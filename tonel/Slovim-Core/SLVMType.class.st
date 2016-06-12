@@ -3,7 +3,6 @@ Class {
 	#superclass : #SLVMObject,
 	#classVars : [
 		'AtomicCounterStorage',
-		'AutoType',
 		'BoolType',
 		'BuiltInTypes',
 		'CharType',
@@ -42,11 +41,6 @@ Class {
 { #category : #'storage classes' }
 SLVMType class >> atomicCounterStorage [
 	^ AtomicCounterStorage
-]
-
-{ #category : #'built in types' }
-SLVMType class >> autoType [
-	^ AutoType
 ]
 
 { #category : #'built in types' }
@@ -161,8 +155,6 @@ SLVMType class >> outputStorage [
 
 { #category : #'class initialization' }
 SLVMType class >> primitiveTypes [
-	AutoType := SLVMAutoType new name: #auto.
-	
 	VoidType := SLVMVoidType new name: #bool.
 	BoolType := SLVMBoolType name: #bool size: 1 alignment: 1.
 	
@@ -316,11 +308,6 @@ SLVMType >> isArrayType [
 ]
 
 { #category : #testing }
-SLVMType >> isAutoType [
-	^ false
-]
-
-{ #category : #testing }
 SLVMType >> isBooleanType [
 	^ false
 ]
@@ -347,11 +334,6 @@ SLVMType >> isMatrixType [
 
 { #category : #testing }
 SLVMType >> isOpaqueType [
-	^ false
-]
-
-{ #category : #testing }
-SLVMType >> isPlaceholderType [
 	^ false
 ]
 
