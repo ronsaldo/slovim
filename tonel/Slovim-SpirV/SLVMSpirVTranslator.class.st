@@ -208,6 +208,12 @@ SLVMSpirVTranslator >> functionTranslation: aFunction do: aBlock [
 	]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMSpirVTranslator >> generateLazyInstructionId: aValue [
+	^ instructionDictionary at: aValue ifAbsentPut: [ builder newId ].
+
+]
+
 { #category : #initialization }
 SLVMSpirVTranslator >> initialize [
 	super initialize.
@@ -251,7 +257,10 @@ SLVMSpirVTranslator >> translateSSAModule: ssaModule [
 
 { #category : #'as yet unclassified' }
 SLVMSpirVTranslator >> translateValue: aValue [
-	^ translatedValues at: aValue ifAbsent: [ aValue accept: self ]
+	^ translatedValues at: aValue ifAbsent: [
+		aValue isInstruction ifTrue: [ ^ self generateLazyInstructionId: aValue ].
+		aValue accept: self
+	]
 ]
 
 { #category : #'as yet unclassified' }
@@ -421,7 +430,7 @@ SLVMSpirVTranslator >> visitConstantValue: constantValue [
 		
 		constantValue type isBooleanType ifTrue: [
 			builder addConstantInstruction: (SpirVInstruction
-				opcode: (constantValue ifTrue: [ SpvOpConstantTrue ] ifFalse: [ SpvOpConstantFalse ])
+				opcode: (constantValue value ifTrue: [ SpvOpConstantTrue ] ifFalse: [ SpvOpConstantFalse ])
 				type: type
 				result: id
 			) 
@@ -680,6 +689,26 @@ SLVMSpirVTranslator >> visitMatrixType: matrixType [
 			opcode: SpvOpTypeMatrix
 			result: id
 			operands: { columnType . matrixType columns}
+		)
+	]
+]
+
+{ #category : #visitor }
+SLVMSpirVTranslator >> visitPhi: phiInstruction [
+	| parameters resultType |
+	parameters := OrderedCollection new.
+	^ self instructionTranslation: phiInstruction do: [ :id |
+		resultType := self translateValue: phiInstruction type.
+		phiInstruction valuesAndParentsDo: [ :value :incomingBlock |
+			parameters add: (self translateValue: value).
+			parameters add: (self basicBlockLabelId: incomingBlock)
+		].
+	
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpPhi
+			type: resultType
+			result: id
+			operands: parameters asArray
 		)
 	]
 ]
