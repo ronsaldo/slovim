@@ -323,6 +323,11 @@ SLVMType >> isFunctionType [
 ]
 
 { #category : #testing }
+SLVMType >> isInstruction [
+	^ false
+]
+
+{ #category : #testing }
 SLVMType >> isIntegerType [
 	^ false
 ]

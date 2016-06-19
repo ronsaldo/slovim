@@ -95,7 +95,7 @@ SLVMJump >> mnemonic [
 
 { #category : #printing }
 SLVMJump >> printOn: aStream [
-	aStream nextPutAll: self mnemonic; nextPutAll:destination name
+	aStream nextPutAll: self mnemonic; print: destination
 ]
 
 { #category : #accessing }

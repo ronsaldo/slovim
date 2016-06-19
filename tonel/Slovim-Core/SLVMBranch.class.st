@@ -73,8 +73,8 @@ SLVMBranch >> falseBlock: anObject [
 { #category : #printing }
 SLVMBranch >> fullPrintOn: aStream [
 	aStream nextPutAll: 'branch '; print: self condition;
-		space; nextPutAll: trueBlock name;
-		space; nextPutAll: falseBlock name
+		space; print: trueBlock;
+		space; print: falseBlock
 ]
 
 { #category : #'as yet unclassified' }
