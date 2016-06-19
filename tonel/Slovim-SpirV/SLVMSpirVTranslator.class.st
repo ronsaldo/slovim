@@ -499,7 +499,7 @@ SLVMSpirVTranslator >> visitFunction: function [
 		
 		currentFunction arguments do: [ :arg | self translateValue: arg ].
 		
-		function basicBlocks do: [ :basicBlock | self translateBasicBlock: basicBlock ].
+		function dominanceTopoSort do: [ :basicBlock | self translateBasicBlock: basicBlock ].
 		
 		builder addFunctionInstruction: (SpirVInstruction opcode: SpvOpFunctionEnd).
 		
