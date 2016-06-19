@@ -139,6 +139,26 @@ SLVMFunction >> computePreOrderFor: basicBlock visited: visitedArray [
 ]
 
 { #category : #'control flow' }
+SLVMFunction >> dominanceTopoSort [
+	| visited result |
+	self computeDominance.
+	visited := Set new.
+	result := OrderedCollection new.
+	basicBlocks do: [ :node | self dominanceTopoSort: node visitedSet: visited destination: result ].
+	^ result
+]
+
+{ #category : #'control flow' }
+SLVMFunction >> dominanceTopoSort: node visitedSet: visitedSet destination: destination [
+	node ifNil: [ ^ self ].
+	(visitedSet includes: node) ifTrue: [ ^ self ].
+	visitedSet add: node.
+	
+	self dominanceTopoSort: node immediateDominator visitedSet: visitedSet destination: destination.
+	destination add: node
+]
+
+{ #category : #'control flow' }
 SLVMFunction >> dominances: doms intersect: n1 with: n2 [
 	| finger1 finger2 |
 	finger1 := n1.
