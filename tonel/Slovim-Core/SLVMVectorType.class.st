@@ -82,6 +82,11 @@ SLVMVectorType >> isVectorType [
 ]
 
 { #category : #accessing }
+SLVMVectorType >> memberAt: constantValue [
+	^ baseType
+]
+
+{ #category : #accessing }
 SLVMVectorType >> name [
 	^ self printString asSymbol
 ]

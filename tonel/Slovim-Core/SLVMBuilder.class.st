@@ -267,6 +267,16 @@ SLVMBuilder >> load: variable name: resultName [
 ]
 
 { #category : #instructions }
+SLVMBuilder >> makeMatrix: matrixType arguments: arguments [
+	^ self makeMatrix: matrixType arguments: arguments name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> makeMatrix: matrixType arguments: arguments name: resultName [
+	^ self addInstruction: (SLVMMakeMatrix type: matrixType parameters: arguments) name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> makeVector: vectorType arguments: arguments [
 	^ self makeVector: vectorType arguments: arguments name: function generateSymbol
 ]

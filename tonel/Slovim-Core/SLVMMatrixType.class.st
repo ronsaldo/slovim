@@ -91,6 +91,11 @@ SLVMMatrixType >> isMatrixType [
 ]
 
 { #category : #accessing }
+SLVMMatrixType >> memberAt: constantValue [
+	^ self columnType
+]
+
+{ #category : #accessing }
 SLVMMatrixType >> name [
 	^ self printString asSymbol
 ]
