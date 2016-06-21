@@ -667,6 +667,20 @@ SLVMSpirVTranslator >> visitLoad: loadInstruction [
 ]
 
 { #category : #visitor }
+SLVMSpirVTranslator >> visitMakeMatrix: makeMatrixInstruction [
+	| resultType arguments |
+	^ self instructionTranslation: makeMatrixInstruction do: [ :id |
+		resultType := self translateValue: makeMatrixInstruction type.
+		arguments := makeMatrixInstruction parameters collect: [ :arg | self translateValue: arg ].
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpCompositeConstruct
+			type: resultType
+			result: id
+			operands: arguments)
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVTranslator >> visitMakeVector: makeVectorInstruction [
 	| resultType arguments |
 	^ self instructionTranslation: makeVectorInstruction do: [ :id |
