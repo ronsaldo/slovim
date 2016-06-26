@@ -15,6 +15,11 @@ SLVMStoreInstruction >> accept: aVisitor [
 ]
 
 { #category : #testing }
+SLVMStoreInstruction >> hasOutputs [
+	^ false
+]
+
+{ #category : #testing }
 SLVMStoreInstruction >> isStore [
 	^ true
 ]

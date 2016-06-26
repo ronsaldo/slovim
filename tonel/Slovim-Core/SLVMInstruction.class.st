@@ -38,6 +38,16 @@ SLVMInstruction >> fullPrintOn: aStream [
 	]
 ]
 
+{ #category : #testing }
+SLVMInstruction >> hasInputs [
+	^ parameters isNotEmpty
+]
+
+{ #category : #testing }
+SLVMInstruction >> hasOutputs [
+	^ true
+]
+
 { #category : #initialization }
 SLVMInstruction >> initialize [
 	instructionReferences := IdentitySet new.
@@ -56,6 +66,11 @@ SLVMInstruction >> isAlloca [
 
 { #category : #testing }
 SLVMInstruction >> isBranch [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isCall [
 	^ false
 ]
 

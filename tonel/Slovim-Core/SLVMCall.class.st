@@ -35,6 +35,16 @@ SLVMCall >> functionValue [
 	^ parameters first
 ]
 
+{ #category : #testing }
+SLVMCall >> hasOutputs [
+	^ type isVoidType not
+]
+
+{ #category : #testing }
+SLVMCall >> isCall [
+	^ true
+]
+
 { #category : #printing }
 SLVMCall >> mnemonic [
 	^ 'call'

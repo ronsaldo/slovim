@@ -10,6 +10,11 @@ SLVMReturnVoid >> accept: aVisitor [
 ]
 
 { #category : #testing }
+SLVMReturnVoid >> hasOutputs [
+	^ false
+]
+
+{ #category : #testing }
 SLVMReturnVoid >> isTerminator [
 	^ true
 ]

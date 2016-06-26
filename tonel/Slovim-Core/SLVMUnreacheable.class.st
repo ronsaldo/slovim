@@ -10,6 +10,11 @@ SLVMUnreacheable >> accept: aVisitor [
 ]
 
 { #category : #testing }
+SLVMUnreacheable >> hasOutputs [
+	^ false
+]
+
+{ #category : #testing }
 SLVMUnreacheable >> isTerminator [
 	^ true
 ]

@@ -77,7 +77,12 @@ SLVMBranch >> fullPrintOn: aStream [
 		space; print: falseBlock
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
+SLVMBranch >> hasOutputs [
+	^ false
+]
+
+{ #category : #initialization }
 SLVMBranch >> initialize [
 	super initialize.
 	unreachableSuccessors := #()

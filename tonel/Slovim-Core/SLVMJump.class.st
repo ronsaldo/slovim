@@ -62,6 +62,11 @@ SLVMJump >> fullPrintOn: aStream [
 	aStream nextPutAll: 'jump '; nextPutAll:destination name
 ]
 
+{ #category : #testing }
+SLVMJump >> hasOutputs [
+	^ false
+]
+
 { #category : #'as yet unclassified' }
 SLVMJump >> initialize [
 	super initialize.
