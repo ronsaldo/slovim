@@ -1,8 +1,29 @@
 Class {
 	#name : #SLVMOptPromoteAllocas,
 	#superclass : #SLVMFunctionOptimizationPass,
-	#category : #'Slovim-Core-SSA'
+	#category : #'Slovim-Core-Optimizations'
 }
+
+{ #category : #'as yet unclassified' }
+SLVMOptPromoteAllocas >> addPhi: phi previousDefinitions: definitionsPerNode allocaInstruction: alloca [
+	| value |
+	phi block predecessors do: [ :predecessor |
+		value := self lastDefinitionValueAt: predecessor for: definitionsPerNode allocaInstruction: alloca.
+		phi addValue: value from: predecessor
+	]
+	
+]
+
+{ #category : #'as yet unclassified' }
+SLVMOptPromoteAllocas >> addUndefinedTo: definitionsPerNode allocaInstruction: allocaInstruction [
+	| function entryBlock undefinedInstruction |
+	function := allocaInstruction block function.
+	entryBlock := function basicBlocks first.
+	undefinedInstruction := SLVMUndefined type: allocaInstruction valueType.
+	entryBlock addFirst: undefinedInstruction.
+	definitionsPerNode at: entryBlock put: { undefinedInstruction }.
+	^ undefinedInstruction
+]
 
 { #category : #'as yet unclassified' }
 SLVMOptPromoteAllocas >> canBePromoted: allocaInstruction [
@@ -11,6 +32,50 @@ SLVMOptPromoteAllocas >> canBePromoted: allocaInstruction [
 	].
 
 	^ true
+]
+
+{ #category : #'as yet unclassified' }
+SLVMOptPromoteAllocas >> findLastStoreTo: allocaInstruction before: loadInstruction [
+	| lastSoFar |
+	lastSoFar := nil.
+	loadInstruction block instructions do: [ :ins |
+		(ins isStore and: [ ins variable == allocaInstruction ]) ifTrue: [ lastSoFar := ins ].
+		ins == loadInstruction ifTrue: [ ^ lastSoFar ]
+	].
+
+	^ lastSoFar
+
+]
+
+{ #category : #'as yet unclassified' }
+SLVMOptPromoteAllocas >> lastDefinitionValueAt: node for: definitionsPerNode allocaInstruction: alloca [
+	| currentNode instructionResult |
+	currentNode := node.
+	[ currentNode isNotNil and: [ (definitionsPerNode includesKey: currentNode) not ] ] whileTrue: [ 
+		currentNode := currentNode immediateDominator
+	].
+
+	"Did we find a definition"
+	currentNode isNil ifTrue: [ ^ self addUndefinedTo: definitionsPerNode allocaInstruction: alloca ].
+	instructionResult := (definitionsPerNode at: currentNode) last.
+	^ instructionResult isStore ifTrue: [ instructionResult value ] ifFalse: [ instructionResult ]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMOptPromoteAllocas >> lastDefinitionValueAtLoad: loadInstruction for: definitionsPerNode allocaInstruction: allocaInstruction [
+	| loadNode definitions lastStore |
+	loadNode := loadInstruction block.
+	definitions := definitionsPerNode at: loadNode ifAbsent: [
+		^ self lastDefinitionValueAt: loadNode for: definitionsPerNode allocaInstruction: allocaInstruction
+	].
+
+	(definitions size = 1 and: [ definitions first isPhi ]) ifTrue: [ ^ definitions first ].
+	
+	lastStore := self findLastStoreTo: allocaInstruction before: loadInstruction.
+	(lastStore isNil and: [ definitions first isPhi ]) ifTrue: [ ^ definitions ].
+	
+	lastStore ifNil: [ ^ self lastDefinitionValueAt: loadNode for: definitionsPerNode allocaInstruction: allocaInstruction ].
+	^ lastStore value
 ]
 
 { #category : #'as yet unclassified' }
@@ -23,17 +88,24 @@ SLVMOptPromoteAllocas >> passOnFunction: aFunction [
 		]
 	].
 
+	aFunction computeDominance.
 	toBePromoted do: [ :alloca | self promote: alloca ]
 ]
 
 { #category : #'as yet unclassified' }
 SLVMOptPromoteAllocas >> promote: allocaInstruction [
-	| hasLoad hasStore |
+	| hasLoad hasStore pendingWork workNode phiNodeDictionary phiNode definitionsPerNode originalDefinitionSites loadValue undefined |
+	definitionsPerNode := Dictionary new.
+	
 	hasLoad := false.
 	hasStore := false.
 	allocaInstruction instructionReferences do: [ :ref |
 		ref isLoad ifTrue: [ hasLoad := true ].
-		ref isStore ifTrue: [ hasStore := true ].
+		ref isStore ifTrue: [
+			hasStore := true.
+			(definitionsPerNode at: ref block ifAbsentPut: [ OrderedCollection new. ])
+				add: ref
+		].
 	].
 
 	(hasLoad not) ifTrue: [
@@ -44,9 +116,79 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 	].
 
 	(hasStore not) ifTrue: [
-		"This variable is never set. It always contains the default value."
-		self halt.
+		"This variable is never set. It always contains the undefined value."
+		undefined := (SLVMUndefined type: allocaInstruction valueType) name: allocaInstruction block function generateSymbol.
+		allocaInstruction block function basicBlocks addFirst: undefined.  
+		allocaInstruction instructionReferences do: [ :load |
+			load replaceWith: undefined.
+		].
+	
+		allocaInstruction removeFromBlock.
 		^ self
 	].
 
+	"Gather the basic blocks with the definitions."
+	originalDefinitionSites := Set new.
+	definitionsPerNode keysDo: [ :node | originalDefinitionSites add: node ].
+	pendingWork := originalDefinitionSites asOrderedCollection .
+	
+	phiNodeDictionary := Dictionary new.
+	[ pendingWork isEmpty ] whileFalse: [ 
+		workNode := pendingWork last.
+		pendingWork removeLast.
+		
+		workNode dominanceFrontier do: [ :frontierNode |
+			phiNodeDictionary at: frontierNode ifAbsentPut: [
+				phiNode := SLVMPhi new name: allocaInstruction block function generateSymbol.
+				frontierNode addFirst: phiNode.
+				(definitionsPerNode at: frontierNode ifAbsentPut: [ OrderedCollection new. ])
+					add: phiNode.
+
+				(originalDefinitionSites includes: frontierNode) ifFalse: [ 
+					pendingWork add: frontierNode.
+				].
+				phiNode
+			]
+		]
+	].
+
+	"Sort the definitions per node."
+	definitionsPerNode keysAndValuesDo: [ :node :definitions | self sortNode: node definitions: definitions allocaInstruction: allocaInstruction ].
+
+	"Finish the phi nodes."
+	phiNodeDictionary valuesDo: [ :phi | self addPhi: phi previousDefinitions: definitionsPerNode allocaInstruction: allocaInstruction ].
+	
+	"Replace the loads and remove the stores."
+	allocaInstruction instructionReferences do: [ :ref |
+		ref isLoad ifTrue: [
+			loadValue := self lastDefinitionValueAtLoad: ref for: definitionsPerNode allocaInstruction: allocaInstruction.
+			ref replaceWith: loadValue.
+		].
+		ref isStore ifTrue: [
+			ref removeFromBlock
+		].
+	].
+
+	allocaInstruction removeFromBlock.
+
+]
+
+{ #category : #'as yet unclassified' }
+SLVMOptPromoteAllocas >> sortNode: node definitions: definitions allocaInstruction: allocaInstruction [
+	| lastStore |
+	definitions size <= 1 ifTrue: [ ^ self ].
+
+	"Move the phi node to the begining."
+	definitions last isPhi ifTrue: [ definitions swap: definitions size with: 1 ].
+	
+	"Find the last store"
+	lastStore := nil.
+	node instructions do: [ :instruction |
+		(instruction isStore and: [ instruction variable == allocaInstruction ]) ifTrue: [ 
+			lastStore := instruction
+		]
+	].
+	self assert: lastStore isNotNil.
+	
+	definitions swap: (definitions indexOf: lastStore) with: definitions size.
 ]

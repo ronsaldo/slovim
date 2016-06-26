@@ -19,10 +19,13 @@ Class {
 { #category : #adding }
 SLVMBasicBlock >> add: anInstruction [ 
 	instructions add: anInstruction.
-	anInstruction block: self.
-	anInstruction isTerminator ifTrue: [
-		self computeSuccessors
-	].
+	self instructionAdded: anInstruction
+]
+
+{ #category : #adding }
+SLVMBasicBlock >> addFirst: anInstruction [ 
+	instructions addFirst: anInstruction.
+	self instructionAdded: anInstruction
 ]
 
 { #category : #adding }
@@ -94,6 +97,14 @@ SLVMBasicBlock >> initialize [
 	instructions := OrderedCollection new.
 	predecessors := Set new.
 	successors := #()
+]
+
+{ #category : #adding }
+SLVMBasicBlock >> instructionAdded: anInstruction [ 
+	anInstruction block: self.
+	anInstruction isTerminator ifTrue: [
+		self computeSuccessors
+	].
 ]
 
 { #category : #accessing }

@@ -1,7 +1,7 @@
 Class {
 	#name : #SLVMOptimizationPass,
 	#superclass : #Object,
-	#category : #'Slovim-Core-SSA'
+	#category : #'Slovim-Core-Optimizations'
 }
 
 { #category : #applying }

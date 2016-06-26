@@ -26,12 +26,17 @@ SLVMPhi >> initialize [
 	incomingBlocks := OrderedCollection new.
 ]
 
+{ #category : #testing }
+SLVMPhi >> isPhi [
+	^ true
+]
+
 { #category : #printing }
 SLVMPhi >> mnemonic [
 	^ 'phi'
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #adding }
 SLVMPhi >> type [
 	^ self parameters first type
 ]

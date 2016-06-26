@@ -45,6 +45,11 @@ SLVMValue >> isInstruction [
 ]
 
 { #category : #testing }
+SLVMValue >> isPhi [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isSSAValue [
 	^ true
 ]

@@ -125,6 +125,17 @@ SLVMInstruction >> removeFromBlock [
 	block remove: self.
 ]
 
+{ #category : #modifying }
+SLVMInstruction >> replaceWith: aNewInstruction [
+	instructionReferences do: [ :usage |
+		usage parameters replaceAll: self with: aNewInstruction.
+		aNewInstruction addInstructionReference: usage.
+	].
+
+	instructionReferences removeAll.
+	self removeFromBlock
+]
+
 { #category : #accessing }
 SLVMInstruction >> successors [
 	^ #()
