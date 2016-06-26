@@ -360,13 +360,13 @@ SLVMBuilder >> not: operand name: resultName [
 ]
 
 { #category : #instructions }
-SLVMBuilder >> phi [
-	^ self phi: function generateSymbol
+SLVMBuilder >> phi: type [
+	^ self phi: type name: function generateSymbol
 ]
 
 { #category : #instructions }
-SLVMBuilder >> phi: resultName [
-	^ self addInstruction: SLVMPhi new name: resultName
+SLVMBuilder >> phi: type name: resultName [
+	^ self addInstruction: (SLVMPhi type: type) name: resultName
 ]
 
 { #category : #instructions }

@@ -54,6 +54,16 @@ SLVMValue >> isSSAValue [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMValue >> isUndefined [
+	^ false
+]
+
+{ #category : #adding }
+SLVMValue >> removeInstructionReference: anInstruction [
+	"By default, do nothing"
+]
+
 { #category : #accessing }
 SLVMValue >> type [
 	self subclassResponsibility

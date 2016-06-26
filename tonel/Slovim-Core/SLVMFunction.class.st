@@ -32,6 +32,11 @@ SLVMFunction >> addBasicBlock: aBasicBlock [
 	self invalidateControlFlowCaches
 ]
 
+{ #category : #optimizations }
+SLVMFunction >> applyFunctionOptimizationPasses: passes [
+	passes do: [ :pass | pass passOnFunction: self ]
+]
+
 { #category : #accessing }
 SLVMFunction >> arguments [
 	^ arguments
@@ -232,11 +237,6 @@ SLVMFunction >> makeArguments [
 			name: (#arg , index printString) asSymbol;
 			yourself
 	]
-]
-
-{ #category : #optimizations }
-SLVMFunction >> performBasicOptimizations [
-	SLVMOptPromoteAllocas passOnFunction: self.
 ]
 
 { #category : #'control flow' }

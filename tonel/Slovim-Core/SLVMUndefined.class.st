@@ -12,9 +12,14 @@ SLVMUndefined class >> type: aType [
 	^ self new type: aType
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #visitor }
 SLVMUndefined >> accept: aVisitor [
 	^ aVisitor visitUndefinedInstruction: self
+]
+
+{ #category : #testing }
+SLVMUndefined >> isUndefined [
+	^ true
 ]
 
 { #category : #printing }

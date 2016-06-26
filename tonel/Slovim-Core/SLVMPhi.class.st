@@ -2,10 +2,16 @@ Class {
 	#name : #SLVMPhi,
 	#superclass : #SLVMInstruction,
 	#instVars : [
-		'incomingBlocks'
+		'incomingBlocks',
+		'type'
 	],
 	#category : #'Slovim-Core-SSA'
 }
+
+{ #category : #construction }
+SLVMPhi class >> type: aType [
+	^ self new type: aType
+]
 
 { #category : #visitor }
 SLVMPhi >> accept: aVisitor [
@@ -14,6 +20,7 @@ SLVMPhi >> accept: aVisitor [
 
 { #category : #adding }
 SLVMPhi >> addValue: value from: incomingBlock [
+	self assert: value type = type.
 	value addInstructionReference: self.
 	parameters add: value.
 	incomingBlocks add: incomingBlock.
@@ -36,9 +43,14 @@ SLVMPhi >> mnemonic [
 	^ 'phi'
 ]
 
-{ #category : #adding }
+{ #category : #accessing }
 SLVMPhi >> type [
-	^ self parameters first type
+	^ type
+]
+
+{ #category : #accessing }
+SLVMPhi >> type: anObject [
+	type := anObject
 ]
 
 { #category : #adding }

@@ -40,7 +40,7 @@ SLVMInstruction >> fullPrintOn: aStream [
 
 { #category : #initialization }
 SLVMInstruction >> initialize [
-	instructionReferences := Set new.
+	instructionReferences := IdentitySet new.
 	parameters := #().
 ]
 
@@ -122,7 +122,14 @@ SLVMInstruction >> printOn: aStream [
 
 { #category : #modifying }
 SLVMInstruction >> removeFromBlock [
+	self assert: instructionReferences isEmpty.
+	parameters do: [ :param | param removeInstructionReference: self ].
 	block remove: self.
+]
+
+{ #category : #adding }
+SLVMInstruction >> removeInstructionReference: anInstruction [
+	instructionReferences remove: anInstruction
 ]
 
 { #category : #modifying }
