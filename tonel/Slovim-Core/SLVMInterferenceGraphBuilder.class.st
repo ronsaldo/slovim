@@ -3,7 +3,8 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'graph',
-		'processedNodeDictionary'
+		'processedNodeDictionary',
+		'visitedBlocks'
 	],
 	#category : #'Slovim-Core-RegisterAllocation'
 }
@@ -30,33 +31,65 @@ SLVMInterferenceGraphBuilder >> buildFor: aFunction [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMInterferenceGraphBuilder >> processValue: aValue [
-	| node paramNode actualParameters |
-	processedNodeDictionary at: aValue ifPresent: [ :oldNode | ^ oldNode ].
-	node := SLVMInterferenceGraphNode new variable: aValue.
-	graph addNode: node.
-	processedNodeDictionary at: aValue put: node.
+SLVMInterferenceGraphBuilder >> interfere: firstValue with: secondValue [
+	| firstNode secondNode |
+	firstNode := self nodeFor: firstValue.
+	secondNode := self nodeFor: secondValue.
+	firstNode interferences add: secondNode.
+	secondNode interferences add: firstNode.
+]
 
-	aValue isInstruction ifFalse: [ ^ node ].
+{ #category : #'as yet unclassified' }
+SLVMInterferenceGraphBuilder >> nodeFor: value [
+	| node |
+	^ processedNodeDictionary at: value ifAbsentPut: [
+		node := SLVMInterferenceGraphNode new variable: value.
+		graph addNode: node.
+		node ]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMInterferenceGraphBuilder >> processValue: value [
+	visitedBlocks := Set new.
+	value instructionReferences do: [ :ref |
+		ref isPhi ifTrue: [
+			ref valuesAndParentsDo: [ :usage :predecessor |
+				usage = value ifTrue: [
+					self value: value liveOutAtBlock: predecessor
+				]
+			]
+		] ifFalse: [
+			self value: value liveInAtInstruction: ref
+		]
+	]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMInterferenceGraphBuilder >> value: value liveInAtInstruction: instruction [
+	self value: value liveOutAtInstruction: instruction
+]
+
+{ #category : #'as yet unclassified' }
+SLVMInterferenceGraphBuilder >> value: value liveOutAtBlock: block [
+	(visitedBlocks includes: block) ifTrue: [ ^ self ].
+	visitedBlocks add: block.
 	
-	aValue isPhi ifTrue: [ 
-		aValue parameters do: [ :param |
-			paramNode := self processValue: param.
-			node preferences add: paramNode.
-			paramNode preferences add: node.
-		].
-	] ifFalse: [
-		actualParameters := aValue parameters.
-		aValue isCall ifTrue: [
-			actualParameters := actualParameters allButFirst.
-		].
-	
-		actualParameters do: [ :param |
-			paramNode := self processValue: param.
-			node interferences add: paramNode.
-			paramNode interferences add: node.
-		].
+	self value: value liveOutAtInstruction: block instructions last 
+]
+
+{ #category : #'as yet unclassified' }
+SLVMInterferenceGraphBuilder >> value: value liveOutAtInstruction: instruction [
+	| currentInstruction |
+	currentInstruction := instruction.
+	[ currentInstruction isNotNil and: [ currentInstruction ~~ value ] ] whileTrue: [ 
+		self interfere: value with: currentInstruction.
+		currentInstruction := currentInstruction previousInstruction
 	].
 
-	^ node
+	currentInstruction ifNil: [
+		instruction block predecessors do: [ :pred |
+			self value: value liveOutAtBlock: pred
+		]
+	].
+
 ]

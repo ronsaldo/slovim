@@ -5,7 +5,9 @@ Class {
 		'name',
 		'block',
 		'parameters',
-		'instructionReferences'
+		'instructionReferences',
+		'previousInstruction',
+		'nextInstruction'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -120,6 +122,16 @@ SLVMInstruction >> name: anObject [
 ]
 
 { #category : #accessing }
+SLVMInstruction >> nextInstruction [
+	^ nextInstruction
+]
+
+{ #category : #accessing }
+SLVMInstruction >> nextInstruction: anObject [
+	nextInstruction := anObject
+]
+
+{ #category : #accessing }
 SLVMInstruction >> parameters [
 	^ parameters
 ]
@@ -128,6 +140,16 @@ SLVMInstruction >> parameters [
 SLVMInstruction >> parameters: anArrayOfParameter [
 	parameters := anArrayOfParameter.
 	parameters do: [ :param | param addInstructionReference: self ]
+]
+
+{ #category : #accessing }
+SLVMInstruction >> previousInstruction [
+	^ previousInstruction
+]
+
+{ #category : #accessing }
+SLVMInstruction >> previousInstruction: anObject [
+	previousInstruction := anObject
 ]
 
 { #category : #printing }

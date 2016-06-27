@@ -18,12 +18,24 @@ Class {
 
 { #category : #adding }
 SLVMBasicBlock >> add: anInstruction [ 
+	instructions ifNotEmpty: [
+		instructions last nextInstruction: anInstruction.
+		anInstruction previousInstruction: instructions last.
+		anInstruction nextInstruction: nil.
+	].
+
 	instructions add: anInstruction.
 	self instructionAdded: anInstruction
 ]
 
 { #category : #adding }
 SLVMBasicBlock >> addFirst: anInstruction [ 
+	instructions ifNotEmpty: [
+		instructions first previousInstruction: anInstruction.
+		anInstruction nextInstruction: instructions first.
+		anInstruction previousInstruction: nil.
+	].
+
 	instructions addFirst: anInstruction.
 	self instructionAdded: anInstruction
 ]
@@ -191,7 +203,15 @@ SLVMBasicBlock >> printOn: aStream [
 ]
 
 { #category : #adding }
-SLVMBasicBlock >> remove: anInstruction [ 
+SLVMBasicBlock >> remove: anInstruction [
+	anInstruction previousInstruction ifNotNil: [ 
+		anInstruction previousInstruction nextInstruction: anInstruction nextInstruction
+	].
+
+	anInstruction nextInstruction ifNotNil: [ 
+		anInstruction nextInstruction previousInstruction: anInstruction previousInstruction
+	].
+
 	instructions remove: anInstruction.
 	anInstruction block: nil.
 
