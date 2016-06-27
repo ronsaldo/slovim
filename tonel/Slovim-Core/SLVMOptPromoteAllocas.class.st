@@ -69,14 +69,16 @@ SLVMOptPromoteAllocas >> canBePromoted: allocaInstruction [
 
 { #category : #'as yet unclassified' }
 SLVMOptPromoteAllocas >> findLastStoreTo: allocaInstruction before: loadInstruction [
-	| lastSoFar |
-	lastSoFar := nil.
-	loadInstruction block instructions do: [ :ins |
-		(ins isStore and: [ ins variable == allocaInstruction ]) ifTrue: [ lastSoFar := ins ].
-		ins == loadInstruction ifTrue: [ ^ lastSoFar ]
+	| currentInstruction |
+	currentInstruction := loadInstruction previousInstruction.
+	[ currentInstruction isNotNil ] whileTrue: [
+		(currentInstruction isStore and: [ currentInstruction variable == allocaInstruction ]) ifTrue: [
+			^ currentInstruction
+		].
+		currentInstruction := currentInstruction previousInstruction.
 	].
 
-	^ lastSoFar
+	^ nil
 
 ]
 
@@ -124,7 +126,7 @@ SLVMOptPromoteAllocas >> lastDefinitionValueAtLoad: loadInstruction for: definit
 SLVMOptPromoteAllocas >> passOnFunction: aFunction [
 	| toBePromoted |
 	toBePromoted := OrderedCollection new.
-	aFunction basicBlocks first instructions do: [ :ins |
+	aFunction basicBlocks first instructionsDo: [ :ins |
 		(ins isAlloca and: [self canBePromoted: ins]) ifTrue: [ 
 			toBePromoted add: ins
 		]
@@ -225,7 +227,7 @@ SLVMOptPromoteAllocas >> sortNode: node definitions: definitions allocaInstructi
 	
 	"Find the last store"
 	lastStore := nil.
-	node instructions do: [ :instruction |
+	node instructionsDo: [ :instruction |
 		(instruction isStore and: [ instruction variable == allocaInstruction ]) ifTrue: [ 
 			lastStore := instruction
 		]

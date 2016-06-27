@@ -2,28 +2,25 @@ Class {
 	#name : #SLVMInterferenceGraphBuilder,
 	#superclass : #Object,
 	#instVars : [
-		'graph',
-		'processedNodeDictionary',
-		'visitedBlocks'
+		'instructionDictionary',
+		'graph'
 	],
 	#category : #'Slovim-Core-RegisterAllocation'
 }
 
-{ #category : #building }
-SLVMInterferenceGraphBuilder class >> buildFor: aFunction [
-	^ self new buildFor: aFunction
+{ #category : #'as yet unclassified' }
+SLVMInterferenceGraphBuilder class >> buildForLiveness: liveness [
+	^ self new buildForLiveness: liveness
 ]
 
-{ #category : #building }
-SLVMInterferenceGraphBuilder >> buildFor: aFunction [
-	processedNodeDictionary := Dictionary new.
+{ #category : #'as yet unclassified' }
+SLVMInterferenceGraphBuilder >> buildForLiveness: liveness [
+	instructionDictionary := Dictionary new.
 	graph := SLVMInterferenceGraph new.
-	
-	aFunction basicBlocks do: [ :bb |
-		bb instructions do: [ :instruction |
-			instruction hasOutputs ifTrue: [
-				self processValue: instruction
-			]
+	liveness function basicBlocks do: [ :block |
+		self combineLiveSets: liveness At: block.
+		block instructionsDo: [ :instruction |
+			self combineLiveSets: liveness At: instruction
 		]
 	].
 
@@ -31,65 +28,33 @@ SLVMInterferenceGraphBuilder >> buildFor: aFunction [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMInterferenceGraphBuilder >> interfere: firstValue with: secondValue [
-	| firstNode secondNode |
-	firstNode := self nodeFor: firstValue.
-	secondNode := self nodeFor: secondValue.
-	firstNode interferences add: secondNode.
-	secondNode interferences add: firstNode.
-]
-
-{ #category : #'as yet unclassified' }
-SLVMInterferenceGraphBuilder >> nodeFor: value [
-	| node |
-	^ processedNodeDictionary at: value ifAbsentPut: [
-		node := SLVMInterferenceGraphNode new variable: value.
-		graph addNode: node.
-		node ]
-]
-
-{ #category : #'as yet unclassified' }
-SLVMInterferenceGraphBuilder >> processValue: value [
-	visitedBlocks := Set new.
-	value instructionReferences do: [ :ref |
-		ref isPhi ifTrue: [
-			ref valuesAndParentsDo: [ :usage :predecessor |
-				usage = value ifTrue: [
-					self value: value liveOutAtBlock: predecessor
-				]
-			]
-		] ifFalse: [
-			self value: value liveInAtInstruction: ref
+SLVMInterferenceGraphBuilder >> combineLiveSets: liveness At: element [
+	| liveInSet liveOutSet varSet |
+	liveInSet := liveness liveInSets at: element ifAbsent: #().
+	liveOutSet := liveness liveOutSets at: element ifAbsent: #().
+	varSet := liveInSet union: liveOutSet.
+	varSet do: [ :a |
+		varSet do: [ :b |
+		a ~~ b ifTrue: [ self interfere: a with: b ]
 		]
 	]
 ]
 
 { #category : #'as yet unclassified' }
-SLVMInterferenceGraphBuilder >> value: value liveInAtInstruction: instruction [
-	self value: value liveOutAtInstruction: instruction
+SLVMInterferenceGraphBuilder >> interfere: a with: b [
+	| nodeA nodeB |
+	nodeA := self nodeForInstruction: a.
+	nodeB := self nodeForInstruction: b.
+	nodeA interferences add: nodeB.
+	nodeB interferences add: nodeA.
 ]
 
 { #category : #'as yet unclassified' }
-SLVMInterferenceGraphBuilder >> value: value liveOutAtBlock: block [
-	(visitedBlocks includes: block) ifTrue: [ ^ self ].
-	visitedBlocks add: block.
-	
-	self value: value liveOutAtInstruction: block instructions last 
-]
-
-{ #category : #'as yet unclassified' }
-SLVMInterferenceGraphBuilder >> value: value liveOutAtInstruction: instruction [
-	| currentInstruction |
-	currentInstruction := instruction.
-	[ currentInstruction isNotNil and: [ currentInstruction ~~ value ] ] whileTrue: [ 
-		self interfere: value with: currentInstruction.
-		currentInstruction := currentInstruction previousInstruction
-	].
-
-	currentInstruction ifNil: [
-		instruction block predecessors do: [ :pred |
-			self value: value liveOutAtBlock: pred
-		]
-	].
-
+SLVMInterferenceGraphBuilder >> nodeForInstruction: anInstruction [
+	| node |
+	^ instructionDictionary at: anInstruction ifAbsentPut: [ 
+		node := SLVMInterferenceGraphNode new variable: anInstruction.
+		graph addNode: node.
+		node
+	]
 ]

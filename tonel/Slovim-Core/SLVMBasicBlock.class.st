@@ -62,6 +62,11 @@ SLVMBasicBlock >> dominanceFrontier: anObject [
 	dominanceFrontier := anObject
 ]
 
+{ #category : #accessing }
+SLVMBasicBlock >> firstInstruction [
+	^ instructions first
+]
+
 { #category : #printing }
 SLVMBasicBlock >> fullPrintOn: aStream [
 	aStream print: self; nextPut: $:.
@@ -119,14 +124,9 @@ SLVMBasicBlock >> instructionAdded: anInstruction [
 	].
 ]
 
-{ #category : #accessing }
-SLVMBasicBlock >> instructions [
-	^ instructions
-]
-
-{ #category : #accessing }
-SLVMBasicBlock >> instructions: anObject [
-	instructions := anObject
+{ #category : #'successor sequences' }
+SLVMBasicBlock >> instructionsDo: aBlock [
+	instructions do: aBlock
 ]
 
 { #category : #testing }
