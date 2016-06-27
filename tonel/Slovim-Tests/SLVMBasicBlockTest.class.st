@@ -15,7 +15,7 @@ SLVMBasicBlockTest >> testAddInstruction [
 	basicBlock add: instruction.
 	self deny: basicBlock isEmpty.
 	self assert: basicBlock numberOfInstructions = 1.
-	self assert: basicBlock instructions first == instruction.
+	self assert: basicBlock firstInstruction == instruction.
 	self assert: basicBlock predecessors isEmpty.
 	self assert: basicBlock successors isEmpty.
 	self assert: instruction block = basicBlock
