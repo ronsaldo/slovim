@@ -244,7 +244,7 @@ SLVMSpirVTranslator >> translateBasicBlock: basicBlock [
 	| labelId |
 	labelId := self basicBlockLabelId: basicBlock.
 	builder addFunctionInstruction: (SpirVInstruction opcode: SpvOpLabel result: labelId).
-	basicBlock instructions do: [ :ins | ins accept: self ] 
+	basicBlock instructionsDo: [ :ins | ins accept: self ] 
 ]
 
 { #category : #'as yet unclassified' }
