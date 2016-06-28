@@ -848,14 +848,16 @@ SLVMSpirVTranslator >> visitStructureType: structureType [
 		].
 
 		structureType types doWithIndex: [ :type :index |
-			type isMatrixType ifTrue: [ 
+			(type isMatrixType or: [ type isArrayType and: [ type baseType isMatrixType ] ]) ifTrue: [
+				| columnType |
+				columnType := type isMatrixType ifTrue: [ type columnType ] ifFalse: [ type baseType  columnType ].
 				builder addAnnotationInstruction: (SpirVInstruction
 					opcode: SpvOpMemberDecorate
 					operands: { id . index - 1 . SpvDecorationColMajor }
 				).
 				builder addAnnotationInstruction: (SpirVInstruction
 					opcode: SpvOpMemberDecorate
-					operands: { id . index - 1 . SpvDecorationMatrixStride . type columnType size }
+					operands: { id . index - 1 . SpvDecorationMatrixStride . columnType size }
 				)
 			].
 			
