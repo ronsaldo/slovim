@@ -172,8 +172,6 @@ SLVMType class >> primitiveTypes [
 	DoubleType := SLVMFloatType name: #double size: 8 alignment: 8.
 	
 	^ {
-		AutoType.
-		
 		VoidType.
 		BoolType.
 		
