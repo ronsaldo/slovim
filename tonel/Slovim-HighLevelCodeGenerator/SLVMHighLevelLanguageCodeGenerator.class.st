@@ -18,7 +18,8 @@ Class {
 		'breakBlock',
 		'currentFunctionNode',
 		'usedLocalSymbols',
-		'translatedBlocks'
+		'translatedBlocks',
+		'phiVariableDictionary'
 	],
 	#classVars : [
 		'BuiltInFunctionMap'
@@ -135,6 +136,49 @@ SLVMHighLevelLanguageCodeGenerator class >> initialize [
 { #category : #adding }
 SLVMHighLevelLanguageCodeGenerator >> addStatement: aStatement [
 	currentStatementList add: aStatement
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> addSuccessorsPhi: instruction [
+	| currentBlock sourceValueSet destValueSet sourceDestMap copyValue variable copyStatement intersection tempBeforeCopies tempVar |
+	currentBlock := instruction block.
+	sourceValueSet := Set new.
+	destValueSet := Set new.
+	sourceDestMap := OrderedCollection new.
+	
+	"TODO: Ensure the copies are actually made in parallel."
+	instruction successors do: [ :succ |
+		succ phiInstructionsDo: [ :phi |
+			phi valuesAndParentsDo: [ :value :parent |
+				parent == currentBlock ifTrue: [
+					sourceValueSet add: value.
+					destValueSet add: phi.
+					sourceDestMap add: value -> phi.
+				]
+			]
+		]
+	].
+
+	tempBeforeCopies := Dictionary new.
+	intersection := sourceValueSet intersection: destValueSet.
+	intersection do: [ :value |
+		copyValue := self translateValue: value.
+		tempVar := self generateTemp: (self translateType: value type).
+		copyStatement := SLVMHLVariableAssignmentStatement new
+			variable: tempVar;
+			value: copyValue.
+		self addStatement: copyStatement.
+		tempBeforeCopies at: value put: tempVar
+	].
+
+	sourceDestMap do: [ :sourceAndDest |
+		copyValue := tempBeforeCopies at: sourceAndDest key ifAbsent: [ self translateValue: sourceAndDest key ].
+		variable := self translateValue: sourceAndDest value. 
+		copyStatement := SLVMHLVariableAssignmentStatement new
+			variable: variable;
+			value: copyValue.
+		self addStatement: copyStatement
+	]
 ]
 
 { #category : #'code generation' }
@@ -393,15 +437,17 @@ SLVMHighLevelLanguageCodeGenerator >> translateBasicTypeName: aType [
 
 { #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> translateFunction: function contentInto: functionNode [
-	| oldDeferredBlocks oldFunctionNode oldTranslatedBlocks oldUsedLocalSymbols |
+	| oldDeferredBlocks oldFunctionNode oldTranslatedBlocks oldUsedLocalSymbols oldPhiVariableDictionary |
 	oldDeferredBlocks := deferredBlocks.
 	oldFunctionNode := currentFunctionNode.
 	oldUsedLocalSymbols := usedLocalSymbols.
 	oldTranslatedBlocks := translatedBlocks.
+	oldPhiVariableDictionary := phiVariableDictionary.
 	[
 		deferredBlocks := Dictionary new.
 		usedLocalSymbols := Set new.
 		translatedBlocks := Set new.
+		phiVariableDictionary := Dictionary new.
 		currentFunctionNode := functionNode.
 		functionNode body: SLVMHLStatementList new.
 		self withStatementList: functionNode body do: [
@@ -412,6 +458,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateFunction: function contentInto: f
 		currentFunctionNode := oldFunctionNode.
 		usedLocalSymbols := oldUsedLocalSymbols.
 		translatedBlocks := oldTranslatedBlocks.
+		phiVariableDictionary := oldPhiVariableDictionary
 	]
 ]
 
@@ -574,6 +621,13 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLFunctionValue: function [
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLIfStatement: statement [
+	(statement trueBody isEmpty and: [ statement falseBody isEmpty ]) ifTrue: [ ^ self ].
+	statement trueBody isEmpty ifTrue: [ 
+		^ self
+			emitLine: ('if (!({1}))' format: {statement condition translateValueWith: self });
+			emitBlockStatementList: statement falseBody.
+	].
+
 	self
 		emitLine: ('if ({1})' format: {statement condition translateValueWith: self });
 		emitBlockStatementList: statement trueBody.
@@ -851,6 +905,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitBinaryOperation: instruction [
 { #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> visitBranch: branch [
 	| trueList falseList statement isLoop condition continueList |
+	self addSuccessorsPhi: branch.
 	self withBranchBlocks: branch do: [
 		isLoop := branch continueBlock isNotNil.
 		condition := self translateValue: branch condition.
@@ -1025,6 +1080,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitGlobalVariable: globalVariable [
 { #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> visitJump: jump [
 	| continueList statement |
+	self addSuccessorsPhi: jump.
 	self withBranchBlocks: jump do: [
 		jump continueBlock ifNotNil: [ 
 			"TODO: Generate an infinite loop here."
@@ -1066,6 +1122,22 @@ SLVMHighLevelLanguageCodeGenerator >> visitMakeVector: instruction [
 		node type: (self translateType: instruction type).
 		node arguments: (instruction parameters collect: [:arg | self translateValue: arg ]).
 	]
+]
+
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> visitPhi: instruction [
+	| name type |
+	^ self instructionTranslation: instruction allocate: [ SLVMHLVariableDeclNode new ] do: [:variable |
+		name := self translateLocalSymbol: instruction name.
+		type := self translateType: instruction type.
+
+		variable
+			name: name;
+			type: type.
+		currentFunctionNode locals add: variable.
+		phiVariableDictionary at: instruction put: variable
+	]
+
 ]
 
 { #category : #visitor }

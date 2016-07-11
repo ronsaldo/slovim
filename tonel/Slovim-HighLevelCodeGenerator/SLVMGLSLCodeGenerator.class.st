@@ -377,6 +377,11 @@ SLVMGLSLCodeGenerator >> translateHLVariableDecl: variableDecl [
 ]
 
 { #category : #'code generation' }
+SLVMGLSLCodeGenerator >> translateModule: module [
+	^ self translateModule: module exportList: { module globalValues at: #main }
+]
+
+{ #category : #'code generation' }
 SLVMGLSLCodeGenerator >> translateReferenceType: type [
 	| baseType name |
 	baseType := self translateType: type baseType.
