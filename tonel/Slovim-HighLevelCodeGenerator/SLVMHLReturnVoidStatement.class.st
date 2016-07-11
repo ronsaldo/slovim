@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SLVMHLReturnVoidStatement >> isReturnVoid [
+	^ true
+]
+
+{ #category : #'as yet unclassified' }
 SLVMHLReturnVoidStatement >> translateWith: translator [
 	^ translator translateHLReturnVoid: self
 ]

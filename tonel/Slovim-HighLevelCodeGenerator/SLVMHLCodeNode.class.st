@@ -7,12 +7,27 @@ Class {
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
 SLVMHLCodeNode >> isArrayType [
 	^ false
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
+SLVMHLCodeNode >> isContinue [
+	^ false
+]
+
+{ #category : #testing }
+SLVMHLCodeNode >> isIfStatement [
+	^ false
+]
+
+{ #category : #testing }
+SLVMHLCodeNode >> isReturnVoid [
+	^ false
+]
+
+{ #category : #testing }
 SLVMHLCodeNode >> isStructureType [
 	^ false
 ]

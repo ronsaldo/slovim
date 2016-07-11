@@ -5,6 +5,7 @@ Class {
 		'glBindingCount'
 	],
 	#classVars : [
+		'BuiltInVariableMappings',
 		'Keywords',
 		'SamplerTypeDictionary',
 		'SamplerTypeMapping',
@@ -27,6 +28,14 @@ SLVMGLSLCodeGenerator class >> initialize [
 	self initializeKeywordSet.
 	self initializeTypeMappings.
 	self initializeTargetBuiltInMappings.
+	self initializeBuiltInVariableMappings.
+]
+
+{ #category : #'class initialization' }
+SLVMGLSLCodeGenerator class >> initializeBuiltInVariableMappings [
+	BuiltInVariableMappings := Dictionary newFromPairs: #(
+		-1 gl_Position
+	)
 ]
 
 { #category : #'class initialization' }
@@ -316,6 +325,13 @@ SLVMGLSLCodeGenerator >> translateBasicTypeName: aType [
 	^ TypeDictionary at: aType
 ]
 
+{ #category : #'code generation' }
+SLVMGLSLCodeGenerator >> translateBuiltInVariable: variableDecl [
+	| location |
+	location := variableDecl definition propertyAt: #location.
+	variableDecl name: (BuiltInVariableMappings at: location)
+]
+
 { #category : #'as yet unclassified' }
 SLVMGLSLCodeGenerator >> translateHLCombineSamplerWithTexture: combine [
 	^ ByteString streamContents: [ :out |
@@ -357,14 +373,24 @@ SLVMGLSLCodeGenerator >> translateHLVariableDecl: variableDecl [
 		storage := 'uniform '.
 		layout := 'layout (push_constant) '.
 	].
-
+ 
 	variableDecl storage == SLVMType inputStorage ifTrue: [
 		storage := 'in '.
+		variableDecl definition propertyAt: #location ifPresent: [ :loc |
+			loc < 0 ifTrue: [
+				^ self translateBuiltInVariable: variableDecl
+			]
+		].
 		layout := self generateInputOutputLayoutString: variableDecl definition
 	].
 
 	variableDecl storage == SLVMType outputStorage ifTrue: [
 		storage := 'out '.
+		variableDecl definition propertyAt: #location ifPresent: [ :loc |
+			loc < 0 ifTrue: [
+				^ self translateBuiltInVariable: variableDecl
+			]
+		].
 		layout := self generateInputOutputLayoutString: variableDecl definition
 	].
 

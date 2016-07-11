@@ -29,6 +29,11 @@ SLVMHLIfStatement >> falseBody: anObject [
 	falseBody := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMHLIfStatement >> isIfStatement [
+	^ true
+]
+
 { #category : #converting }
 SLVMHLIfStatement >> translateWith: translator [
 	^ translator translateHLIfStatement: self

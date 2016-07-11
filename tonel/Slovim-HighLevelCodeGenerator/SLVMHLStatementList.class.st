@@ -23,6 +23,16 @@ SLVMHLStatementList >> isEmpty [
 	^ statements isEmpty
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMHLStatementList >> removeFinalContinues [
+	[statements isNotEmpty and: [ statements last isContinue ]] whileTrue: [ statements removeLast ]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMHLStatementList >> removeFinalReturnVoids [
+	[statements isNotEmpty and: [ statements last isReturnVoid ]] whileTrue: [ statements removeLast ]
+]
+
 { #category : #accessing }
 SLVMHLStatementList >> statements [
 	^ statements

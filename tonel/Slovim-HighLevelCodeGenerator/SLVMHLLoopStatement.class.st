@@ -28,6 +28,11 @@ SLVMHLLoopStatement >> continueBody: anObject [
 	continueBody := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMHLLoopStatement >> removeFinalContinues [
+	body removeFinalContinues
+]
+
 { #category : #converting }
 SLVMHLLoopStatement >> translateWith: translator [
 	^ translator translateHLLoopStatement: self

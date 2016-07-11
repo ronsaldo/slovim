@@ -206,7 +206,7 @@ SLVMHighLevelLanguageCodeGenerator >> emitBlockStatementList: statementList [
 		^ self withExtraIndentationLevel: [ self emitLine: ';' ].
 	].
  
-	statementList statements size = 1 ifTrue: [ 
+	(statementList statements size = 1 and: [ statementList statements first isIfStatement not ]) ifTrue: [ 
 		self withExtraIndentationLevel: [ statementList translateWith: self ].
 	] ifFalse: [ 
 		self
@@ -452,7 +452,9 @@ SLVMHighLevelLanguageCodeGenerator >> translateFunction: function contentInto: f
 		functionNode body: SLVMHLStatementList new.
 		self withStatementList: functionNode body do: [
 			self translateBasicBlock: function basicBlocks first.
-		]
+		].
+	
+		functionNode body removeFinalReturnVoids.
 	] ensure: [
 		deferredBlocks := oldDeferredBlocks.
 		currentFunctionNode := oldFunctionNode.
@@ -972,7 +974,9 @@ SLVMHighLevelLanguageCodeGenerator >> visitBranch: branch [
 			self translateBasicBlock: branch continueBlock
 		].
 		statement continueBody: continueList
-	]
+	].
+
+	branch continueBlock ifNotNil: [ statement removeFinalContinues ]
 ]
 
 { #category : #visitor }
@@ -1098,7 +1102,9 @@ SLVMHighLevelLanguageCodeGenerator >> visitJump: jump [
 			self translateBasicBlock: jump continueBlock
 		].
 		statement continueBody: continueList
-	]
+	].
+
+	jump continueBlock ifNotNil: [ statement removeFinalContinues ]
 ]
 
 { #category : #visitor }

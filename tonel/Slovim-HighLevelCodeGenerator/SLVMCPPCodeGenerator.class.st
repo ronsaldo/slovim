@@ -2,7 +2,13 @@ Class {
 	#name : #SLVMCPPCodeGenerator,
 	#superclass : #SLVMHighLevelLanguageCodeGenerator,
 	#classVars : [
-		'Keywords'
+		'Keywords',
+		'SamplerTypeDictionary',
+		'SamplerTypeMapping',
+		'SpecialSemanticVariableMap',
+		'TargetBuiltInMappings',
+		'TypeDictionary',
+		'TypeMapping'
 	],
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
@@ -15,6 +21,13 @@ SLVMCPPCodeGenerator class >> codeGeneratorName [
 { #category : #'class initialization' }
 SLVMCPPCodeGenerator class >> initialize [
 	super initialize.
+	self initializeKeywordSet.
+	self initializeTypeMappings.
+	self initializeTargetBuiltInMappings.
+]
+
+{ #category : #'class initialization' }
+SLVMCPPCodeGenerator class >> initializeKeywordSet [
 	Keywords := Set newFrom: #(
 		alignas
 		alignof
@@ -105,7 +118,140 @@ SLVMCPPCodeGenerator class >> initialize [
 	)
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'class initialization' }
+SLVMCPPCodeGenerator class >> initializeTargetBuiltInMappings [
+	TargetBuiltInMappings := Dictionary newFromPairs: #(
+		'sample.implicit_lod' (sample_implicit_lod call)
+		
+		#'math.acos'	(#'glm::acos' call)
+		#'math.acosh'	(#'glm::acosh' call)
+		#'math.asin'	(#'glm::asin' call)
+		#'math.asinh'	(#'glm::asinh' call)
+		#'math.atan2'	(#'glm::atan2' call)
+		#'math.atan'	(#'glm::atan' call)
+		#'math.atanh'	(#'glm::atanh' function)
+		#'math.ceil'	(#'glm::ceil' function)
+		#'math.cos'     (#'glm::cos' function)
+		#'math.cosh'	(#'glm::cosh' call)
+		#'math.degrees'	(#'glm::degrees' call)
+		#'math.exp2'	(#'glm::exp2' call)
+		#'math.exp'     (#'glm::exp' call)
+		#'math.fabs'	(#'glm::abs' call)
+		#'math.floor'	(#'glm::floor' call)
+		#'math.fmax'	(#'glm::max' call)
+		#'math.fmin'	(#'glm::min' call)
+		#'math.fmix'	(#'glm::mix' call)
+		#'math.fract'	(#'glm::fract' call)
+		#'math.fsign'	(#'glm::fsign' call)
+		#'math.inverseSqrt'	(#'glm::inverseSqrt' call)
+		#'math.log2'	(#'glm::log2' call)
+		#'math.log'	    (#'glm::log' call)
+		#'math.pow'     (#'glm::pow' call)
+		#'math.radians'	(#'glm::radians' call)
+		#'math.roundEven'	(#'glm::roundEven' call)
+		#'math.round'	(#'glm::round' call)
+		#'math.sinh'	(#'glm::sinh' call)
+		#'math.sin'     (#'glm::sin' call)
+		#'math.smax'	(#'glm::max' call)
+		#'math.smin'	(#'glm::min' call)
+		#'math.smoothstep'	(#'glm::smoothstep' call)
+		#'math.sqrt'	(#'glm::sqrt' call)
+		#'math.step'	(#'glm::step' call)
+		#'math.tan'	(#'glm::tan' call)
+		#'math.trunc'	(#'glm::trunc' call)
+		#'math.umax'	(#'glm::max' call)
+		#'math.umin'	(#'glm::min' call)
+		#'matrix.transpose'	(#'glm::transpose' call)
+		#'vector.cross'     (#'glm::cross' call)
+		#'vector.dot'	    (#'glm::dot' call)
+		#'vector.length'	(#'glm::length' call)
+		#'vector.normalize'	(#'glm::normalize' call)
+		#'vector.reflect'	(#'glm::reflect' call)
+		#'vector.refract'	(#'glm::refract' call)
+	)
+]
+
+{ #category : #'class initialization' }
+SLVMCPPCodeGenerator class >> initializeTypeMappings [
+	| builtInTypes |
+	TypeMapping := #(
+		void void
+		bool bool
+		char char
+		short short
+		int int
+		uint uint
+		long long
+		ulong ulong
+		float float
+		double double
+		float2 'glm::vec2'
+		float3 'glm::vec3'
+		float4 'glm::vec4'
+		float2x2 'glm::mat2'
+		float3x3 'glm::mat3'
+		float4x4 'glm::mat4'
+		
+		int2 'glm::ivec2'
+		int3 'glm::ivec3'
+		int4 'glm::ivec4'
+		uint2 'glm::uivec2'
+		uint3 'glm::uivec3'
+		uint4 'glm::uivec4'
+
+		short2 'glm::svec2'
+		short3 'glm::svec3'
+		short4 'glm::svec4'
+		ushort2 'glm::usvec2'
+		ushort3 'glm::usvec3'
+		ushort4 'glm::usvec4'
+		
+		texture2D 'texture2D'
+		textureCube 'textureCube'
+		sampler sampler
+	).
+	
+	SamplerTypeMapping := #(
+		texture2D sampler2D
+		textureCube samplerCube
+	).
+	
+	TypeDictionary := Dictionary new.
+	SamplerTypeDictionary := Dictionary new.
+	builtInTypes := SLVMType builtInTypes.
+	TypeMapping pairsDo: [ :myName :mappedName |
+		TypeDictionary at: (builtInTypes at: myName) put: mappedName
+	].
+
+	SamplerTypeMapping pairsDo: [ :myName :mappedName |
+		TypeDictionary at: (SLVMSampledTextureType new texture: (builtInTypes at: myName)) put: mappedName
+		
+	].
+
+	SpecialSemanticVariableMap := Dictionary newFromPairs: #(
+		-1 position
+	)
+]
+
+{ #category : #'code generation' }
+SLVMCPPCodeGenerator >> emitPrelude [
+	self
+		emitLine: '#include <glm/glm.hpp>';
+		emitNewline
+]
+
+{ #category : #testing }
 SLVMCPPCodeGenerator >> isBlackListedSymbol: aSymbol [
 	^ Keywords includes: aSymbol
+]
+
+{ #category : #'code generation' }
+SLVMCPPCodeGenerator >> mapBuiltInFunction: aFunctionName [
+	TargetBuiltInMappings at: aFunctionName ifPresent: [ :mapping | ^ mapping ].
+	^ super mapBuiltInFunction: aFunctionName
+]
+
+{ #category : #'code generation' }
+SLVMCPPCodeGenerator >> translateBasicTypeName: aType [
+	^ TypeDictionary at: aType
 ]

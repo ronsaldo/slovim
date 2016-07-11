@@ -40,6 +40,11 @@ SLVMHLUntilLoopStatement >> continueBody: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMHLUntilLoopStatement >> removeFinalContinues [
+	body removeFinalContinues
+]
+
+{ #category : #'as yet unclassified' }
 SLVMHLUntilLoopStatement >> translateWith: translator [
 	^ translator translateHLUntilLoopStatement: self
 ]
