@@ -130,64 +130,64 @@ SLVMSpirVCodeGenerator class >> initialize [
 
 	BuiltInExtensionInstructionMap := Dictionary new.
 	#(
-		cross (glsl450 GLSLstd450Cross)
-		dot (SpirV SpvOpDot)
-		length (glsl450 GLSLstd450Length)
-		normalize (glsl450 GLSLstd450Normalize)
-		reflect (glsl450 GLSLstd450Reflect)
-		refract (glsl450 GLSLstd450Refract)
+		'vector.cross' (glsl450 GLSLstd450Cross)
+		'vector.dot' (SpirV SpvOpDot)
+		'vector.length' (glsl450 GLSLstd450Length)
+		'vector.normalize' (glsl450 GLSLstd450Normalize)
+		'vector.reflect' (glsl450 GLSLstd450Reflect)
+		'vector.refract' (glsl450 GLSLstd450Refract)
 	
-		smoothstep (glsl450 GLSLstd450SmoothStep)
-		step (glsl450 GLSLstd450Step)
+		'math.smoothstep' (glsl450 GLSLstd450SmoothStep)
+		'math.step' (glsl450 GLSLstd450Step)
 		
-		pow (glsl450 GLSLstd450Pow) 
-		atan2 (glsl450 GLSLstd450Atan2) 
+		'math.pow' (glsl450 GLSLstd450Pow) 
+		'math.atan2' (glsl450 GLSLstd450Atan2) 
 		
-		asin (glsl450 GLSLstd450Asin) 
-		sin (glsl450 GLSLstd450Sin)
-		asinh (glsl450 GLSLstd450Asinh)
-		sinh (glsl450 GLSLstd450Sinh)
+		'math.asin' (glsl450 GLSLstd450Asin) 
+		'math.sin' (glsl450 GLSLstd450Sin)
+		'math.asinh' (glsl450 GLSLstd450Asinh)
+		'math.sinh' (glsl450 GLSLstd450Sinh)
 		
-		acos (glsl450 GLSLstd450Acos) 
-		cos (glsl450 GLSLstd450Cos)
-		acosh (glsl450 GLSLstd450Acosh)
-		cosh (glsl450 GLSLstd450Cosh)
+		'math.acos' (glsl450 GLSLstd450Acos) 
+		'math.cos' (glsl450 GLSLstd450Cos)
+		'math.acosh' (glsl450 GLSLstd450Acosh)
+		'math.cosh' (glsl450 GLSLstd450Cosh)
 		
-		atan (glsl450 GLSLstd450Atan)
-		tan (glsl450 GLSLstd450Tan)
-		atanh (glsl450 GLSLstd450Atanh)
+		'math.atan' (glsl450 GLSLstd450Atan)
+		'math.tan' (glsl450 GLSLstd450Tan)
+		'math.atanh' (glsl450 GLSLstd450Atanh)
 		
-		exp (glsl450 GLSLstd450Exp)
-		exp2 (glsl450 GLSLstd450Exp2)
-		log (glsl450 GLSLstd450Log)
-		log2 (glsl450 GLSLstd450Log2)
+		'math.exp' (glsl450 GLSLstd450Exp)
+		'math.exp2' (glsl450 GLSLstd450Exp2)
+		'math.log' (glsl450 GLSLstd450Log)
+		'math.log2' (glsl450 GLSLstd450Log2)
 		
-		sqrt (glsl450 GLSLstd450Sqrt)
-		inverseSqrt (glsl450 GLSLstd450InverseSqrt)
-		floor (glsl450 GLSLstd450Floor)
-		ceil (glsl450 GLSLstd450Ceil)
-		trunc (glsl450 GLSLstd450Trunc)
-		round (glsl450 GLSLstd450Round)
-		roundEven (glsl450 GLSLstd450RoundEven)
-		fract (glsl450 GLSLstd450Fract)
+		'math.sqrt' (glsl450 GLSLstd450Sqrt)
+		'math.inverseSqrt' (glsl450 GLSLstd450InverseSqrt)
+		'math.floor' (glsl450 GLSLstd450Floor)
+		'math.ceil' (glsl450 GLSLstd450Ceil)
+		'math.trunc' (glsl450 GLSLstd450Trunc)
+		'math.round' (glsl450 GLSLstd450Round)
+		'math.roundEven' (glsl450 GLSLstd450RoundEven)
+		'math.fract' (glsl450 GLSLstd450Fract)
 		
-		degrees (glsl450 GLSLstd450Degrees)
-		radians (glsl450 GLSLstd450Radians)
-		fabs (glsl450 GLSLstd450FAbs)
+		'math.degrees' (glsl450 GLSLstd450Degrees)
+		'math.radians' (glsl450 GLSLstd450Radians)
+		'math.fabs' (glsl450 GLSLstd450FAbs)
 		
-		fsign (glsl450 GLSLstd450FSign)
+		'math.fsign' (glsl450 GLSLstd450FSign)
 			
-		smin (glsl450 GLSLstd450SMin)
-		umin (glsl450 GLSLstd450UMin)
-		fmin (glsl450 GLSLstd450FMin)
+		'math.smin' (glsl450 GLSLstd450SMin)
+		'math.umin' (glsl450 GLSLstd450UMin)
+		'math.fmin' (glsl450 GLSLstd450FMin)
 
-		smax (glsl450 GLSLstd450SMax)
-		umax (glsl450 GLSLstd450UMax)
-		fmax (glsl450 GLSLstd450FMax)
+		'math.smax' (glsl450 GLSLstd450SMax)
+		'math.umax' (glsl450 GLSLstd450UMax)
+		'math.fmax' (glsl450 GLSLstd450FMax)
 		
-		fmix (glsl450 GLSLstd450FMix)
+		'math.fmix' (glsl450 GLSLstd450FMix)
 		
-		transpose (SpirV SpvOpTranspose)
+		'matrix.transpose' (SpirV SpvOpTranspose)
 	) pairsDo: [ :k :v |
 		value := (SpirVConstants bindingOf: v second) value.
 		self assert: value isNotNil.
@@ -254,9 +254,14 @@ SLVMSpirVCodeGenerator >> translateBasicBlock: basicBlock [
 
 { #category : #'as yet unclassified' }
 SLVMSpirVCodeGenerator >> translateModule: ssaModule [
+	^ self translateModule: ssaModule exportList: (ssaModule globalValues values select: [:value | self isEntryPointFunction: value])
+]
+
+{ #category : #'as yet unclassified' }
+SLVMSpirVCodeGenerator >> translateModule: ssaModule exportList: exportList [
 	^ SpirVModuleBuilder build: [ :builderArg |
 		builder := builderArg.
-		ssaModule globalValues valuesDo: [ :globalValue | (self isEntryPointFunction: globalValue) ifTrue: [ self translateValue: globalValue ] ]
+		exportList do: [ :value | self translateValue: value ]
 	]
 ]
 
