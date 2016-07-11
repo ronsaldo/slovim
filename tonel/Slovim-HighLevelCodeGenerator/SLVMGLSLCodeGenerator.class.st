@@ -1,11 +1,15 @@
 Class {
 	#name : #SLVMGLSLCodeGenerator,
 	#superclass : #SLVMHighLevelLanguageCodeGenerator,
+	#instVars : [
+		'glBindingCount'
+	],
 	#classVars : [
 		'Keywords',
 		'SamplerTypeDictionary',
 		'SamplerTypeMapping',
 		'SpecialSemanticVariableMap',
+		'TargetBuiltInMappings',
 		'TypeDictionary',
 		'TypeMapping'
 	],
@@ -22,6 +26,7 @@ SLVMGLSLCodeGenerator class >> initialize [
 	super initialize.
 	self initializeKeywordSet.
 	self initializeTypeMappings.
+	self initializeTargetBuiltInMappings.
 ]
 
 { #category : #'class initialization' }
@@ -138,6 +143,13 @@ row_major
 ]
 
 { #category : #'class initialization' }
+SLVMGLSLCodeGenerator class >> initializeTargetBuiltInMappings [
+	TargetBuiltInMappings := Dictionary newFromPairs: #(
+		'sample.implicit_lod' (texture call)
+	)
+]
+
+{ #category : #'class initialization' }
 SLVMGLSLCodeGenerator class >> initializeTypeMappings [
 	| builtInTypes |
 	TypeMapping := #(
@@ -172,8 +184,8 @@ SLVMGLSLCodeGenerator class >> initializeTypeMappings [
 		ushort3 usvec3
 		ushort4 usvec4
 		
-		texture2D texture2D
-		textureCube textureCube
+		texture2D 'SLVM_TEXTURE(texture2D, sampler2D)'
+		textureCube 'SLVM_TEXTURE(textureCube, samplerCube)'
 		sampler sampler
 	).
 	
@@ -199,19 +211,29 @@ SLVMGLSLCodeGenerator class >> initializeTypeMappings [
 	)
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMGLSLCodeGenerator >> allocateGLBindingForVKSet: set binding: binding [
+	| result |
+	result := glBindingCount.
+	glBindingCount := glBindingCount + 1.
+	^ result
+]
+
 { #category : #'code generation' }
 SLVMGLSLCodeGenerator >> emitPrelude [
 	self emitLine: '#version 430';
 		emitLine: '#extension GL_ARB_separate_shader_objects : enable';
 		emitNewline;
 		emitLine: '#ifdef VULKAN';
-		emitLine: '#define GL_BINDING_VK_SET_BINDING(glb, s, b) set = s, binding = b';
-		emitLine: '#define VK_UNIFORM_SAMPLER(lc, name) layout lc uniform sampler name';
-		emitLine: '#define COMBINE_SAMPLER_WITH(sampler, texture, samplerType) samplerType(sampler, texture)';
+		emitLine: '#define SLVM_GL_BINDING_VK_SET_BINDING(glb, s, b) set = s, binding = b';
+		emitLine: '#define SLVM_VK_UNIFORM_SAMPLER(lc, name) layout lc uniform sampler name;';
+		emitLine: '#define SLVM_COMBINE_SAMPLER_WITH(sampler, texture, samplerType) samplerType(texture, sampler)';
+		emitLine: '#define SLVM_TEXTURE(vulkanType, openglType) vulkanType';
 		emitLine: '#else';
-		emitLine: '#define GL_BINDING_VK_SET_BINDING(glb, s, b) binding = glb';
-		emitLine: '#define VK_UNIFORM_SAMPLER(lc, name) /* Declaration removed */';
-		emitLine: '#define COMBINE_SAMPLER_WITH(sampler, texture, samplerType) texture';
+		emitLine: '#define SLVM_GL_BINDING_VK_SET_BINDING(glb, s, b) binding = glb';
+		emitLine: '#define SLVM_VK_UNIFORM_SAMPLER(lc, name) /* Declaration removed */';
+		emitLine: '#define SLVM_COMBINE_SAMPLER_WITH(sampler, texture, samplerType) texture';
+		emitLine: '#define SLVM_TEXTURE(vulkanType, openglType) openglType';
 		emitLine: '#endif';
 		emitNewline.
 ]
@@ -220,11 +242,11 @@ SLVMGLSLCodeGenerator >> emitPrelude [
 SLVMGLSLCodeGenerator >> generateInputOutputLayoutString: variable [
 	| location |
 	location := variable propertyAt: #location ifAbsent: [ ^ self ].
-	^ 'layout ( location = ', location asString, ') '
+	^ 'layout ( location = ', location asString, ' ) '
 ]
 
 { #category : #'code generation' }
-SLVMGLSLCodeGenerator >> generateUniformLayoutString: variable [
+SLVMGLSLCodeGenerator >> generateUniformLayoutContentString: variable [
 	| layoutProperties binding set glBinding layout |
 	layoutProperties := OrderedCollection new.
 	variable type storage == SLVMType pushConstantStorage ifTrue: [
@@ -247,7 +269,7 @@ SLVMGLSLCodeGenerator >> generateUniformLayoutString: variable [
 	].
 
 	(binding isNotNil and: [ set isNotNil ]) ifTrue: [ 
-		glBinding ifNil: [ glBinding := set*20 + binding  ].
+		glBinding ifNil: [ glBinding := self allocateGLBindingForVKSet: set binding: binding ].
 	
 		layout := ''.	
 		variable valueType isStructureType ifTrue: [ 
@@ -258,15 +280,35 @@ SLVMGLSLCodeGenerator >> generateUniformLayoutString: variable [
 			]
 		].
 		
-		^ 'layout ( GL_BINDING_VK_SET_BINDING({1}, {2}, {3}){4} ) ' format: { glBinding . set . binding . layout }
+		^ ' ( SLVM_GL_BINDING_VK_SET_BINDING({1}, {2}, {3}){4} ) ' format: { glBinding . set . binding . layout }
 	].
 
 	^ ''
 ]
 
+{ #category : #'code generation' }
+SLVMGLSLCodeGenerator >> generateUniformLayoutString: variable [
+	| content |
+	content := self generateUniformLayoutContentString: variable.
+	content ifEmpty: [ ^ '' ].
+	^ 'layout' , (self generateUniformLayoutContentString: variable)
+]
+
 { #category : #'as yet unclassified' }
+SLVMGLSLCodeGenerator >> initialize [
+	super initialize.
+	glBindingCount := 0.
+]
+
+{ #category : #testing }
 SLVMGLSLCodeGenerator >> isBlackListedSymbol: aSymbol [
 	^ Keywords includes: aSymbol
+]
+
+{ #category : #'code generation' }
+SLVMGLSLCodeGenerator >> mapBuiltInFunction: aFunctionName [
+	TargetBuiltInMappings at: aFunctionName ifPresent: [ :mapping | ^ mapping ].
+	^ super mapBuiltInFunction: aFunctionName
 ]
 
 { #category : #'code generation' }
@@ -275,12 +317,26 @@ SLVMGLSLCodeGenerator >> translateBasicTypeName: aType [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMGLSLCodeGenerator >> translateHLCombineSamplerWithTexture: combine [
+	^ ByteString streamContents: [ :out |
+		out
+			nextPutAll: 'SLVM_COMBINE_SAMPLER_WITH(';
+			nextPutAll: (combine sampler translateValueWith: self);
+			nextPutAll: ', ';
+			nextPutAll: (combine texture translateValueWith: self);
+			nextPutAll: ', ';
+			nextPutAll: (combine combinedType name);
+			nextPut: $)
+	]
+]
+
+{ #category : #'code generation' }
 SLVMGLSLCodeGenerator >> translateHLStructure: structure [
 	structure kind ~~ SLVMStructureType genericKind ifTrue: [ ^ self ].
 	super translateHLStructure: structure.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'code generation' }
 SLVMGLSLCodeGenerator >> translateHLVariableDecl: variableDecl [
 	| storage variableType arrayBounds variableTypeString layout |
 	storage := ''.
@@ -292,6 +348,7 @@ SLVMGLSLCodeGenerator >> translateHLVariableDecl: variableDecl [
 	].
 
 	variableDecl storage == SLVMType uniformConstantStorage ifTrue: [
+		variableDecl definition valueType isSamplerType ifTrue: [ ^ self translateSampler: variableDecl ].
 		storage := 'uniform '.
 		layout := self generateUniformLayoutString: variableDecl definition
 	].
@@ -319,12 +376,19 @@ SLVMGLSLCodeGenerator >> translateHLVariableDecl: variableDecl [
 	
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'code generation' }
 SLVMGLSLCodeGenerator >> translateReferenceType: type [
 	| baseType name |
 	baseType := self translateType: type baseType.
 	name := 'inout ', baseType name.
 	^ SLVMHLReferenceTypeNode new baseType: baseType; name: name asSymbol; yourself
+]
+
+{ #category : #'code generation' }
+SLVMGLSLCodeGenerator >> translateSampler: variableDecl [
+	| layout |
+	layout := self generateUniformLayoutContentString: variableDecl definition.
+	self emitLine: ('SLVM_VK_UNIFORM_SAMPLER({1},{2})' format: { layout . variableDecl name }).
 ]
 
 { #category : #'as yet unclassified' }
@@ -335,11 +399,11 @@ SLVMGLSLCodeGenerator >> translateUniformBlock: blockDecl [
 	structure := blockDecl type.
 	structure kind == SLVMStructureType bufferBlockKind ifTrue: [ blockType := 'buffer' ].
 	self
-		emitLine: ('{1}{2} {3}' format: { layout . blockType . blockDecl name });
+		emitLine: ('{1}{2} {3}' format: { layout . blockType . structure name });
 		emitLine: '{';
 		withExtraIndentationLevel: [
 			structure fields do: [ :field | self translateHLVariableDecl: field ]
 		];
-		emitLine: ('} {1}' format: { blockDecl name });
+		emitLine: ('} {1};' format: { blockDecl name });
 		emitNewline.
 ]

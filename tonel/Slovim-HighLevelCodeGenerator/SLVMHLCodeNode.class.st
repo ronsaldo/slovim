@@ -18,6 +18,11 @@ SLVMHLCodeNode >> isStructureType [
 ]
 
 { #category : #converting }
+SLVMHLCodeNode >> translateInlineWith: translator [
+	self subclassResponsibility
+]
+
+{ #category : #converting }
 SLVMHLCodeNode >> translateValueWith: translator [
 	self subclassResponsibility
 ]

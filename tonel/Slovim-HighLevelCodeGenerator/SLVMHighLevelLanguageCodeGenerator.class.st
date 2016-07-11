@@ -17,10 +17,120 @@ Class {
 		'continueBlock',
 		'breakBlock',
 		'currentFunctionNode',
-		'usedLocalSymbols'
+		'usedLocalSymbols',
+		'translatedBlocks'
+	],
+	#classVars : [
+		'BuiltInFunctionMap'
 	],
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
+
+{ #category : #'class initialization' }
+SLVMHighLevelLanguageCodeGenerator class >> initialize [
+	super initialize.
+	BuiltInFunctionMap := Dictionary newFromPairs: #(
+		'binop.add'		(+ binary)
+		'binop.sub'   (- binary)
+		'binop.mul'   (* binary)
+		'binop.div'   (/ binary)
+		'binop.udiv'  (/ binary)
+		'binop.rem'   (% binary)
+		'binop.urem'  (% binary)
+
+		'binop.bitand' (& binary)
+		'binop.bitor' (| binary)
+		'binop.bitxor' (^ binary)
+
+		'binop.shiftleft' (<< binary)
+		'binop.shiftright' (>> binary)
+
+		'binop.ilt' (< binary)
+		'binop.ile' (<= binary)
+		'binop.ieq' (== binary)
+		'binop.ine' (!= binary)
+		'binop.igt' (> binary)
+		'binop.ige' (>= binary)
+
+		'binop.fadd' 		(+ binary)
+		'binop.fsub' 		(- binary)
+		'binop.fmul' 		(* binary)
+		'binop.fdiv' 		(/ binary)
+		'binop.frem' 		(% binary)
+
+		'binop.uflt' (< binary)
+		'binop.ufle' (<= binary)
+		'binop.ufeq' (== binary)
+		'binop.ufne' (!= binary)
+		'binop.ufgt' (> binary)
+		'binop.ufge' (>= binary)
+
+		'binop.oflt' (< binary)
+		'binop.ofle' (<= binary)
+		'binop.ofeq' (== binary)
+		'binop.ofne' (!= binary)
+		'binop.ofgt' (> binary)
+		'binop.ofge' (>= binary)
+		
+		'binop.mulMatrixMatrix' (* binary)
+		'binop.mulMatrixVector' (* binary)
+		'binop.mulVectorMatrix' (* binary)
+		
+		'unary.neg'		(- unary)
+		'unary.not'   (~ unary)
+		'unary.lnot'  (! unary)
+		'unary.fneg'   (- unary)
+		
+		'sample.implicit_lod' (sampleImplicitLod call)
+		
+		#'math.acos'	(#'acos' call)
+		#'math.acosh'	(#'acosh' call)
+		#'math.asin'	(#'asin' call)
+		#'math.asinh'	(#'asinh' call)
+		#'math.atan2'	(#'atan2' call)
+		#'math.atan'	(#'atan' call)
+		#'math.atanh'	(#'atanh' function)
+		#'math.ceil'	(#'ceil' function)
+		#'math.cos'     (#'cos' function)
+		#'math.cosh'	(#'cosh' call)
+		#'math.degrees'	(#'degrees' call)
+		#'math.exp2'	(#'exp2' call)
+		#'math.exp'     (#'exp' call)
+		#'math.fabs'	(#'abs' call)
+		#'math.floor'	(#'floor' call)
+		#'math.fmax'	(#'max' call)
+		#'math.fmin'	(#'min' call)
+		#'math.fmix'	(#'mix' call)
+		#'math.fract'	(#'fract' call)
+		#'math.fsign'	(#'fsign' call)
+		#'math.inverseSqrt'	(#'inverseSqrt' call)
+		#'math.log2'	(#'log2' call)
+		#'math.log'	    (#'log' call)
+		#'math.pow'     (#'pow' call)
+		#'math.radians'	(#'radians' call)
+		#'math.roundEven'	(#'roundEven' call)
+		#'math.round'	(#'round' call)
+		#'math.sinh'	(#'sinh' call)
+		#'math.sin'     (#'sin' call)
+		#'math.smax'	(#'max' call)
+		#'math.smin'	(#'min' call)
+		#'math.smoothstep'	(#'smoothstep' call)
+		#'math.sqrt'	(#'sqrt' call)
+		#'math.step'	(#'step' call)
+		#'math.tan'	(#'tan' call)
+		#'math.trunc'	(#'trunc' call)
+		#'math.umax'	(#'max' call)
+		#'math.umin'	(#'min' call)
+		#'matrix.transpose'	(#'transpose' call)
+		#'vector.cross'     (#'cross' call)
+		#'vector.dot'	    (#'dot' call)
+		#'vector.length'	(#'length' call)
+		#'vector.normalize'	(#'normalize' call)
+		#'vector.reflect'	(#'reflect' call)
+		#'vector.refract'	(#'refract' call)
+
+	)
+]
 
 { #category : #adding }
 SLVMHighLevelLanguageCodeGenerator >> addStatement: aStatement [
@@ -44,6 +154,22 @@ SLVMHighLevelLanguageCodeGenerator >> deferBlockTranslation: aBasicBlock [
 	aBasicBlock ifNil: [ ^ self ].
 	count := deferredBlocks at: aBasicBlock ifAbsent: [ 0 ].
 	deferredBlocks at: aBasicBlock put: count + 1
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> emitBlockStatementList: statementList [
+	statementList statements ifEmpty: [
+		^ self withExtraIndentationLevel: [ self emitLine: ';' ].
+	].
+ 
+	statementList statements size = 1 ifTrue: [ 
+		self withExtraIndentationLevel: [ statementList translateWith: self ].
+	] ifFalse: [ 
+		self
+			emitLine: '{';
+			withExtraIndentationLevel: [ statementList translateWith: self ];
+			emitLine: '}'
+	]
 ]
 
 { #category : #'code generation' }
@@ -91,8 +217,8 @@ SLVMHighLevelLanguageCodeGenerator >> functionTranslation: value do: aBlock [
 	^ translatedValueDictionary at: value ifAbsent: [
 		hlNode := SLVMHLFunctionNode new.
 		translatedValueDictionary at: value put: hlNode.
-		functionDefinitions add: hlNode.
 		aBlock value: hlNode.
+		functionDefinitions add: hlNode.
 		hlNode
 	]
 ]
@@ -152,7 +278,10 @@ SLVMHighLevelLanguageCodeGenerator >> instructionTranslation: value allocate: al
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> instructionWithResultTranslation: instruction allocate: allocateBlock do: aBlock [
 	instruction type isVoidType ifTrue: [
-		^ self instructionTranslation: instruction allocate: allocateBlock do: aBlock
+		^ self instructionTranslation: instruction allocate: allocateBlock do: [:node |
+			aBlock value: node.
+			self addStatement: node.
+		]
 	].
 
 	self instructionTranslation: instruction allocate: [ SLVMHLVariableAssignmentStatement new ] do: [ :assignment |
@@ -214,6 +343,11 @@ SLVMHighLevelLanguageCodeGenerator >> makeFunctionPrototypeString: function [
 ]
 
 { #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> mapBuiltInFunction: aFunctionName [
+	^ BuiltInFunctionMap at: aFunctionName
+]
+
+{ #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> pureInstructionTranslation: instruction allocate: allocateBlock do: aBlock [
 	instruction instructionReferences size <= 1 ifTrue: [
 		^ self instructionTranslation: instruction allocate: allocateBlock do: aBlock
@@ -242,6 +376,8 @@ SLVMHighLevelLanguageCodeGenerator >> translateBasicBlock: aBasicBlock [
 	].
 
 	(self deferBlockCount: aBasicBlock) > 0 ifTrue: [ ^ self ].
+	(translatedBlocks includes: aBasicBlock) ifTrue: [ ^ self ].
+	translatedBlocks add: aBasicBlock.
 	aBasicBlock instructionsDo: [ :instruction | instruction accept: self ].
 ]
 
@@ -257,13 +393,15 @@ SLVMHighLevelLanguageCodeGenerator >> translateBasicTypeName: aType [
 
 { #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> translateFunction: function contentInto: functionNode [
-	| oldDeferredBlocks oldFunctionNode oldUsedLocalSymbols |
+	| oldDeferredBlocks oldFunctionNode oldTranslatedBlocks oldUsedLocalSymbols |
 	oldDeferredBlocks := deferredBlocks.
 	oldFunctionNode := currentFunctionNode.
 	oldUsedLocalSymbols := usedLocalSymbols.
+	oldTranslatedBlocks := translatedBlocks.
 	[
 		deferredBlocks := Dictionary new.
 		usedLocalSymbols := Set new.
+		translatedBlocks := Set new.
 		currentFunctionNode := functionNode.
 		functionNode body: SLVMHLStatementList new.
 		self withStatementList: functionNode body do: [
@@ -273,6 +411,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateFunction: function contentInto: f
 		deferredBlocks := oldDeferredBlocks.
 		currentFunctionNode := oldFunctionNode.
 		usedLocalSymbols := oldUsedLocalSymbols.
+		translatedBlocks := oldTranslatedBlocks.
 	]
 ]
 
@@ -302,8 +441,37 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLBreakStatement: statement [
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLBuiltInCallStatementValue: statement [
+	| mappedFunction functionName functionType |
+	mappedFunction := self mapBuiltInFunction: statement function.
+	functionName := mappedFunction first.
+	functionType := mappedFunction second.
+	 
+	functionType == #binary ifTrue: [
+		^ ByteString streamContents: [ :out |
+		
+			out
+				nextPut: $(;
+				nextPutAll: (statement arguments first translateValueWith: self);
+				space;
+				nextPutAll: functionName;
+				space;
+				nextPutAll: (statement arguments second translateValueWith: self);
+				nextPut: $)
+		]
+	].
+
+	functionType == #unary ifTrue: [ 
+		^ ByteString streamContents: [ :out |
+		
+			out
+				nextPutAll: functionName;
+				nextPutAll: (statement arguments first translateValueWith: self).
+		]
+	].
+
 	^ ByteString streamContents: [ :out |
-		out nextPutAll: statement function.
+		
+		out nextPutAll: functionName.
 		out nextPut: $(.
 		statement arguments doWithIndex: [ :arg :index |
 			index > 1 ifTrue: [ out nextPutAll: ', ' ].
@@ -317,6 +485,11 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLBuiltInCallStatementValue: stat
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLBuiltInFunctionValue: function [
 	^ function name
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateHLCallStatement: statement [
+	self emitTabs; emitString: (self translateHLCallStatementValue: statement); emitString: ';'; emitNewline.
 ]
 
 { #category : #'code generation' }
@@ -336,11 +509,12 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLCallStatementValue: statement [
 { #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> translateHLCombineSamplerWithTexture: combine [
 	^ ByteString streamContents: [ :out |
-		out nextPutAll: (combine combinedType name ifNil: [ 'some sampler type' ]);
+		out nextPutAll: combine combinedType name;
 			nextPut: $(;
-			nextPutAll: (combine sampler translateValueWith: self);
-			space;
 			nextPutAll: (combine texture translateValueWith: self);
+			nextPut: $,;
+			space;
+			nextPutAll: (combine sampler translateValueWith: self);
 			nextPut: $).
 	]
 ]
@@ -402,17 +576,12 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLFunctionValue: function [
 SLVMHighLevelLanguageCodeGenerator >> translateHLIfStatement: statement [
 	self
 		emitLine: ('if ({1})' format: {statement condition translateValueWith: self });
-		emitLine: '{';
-		withExtraIndentationLevel: [ statement trueBody translateWith: self ];
-		emitLine: '}'.
+		emitBlockStatementList: statement trueBody.
 		
 	statement falseBody isEmpty ifFalse: [
 		self
 			emitLine: 'else';
-			emitLine: '{';
-			withExtraIndentationLevel: [ statement falseBody translateWith: self ];
-			emitLine: '}';
-			emitNewline
+			emitBlockStatementList: statement falseBody.
 	]	
 ]
 
@@ -427,6 +596,11 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLLoadStatementValue: statement [
 ]
 
 { #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateHLReturn: statement [
+	self emitLine: ('return {1};' format: {statement value translateValueWith: self})
+]
+
+{ #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLReturnVoid: statement [
 	self emitLine: 'return;'
 ]
@@ -434,6 +608,16 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLReturnVoid: statement [
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLStatementList: list [
 	list statements do: [ :statement | statement translateWith: self ]
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateHLStatementListInline: list [
+	^ ByteString streamContents: [:out |
+		list statements doWithIndex: [ :statement :index |
+			index > 1 ifTrue: [ out nextPutAll: ', ' ].
+			out nextPutAll: (statement translateInlineWith: self)
+		]
+	]
 ]
 
 { #category : #'code generation' }
@@ -450,11 +634,22 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLStructure: structure [
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLUntilLoopStatement: statement [
-	self
-		emitLine: ('while (!({1}))' format: {statement condition translateValueWith: self });
-		emitLine: '{';
-		withExtraIndentationLevel: [ statement body translateWith: self ];
-		emitLine: '}'
+	statement continueBody ifNotNil: [ 
+		self
+			emitLine: ('for (;!({1}); {2})' format: {
+				statement condition translateValueWith: self .
+				statement continueBody translateInlineWith: self});
+			emitLine: '{';
+			withExtraIndentationLevel: [ statement body translateWith: self ];
+			emitLine: '}'
+	] ifNil: [ 
+		self
+			emitLine: ('while (!({1}))' format: {statement condition translateValueWith: self });
+			emitLine: '{';
+			withExtraIndentationLevel: [ statement body translateWith: self ];
+			emitLine: '}'
+	]
+
 ]
 
 { #category : #'code generation' }
@@ -463,6 +658,14 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLVariableAssignmentStatement: as
 	value := assignment value translateValueWith: self.
 	variable := assignment variable translateValueWith: self.
 	self emitLine: ('{1} = {2};' format: {variable . value})
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateHLVariableAssignmentStatementInline: assignment [
+	| value variable |
+	value := assignment value translateValueWith: self.
+	variable := assignment variable translateValueWith: self.
+	^ '{1} = {2}' format: {variable . value}
 ]
 
 { #category : #'code generation' }
@@ -503,14 +706,25 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLVectorSwizzleValue: swizzle [
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLWhileLoopStatement: statement [
-	self
-		emitLine: ('while ({1})' format: {statement condition translateValueWith: self });
-		emitLine: '{';
-		withExtraIndentationLevel: [ statement body translateWith: self ];
-		emitLine: '}'
+	statement continueBody ifNotNil: [ 
+		self
+			emitLine: ('for (;{1}; {2})' format: {
+				statement condition translateValueWith: self .
+				statement continueBody translateInlineWith: self});
+			emitLine: '{';
+			withExtraIndentationLevel: [ statement body translateWith: self ];
+			emitLine: '}'
+	] ifNil: [ 
+		self
+			emitLine: ('while ({1})' format: {statement condition translateValueWith: self });
+			emitLine: '{';
+			withExtraIndentationLevel: [ statement body translateWith: self ];
+			emitLine: '}'
+	]
+
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateInstruction: aValue [
 	^ translatedValueDictionary at: aValue ifAbsent: [ ^ aValue accept: self ]
 ]
@@ -523,13 +737,13 @@ SLVMHighLevelLanguageCodeGenerator >> translateLocalSymbol: aSymbol [
 ]
 
 { #category : #'code generation' }
-SLVMHighLevelLanguageCodeGenerator >> translateModule: ssaModule [
+SLVMHighLevelLanguageCodeGenerator >> translateModule: ssaModule exportList: exportList [
 	typeDeclarations := OrderedCollection new.
 	globalVariableDeclarations := OrderedCollection new.
 	functionDefinitions := OrderedCollection new.
-	translatedValueDictionary := IdentityDictionary new.
+	translatedValueDictionary := Dictionary new.
 	
-	ssaModule globalValues do: [ :global |
+	exportList do: [ :global |
 		global accept: self
 	].
 	^ self emitTranslatedCode: typeDeclarations , globalVariableDeclarations , functionDefinitions
@@ -586,7 +800,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateType: aType [
 	^ self translateBasicType: aType
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateValue: aValue [
 	aValue isInstruction ifTrue: [ ^ self translateInstruction: aValue ].
 	^ translatedValueDictionary at: aValue ifAbsentPut: [ aValue accept: self ]
@@ -636,7 +850,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitBinaryOperation: instruction [
 
 { #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> visitBranch: branch [
-	| trueList falseList statement isLoop condition |
+	| trueList falseList statement isLoop condition continueList |
 	self withBranchBlocks: branch do: [
 		isLoop := branch continueBlock isNotNil.
 		condition := self translateValue: branch condition.
@@ -695,6 +909,15 @@ SLVMHighLevelLanguageCodeGenerator >> visitBranch: branch [
 		]
 	].
 
+	(branch continueBlock isNotNil and:
+	[ (translatedBlocks includes: branch continueBlock) not and:
+	[ (self deferBlockCount: branch continueBlock) = 0]]) ifTrue: [
+		continueList := SLVMHLStatementList new.
+		self withStatementList: continueList do: [ 
+			self translateBasicBlock: branch continueBlock
+		].
+		statement continueBody: continueList
+	]
 ]
 
 { #category : #visitor }
@@ -726,7 +949,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitCombineSamplerWithTexture: instructio
 
 { #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> visitConstantBuiltInFunction: aFunction [
-	^ SLVMHLBuiltInFunction new name: aFunction name; builtin: aFunction
+	^ SLVMHLBuiltInFunction new name: (self mapBuiltInFunction: aFunction name) first; builtin: aFunction
 ]
 
 { #category : #visitor }
@@ -800,14 +1023,25 @@ SLVMHighLevelLanguageCodeGenerator >> visitGlobalVariable: globalVariable [
 ]
 
 { #category : #visitor }
-SLVMHighLevelLanguageCodeGenerator >> visitJump: jumpInstruction [
-	self withBranchBlocks: jumpInstruction do: [
-		jumpInstruction continueBlock ifNotNil: [ 
+SLVMHighLevelLanguageCodeGenerator >> visitJump: jump [
+	| continueList statement |
+	self withBranchBlocks: jump do: [
+		jump continueBlock ifNotNil: [ 
 			"TODO: Generate an infinite loop here."
 			self halt.
 		] ifNil: [
-			self translateBasicBlock: jumpInstruction destination
+			self translateBasicBlock: jump destination
 		]
+	].
+
+	(jump continueBlock isNotNil and:
+	[ (translatedBlocks includes: jump continueBlock) not and:
+	[ (self deferBlockCount: jump continueBlock) = 0]]) ifTrue: [
+		continueList := SLVMHLStatementList new.
+		self withStatementList: continueList do: [ 
+			self translateBasicBlock: jump continueBlock
+		].
+		statement continueBody: continueList
 	]
 ]
 
@@ -836,8 +1070,10 @@ SLVMHighLevelLanguageCodeGenerator >> visitMakeVector: instruction [
 
 { #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> visitReturn: instruction [
-	self flag: 'Todo'.
-	^ nil
+	^ self instructionTranslation: instruction allocate: [ SLVMHLReturnStatement new ] do: [ :node |
+		node value: (self translateValue: instruction value).
+		self addStatement: node
+	]
 ]
 
 { #category : #visitor }
@@ -851,7 +1087,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitReturnVoid: instruction [
 SLVMHighLevelLanguageCodeGenerator >> visitSampleImplicitLod: instruction [
 	^ self pureInstructionTranslation: instruction allocate: [ SLVMHLBuiltInCallStatement new ] do: [ :node |
 		node
-			function: #'sample.implicit-lod';
+			function: #'sample.implicit_lod';
 			arguments: { self translateValue: instruction sampledTexture . self translateValue: instruction texcoord}
 	]
 ]

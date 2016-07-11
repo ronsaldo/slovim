@@ -9,6 +9,11 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SLVMHLVariableAssignmentStatement >> translateInlineWith: translator [
+	^ translator translateHLVariableAssignmentStatementInline: self
+]
+
+{ #category : #'as yet unclassified' }
 SLVMHLVariableAssignmentStatement >> translateValueWith: translator [
 	^ translator translateHLVariableAssignmentStatementValue: self
 ]

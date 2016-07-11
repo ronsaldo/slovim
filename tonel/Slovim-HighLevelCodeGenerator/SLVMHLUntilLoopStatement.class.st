@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMHLStatement,
 	#instVars : [
 		'condition',
-		'body'
+		'body',
+		'continueBody'
 	],
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
@@ -26,6 +27,16 @@ SLVMHLUntilLoopStatement >> condition [
 { #category : #accessing }
 SLVMHLUntilLoopStatement >> condition: anObject [
 	condition := anObject
+]
+
+{ #category : #accessing }
+SLVMHLUntilLoopStatement >> continueBody [
+	^ continueBody
+]
+
+{ #category : #accessing }
+SLVMHLUntilLoopStatement >> continueBody: anObject [
+	continueBody := anObject
 ]
 
 { #category : #'as yet unclassified' }

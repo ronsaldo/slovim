@@ -34,6 +34,11 @@ SLVMHLStatementList >> statements: anObject [
 ]
 
 { #category : #converting }
+SLVMHLStatementList >> translateInlineWith: translator [
+	^ translator translateHLStatementListInline: self
+]
+
+{ #category : #converting }
 SLVMHLStatementList >> translateWith: translator [
 	^ translator translateHLStatementList: self
 ]

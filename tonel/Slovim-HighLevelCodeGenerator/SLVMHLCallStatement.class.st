@@ -32,3 +32,8 @@ SLVMHLCallStatement >> function: anObject [
 SLVMHLCallStatement >> translateValueWith: translator [
 	^ translator translateHLCallStatementValue: self
 ]
+
+{ #category : #'as yet unclassified' }
+SLVMHLCallStatement >> translateWith: translator [
+	^ translator translateHLCallStatement: self
+]

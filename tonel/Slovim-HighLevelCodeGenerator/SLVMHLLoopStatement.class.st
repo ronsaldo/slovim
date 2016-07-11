@@ -2,7 +2,8 @@ Class {
 	#name : #SLVMHLLoopStatement,
 	#superclass : #SLVMHLStatement,
 	#instVars : [
-		'body'
+		'body',
+		'continueBody'
 	],
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
@@ -15,6 +16,16 @@ SLVMHLLoopStatement >> body [
 { #category : #accessing }
 SLVMHLLoopStatement >> body: anObject [
 	body := anObject
+]
+
+{ #category : #accessing }
+SLVMHLLoopStatement >> continueBody [
+	^ continueBody
+]
+
+{ #category : #accessing }
+SLVMHLLoopStatement >> continueBody: anObject [
+	continueBody := anObject
 ]
 
 { #category : #converting }
