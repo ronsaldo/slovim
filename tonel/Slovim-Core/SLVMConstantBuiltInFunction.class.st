@@ -19,45 +19,45 @@ SLVMConstantBuiltInFunction class >> initialize [
 	self initialize
 	"
 	super initialize.
-	ValidBuiltInFunctionNames := Set newFrom: #(
+	ValidBuiltInFunctionNames := Set newFrom: ( #(
 		"Vector functions"
-		cross
-		dot
-		length
-		normalize
-		reflect
-		refract
+		'vector.cross'
+		'vector.dot'
+		'vector.length'
+		'vector.normalize'
+		'vector.reflect'
+		'vector.refract'
 		
 		"Math functions"
-		smoothstep
-		step
+		'math.smoothstep'
+		'math.step'
 		
 		"Common functions"
-		umin
-		smin
-		fmin
+		'math.umin'
+		'math.smin'
+		'math.fmin'
 		
-		pow atan2
+		'math.pow' 'math.atan2'
 		
-		asin sin asinh sinh
-		acos cos acosh cosh
-		atan tan atanh
-		exp exp2 log log2
-		sqrt inverseSqrt
-		floor ceil trunc round roundEven fract
-		degrees radians 
-		fabs
-		fsign
+		'math.asin' 'math.sin' 'math.asinh' 'math.sinh'
+		'math.acos' 'math.cos' 'math.acosh' 'math.cosh'
+		'math.atan' 'math.tan' 'math.atanh'
+		'math.exp' 'math.exp2' 'math.log' 'math.log2'
+		'math.sqrt' 'math.inverseSqrt'
+		'math.floor' 'math.ceil' 'math.trunc' 'math.round' 'math.roundEven' 'math.fract'
+		'math.degrees' 'math.radians' 
+		'math.fabs'
+		'math.fsign'
 			
-		umax
-		smax
-		fmax
+		'math.umax'
+		'math.smax'
+		'math.fmax'
 		
-		fmix
+		'math.fmix'
 		
 		"Matrix functions"
-		transpose
-	).
+		'matrix.transpose'
+	) collect: #asSymbol).
 ]
 
 { #category : #construction }

@@ -19,51 +19,51 @@ SLVMBinaryOperation class >> initialize [
 	super initialize.
 	
 	OperationSignatures := Dictionary newFromPairs: #(
-		add		integer
-		sub   integer 
-		mul   integer
-		div   integer
-		udiv  integer
-		rem   integer
-		urem  integer
+		add		(integer evaluateAdd)
+		sub   (integer evaluateSub) 
+		mul   (integer evaluateMul)
+		div   (integer evaluateIDiv)
+		udiv  (integer evaluateIDiv)
+		rem   (integer evaluateIRem)
+		urem  (integer evaluateIRem)
 
-		bitand integer
-		bitor integer
-		bitxor integer
+		bitand (integer evaluateBitAnd)
+		bitor (integer evaluateBitOr)
+		bitxor (integer evaluateBitXOr)
 
-		shiftleft integer
-		shiftright integer
+		shiftleft (integer evaluateShiftLeft)
+		shiftright (integer evaluateShiftRight)
 
-		ilt integerComp
-		ile integerComp
-		ieq integerComp
-		ine integerComp
-		igt integerComp
-		ige integerComp
+		ilt (integerComp evaluateLessThan)
+		ile (integerComp evaluateLessEqual)
+		ieq (integerComp evaluateEqual)
+		ine (integerComp evaluateNotEqual)
+		igt (integerComp evaluateGreaterThan)
+		ige (integerComp evaluateGreaterEqual)
 
-		fadd 		float
-		fsub 		float
-		fmul 		float
-		fdiv 		float
-		frem 		float
+		fadd 		(float evaluateAdd)
+		fsub 		(float evaluateSub)
+		fmul 		(float evaluateMul)
+		fdiv 		(float evaluateDiv)
+		frem 		(float evaluateRem)
 
-		uflt floatComp
-		ufle floatComp
-		ufeq floatComp
-		ufne floatComp
-		ufgt floatComp
-		ufge floatComp
+		uflt (floatComp evaluateLessThan)
+		ufle (floatComp evaluateLessEqual)
+		ufeq (floatComp evaluateEqual)
+		ufne (floatComp evaluateNotEqual)
+		ufgt (floatComp evaluateGreaterThan)
+		ufge (floatComp evaluateGreaterEqual)
 
-		oflt floatComp
-		ofle floatComp
-		ofeq floatComp
-		ofne floatComp
-		ofgt floatComp
-		ofge floatComp
+		oflt (floatComp evaluateLessThan)
+		ofle (floatComp evaluateLessEqual)
+		ofeq (floatComp evaluateEqual)
+		ofne (floatComp evaluateNotEqual)
+		ofgt (floatComp evaluateGreaterThan)
+		ofge (floatComp evaluateGreaterEqual)
 		
-		mulMatrixMatrix matrixMatrix
-		mulMatrixVector matrixVector
-		mulVectorMatrix vectorMatrix
+		mulMatrixMatrix (matrixMatrix evaluateMulMatrixMatrix)
+		mulMatrixVector (matrixVector evaluateMulMatrixVector)
+		mulVectorMatrix (vectorMatrix evaluateMulVectorMatrix)
 	).
 
 ]
@@ -84,7 +84,7 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 	| leftType rightType operationType |
 	leftType := leftOperand type.
 	rightType := rightOperand type.
-	operationType := OperationSignatures at: anOperation.
+	operationType := (OperationSignatures at: anOperation) first.
 	operationType == #matrixMatrix ifTrue: [ 
 		self assert: leftType isMatrixType.
 		self assert: rightType isMatrixType.
@@ -123,6 +123,14 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 
 	self error: 'Unsupported operation type'
 
+]
+
+{ #category : #'basic optimizations' }
+SLVMBinaryOperation >> foldConstant [
+	(self left isConstant and: [ self right isConstant ]) ifTrue: [ 
+		^ self perform: (OperationSignatures at: operation) second.
+	].
+	^ self
 ]
 
 { #category : #accessing }

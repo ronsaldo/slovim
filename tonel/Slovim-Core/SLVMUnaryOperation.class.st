@@ -19,10 +19,10 @@ SLVMUnaryOperation class >> initialize [
 	super initialize.
 	
 	OperationSignatures := Dictionary newFromPairs: #(
-		neg		integer
-		not   integer
-		lnot  bool 
-		fneg   float
+		neg		(integer evaluateNegated)
+		not   (integer evaluateBitNot)
+		lnot  (bool evaluateLogicalNot)
+		fneg   (float evaluateNegated)
 	).
 
 ]
@@ -39,9 +39,9 @@ SLVMUnaryOperation >> accept: aVisitor [
 
 { #category : #'as yet unclassified' }
 SLVMUnaryOperation >> computeTypeFor: anOperation operand: operand [
-	| operandType rightType operationType |
+	| operandType operationType |
 	operandType := operand type.
-	operationType := OperationSignatures at: anOperation.
+	operationType := (OperationSignatures at: anOperation) first.
 	
 	operationType == #integer ifTrue: [ 
 		(operandType isIntegerType or: [operandType isVectorType and: [operandType baseType isIntegerType ] ]) ifFalse: [ self error: 'Unary operation ' , anOperation , ' requires integer operand.' ].
@@ -55,6 +55,14 @@ SLVMUnaryOperation >> computeTypeFor: anOperation operand: operand [
 
 	self error: 'Unsupported operation type'
 
+]
+
+{ #category : #'basic optimizations' }
+SLVMUnaryOperation >> foldConstant [
+	(self left isConstant and: [ self right isConstant ]) ifTrue: [ 
+		^ self perform: (OperationSignatures at: operation) second.
+	].
+	^ self
 ]
 
 { #category : #printing }

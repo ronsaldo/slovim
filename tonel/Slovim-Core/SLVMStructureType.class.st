@@ -65,7 +65,7 @@ SLVMStructureType >> computeLayout [
 
 { #category : #comparing }
 SLVMStructureType >> hash [
-	^ self class hash bitXor: types hash
+	^ self class hash bitXor: (kind hash bitXor: types hash)
 ]
 
 { #category : #testing }

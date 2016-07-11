@@ -27,6 +27,11 @@ SLVMInstruction >> block: anObject [
 	block := anObject
 ]
 
+{ #category : #'basic optimizations' }
+SLVMInstruction >> foldConstant [
+	^ self
+]
+
 { #category : #printing }
 SLVMInstruction >> fullPrintOn: aStream [
 	self type isVoidType ifFalse: [

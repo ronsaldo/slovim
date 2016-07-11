@@ -23,6 +23,21 @@ SLVMCodeGenerator class >> translateModule: module [
 ]
 
 { #category : #'code generation' }
+SLVMCodeGenerator class >> translateModule: module exportList: exportList [
+	^ self new translateModule: module exportList: exportList
+]
+
+{ #category : #'code generation' }
+SLVMCodeGenerator class >> translateModule: module function: shaderName [
+	^ self translateModule: module exportList: { module globalValues at: shaderName }
+]
+
+{ #category : #'code generation' }
 SLVMCodeGenerator >> translateModule: module [
+	^ self translateModule: module exportList: module globalValues
+]
+
+{ #category : #'code generation' }
+SLVMCodeGenerator >> translateModule: module exportList: exportList [
 	self subclassResponsibility
 ]
