@@ -1,6 +1,6 @@
 Class {
-	#name : #SLVMSpirVTranslator,
-	#superclass : #Object,
+	#name : #SLVMSpirVCodeGenerator,
+	#superclass : #SLVMCodeGenerator,
 	#instVars : [
 		'translatedValues',
 		'builder',
@@ -22,8 +22,13 @@ Class {
 	#category : #'Slovim-SpirV'
 }
 
+{ #category : #name }
+SLVMSpirVCodeGenerator class >> codeGeneratorName [
+	^ #'spir-v'
+]
+
 { #category : #'class initialization' }
-SLVMSpirVTranslator class >> initialize [
+SLVMSpirVCodeGenerator class >> initialize [
 	"
 	self initialize
 	"
@@ -192,12 +197,12 @@ SLVMSpirVTranslator class >> initialize [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMSpirVTranslator >> basicBlockLabelId: basicBlock [
+SLVMSpirVCodeGenerator >> basicBlockLabelId: basicBlock [
 	^ basicBlockDictionary at: basicBlock ifAbsentPut: [ builder newId ].
 ]
 
 { #category : #'as yet unclassified' }
-SLVMSpirVTranslator >> functionTranslation: aFunction do: aBlock [
+SLVMSpirVCodeGenerator >> functionTranslation: aFunction do: aBlock [
 	| oldFunction |
 	^ self valueTranslation: aFunction do: [:id |
 		oldFunction := currentFunction.
@@ -209,13 +214,13 @@ SLVMSpirVTranslator >> functionTranslation: aFunction do: aBlock [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMSpirVTranslator >> generateLazyInstructionId: aValue [
+SLVMSpirVCodeGenerator >> generateLazyInstructionId: aValue [
 	^ instructionDictionary at: aValue ifAbsentPut: [ builder newId ].
 
 ]
 
 { #category : #initialization }
-SLVMSpirVTranslator >> initialize [
+SLVMSpirVCodeGenerator >> initialize [
 	super initialize.
 	translatedValues := Dictionary new.
 	basicBlockDictionary := Dictionary new.
@@ -224,7 +229,7 @@ SLVMSpirVTranslator >> initialize [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMSpirVTranslator >> instructionTranslation: aValue do: aBlock [
+SLVMSpirVCodeGenerator >> instructionTranslation: aValue do: aBlock [
 	| instructionId |
 	instructionId := instructionDictionary at: aValue ifAbsentPut: [ builder newId ].
 	translatedValues at: aValue put: instructionId.
@@ -233,14 +238,14 @@ SLVMSpirVTranslator >> instructionTranslation: aValue do: aBlock [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMSpirVTranslator >> isEntryPointFunction: aGlobalValue [
+SLVMSpirVCodeGenerator >> isEntryPointFunction: aGlobalValue [
 	aGlobalValue isFunction ifFalse: [ ^ false ].
 	EntryPointTypes do: [ :point | (aGlobalValue hasProperty: point) ifTrue: [ ^ true ] ].
 	^ false.
 ]
 
 { #category : #'as yet unclassified' }
-SLVMSpirVTranslator >> translateBasicBlock: basicBlock [
+SLVMSpirVCodeGenerator >> translateBasicBlock: basicBlock [
 	| labelId |
 	labelId := self basicBlockLabelId: basicBlock.
 	builder addFunctionInstruction: (SpirVInstruction opcode: SpvOpLabel result: labelId).
@@ -248,7 +253,7 @@ SLVMSpirVTranslator >> translateBasicBlock: basicBlock [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMSpirVTranslator >> translateSSAModule: ssaModule [
+SLVMSpirVCodeGenerator >> translateModule: ssaModule [
 	^ SpirVModuleBuilder build: [ :builderArg |
 		builder := builderArg.
 		ssaModule globalValues valuesDo: [ :globalValue | (self isEntryPointFunction: globalValue) ifTrue: [ self translateValue: globalValue ] ]
@@ -256,7 +261,7 @@ SLVMSpirVTranslator >> translateSSAModule: ssaModule [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMSpirVTranslator >> translateValue: aValue [
+SLVMSpirVCodeGenerator >> translateValue: aValue [
 	^ translatedValues at: aValue ifAbsent: [
 		aValue isInstruction ifTrue: [ ^ self generateLazyInstructionId: aValue ].
 		aValue accept: self
@@ -264,7 +269,7 @@ SLVMSpirVTranslator >> translateValue: aValue [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMSpirVTranslator >> valueTranslation: aValue do: aBlock [
+SLVMSpirVCodeGenerator >> valueTranslation: aValue do: aBlock [
 	| valueId |
 	(aValue isType not and: [aValue isInstruction]) ifTrue: [ ^ instructionDictionary at: aValue ifAbsentPut: [ builder newId ]].
 	valueId := builder newId.
@@ -274,7 +279,7 @@ SLVMSpirVTranslator >> valueTranslation: aValue do: aBlock [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitAlloca: allocaInstruction [
+SLVMSpirVCodeGenerator >> visitAlloca: allocaInstruction [
 	| resultType |
 	^ self instructionTranslation: allocaInstruction do: [ :id |
 		resultType := self translateValue: allocaInstruction type.
@@ -287,7 +292,7 @@ SLVMSpirVTranslator >> visitAlloca: allocaInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitArrayType: arrayType [
+SLVMSpirVCodeGenerator >> visitArrayType: arrayType [
 	| baseType length |
 	^ self valueTranslation: arrayType do: [ :id |
 		baseType := self translateValue: arrayType baseType.
@@ -314,7 +319,7 @@ SLVMSpirVTranslator >> visitArrayType: arrayType [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitBinaryOperation: binaryOp [
+SLVMSpirVCodeGenerator >> visitBinaryOperation: binaryOp [
 	| opcode resultType left right |
 	^ self instructionTranslation: binaryOp do: [ :id |
 		opcode := BinaryOperationMap at: binaryOp operation.
@@ -331,7 +336,7 @@ SLVMSpirVTranslator >> visitBinaryOperation: binaryOp [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitBoolType: voidType [
+SLVMSpirVCodeGenerator >> visitBoolType: voidType [
 	^ self valueTranslation: voidType do: [ :id |
 		builder addTypeInstruction: (SpirVInstruction
 			opcode: SpvOpTypeBool
@@ -341,7 +346,7 @@ SLVMSpirVTranslator >> visitBoolType: voidType [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitBranch: branchInstruction [
+SLVMSpirVCodeGenerator >> visitBranch: branchInstruction [
 	| condition trueBlock falseBlock mergeBlock continueBlock |
 	^ self instructionTranslation: branchInstruction do: [ :id |
 		condition := self translateValue: branchInstruction condition.
@@ -371,7 +376,7 @@ SLVMSpirVTranslator >> visitBranch: branchInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitCall: callInstruction [
+SLVMSpirVCodeGenerator >> visitCall: callInstruction [
 	| resultType function arguments functionValue setInstructionPair extensionSet extensionInstruction |
 	^ self instructionTranslation: callInstruction do: [ :id |
 		functionValue := callInstruction functionValue.
@@ -407,7 +412,7 @@ SLVMSpirVTranslator >> visitCall: callInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitCombineSamplerWithTexture: combineSampler [
+SLVMSpirVCodeGenerator >> visitCombineSamplerWithTexture: combineSampler [
 	| sampler texture resultType |
 	^ self instructionTranslation: combineSampler do: [ :id |
 		sampler := self translateValue: combineSampler sampler.
@@ -422,7 +427,7 @@ SLVMSpirVTranslator >> visitCombineSamplerWithTexture: combineSampler [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitConstantValue: constantValue [
+SLVMSpirVCodeGenerator >> visitConstantValue: constantValue [
 	| value type encodedValue |
 	^ self valueTranslation: constantValue do: [ :id |
 		value := constantValue value.
@@ -460,7 +465,7 @@ SLVMSpirVTranslator >> visitConstantValue: constantValue [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitExtractVectorElement: extractElement [
+SLVMSpirVCodeGenerator >> visitExtractVectorElement: extractElement [
 	| resultType vector index |
 	^ self instructionTranslation: extractElement do: [ :id |
 		resultType := self translateValue: extractElement type.
@@ -485,14 +490,14 @@ SLVMSpirVTranslator >> visitExtractVectorElement: extractElement [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitFloatType: floatType [
+SLVMSpirVCodeGenerator >> visitFloatType: floatType [
 	^ self valueTranslation: floatType do: [ :id |
 		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypeFloat result: id operands: {floatType size})
 	]
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitFunction: function [
+SLVMSpirVCodeGenerator >> visitFunction: function [
 	| functionType resultType |
 	^ self functionTranslation: function do: [ :id |
 		functionType := self translateValue: function functionType.
@@ -545,7 +550,7 @@ SLVMSpirVTranslator >> visitFunction: function [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitFunctionArgument: functionArgument [
+SLVMSpirVCodeGenerator >> visitFunctionArgument: functionArgument [
 	| type |
 	^ self valueTranslation: functionArgument do: [ :id |
 		type := self translateValue: functionArgument type.
@@ -557,7 +562,7 @@ SLVMSpirVTranslator >> visitFunctionArgument: functionArgument [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitFunctionType: functionType [
+SLVMSpirVCodeGenerator >> visitFunctionType: functionType [
 	| resultType arguments |
 	^ self valueTranslation: functionType do: [ :id |
 		resultType := self translateValue: functionType returnType.
@@ -570,7 +575,7 @@ SLVMSpirVTranslator >> visitFunctionType: functionType [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitGetElementReference: getElementRef [
+SLVMSpirVCodeGenerator >> visitGetElementReference: getElementRef [
 	| resultType pointer index |
 	^ self instructionTranslation: getElementRef do: [ :id |
 		pointer := self translateValue: getElementRef reference.
@@ -585,7 +590,7 @@ SLVMSpirVTranslator >> visitGetElementReference: getElementRef [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitGlobalVariable: globalVariable [
+SLVMSpirVCodeGenerator >> visitGlobalVariable: globalVariable [
 	| type storage |
 	^ self valueTranslation: globalVariable do: [ :id |
 		type := self translateValue: globalVariable type.
@@ -634,14 +639,14 @@ SLVMSpirVTranslator >> visitGlobalVariable: globalVariable [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitIntegerType: integerType [
+SLVMSpirVCodeGenerator >> visitIntegerType: integerType [
 	^ self valueTranslation: integerType do: [ :id |
 		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypeInt result: id operands: {integerType size . integerType isSigned asBit})
 	]
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitJump: jumpInstruction [
+SLVMSpirVCodeGenerator >> visitJump: jumpInstruction [
 	| destination |
 	^ self instructionTranslation: jumpInstruction do: [ :id |
 		destination := self basicBlockLabelId: (jumpInstruction destination). 
@@ -653,7 +658,7 @@ SLVMSpirVTranslator >> visitJump: jumpInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitLoad: loadInstruction [
+SLVMSpirVCodeGenerator >> visitLoad: loadInstruction [
 	| variable resultType |
 	^ self instructionTranslation: loadInstruction do: [ :id |
 		variable := self translateValue: loadInstruction variable.
@@ -667,7 +672,7 @@ SLVMSpirVTranslator >> visitLoad: loadInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitMakeMatrix: makeMatrixInstruction [
+SLVMSpirVCodeGenerator >> visitMakeMatrix: makeMatrixInstruction [
 	| resultType arguments |
 	^ self instructionTranslation: makeMatrixInstruction do: [ :id |
 		resultType := self translateValue: makeMatrixInstruction type.
@@ -681,7 +686,7 @@ SLVMSpirVTranslator >> visitMakeMatrix: makeMatrixInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitMakeVector: makeVectorInstruction [
+SLVMSpirVCodeGenerator >> visitMakeVector: makeVectorInstruction [
 	| resultType arguments |
 	^ self instructionTranslation: makeVectorInstruction do: [ :id |
 		resultType := self translateValue: makeVectorInstruction type.
@@ -695,7 +700,7 @@ SLVMSpirVTranslator >> visitMakeVector: makeVectorInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitMatrixType: matrixType [
+SLVMSpirVCodeGenerator >> visitMatrixType: matrixType [
 	| columnType |
 	^ self valueTranslation: matrixType do: [ :id |
 		columnType := self translateValue: matrixType columnType.
@@ -708,7 +713,7 @@ SLVMSpirVTranslator >> visitMatrixType: matrixType [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitPhi: phiInstruction [
+SLVMSpirVCodeGenerator >> visitPhi: phiInstruction [
 	| parameters resultType |
 	parameters := OrderedCollection new.
 	^ self instructionTranslation: phiInstruction do: [ :id |
@@ -728,7 +733,7 @@ SLVMSpirVTranslator >> visitPhi: phiInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitReferenceType: referenceType [
+SLVMSpirVCodeGenerator >> visitReferenceType: referenceType [
 	| baseType storage |
 	^ self valueTranslation: referenceType do: [ :id |
 		baseType := self translateValue: referenceType baseType.
@@ -738,7 +743,7 @@ SLVMSpirVTranslator >> visitReferenceType: referenceType [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitReturn: returnInstruction [
+SLVMSpirVCodeGenerator >> visitReturn: returnInstruction [
 	| value |
 	^ self instructionTranslation: returnInstruction do: [ :id |
 		value := self translateValue: returnInstruction value.
@@ -749,7 +754,7 @@ SLVMSpirVTranslator >> visitReturn: returnInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitReturnVoid: returnVoidInstruction [
+SLVMSpirVCodeGenerator >> visitReturnVoid: returnVoidInstruction [
 	^ self instructionTranslation: returnVoidInstruction do: [ :id |
 		builder addFunctionInstruction: (SpirVInstruction
 			opcode: SpvOpReturn)
@@ -757,7 +762,7 @@ SLVMSpirVTranslator >> visitReturnVoid: returnVoidInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitSampleImplicitLod: sampleImplicitLod [
+SLVMSpirVCodeGenerator >> visitSampleImplicitLod: sampleImplicitLod [
 	| sampledTexture texcoord resultType |
 	^ self instructionTranslation: sampleImplicitLod do: [ :id |
 		sampledTexture := self translateValue: sampleImplicitLod sampledTexture.
@@ -772,7 +777,7 @@ SLVMSpirVTranslator >> visitSampleImplicitLod: sampleImplicitLod [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitSampledTextureType: sampledTextureType [
+SLVMSpirVCodeGenerator >> visitSampledTextureType: sampledTextureType [
 	| textureType |
 	^ self valueTranslation: sampledTextureType do: [ :id |
 		textureType := self translateValue: sampledTextureType texture.
@@ -785,7 +790,7 @@ SLVMSpirVTranslator >> visitSampledTextureType: sampledTextureType [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitSamplerType: samplerType [
+SLVMSpirVCodeGenerator >> visitSamplerType: samplerType [
 	^ self valueTranslation: samplerType do: [ :id |
 		builder addTypeInstruction: (SpirVInstruction
 			opcode: SpvOpTypeSampler
@@ -795,7 +800,7 @@ SLVMSpirVTranslator >> visitSamplerType: samplerType [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitShuffleVectors: shuffleVectors [
+SLVMSpirVCodeGenerator >> visitShuffleVectors: shuffleVectors [
 	| resultType firstVector secondVector |
 	^ self instructionTranslation: shuffleVectors do: [ :id |
 		firstVector := self translateValue: shuffleVectors firstVector.
@@ -811,7 +816,7 @@ SLVMSpirVTranslator >> visitShuffleVectors: shuffleVectors [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitStore: storeInstruction [
+SLVMSpirVCodeGenerator >> visitStore: storeInstruction [
 	| value variable |
 	^ self instructionTranslation: storeInstruction do: [ :id |
 		value := self translateValue: storeInstruction value.
@@ -823,7 +828,7 @@ SLVMSpirVTranslator >> visitStore: storeInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitStructureType: structureType [
+SLVMSpirVCodeGenerator >> visitStructureType: structureType [
 	| types |
 	^ self valueTranslation: structureType do: [ :id |
 		types := structureType types collect: [:type | self translateValue: type ].
@@ -888,7 +893,7 @@ SLVMSpirVTranslator >> visitStructureType: structureType [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitTextureType: textureType [
+SLVMSpirVCodeGenerator >> visitTextureType: textureType [
 	| sampledType |
 	^ self valueTranslation: textureType do: [ :id |
 		sampledType := self translateValue: textureType sampledType.
@@ -908,7 +913,7 @@ SLVMSpirVTranslator >> visitTextureType: textureType [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitUnaryOperation: unaryOp [
+SLVMSpirVCodeGenerator >> visitUnaryOperation: unaryOp [
 	| opcode resultType operand |
 	^ self instructionTranslation: unaryOp do: [ :id |
 		opcode := UnaryOperationMap at: unaryOp operation.
@@ -924,7 +929,7 @@ SLVMSpirVTranslator >> visitUnaryOperation: unaryOp [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitUnreachable: unreachableInstruction [
+SLVMSpirVCodeGenerator >> visitUnreachable: unreachableInstruction [
 	| returnType returnValueType returnValue |
 	^ self instructionTranslation: unreachableInstruction do: [ :id |
 		returnType := currentFunction functionType returnType.
@@ -946,7 +951,7 @@ SLVMSpirVTranslator >> visitUnreachable: unreachableInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitVectorType: vectorType [
+SLVMSpirVCodeGenerator >> visitVectorType: vectorType [
 	| baseType |
 	^ self valueTranslation: vectorType do: [ :id |
 		baseType := self translateValue: vectorType baseType.
@@ -955,7 +960,7 @@ SLVMSpirVTranslator >> visitVectorType: vectorType [
 ]
 
 { #category : #visitor }
-SLVMSpirVTranslator >> visitVoidType: voidType [
+SLVMSpirVCodeGenerator >> visitVoidType: voidType [
 	^ self valueTranslation: voidType do: [ :id |
 		builder addTypeInstruction: (SpirVInstruction
 			opcode: SpvOpTypeVoid
