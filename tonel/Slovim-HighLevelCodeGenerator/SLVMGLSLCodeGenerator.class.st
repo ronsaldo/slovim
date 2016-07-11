@@ -190,7 +190,8 @@ SLVMGLSLCodeGenerator class >> initializeTypeMappings [
 	].
 
 	SamplerTypeMapping pairsDo: [ :myName :mappedName |
-		SamplerTypeDictionary at: (builtInTypes at: myName) put: mappedName
+		TypeDictionary at: (SLVMSampledTextureType new texture: (builtInTypes at: myName)) put: mappedName
+		
 	].
 
 	SpecialSemanticVariableMap := Dictionary newFromPairs: #(
@@ -200,9 +201,8 @@ SLVMGLSLCodeGenerator class >> initializeTypeMappings [
 
 { #category : #'code generation' }
 SLVMGLSLCodeGenerator >> emitPrelude [
-	self emitLine: '#version 400';
+	self emitLine: '#version 430';
 		emitLine: '#extension GL_ARB_separate_shader_objects : enable';
-		emitLine: '#extension GL_ARB_shading_language_420pack : enable';
 		emitNewline;
 		emitLine: '#ifdef VULKAN';
 		emitLine: '#define GL_BINDING_VK_SET_BINDING(glb, s, b) set = s, binding = b';
@@ -225,6 +225,42 @@ SLVMGLSLCodeGenerator >> generateInputOutputLayoutString: variable [
 
 { #category : #'code generation' }
 SLVMGLSLCodeGenerator >> generateUniformLayoutString: variable [
+	| layoutProperties binding set glBinding layout |
+	layoutProperties := OrderedCollection new.
+	variable type storage == SLVMType pushConstantStorage ifTrue: [
+		^ self
+	].
+
+	binding := nil.
+	set := nil.
+	glBinding := nil.
+	(variable hasProperty: #glBinding) ifTrue: [ 
+		glBinding := variable propertyAt: #glBinding
+	].
+
+	(variable hasProperty: #binding) ifTrue: [ 
+		binding := variable propertyAt: #binding
+	].
+
+	(variable hasProperty: #set) ifTrue: [ 
+		set := variable propertyAt: #set
+	].
+
+	(binding isNotNil and: [ set isNotNil ]) ifTrue: [ 
+		glBinding ifNil: [ glBinding := set*20 + binding  ].
+	
+		layout := ''.	
+		variable valueType isStructureType ifTrue: [ 
+			variable valueType kind == SLVMStructureType bufferBlockKind ifTrue: [ 
+				layout := ', std430'.
+			] ifFalse: [ 
+				layout := ', std140'.
+			]
+		].
+		
+		^ 'layout ( GL_BINDING_VK_SET_BINDING({1}, {2}, {3}){4} ) ' format: { glBinding . set . binding . layout }
+	].
+
 	^ ''
 ]
 
@@ -284,9 +320,17 @@ SLVMGLSLCodeGenerator >> translateHLVariableDecl: variableDecl [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMGLSLCodeGenerator >> translateReferenceType: type [
+	| baseType name |
+	baseType := self translateType: type baseType.
+	name := 'inout ', baseType name.
+	^ SLVMHLReferenceTypeNode new baseType: baseType; name: name asSymbol; yourself
+]
+
+{ #category : #'as yet unclassified' }
 SLVMGLSLCodeGenerator >> translateUniformBlock: blockDecl [
 	| layout blockType structure |
-	layout := self generateUniformLayoutString: blockDecl.
+	layout := self generateUniformLayoutString: blockDecl definition.
 	blockType := 'uniform'.
 	structure := blockDecl type.
 	structure kind == SLVMStructureType bufferBlockKind ifTrue: [ blockType := 'buffer' ].

@@ -25,6 +25,11 @@ SLVMHLStructureTypeNode >> initialize [
 	fields := #().
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMHLStructureTypeNode >> isStructureType [
+	^ true
+]
+
 { #category : #accessing }
 SLVMHLStructureTypeNode >> kind [
 	^ kind

@@ -64,6 +64,11 @@ SLVMHLVariableDeclNode >> storage: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMHLVariableDeclNode >> translateValueWith: translator [
+	^ translator translateHLVariableDeclValue: self
+]
+
+{ #category : #'as yet unclassified' }
 SLVMHLVariableDeclNode >> translateWith: translator [
 	^ translator translateHLVariableDecl: self
 ]

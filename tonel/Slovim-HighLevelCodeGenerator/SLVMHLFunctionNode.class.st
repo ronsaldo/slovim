@@ -4,15 +4,43 @@ Class {
 	#instVars : [
 		'name',
 		'type',
-		'arguments'
+		'arguments',
+		'locals',
+		'body'
 	],
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
 
+{ #category : #accessing }
+SLVMHLFunctionNode >> arguments [
+	^ arguments
+]
+
+{ #category : #accessing }
+SLVMHLFunctionNode >> arguments: anObject [
+	arguments := anObject
+]
+
+{ #category : #accessing }
+SLVMHLFunctionNode >> body [
+	^ body
+]
+
+{ #category : #accessing }
+SLVMHLFunctionNode >> body: anObject [
+	body := anObject
+]
+
 { #category : #initialization }
 SLVMHLFunctionNode >> initialize [
 	super initialize.
-	arguments := #()
+	arguments := #().
+	locals := OrderedCollection new.
+]
+
+{ #category : #initialization }
+SLVMHLFunctionNode >> locals [
+	^ locals
 ]
 
 { #category : #accessing }
@@ -28,6 +56,11 @@ SLVMHLFunctionNode >> name: anObject [
 { #category : #printing }
 SLVMHLFunctionNode >> printOn: aStream [
 	aStream nextPutAll: '(function '; print: name; space; print: type; nextPut: $)
+]
+
+{ #category : #'as yet unclassified' }
+SLVMHLFunctionNode >> translateValueWith: translator [
+	^ translator translateHLFunctionValue: self
 ]
 
 { #category : #'as yet unclassified' }
