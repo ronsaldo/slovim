@@ -12,6 +12,14 @@ SLVMCodeGenerator class >> codeGeneratorName [
 	^ name
 ]
 
+{ #category : #name }
+SLVMCodeGenerator class >> generatorNamed: generatorName [
+	self allSubclassesDo: [ :sc |
+		(sc isAbstract not and: [ sc codeGeneratorName = generatorName ]) ifTrue: [ ^ sc new]
+	].
+	self error: 'unknown code generator'
+]
+
 { #category : #testing }
 SLVMCodeGenerator class >> isAbstract [
 	^ self == SLVMCodeGenerator

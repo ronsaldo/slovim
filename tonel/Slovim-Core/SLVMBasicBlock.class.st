@@ -159,6 +159,14 @@ SLVMBasicBlock >> numberOfInstructions [
 	^ instructions size
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMBasicBlock >> phiInstructionsDo: aBlock [
+	self instructionsDo: [:ins |
+		ins isPhi ifFalse: [ ^ self ].
+		aBlock value: ins
+	]
+]
+
 { #category : #accessing }
 SLVMBasicBlock >> postOrderIndex [
 	^ postOrderIndex
