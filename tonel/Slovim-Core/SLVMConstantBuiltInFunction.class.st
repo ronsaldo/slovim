@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'functionType',
 		'type',
-		'name'
+		'name',
+		'isPureFunction'
 	],
 	#classVars : [
 		'ValidBuiltInFunctionNames'
@@ -64,14 +65,35 @@ SLVMConstantBuiltInFunction class >> name: aName functionType: aFunctionType [
 	^ self new name: aName functionType: aFunctionType
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMConstantBuiltInFunction >> accept: aVisitor [
+	^ aVisitor visitConstantBuiltInFunction: self
+]
+
 { #category : #accessing }
 SLVMConstantBuiltInFunction >> functionType [
 	^ functionType
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMConstantBuiltInFunction >> initialize [
+	super initialize.
+	isPureFunction := true.
+]
+
 { #category : #testing }
 SLVMConstantBuiltInFunction >> isConstantBuiltInFunction [
 	^ true
+]
+
+{ #category : #accessing }
+SLVMConstantBuiltInFunction >> isPureFunction [
+	^ isPureFunction
+]
+
+{ #category : #accessing }
+SLVMConstantBuiltInFunction >> isPureFunction: anObject [
+	isPureFunction := anObject
 ]
 
 { #category : #accessing }

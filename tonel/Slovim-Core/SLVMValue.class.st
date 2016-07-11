@@ -50,6 +50,11 @@ SLVMValue >> isPhi [
 ]
 
 { #category : #testing }
+SLVMValue >> isPureFunction [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isSSAValue [
 	^ true
 ]
