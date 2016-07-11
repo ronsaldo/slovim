@@ -20,6 +20,7 @@ SLVMOptPromoteAllocas >> addPhi: phi previousDefinitions: definitionsPerNode all
 		phi instructionReferences isEmpty ifTrue: [
 			phi removeFromBlock 
 		] ifFalse: [
+			"TODO: Replace this phi with undefined"
 			self halt.
 		].
 	

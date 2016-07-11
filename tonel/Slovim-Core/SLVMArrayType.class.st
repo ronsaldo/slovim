@@ -68,6 +68,11 @@ SLVMArrayType >> memberAt: constantValue [
 	^ baseType
 ]
 
+{ #category : #accessing }
+SLVMArrayType >> name [
+	^ self printString
+]
+
 { #category : #printing }
 SLVMArrayType >> printOn: aStream [
 	aStream print: baseType; nextPut: $[.

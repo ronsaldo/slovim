@@ -26,6 +26,8 @@ Class {
 		'Textured2DType',
 		'Textured3DArrayType',
 		'Textured3DType',
+		'TexturedCubeArrayType',
+		'TexturedCubeType',
 		'UCharType',
 		'UIntType',
 		'ULongType',
@@ -155,7 +157,7 @@ SLVMType class >> outputStorage [
 
 { #category : #'class initialization' }
 SLVMType class >> primitiveTypes [
-	VoidType := SLVMVoidType new name: #bool.
+	VoidType := SLVMVoidType new name: #void.
 	BoolType := SLVMBoolType name: #bool size: 1 alignment: 1.
 	
 	CharType := SLVMIntegerType name: #char size: 1 alignment: 1.
@@ -220,6 +222,8 @@ SLVMType class >> textureAndSamplerTypes [
 	Textured2DArrayType := SLVMTextureType new name: #texture2DArray; sampledType: FloatType; dimensions: 2; array: true; depth: false; multisample: false; sampled: true.
 	Textured3DType := SLVMTextureType new name: #texture3D; dimensions: 3; sampledType: FloatType; array: false; depth: false; multisample: false; sampled: true.
 	Textured3DArrayType := SLVMTextureType new name: #texture3DArray; sampledType: FloatType; dimensions: 3; array: true; depth: false; multisample: false; sampled: true.
+	TexturedCubeType := SLVMTextureType new name: #textureCube; dimensions: 4; sampledType: FloatType; array: false; depth: false; multisample: false; sampled: true.
+	TexturedCubeArrayType := SLVMTextureType new name: #textureCubeArray; sampledType: FloatType; dimensions: 4; array: true; depth: false; multisample: false; sampled: true.
 	
 	^ {
 		SamplerType .
@@ -228,7 +232,9 @@ SLVMType class >> textureAndSamplerTypes [
 		Textured2DType .
 		Textured2DArrayType .
 		Textured3DType .
-		Textured3DType .
+		Textured3DArrayType .
+		TexturedCubeType .
+		TexturedCubeArrayType .
 	}
 ]
 
@@ -272,6 +278,30 @@ SLVMType class >> vectorTypes [
 		SLVMVectorType baseType: DoubleType elements: 2.
 		SLVMVectorType baseType: DoubleType elements: 3.
 		SLVMVectorType baseType: DoubleType elements: 4.
+		
+		SLVMVectorType baseType: IntType elements: 2.
+		SLVMVectorType baseType: IntType elements: 3.
+		SLVMVectorType baseType: IntType elements: 4.
+		
+		SLVMVectorType baseType: UIntType elements: 2.
+		SLVMVectorType baseType: UIntType elements: 3.
+		SLVMVectorType baseType: UIntType elements: 4.
+
+		SLVMVectorType baseType: ShortType elements: 2.
+		SLVMVectorType baseType: ShortType elements: 3.
+		SLVMVectorType baseType: ShortType elements: 4.
+
+		SLVMVectorType baseType: UShortType elements: 2.
+		SLVMVectorType baseType: UShortType elements: 3.
+		SLVMVectorType baseType: UShortType elements: 4.
+
+		SLVMVectorType baseType: CharType elements: 2.
+		SLVMVectorType baseType: CharType elements: 3.
+		SLVMVectorType baseType: CharType elements: 4.
+
+		SLVMVectorType baseType: UCharType elements: 2.
+		SLVMVectorType baseType: UCharType elements: 3.
+		SLVMVectorType baseType: UCharType elements: 4.
 	}
 ]
 
@@ -363,6 +393,11 @@ SLVMType >> isSamplerType [
 { #category : #testing }
 SLVMType >> isSlovimType [
 	^ true
+]
+
+{ #category : #testing }
+SLVMType >> isStructureType [
+	^ false
 ]
 
 { #category : #testing }
