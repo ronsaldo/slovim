@@ -203,12 +203,15 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 	"Finish the phi nodes."
 	phiNodeDictionary valuesDo: [ :phi | self addPhi: phi previousDefinitions: definitionsPerNode allocaInstruction: allocaInstruction ].
 	
-	"Replace the loads and remove the stores."
+	"Replace the loads, then remove the stores."
 	allocaInstruction instructionReferences asArray do: [ :ref |
 		ref isLoad ifTrue: [
 			loadValue := self lastDefinitionValueAtLoad: ref for: definitionsPerNode allocaInstruction: allocaInstruction.
 			ref replaceWith: loadValue.
 		].
+	].
+
+	allocaInstruction instructionReferences asArray do: [ :ref |
 		ref isStore ifTrue: [
 			ref removeFromBlock
 		].
