@@ -15,7 +15,8 @@ SLVMHLBuiltInCallStatement >> arguments [
 
 { #category : #accessing }
 SLVMHLBuiltInCallStatement >> arguments: anObject [
-	arguments := anObject
+	arguments := anObject.
+	arguments do: [ :arg | self assert: arg isCodeNode]
 ]
 
 { #category : #accessing }

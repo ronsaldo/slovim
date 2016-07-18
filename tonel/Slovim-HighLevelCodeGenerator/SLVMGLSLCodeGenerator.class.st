@@ -230,8 +230,10 @@ SLVMGLSLCodeGenerator >> allocateGLBindingForVKSet: set binding: binding [
 
 { #category : #'code generation' }
 SLVMGLSLCodeGenerator >> emitPrelude [
-	self emitLine: '#version 430';
+	self
+		emitLine: '#version 430';
 		emitLine: '#extension GL_ARB_separate_shader_objects : enable';
+		emitLine: '#pragma SLVM';
 		emitNewline;
 		emitLine: '#ifdef VULKAN';
 		emitLine: '#define SLVM_GL_BINDING_VK_SET_BINDING(glb, s, b) set = s, binding = b';

@@ -13,6 +13,11 @@ SLVMHLCodeNode >> isArrayType [
 ]
 
 { #category : #testing }
+SLVMHLCodeNode >> isCodeNode [
+	^ true
+]
+
+{ #category : #testing }
 SLVMHLCodeNode >> isContinue [
 	^ false
 ]
@@ -24,6 +29,11 @@ SLVMHLCodeNode >> isIfStatement [
 
 { #category : #testing }
 SLVMHLCodeNode >> isReturnVoid [
+	^ false
+]
+
+{ #category : #testing }
+SLVMHLCodeNode >> isStatement [
 	^ false
 ]
 

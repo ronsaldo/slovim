@@ -103,7 +103,7 @@ SLVMHighLevelLanguageCodeGenerator class >> initialize [
 		#'math.fmin'	(#'min' call)
 		#'math.fmix'	(#'mix' call)
 		#'math.fract'	(#'fract' call)
-		#'math.fsign'	(#'fsign' call)
+		#'math.fsign'	(#'sign' call)
 		#'math.inverseSqrt'	(#'inverseSqrt' call)
 		#'math.log2'	(#'log2' call)
 		#'math.log'	    (#'log' call)
@@ -135,6 +135,7 @@ SLVMHighLevelLanguageCodeGenerator class >> initialize [
 
 { #category : #adding }
 SLVMHighLevelLanguageCodeGenerator >> addStatement: aStatement [
+	self assert: aStatement isStatement.
 	currentStatementList add: aStatement
 ]
 
@@ -315,7 +316,8 @@ SLVMHighLevelLanguageCodeGenerator >> instructionTranslation: value allocate: al
 	^ translatedValueDictionary at: value ifAbsent: [ 
 		translatedValue := allocateBlock value.
 		translatedValueDictionary at: value put: translatedValue.
-		aBlock value: translatedValue
+		aBlock value: translatedValue.
+		translatedValue
 	]
 ]
 
@@ -328,7 +330,7 @@ SLVMHighLevelLanguageCodeGenerator >> instructionWithResultTranslation: instruct
 		]
 	].
 
-	self instructionTranslation: instruction allocate: [ SLVMHLVariableAssignmentStatement new ] do: [ :assignment |
+	^ self instructionTranslation: instruction allocate: [ SLVMHLVariableAssignmentStatement new ] do: [ :assignment |
 		assignment
 			variable: (self generateTemp: instruction type);
 			value: allocateBlock value.
@@ -397,7 +399,7 @@ SLVMHighLevelLanguageCodeGenerator >> pureInstructionTranslation: instruction al
 		^ self instructionTranslation: instruction allocate: allocateBlock do: aBlock
 	].
 
-	self instructionWithResultTranslation: instruction allocate: allocateBlock do: aBlock
+	^ self instructionWithResultTranslation: instruction allocate: allocateBlock do: aBlock
 
 ]
 
