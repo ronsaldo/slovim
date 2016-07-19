@@ -19,7 +19,8 @@ Class {
 		'currentFunctionNode',
 		'usedLocalSymbols',
 		'translatedBlocks',
-		'phiVariableDictionary'
+		'phiVariableDictionary',
+		'currentSSAModule'
 	],
 	#classVars : [
 		'BuiltInFunctionMap'
@@ -164,7 +165,7 @@ SLVMHighLevelLanguageCodeGenerator >> addSuccessorsPhi: instruction [
 	intersection := sourceValueSet intersection: destValueSet.
 	intersection do: [ :value |
 		copyValue := self translateValue: value.
-		tempVar := self generateTemp: (self translateType: value type).
+		tempVar := self generateTemp: value type.
 		copyStatement := SLVMHLVariableAssignmentStatement new
 			variable: tempVar;
 			value: copyValue.
@@ -355,6 +356,11 @@ SLVMHighLevelLanguageCodeGenerator >> isBlackListedSymbol: aSymbol [
 	^ false
 ]
 
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> isInliningMandatory [
+	^ false
+]
+
 { #category : #testing }
 SLVMHighLevelLanguageCodeGenerator >> isValidSymbol: aSymbol [
 	(aSymbol isNil or: [aSymbol isEmpty]) ifTrue: [ ^ false ].
@@ -391,6 +397,11 @@ SLVMHighLevelLanguageCodeGenerator >> makeFunctionPrototypeString: function [
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> mapBuiltInFunction: aFunctionName [
 	^ BuiltInFunctionMap at: aFunctionName
+]
+
+{ #category : #testing }
+SLVMHighLevelLanguageCodeGenerator >> needStructuredControlFlow [
+	^ true
 ]
 
 { #category : #'code generation' }
@@ -789,17 +800,20 @@ SLVMHighLevelLanguageCodeGenerator >> translateInstruction: aValue [
 
 { #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> translateLocalSymbol: aSymbol [
-	(usedLocalSymbols includes: [ aSymbol ]) ifTrue: [ ^ self generateSymbol ].
+	(usedLocalSymbols includes: aSymbol) ifTrue: [ ^ self generateSymbol ].
 	usedLocalSymbols add: aSymbol.
-	^ self translateSymbol: aSymbol
+	^ self translateSymbol: '_l_' , aSymbol
 ]
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateModule: ssaModule exportList: exportList [
+	currentSSAModule := ssaModule.
 	typeDeclarations := OrderedCollection new.
 	globalVariableDeclarations := OrderedCollection new.
 	functionDefinitions := OrderedCollection new.
 	translatedValueDictionary := Dictionary new.
+	
+	self applyOptimizationsIn: ssaModule functionList: exportList.
 	
 	exportList do: [ :global |
 		global accept: self
@@ -1038,6 +1052,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitExtractVectorElement: instruction [
 SLVMHighLevelLanguageCodeGenerator >> visitFunction: function [
 	| functionType name |
 	^ self functionTranslation: function do: [ :functionNode |
+		self applyOptimizationsIn: currentSSAModule functionList: { function }.
 		functionType := self translateType: function functionType.
 		name := nil.
 		self hasFunctionOverloadingSupport ifTrue: [ name := function unmangledName ].
