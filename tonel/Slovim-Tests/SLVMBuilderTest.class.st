@@ -96,7 +96,7 @@ SLVMBuilderTest >> testReturn [
 	].
 
 	self assert: instruction block function equals: function.
-	self assert: function basicBlocks firstInstruction first equals: instruction.
+	self assert: function basicBlocks first firstInstruction equals: instruction.
 ]
 
 { #category : #'as yet unclassified' }
@@ -108,5 +108,5 @@ SLVMBuilderTest >> testReturnVoid [
 	].
 
 	self assert: instruction block function equals: function.
-	self assert: function basicBlocks firstInstruction first equals: instruction.
+	self assert: function basicBlocks first firstInstruction equals: instruction.
 ]
