@@ -43,6 +43,13 @@ SLVMPhi >> mnemonic [
 	^ 'phi'
 ]
 
+{ #category : #adding }
+SLVMPhi >> replaceParent: oldParent with: newParent [
+	incomingBlocks doWithIndex: [ :incoming :index |
+		incoming = oldParent ifTrue: [ incomingBlocks at: index put: newParent ]
+	]
+]
+
 { #category : #accessing }
 SLVMPhi >> type [
 	^ type

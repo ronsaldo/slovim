@@ -15,6 +15,11 @@ SLVMReturnVoid >> hasOutputs [
 ]
 
 { #category : #testing }
+SLVMReturnVoid >> isReturnVoid [
+	^ true
+]
+
+{ #category : #testing }
 SLVMReturnVoid >> isTerminator [
 	^ true
 ]

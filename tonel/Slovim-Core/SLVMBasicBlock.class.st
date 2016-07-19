@@ -18,14 +18,14 @@ Class {
 
 { #category : #adding }
 SLVMBasicBlock >> add: anInstruction [ 
-	instructions ifNotEmpty: [
-		instructions last nextInstruction: anInstruction.
-		anInstruction previousInstruction: instructions last.
-		anInstruction nextInstruction: nil.
-	].
-
-	instructions add: anInstruction.
+	self addQuiet: anInstruction.
 	self instructionAdded: anInstruction
+]
+
+{ #category : #adding }
+SLVMBasicBlock >> add: anInstruction after: instructionPoint [
+	instructionPoint ifNil: [ ^ self addFirst: instructionPoint ].
+	self halt.
 ]
 
 { #category : #adding }
@@ -43,6 +43,18 @@ SLVMBasicBlock >> addFirst: anInstruction [
 { #category : #adding }
 SLVMBasicBlock >> addPredecessor: aBasicBlock [
 	predecessors add: aBasicBlock
+]
+
+{ #category : #adding }
+SLVMBasicBlock >> addQuiet: anInstruction [ 
+	instructions ifNotEmpty: [
+		instructions last nextInstruction: anInstruction.
+		anInstruction previousInstruction: instructions last.
+		anInstruction nextInstruction: nil.
+	].
+
+	instructions add: anInstruction.
+	anInstruction block: self
 ]
 
 { #category : #adding }
@@ -223,6 +235,31 @@ SLVMBasicBlock >> remove: anInstruction [
 	instructions remove: anInstruction.
 	anInstruction block: nil.
 
+]
+
+{ #category : #adding }
+SLVMBasicBlock >> removeChain: anInstructionChain [ 
+	| current |
+	current := anInstructionChain.
+	[ current isNil ] whileFalse: [
+		instructions remove: current.
+		current block: nil.
+		current := current nextInstruction
+	].
+	
+]
+
+{ #category : #adding }
+SLVMBasicBlock >> setChain: anInstructionChain [ 
+	| current |
+	instructions removeAll.
+	current := anInstructionChain.
+	[ current isNil ] whileFalse: [
+		instructions add: current.
+		self instructionAdded: current.
+		current := current nextInstruction
+	].
+	
 ]
 
 { #category : #accessing }

@@ -24,17 +24,24 @@ SLVMJump >> accept: aVisitor [
 SLVMJump >> addUnreachableSuccessors [
 	| changed |
 	changed := false.
-	mergeBlock predecessors ifEmpty: [
+	(mergeBlock isNotNil and: [ mergeBlock predecessors isEmpty ]) ifTrue: [
 		unreachableSuccessors := { mergeBlock }.
 		changed := true.
 	].
 
-	continueBlock predecessors ifEmpty: [
-		unreachableSuccessors := { mergeBlock }.
+	(continueBlock isNotNil and: [ continueBlock predecessors isEmpty]) ifTrue: [
+		unreachableSuccessors := unreachableSuccessors , { continueBlock }.
 		changed := true.
 	].
 
 	changed ifTrue: [ block computeSuccessors. ]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMJump >> applySubstitutions: substitutionDictionary [
+	destination := substitutionDictionary at: destination.
+	mergeBlock ifNotNil: [ mergeBlock := substitutionDictionary at: mergeBlock ].
+	continueBlock ifNotNil: [ continueBlock := substitutionDictionary at: continueBlock ].
 ]
 
 { #category : #accessing }
@@ -59,7 +66,7 @@ SLVMJump >> destination: anObject [
 
 { #category : #printing }
 SLVMJump >> fullPrintOn: aStream [
-	aStream nextPutAll: 'jump '; nextPutAll:destination name
+	aStream nextPutAll: 'jump '; print: destination
 ]
 
 { #category : #testing }
@@ -96,6 +103,12 @@ SLVMJump >> mergeBlock: anObject [
 { #category : #printing }
 SLVMJump >> mnemonic [
 	^ #jump
+]
+
+{ #category : #'as yet unclassified' }
+SLVMJump >> postCopy [
+	super postCopy.
+	unreachableSuccessors := #()
 ]
 
 { #category : #printing }

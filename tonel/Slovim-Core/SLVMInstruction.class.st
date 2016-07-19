@@ -17,6 +17,21 @@ SLVMInstruction >> addInstructionReference: anInstruction [
 	instructionReferences add: anInstruction
 ]
 
+{ #category : #adding }
+SLVMInstruction >> addUnreachableSuccessors [
+	"This is used by branching instructions"
+]
+
+{ #category : #'as yet unclassified' }
+SLVMInstruction >> applySubstitutions: substitutionDictionary [
+	parameters doWithIndex: [ :param :index |
+		substitutionDictionary at: param ifPresent: [ :substitution |
+			parameters at: index put: substitution.
+			substitution addInstructionReference: self
+		]
+	]
+]
+
 { #category : #accessing }
 SLVMInstruction >> block [
 	^ block
@@ -57,7 +72,7 @@ SLVMInstruction >> hasOutputs [
 
 { #category : #initialization }
 SLVMInstruction >> initialize [
-	instructionReferences := IdentitySet new.
+	instructionReferences := OrderedCollection new.
 	parameters := #().
 ]
 
@@ -93,6 +108,16 @@ SLVMInstruction >> isJump [
 
 { #category : #testing }
 SLVMInstruction >> isLoad [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isReturn [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isReturnVoid [
 	^ false
 ]
 
@@ -147,6 +172,15 @@ SLVMInstruction >> parameters: anArrayOfParameter [
 	parameters do: [ :param | param addInstructionReference: self ]
 ]
 
+{ #category : #copying }
+SLVMInstruction >> postCopy [
+	parameters := parameters copy.
+	instructionReferences := OrderedCollection new.
+	block := nil.	
+	previousInstruction := nil.
+	nextInstruction := nil.
+]
+
 { #category : #accessing }
 SLVMInstruction >> previousInstruction [
 	^ previousInstruction
@@ -171,7 +205,7 @@ SLVMInstruction >> removeFromBlock [
 
 { #category : #adding }
 SLVMInstruction >> removeInstructionReference: anInstruction [
-	instructionReferences remove: anInstruction
+	instructionReferences removeAllSuchThat: [:el | el == anInstruction]
 ]
 
 { #category : #modifying }
@@ -183,6 +217,30 @@ SLVMInstruction >> replaceWith: aNewInstruction [
 
 	instructionReferences removeAll.
 	self removeFromBlock
+]
+
+{ #category : #'as yet unclassified' }
+SLVMInstruction >> splitBasicBlock [
+	| nextBlock nextChain |
+	nextBlock := SLVMBasicBlock new name: (block name , '_split').
+	block function addBasicBlock: nextBlock.
+	
+	"Update the phis"
+	block successors do: [ :succ |
+		succ phiInstructionsDo: [ :phi |
+			phi replaceParent: block with: nextBlock
+		]
+	].
+
+	"Unlink the next instructions"
+	nextChain := self nextInstruction.
+	nextChain previousInstruction: nil.
+	self nextInstruction: nil.
+	
+	block removeChain: nextChain.
+	nextBlock setChain: nextChain.
+		
+	^ nextBlock
 ]
 
 { #category : #accessing }

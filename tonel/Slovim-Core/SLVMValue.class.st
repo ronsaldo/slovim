@@ -40,6 +40,11 @@ SLVMValue >> isConstantValue [
 ]
 
 { #category : #testing }
+SLVMValue >> isFunction [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isInstruction [
 	^ false
 ]

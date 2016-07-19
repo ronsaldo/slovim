@@ -15,6 +15,11 @@ SLVMReturn >> accept: aVisitor [
 ]
 
 { #category : #testing }
+SLVMReturn >> isReturn [
+	^ true
+]
+
+{ #category : #testing }
 SLVMReturn >> isTerminator [
 	^ true
 ]

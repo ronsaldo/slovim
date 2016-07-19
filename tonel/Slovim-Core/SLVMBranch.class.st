@@ -25,17 +25,27 @@ SLVMBranch >> accept: aVisitor [
 SLVMBranch >> addUnreachableSuccessors [
 	| changed |
 	changed := false.
-	mergeBlock predecessors ifEmpty: [
+	unreachableSuccessors := #().
+	(mergeBlock isNotNil and: [ mergeBlock predecessors isEmpty ]) ifTrue: [
 		unreachableSuccessors := { mergeBlock }.
 		changed := true.
 	].
 
-	(continueBlock isNil not and: [ continueBlock isEmpty not]) ifTrue: [
-		unreachableSuccessors := { mergeBlock }.
+	(continueBlock isNotNil and: [ continueBlock predecessors isEmpty]) ifTrue: [
+		unreachableSuccessors := unreachableSuccessors , { continueBlock }.
 		changed := true.
 	].
 
 	changed ifTrue: [ block computeSuccessors. ]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMBranch >> applySubstitutions: substitutionDictionary [
+	super applySubstitutions: substitutionDictionary.
+	falseBlock := substitutionDictionary at: falseBlock.
+	trueBlock := substitutionDictionary at: trueBlock.
+	mergeBlock ifNotNil: [ mergeBlock := substitutionDictionary at: mergeBlock ].
+	continueBlock ifNotNil: [ continueBlock := substitutionDictionary at: continueBlock ].
 ]
 
 { #category : #accessing }
@@ -111,6 +121,12 @@ SLVMBranch >> mergeBlock: anObject [
 { #category : #printing }
 SLVMBranch >> mnemonic [
 	^ #branch
+]
+
+{ #category : #'as yet unclassified' }
+SLVMBranch >> postCopy [
+	super postCopy.
+	unreachableSuccessors := #()
 ]
 
 { #category : #accessing }
