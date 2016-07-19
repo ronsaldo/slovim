@@ -133,6 +133,11 @@ SLVMBinaryOperation >> foldConstant [
 	^ self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMBinaryOperation >> isPureInstruction [
+	^ true
+]
+
 { #category : #accessing }
 SLVMBinaryOperation >> left [
 	^ parameters first

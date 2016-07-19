@@ -5,7 +5,8 @@ Class {
 	#name : #SLVMCodeGenerator,
 	#superclass : #Object,
 	#instVars : [
-		'optimizationLevel'
+		'optimizationLevel',
+		'globalOptimization'
 	],
 	#category : #'Slovim-Core-CodeGeneration'
 }
@@ -45,11 +46,13 @@ SLVMCodeGenerator class >> translateModule: module function: shaderName [
 
 { #category : #'code generation' }
 SLVMCodeGenerator >> applyOptimizationsIn: ssaModule functionList: functionList [
-	| globalOptimization |
 	(optimizationLevel = 0 and: [ self isInliningMandatory not ]) ifTrue: [ ^ self ].
-	globalOptimization := SLVMOptInline new.
-	globalOptimization keepStructuredControlFlow: self needStructuredControlFlow.
-	globalOptimization postInlineOptimizations: (ssaModule createFunctionOptimizationPassesForLevel: optimizationLevel).
+	globalOptimization ifNil: [
+		globalOptimization := SLVMOptInline new.
+		globalOptimization keepStructuredControlFlow: self needStructuredControlFlow.
+		globalOptimization postInlineOptimizations: (ssaModule createFunctionOptimizationPassesForLevel: optimizationLevel).
+	].
+
 	globalOptimization passOnFunctions: functionList.
 ]
 

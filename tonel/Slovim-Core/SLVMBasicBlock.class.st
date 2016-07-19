@@ -7,7 +7,9 @@ Class {
 		'preOrderIndex',
 		'name',
 		'function',
-		'instructions',
+		'firstInstruction',
+		'lastInstruction',
+		'numberOfInstructions',
 		'predecessors',
 		'successors',
 		'immediateDominator',
@@ -29,14 +31,19 @@ SLVMBasicBlock >> add: anInstruction after: instructionPoint [
 ]
 
 { #category : #adding }
-SLVMBasicBlock >> addFirst: anInstruction [ 
-	instructions ifNotEmpty: [
-		instructions first previousInstruction: anInstruction.
-		anInstruction nextInstruction: instructions first.
-		anInstruction previousInstruction: nil.
+SLVMBasicBlock >> addFirst: anInstruction [
+	self assert: anInstruction previousInstruction isNil.
+	self assert: anInstruction nextInstruction isNil.
+	firstInstruction ifNil: [
+		firstInstruction := lastInstruction := anInstruction.
+		numberOfInstructions := 1.
+	] ifNotNil: [
+		firstInstruction previousInstruction: anInstruction.
+		anInstruction nextInstruction: firstInstruction.
+		firstInstruction := anInstruction.
+		numberOfInstructions ifNotNil: [ numberOfInstructions := numberOfInstructions + 1 ].
 	].
 
-	instructions addFirst: anInstruction.
 	self instructionAdded: anInstruction
 ]
 
@@ -47,21 +54,50 @@ SLVMBasicBlock >> addPredecessor: aBasicBlock [
 
 { #category : #adding }
 SLVMBasicBlock >> addQuiet: anInstruction [ 
-	instructions ifNotEmpty: [
-		instructions last nextInstruction: anInstruction.
-		anInstruction previousInstruction: instructions last.
+	self assert: anInstruction previousInstruction isNil.
+	self assert: anInstruction nextInstruction isNil.
+	lastInstruction ifNil: [
+		anInstruction previousInstruction: nil.
 		anInstruction nextInstruction: nil.
+		firstInstruction := lastInstruction := anInstruction.
+		numberOfInstructions := 1.
+	]	ifNotNil: [
+		lastInstruction nextInstruction: anInstruction.
+		anInstruction previousInstruction: lastInstruction.
+		lastInstruction := anInstruction.
+		numberOfInstructions ifNotNil: [ numberOfInstructions := numberOfInstructions + 1 ].
 	].
 
-	instructions add: anInstruction.
 	anInstruction block: self
 ]
 
 { #category : #adding }
+SLVMBasicBlock >> computeLastInstruction [
+	| current |
+	current := lastInstruction := firstInstruction.
+	[ current isNotNil ] whileTrue: [
+		lastInstruction := current.
+		current := current nextInstruction
+	].
+	
+]
+
+{ #category : #adding }
 SLVMBasicBlock >> computeSuccessors [
-	successors := instructions last successors.
+	successors := self lastInstruction successors.
 	successors do: [ :suc | suc addPredecessor: self]
 
+]
+
+{ #category : #accessing }
+SLVMBasicBlock >> countNumberOfInstructions [
+	| current |
+	numberOfInstructions := 0.
+	current := self firstInstruction.
+	[current isNotNil] whileTrue: [
+		current := current nextInstruction.
+		numberOfInstructions := numberOfInstructions + 1.
+	]
 ]
 
 { #category : #accessing }
@@ -76,7 +112,7 @@ SLVMBasicBlock >> dominanceFrontier: anObject [
 
 { #category : #accessing }
 SLVMBasicBlock >> firstInstruction [
-	^ instructions first
+	^ firstInstruction
 ]
 
 { #category : #printing }
@@ -87,7 +123,7 @@ SLVMBasicBlock >> fullPrintOn: aStream [
 	aStream space.
 	self printArray: successors on: aStream.
 	aStream cr.
-	instructions do: [ :ins | aStream tab. ins fullPrintOn: aStream. aStream cr ]
+	self instructionsDo: [ :ins | aStream tab. ins fullPrintOn: aStream. aStream cr ]
 ]
 
 { #category : #accessing }
@@ -123,9 +159,8 @@ SLVMBasicBlock >> index: anObject [
 { #category : #initialization }
 SLVMBasicBlock >> initialize [
 	super initialize.
-	instructions := OrderedCollection new.
 	predecessors := Set new.
-	successors := #()
+	successors := #().
 ]
 
 { #category : #adding }
@@ -138,12 +173,18 @@ SLVMBasicBlock >> instructionAdded: anInstruction [
 
 { #category : #'successor sequences' }
 SLVMBasicBlock >> instructionsDo: aBlock [
-	instructions do: aBlock
+	| currentInstruction nextInstruction |
+	currentInstruction := self firstInstruction.
+	[ currentInstruction isNotNil ] whileTrue: [ 
+		nextInstruction := currentInstruction nextInstruction.
+		aBlock value: currentInstruction.
+		currentInstruction := nextInstruction
+	]
 ]
 
 { #category : #testing }
 SLVMBasicBlock >> isEmpty [
-	^ instructions isEmpty
+	^ firstInstruction isNil
 ]
 
 { #category : #testing }
@@ -153,7 +194,7 @@ SLVMBasicBlock >> isLastTerminator [
 
 { #category : #accessing }
 SLVMBasicBlock >> lastInstruction [
-	^ instructions last
+	^ lastInstruction
 ]
 
 { #category : #accessing }
@@ -168,7 +209,8 @@ SLVMBasicBlock >> name: anObject [
 
 { #category : #accessing }
 SLVMBasicBlock >> numberOfInstructions [
-	^ instructions size
+	numberOfInstructions ifNil: [ self countNumberOfInstructions ].
+	^ numberOfInstructions
 ]
 
 { #category : #'as yet unclassified' }
@@ -224,42 +266,65 @@ SLVMBasicBlock >> printOn: aStream [
 
 { #category : #adding }
 SLVMBasicBlock >> remove: anInstruction [
-	anInstruction previousInstruction ifNotNil: [ 
+	(anInstruction previousInstruction isNil and: [ anInstruction nextInstruction isNil ]) ifTrue: [
+		anInstruction block: nil.
+		firstInstruction := lastInstruction := nil.
+		numberOfInstructions := 0.
+		^ self
+	].
+
+	anInstruction previousInstruction ifNil: [ 
+		firstInstruction := anInstruction nextInstruction.
+	] ifNotNil: [ 
 		anInstruction previousInstruction nextInstruction: anInstruction nextInstruction
 	].
 
-	anInstruction nextInstruction ifNotNil: [ 
+	anInstruction nextInstruction ifNil: [
+		lastInstruction := anInstruction previousInstruction.
+	] ifNotNil: [ 
 		anInstruction nextInstruction previousInstruction: anInstruction previousInstruction
 	].
 
-	instructions remove: anInstruction.
+	anInstruction previousInstruction: nil.
+	anInstruction nextInstruction: nil.
 	anInstruction block: nil.
-
+	numberOfInstructions ifNotNil: [numberOfInstructions := numberOfInstructions - 1].
 ]
 
 { #category : #adding }
 SLVMBasicBlock >> removeChain: anInstructionChain [ 
 	| current |
 	current := anInstructionChain.
-	[ current isNil ] whileFalse: [
-		instructions remove: current.
+	[ current isNotNil ] whileTrue: [
+		self assert: current block == self.
 		current block: nil.
 		current := current nextInstruction
 	].
 	
+	anInstructionChain previousInstruction ifNil: [
+		firstInstruction := lastInstruction := nil.
+		numberOfInstructions := 0.
+	] ifNotNil: [
+		lastInstruction := anInstructionChain previousInstruction.
+		lastInstruction nextInstruction: nil.
+		anInstructionChain previousInstruction: nil.
+		numberOfInstructions := nil.
+	]
 ]
 
 { #category : #adding }
 SLVMBasicBlock >> setChain: anInstructionChain [ 
 	| current |
-	instructions removeAll.
-	current := anInstructionChain.
-	[ current isNil ] whileFalse: [
-		instructions add: current.
-		self instructionAdded: current.
+	numberOfInstructions := 0.
+	firstInstruction := anInstructionChain.
+	
+	current := lastInstruction := anInstructionChain.
+	[ current isNotNil ] whileTrue: [
+		current block: self.
+		lastInstruction := current.
+		numberOfInstructions := numberOfInstructions + 1.
 		current := current nextInstruction
 	].
-	
 ]
 
 { #category : #accessing }

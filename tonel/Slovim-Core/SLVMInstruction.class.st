@@ -70,6 +70,11 @@ SLVMInstruction >> hasOutputs [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMInstruction >> hasReferences [
+	^ instructionReferences isNotEmpty
+]
+
 { #category : #initialization }
 SLVMInstruction >> initialize [
 	instructionReferences := OrderedCollection new.
@@ -108,6 +113,11 @@ SLVMInstruction >> isJump [
 
 { #category : #testing }
 SLVMInstruction >> isLoad [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isPureInstruction [
 	^ false
 ]
 
@@ -210,6 +220,8 @@ SLVMInstruction >> removeInstructionReference: anInstruction [
 
 { #category : #modifying }
 SLVMInstruction >> replaceWith: aNewInstruction [
+	self == aNewInstruction ifTrue: [ ^ self ].
+	
 	instructionReferences do: [ :usage |
 		usage parameters replaceAll: self with: aNewInstruction.
 		aNewInstruction addInstructionReference: usage.
@@ -234,10 +246,11 @@ SLVMInstruction >> splitBasicBlock [
 
 	"Unlink the next instructions"
 	nextChain := self nextInstruction.
-	nextChain previousInstruction: nil.
-	self nextInstruction: nil.
 	
 	block removeChain: nextChain.
+	self assert: nextChain previousInstruction isNil.
+	self assert: nextInstruction isNil.
+	
 	nextBlock setChain: nextChain.
 		
 	^ nextBlock

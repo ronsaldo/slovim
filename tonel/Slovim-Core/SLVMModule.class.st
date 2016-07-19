@@ -23,6 +23,7 @@ SLVMModule >> createFunctionOptimizationPassesForLevel: optimizationLevel [
 	passes := OrderedCollection new.
 	passes addAll: {
 		SLVMOptPromoteAllocas.
+		SLVMOptBasicOptimizations.
 	}.
 	
 	"Add lot more passes depending on the optimization level."
