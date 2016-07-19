@@ -57,9 +57,24 @@ SLVMUnaryOperation >> computeTypeFor: anOperation operand: operand [
 
 ]
 
+{ #category : #'constant folding' }
+SLVMUnaryOperation >> evaluateBitNot [
+	^ SLVMConstant type: type value: (self operand value bitInvert)
+]
+
+{ #category : #'constant folding' }
+SLVMUnaryOperation >> evaluateLogicalNot [
+	^ SLVMConstant type: type value: (self operand value not)
+]
+
+{ #category : #'constant folding' }
+SLVMUnaryOperation >> evaluateNegated [
+	^ SLVMConstant type: type value: (self operand value negated)
+]
+
 { #category : #'basic optimizations' }
 SLVMUnaryOperation >> foldConstant [
-	(self left isConstant and: [ self right isConstant ]) ifTrue: [ 
+	(self operand isConstant) ifTrue: [ 
 		^ self perform: (OperationSignatures at: operation) second.
 	].
 	^ self

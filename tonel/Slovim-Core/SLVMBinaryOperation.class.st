@@ -125,6 +125,97 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 
 ]
 
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateAdd [
+	^ SLVMConstant type: type value: (self left value + self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateBitAnd [
+	^ SLVMConstant type: type value: (self left value bitAnd: self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateBitOr [
+	^ SLVMConstant type: type value: (self left value bitOr: self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateBitXOr [
+	^ SLVMConstant type: type value: (self left value bitXor: self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateDiv [
+	^ SLVMConstant type: type value: (self left value / self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateEqual [
+	^ SLVMConstant type: type value: (self left value = self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateGreaterEqual [
+	^ SLVMConstant type: type value: (self left value >= self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateGreaterThan [
+	^ SLVMConstant type: type value: (self left value > self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateIDiv [
+	^ SLVMConstant type: type value: (self left value // self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateIRem [
+	^ SLVMConstant type: type value: (self left value \\ self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateLessEqual [
+	^ SLVMConstant type: type value: (self left value <= self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateLessThan [
+	^ SLVMConstant type: type value: (self left value < self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateMul [
+	^ SLVMConstant type: type value: (self left value * self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateNotEqual [
+	^ SLVMConstant type: type value: (self left value ~= self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateRem [
+	self flag: 'Implement this properly'.
+	^ SLVMConstant type: type value: (self left value % self right value negated)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateShiftLeft [
+	^ SLVMConstant type: type value: (self left value bitShift: self right value)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateShiftRight [
+	^ SLVMConstant type: type value: (self left value bitShift: self right value negated)
+]
+
+{ #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateSub [
+	^ SLVMConstant type: type value: (self left value - self right value)
+]
+
 { #category : #'basic optimizations' }
 SLVMBinaryOperation >> foldConstant [
 	(self left isConstant and: [ self right isConstant ]) ifTrue: [ 
