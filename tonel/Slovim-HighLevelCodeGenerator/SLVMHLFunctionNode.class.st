@@ -5,6 +5,7 @@ Class {
 		'name',
 		'type',
 		'arguments',
+		'dynamicLiterals',
 		'locals',
 		'body'
 	],
@@ -29,6 +30,16 @@ SLVMHLFunctionNode >> body [
 { #category : #accessing }
 SLVMHLFunctionNode >> body: anObject [
 	body := anObject
+]
+
+{ #category : #accessing }
+SLVMHLFunctionNode >> dynamicLiterals [
+	^ dynamicLiterals
+]
+
+{ #category : #accessing }
+SLVMHLFunctionNode >> dynamicLiterals: anObject [
+	dynamicLiterals := anObject
 ]
 
 { #category : #initialization }

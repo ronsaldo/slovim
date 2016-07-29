@@ -121,6 +121,9 @@ SLVMCPPCodeGenerator class >> initializeKeywordSet [
 { #category : #'class initialization' }
 SLVMCPPCodeGenerator class >> initializeTargetBuiltInMappings [
 	TargetBuiltInMappings := Dictionary newFromPairs: #(
+		'binop.dynObjectIdentityEquals' ('slvm::dynrun::identityEquals' call)
+		'binop.dynObjectIdentityNotEquals' ('slvm::dynrun::identityNotEquals' call)
+
 		'sample.implicit_lod' (sample_implicit_lod call)
 		
 		#'math.acos'	(#'glm::acos' call)
@@ -209,6 +212,8 @@ SLVMCPPCodeGenerator class >> initializeTypeMappings [
 		texture2D 'texture2D'
 		textureCube 'textureCube'
 		sampler sampler
+		
+		dynobject 'slvm::dynrun::object'
 	).
 	
 	SamplerTypeMapping := #(
@@ -235,9 +240,18 @@ SLVMCPPCodeGenerator class >> initializeTypeMappings [
 
 { #category : #'code generation' }
 SLVMCPPCodeGenerator >> emitPrelude [
-	self
-		emitLine: '#include <glm/glm.hpp>';
-		emitNewline
+	linearAlgebraRequired ifTrue: [
+		self
+			emitLine: '#include <glm/glm.hpp>';
+			emitNewline
+	].
+
+	dynamicRuntimeRequried ifTrue: [
+		self
+			emitLine: '#include <SLVM/DynamicRuntime.hpp>';
+			emitNewline
+	].
+
 ]
 
 { #category : #testing }
@@ -254,4 +268,25 @@ SLVMCPPCodeGenerator >> mapBuiltInFunction: aFunctionName [
 { #category : #'code generation' }
 SLVMCPPCodeGenerator >> translateBasicTypeName: aType [
 	^ TypeDictionary at: aType
+]
+
+{ #category : #'code generation' }
+SLVMCPPCodeGenerator >> translateHLFunctionDynamicLiteralNodeValue: literalNode [
+	^ ByteString streamContents: [:out | out nextPutAll: 'literalAt('; print: literalNode index; nextPut: $) ]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMCPPCodeGenerator >> translateHLMessageSendStatementValue: statement [
+	^ ByteString streamContents: [ :out |
+		out nextPutAll: (statement receiver translateValueWith: self).
+		out nextPutAll: '.send<'; nextPutAll: statement returnType name; nextPut: $>.
+		out space; nextPut: $(.
+		out nextPutAll: (statement selector translateValueWith: self).
+		statement arguments doWithIndex: [ :arg :index |
+			out nextPutAll: ', '.
+			out nextPutAll: (arg translateValueWith: self)
+		].
+	
+		out nextPut: $).
+	]
 ]

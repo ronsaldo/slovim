@@ -20,7 +20,9 @@ Class {
 		'usedLocalSymbols',
 		'translatedBlocks',
 		'phiVariableDictionary',
-		'currentSSAModule'
+		'currentSSAModule',
+		'linearAlgebraRequired',
+		'dynamicRuntimeRequried'
 	],
 	#classVars : [
 		'BuiltInFunctionMap'
@@ -77,7 +79,7 @@ SLVMHighLevelLanguageCodeGenerator class >> initialize [
 		'binop.mulMatrixMatrix' (* binary)
 		'binop.mulMatrixVector' (* binary)
 		'binop.mulVectorMatrix' (* binary)
-		
+				
 		'unary.neg'		(- unary)
 		'unary.not'   (~ unary)
 		'unary.lnot'  (! unary)
@@ -309,6 +311,8 @@ SLVMHighLevelLanguageCodeGenerator >> initialize [
 	super initialize.
 	indentationLevel := 0.
 	gensymCount := 0.
+	linearAlgebraRequired := true.
+	dynamicRuntimeRequried := true.
 ]
 
 { #category : #'code generation' }
@@ -440,6 +444,8 @@ SLVMHighLevelLanguageCodeGenerator >> translateBasicBlock: aBasicBlock [
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateBasicType: aType [
+	(aType isVectorType or: [aType isMatrixType]) ifTrue: [ linearAlgebraRequired := true ].
+	aType isDynamicObjectType ifTrue: [ dynamicRuntimeRequried := true ].
 	^ SLVMHLBasicTypeNode new name: (self translateBasicTypeName: aType); type: aType
 ]
 
@@ -485,6 +491,16 @@ SLVMHighLevelLanguageCodeGenerator >> translateFunctionArgument: arg [
 		type: (self translateType: arg type).
 	translatedValueDictionary at: arg put: argNode.
 	^ argNode
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateFunctionDynamicLiteral: literal [
+	| literalNode |
+	literalNode := SLVMHLFunctionDynamicLiteralNode new
+		index: literal index;
+		value: literal value.
+	translatedValueDictionary at: literal put: literalNode.
+	^ literalNode
 ]
 
 { #category : #'code generation' }
@@ -662,6 +678,16 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLLiteralValue: literalValue [
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLLoadStatementValue: statement [
 	^ statement variable translateValueWith: self
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateHLMessageSendStatement: statement [
+	self emitTabs; emitString: (self translateHLMessageSendStatementValue: statement); emitString: ';'; emitNewline.
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateHLMessageSendStatementValue: statement [
+	self subclassResponsibility
 ]
 
 { #category : #'code generation' }
@@ -1061,6 +1087,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitFunction: function [
 			name: (self translateSymbol: name);
 			type: functionType.
 		functionNode arguments: (function arguments collect: [ :arg | self translateFunctionArgument: arg ] ).
+		functionNode dynamicLiterals: (function dynamicLiterals collect: [ :arg | self translateFunctionDynamicLiteral: arg ] ).
 		
 		self translateFunction: function contentInto: functionNode
 	]
@@ -1145,6 +1172,19 @@ SLVMHighLevelLanguageCodeGenerator >> visitMakeVector: instruction [
 		node type: (self translateType: instruction type).
 		node arguments: (instruction parameters collect: [:arg | self translateValue: arg ]).
 	]
+]
+
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> visitMessageSend: instruction [
+	^ self instructionWithResultTranslation: instruction allocate: [ SLVMHLMessageSendStatement new ] do: [ :node |
+			node
+				returnType: (self translateType: instruction type);
+				selector: (self translateValue: instruction selector);
+				receiver: (self translateValue: instruction receiver);
+				arguments: (instruction arguments collect: [:arg | self translateValue: arg])
+	]
+
+
 ]
 
 { #category : #visitor }
