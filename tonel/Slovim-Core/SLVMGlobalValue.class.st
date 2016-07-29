@@ -41,7 +41,7 @@ SLVMGlobalValue >> name: anObject [
 
 { #category : #printing }
 SLVMGlobalValue >> printOn: aStream [
-	aStream nextPut: $@; print: name.
+	aStream nextPut: $@; print: (name ifNil: [#anonymous]).
 ]
 
 { #category : #printing }

@@ -10,10 +10,16 @@ Class {
 		'gensymCount',
 		'postOrder',
 		'preOrder',
-		'haveDominance'
+		'haveDominance',
+		'dynamicLiterals'
 	],
 	#category : #'Slovim-Core-SSA'
 }
+
+{ #category : #construction }
+SLVMFunction class >> functionType: aFunctionType [
+	^ self new functionType: aFunctionType; yourself
+]
 
 { #category : #construction }
 SLVMFunction class >> name: aString functionType: aFunctionType [
@@ -31,6 +37,15 @@ SLVMFunction >> addBasicBlock: aBasicBlock [
 	aBasicBlock index: basicBlocks size.
 	aBasicBlock function: self.
 	self invalidateControlFlowCaches
+]
+
+{ #category : #adding }
+SLVMFunction >> addDynamicLiteral: literal [
+	| result |
+	dynamicLiterals do: [ :lit | lit value = literal ifTrue: [ ^ lit ] ].
+	result := SLVMConstantDynamicLiteral new value: literal; index: dynamicLiterals size + 1.
+	dynamicLiterals add: result.
+	^ result
 ]
 
 { #category : #optimizations }
@@ -181,9 +196,20 @@ SLVMFunction >> dominances: doms intersect: n1 with: n2 [
 	^ finger1
 ]
 
+{ #category : #accessing }
+SLVMFunction >> dynamicLiterals [
+	^ dynamicLiterals
+]
+
 { #category : #printing }
 SLVMFunction >> fullPrintOn: aStream [
-	aStream nextPut: $@; print: name; space; print: type; cr.
+	aStream nextPut: $@; print: (name ifNil: [#anonymous]); space; print: type; cr.
+	dynamicLiterals ifNotEmpty: [
+		aStream nextPutAll: 'literals ['; cr.
+		dynamicLiterals do: [ :lit | aStream print: lit value; cr ].
+		aStream nextPutAll: ']'; cr.
+	].
+
 	aStream nextPutAll: '{'; cr.
 	basicBlocks do: [ :bb | bb fullPrintOn: aStream ].
 	aStream nextPutAll: '}'; cr.
@@ -212,6 +238,7 @@ SLVMFunction >> generateSymbol [
 SLVMFunction >> initialize [
 	super initialize.
 	basicBlocks := OrderedCollection new.
+	dynamicLiterals := OrderedCollection new.
 	arguments := #().
 	gensymCount := 0.
 	haveDominance := false.

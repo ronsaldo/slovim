@@ -38,6 +38,11 @@ SLVMPhi >> isPhi [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMPhi >> isPureInstruction [
+	^ true
+]
+
 { #category : #printing }
 SLVMPhi >> mnemonic [
 	^ 'phi'

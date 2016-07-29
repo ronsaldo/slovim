@@ -71,6 +71,11 @@ SLVMReferenceType >> printOn: aStream [
 ]
 
 { #category : #accessing }
+SLVMReferenceType >> referenceTypeOfMemberAt: index [
+	^ SLVMReferenceType baseType: (self typeOfMemberAt: index) storage: storage
+]
+
+{ #category : #accessing }
 SLVMReferenceType >> storage [
 	^ storage
 ]
@@ -79,4 +84,9 @@ SLVMReferenceType >> storage [
 SLVMReferenceType >> storage: aSymbol [
 	self assert: aSymbol isSymbol.
 	storage := aSymbol
+]
+
+{ #category : #accessing }
+SLVMReferenceType >> typeOfMemberAt: index [
+	^ baseType memberAt: index
 ]

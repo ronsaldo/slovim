@@ -80,6 +80,11 @@ SLVMUnaryOperation >> foldConstant [
 	^ self
 ]
 
+{ #category : #testing }
+SLVMUnaryOperation >> isPureInstruction [
+	^ true
+]
+
 { #category : #printing }
 SLVMUnaryOperation >> mnemonic [
 	^ self operation

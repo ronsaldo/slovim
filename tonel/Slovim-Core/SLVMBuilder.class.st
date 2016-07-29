@@ -24,6 +24,12 @@ SLVMBuilder >> add: left with: right name: resultName [
 ]
 
 { #category : #adding }
+SLVMBuilder >> addDynamicLiteral: literal [
+	literal isSLVMDynamicInlineLiteral ifTrue: [ ^ SLVMConstantValue type: SLVMType dynamicObjectType value: literal ].
+	^ function addDynamicLiteral: literal
+]
+
+{ #category : #adding }
 SLVMBuilder >> addInstruction: anInstruction name: theInstructionName [
 	anInstruction name: theInstructionName.
 	currentBlock add: anInstruction.
@@ -143,6 +149,26 @@ SLVMBuilder >> div: left with: right [
 { #category : #instructions }
 SLVMBuilder >> div: left with: right name: resultName [
 	^ self addOperation: #div left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> dynObjectIdentityEquals: left with: right [
+	^ self dynObjectIdentityEquals: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> dynObjectIdentityEquals: left with: right name: resultName [
+	^ self addOperation: #dynObjectIdentityEquals left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> dynObjectIdentityNotEquals: left with: right [
+	^ self dynObjectIdentityNotEquals: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> dynObjectIdentityNotEquals: left with: right name: resultName [
+	^ self addOperation: #dynObjectIdentityNotEquals left: left right: right name: resultName
 ]
 
 { #category : #instructions }
@@ -410,6 +436,16 @@ SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord name: result
 ]
 
 { #category : #instructions }
+SLVMBuilder >> send: selector returnType: returnType receiver: receiver arguments: arguments [
+	^ self send: selector returnType: returnType receiver: receiver arguments: arguments name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> send: selector returnType: returnType receiver: receiver arguments: arguments name: resultName [
+	^ self addInstruction: (SLVMSendMessage returnType: returnType receiver: receiver selector: selector arguments: arguments) name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> shuffleVector: firstVector with: secondVector components: components [
 	^ self shuffleVector: firstVector with: secondVector components: components name: function generateSymbol
 ]
@@ -449,10 +485,10 @@ SLVMBuilder >> unreachable: resultName [
 	^ self addInstruction: SLVMUnreacheable new name: resultName
 ]
 
-{ #category : #'instance creation' }
+{ #category : #'as yet unclassified' }
 SLVMBuilder >> withBasicBlock: aBasicBlock do: aBlock [
-	| oldBlock |
-	oldBlock := currentBlock.
+	| oldCurrentBlock |
+	oldCurrentBlock := currentBlock.
 	currentBlock := aBasicBlock.
-	aBlock ensure: [ currentBlock := oldBlock ]
+	aBlock ensure: [ currentBlock := oldCurrentBlock ]
 ]

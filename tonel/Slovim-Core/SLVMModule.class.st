@@ -42,7 +42,7 @@ SLVMModule >> globalValues [
 
 { #category : #initialization }
 SLVMModule >> initialize [
-	globalValues := OrderedDictionary new
+	globalValues := OrderedDictionary new.
 ]
 
 { #category : #'as yet unclassified' }

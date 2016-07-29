@@ -35,8 +35,8 @@ SLVMGetElementReference >> reference [
 { #category : #construction }
 SLVMGetElementReference >> reference: reference index: index [
 	self parameters: { reference . index }.
-	self assert: reference type isReferenceType.
-	type := SLVMReferenceType baseType: (reference type baseType memberAt: index) storage: reference type storage
+	self assert: (reference type isReferenceType or: [reference type isDynamicObjectType ]).
+	type := reference type referenceTypeOfMemberAt: index.
 ]
 
 { #category : #accessing }

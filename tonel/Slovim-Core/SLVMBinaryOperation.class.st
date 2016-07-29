@@ -61,6 +61,9 @@ SLVMBinaryOperation class >> initialize [
 		ofgt (floatComp evaluateGreaterThan)
 		ofge (floatComp evaluateGreaterEqual)
 		
+		dynObjectIdentityEquals (dynObjectComp evaluateIdentityEquals)
+		dynObjectIdentityNotEquals (dynObjectComp evaluateIdentityNotEquals)
+		
 		mulMatrixMatrix (matrixMatrix evaluateMulMatrixMatrix)
 		mulMatrixVector (matrixVector evaluateMulMatrixVector)
 		mulVectorMatrix (vectorMatrix evaluateMulVectorMatrix)
@@ -119,6 +122,10 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 	((operationType == #float) or: [ operationType == #floatComp ]) ifTrue: [ 
 		(leftType isFloatType or: [leftType isVectorType and: [leftType baseType isFloatType ] ]) ifFalse: [ self error: 'Binary operation ' , anOperation , ' requires floating point operands.' ].
 		^ operationType == #floatComp ifTrue: [ SLVMType boolType ] ifFalse: [ leftType ]
+	].
+
+	((operationType == #dynObject) or: [ operationType == #dynObjectComp ]) ifTrue: [ 
+		^ operationType == #dynObjectComp ifTrue: [ SLVMType boolType ] ifFalse: [ leftType ]
 	].
 
 	self error: 'Unsupported operation type'
