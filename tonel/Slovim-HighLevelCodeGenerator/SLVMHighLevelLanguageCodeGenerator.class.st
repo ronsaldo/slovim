@@ -25,7 +25,9 @@ Class {
 		'dynamicRuntimeRequried'
 	],
 	#classVars : [
-		'BuiltInFunctionMap'
+		'BuiltInFunctionMap',
+		'PureSpecialMessageSelector',
+		'SpecialMessageSelector'
 	],
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
@@ -33,6 +35,48 @@ Class {
 { #category : #'class initialization' }
 SLVMHighLevelLanguageCodeGenerator class >> initialize [
 	super initialize.
+	PureSpecialMessageSelector := Dictionary newFromPairs: #(
+		+	'message.add'
+		-	'message.sub'
+		*	'message.mul'
+		/	'message.div'
+		//	'message.integer-division'
+		\\	'message.remainder'
+
+		<	'message.less'
+		<=	'message.less-equal'
+		>	'message.greater'
+		>= 'message.greater-equal'
+		=	'message.equals'
+		~= 'message.not-equals'
+
+		==	'message.identity-equals'
+		~~ 'message.identity-not-equals'
+
+		negated 'message.negated'
+		not 'message.not'
+			
+		bitAnd: 'message.bit-and'
+		bitOr: 'message.bit-or'
+		bitXor: 'message.bit-xor'
+		bitShift: 'message.bit-shift'
+
+		at: 'message.at'
+		size 'message.size'
+		class 'message.class'
+		
+		basicNew 'message.basic-new'
+		basicNew: 'message.basic-new-size'
+	).
+
+	SpecialMessageSelector := Dictionary newFromPairs: #(
+		at:put: 'message.at-put'
+		value 'message.value'
+		value: 'message.value.1'
+		x: 'message.set-x'
+		y: 'message.set-y'
+	).
+	
 	BuiltInFunctionMap := Dictionary newFromPairs: #(
 		'binop.add'		(+ binary)
 		'binop.sub'   (- binary)
@@ -544,6 +588,22 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLBuiltInCallStatementValue: stat
 			out
 				nextPutAll: functionName;
 				nextPutAll: (statement arguments first translateValueWith: self).
+		]
+	].
+
+	functionType == #member ifTrue: [ 
+		^ ByteString streamContents: [ :out |
+			out
+				nextPutAll: (statement arguments first translateValueWith: self);
+				nextPut: $.;
+				nextPutAll: functionName;
+				nextPut: $(.
+			statement arguments allButFirst doWithIndex: [ :arg :index |
+				index > 1 ifTrue: [ out nextPutAll: ', ' ].
+				out nextPutAll: (arg translateValueWith: self)
+			].
+	
+			out nextPut: $).
 		]
 	].
 
@@ -1176,6 +1236,29 @@ SLVMHighLevelLanguageCodeGenerator >> visitMakeVector: instruction [
 
 { #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> visitMessageSend: instruction [
+	| selectorSymbol |
+	selectorSymbol := instruction selector isConstant ifTrue: [ instruction selector value ].
+	selectorSymbol ifNotNil: [
+		PureSpecialMessageSelector at: selectorSymbol ifPresent: [ :builtInFunction |
+			^ self pureInstructionTranslation: instruction allocate: [ SLVMHLBuiltInCallStatement new ] do: [ :node |
+			node
+				function: builtInFunction asSymbol;
+				arguments: { self translateValue: instruction receiver } ,
+					(instruction arguments collect: [:arg | self translateValue: arg])
+			]
+		].
+
+		SpecialMessageSelector at: selectorSymbol ifPresent: [ :builtInFunction |
+			^ self instructionWithResultTranslation: instruction allocate: [ SLVMHLBuiltInCallStatement new ] do: [ :node |
+			node
+				function: builtInFunction asSymbol;
+				arguments: { self translateValue: instruction receiver } ,
+					(instruction arguments collect: [:arg | self translateValue: arg])
+			]
+		]
+
+	].
+	
 	^ self instructionWithResultTranslation: instruction allocate: [ SLVMHLMessageSendStatement new ] do: [ :node |
 			node
 				returnType: (self translateType: instruction type);

@@ -124,6 +124,42 @@ SLVMCPPCodeGenerator class >> initializeTargetBuiltInMappings [
 		'binop.dynObjectIdentityEquals' ('slvm::dynrun::identityEquals' call)
 		'binop.dynObjectIdentityNotEquals' ('slvm::dynrun::identityNotEquals' call)
 
+		'message.identity-equals'				('slvm::dynrun::identityEquals' call)
+		'message.identity-not-equals'			('slvm::dynrun::identityNotEquals' call)
+		
+		'message.add'				(+ binary)
+		'message.sub'				(- binary)
+		'message.mul'				(* binary)
+		'message.div'				(/ binary)
+		'message.integer-division'				('slvm::dynrun::integerDivision' call)
+		'message.remainder'		(% binary)
+
+		'message.less'				(< binary)
+		'message.less-equal'		(<= binary)
+		'message.greater'			(> binary)
+		'message.greater-equal'	(>= binary)
+		'message.equals'			(= binary)
+		'message.not-equals'		(~= binary)
+
+		'message.negated'			(- unary)
+		'message.not'				(! unary)
+			
+		'message.bit-and'			(& binary)
+		'message.bit-or'			(| binary)
+		'message.bit-xor'			(^ binary)
+
+		'message.at'					(at member)
+		'message.at-put'			(atPut member)
+		'message.size'				(size member)
+		'message.class'				(getClass member)
+		
+		'message.value'				(value member)
+		'message.value.1'			(value member)
+		'message.set-x'				(x member)
+		'message.set-y'				(y member)
+		'message.basic-new'		(basicNew member)
+		'message.basic-new-size'	(basicNew member)
+
 		'sample.implicit_lod' (sample_implicit_lod call)
 		
 		#'math.acos'	(#'glm::acos' call)
