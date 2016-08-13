@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
 
+{ #category : #'as yet unclassified' }
+SLVMLirLabel >> copyReplaceBlocksWith: dict [
+	^ dict at: self
+]
+
 { #category : #testing }
 SLVMLirLabel >> isLabel [
 	^ true

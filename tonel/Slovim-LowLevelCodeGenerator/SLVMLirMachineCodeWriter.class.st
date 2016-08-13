@@ -49,7 +49,7 @@ SLVMLirMachineCodeWriter >> putInt32: value [
 
 { #category : #adding }
 SLVMLirMachineCodeWriter >> putInt8: value [
-	self put: value
+	self put: (value bitAnd: 16rFF)
 ]
 
 { #category : #accessing }

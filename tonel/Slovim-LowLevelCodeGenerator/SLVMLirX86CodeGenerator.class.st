@@ -1,11 +1,48 @@
 Class {
 	#name : #SLVMLirX86CodeGenerator,
 	#superclass : #SLVMLirGenerator,
+	#classVars : [
+		'OperationCodeGeneratorMap'
+	],
 	#pools : [
 		'SLVMLirX86Constants'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-X86'
 }
+
+{ #category : #'as yet unclassified' }
+SLVMLirX86CodeGenerator class >> initialize [
+	super initialize.
+	
+	OperationCodeGeneratorMap := IdentityDictionary newFromPairs: #(
+		add visitAdd:
+		sub visitSub:
+		div visitDiv:
+		udiv visitUDiv:
+		rem visitRem:
+		urem visitURem:
+		
+		bitand visitBitAnd:
+		bitor visitBitOr:
+		bitxor visitBitXor:
+		
+		shiftleft visitShiftLeft:
+		shiftright visitShiftRight:
+
+		ilt visitSignedLessThan:
+		ile visitSignedLessEqual:
+		ieq visitSignedEqual:
+		ine visitSignedNotEqual:
+		igt visitSignedGreaterThan:
+		ige visitSignedGreaterEqual:
+		
+		fadd visitFloatAdd:
+		fsub visitFloatSub:
+		fmul visitFloatMul:
+		fdiv visitFloatDiv:
+	).
+	
+]
 
 { #category : #instructions }
 SLVMLirX86CodeGenerator >> addX86: opcode [
@@ -48,6 +85,23 @@ SLVMLirX86CodeGenerator >> ensureInstructionValuesInRegistersOrImmediate: instru
 	^ { self ensureInstruction: instruction valueInRegister: first . self ensureInstruction: instruction valueInRegister: second }
 ]
 
+{ #category : #visitor }
+SLVMLirX86CodeGenerator >> generateIntegerCompare: compare instruction: instruction [
+	| values result continueLabel |
+	values := self ensureInstructionValuesInRegistersOrImmediate: instruction.
+	result := self allocateInstructionResultRegister: instruction.
+	continueLabel := self newLabel: #compareResult.
+	self
+		addX86: CMP with: values first with: values second;
+		addX86: MOV with: result with: 1;
+		addX86: compare with: continueLabel;
+		addX86: XOR with: result with: result;
+		addX86: JMP with: continueLabel;
+		addLabel: continueLabel.
+	self instruction: instruction resultInRegister: result.
+
+]
+
 { #category : #'code generation' }
 SLVMLirX86CodeGenerator >> generatePrologue [
 	| prologueBlock stackFrame entryBlock |	
@@ -65,6 +119,8 @@ SLVMLirX86CodeGenerator >> generatePrologue [
 	
 	"Allocate space for the variables"
 	stackFrame := lirFunction stackFrame.
+	self flag: 'Support multiples calling conventions'.
+	stackFrame argumentsBaseOffset: 8.
 	stackFrame optimizeAndBuildLayout.
 	stackFrame size ~= 0 ifTrue: [
 		self addX86: SUB with: ESP with: (stackFrame size alignedTo: self stackAlignment).
@@ -80,6 +136,14 @@ SLVMLirX86CodeGenerator >> initialize [
 	compilationTarget := SLVMX86CompilationTarget new.
 ]
 
+{ #category : #visitor }
+SLVMLirX86CodeGenerator >> leaveFrame [
+	self
+		addX86: MOV with: ESP with: EBP;
+		addX86: POP with: EBP;
+		addX86: RET
+]
+
 { #category : #'code generation' }
 SLVMLirX86CodeGenerator >> moveConstant: constant toMemoryInRegister: pointerRegister [
 	self addX86: MOV with: pointerRegister asX86Ptr with: constant
@@ -91,12 +155,21 @@ SLVMLirX86CodeGenerator >> moveConstant: value toRegister: register. [
 ]
 
 { #category : #'code generation' }
-SLVMLirX86CodeGenerator >> moveLocal: localVariable toRegister: register. [
+SLVMLirX86CodeGenerator >> moveLocal: localVariable toRegister: register [
 	register isVectorRegister ifTrue: [
 		self halt. 
 	] ifFalse: [
 		self addX86: MOV with: register with: localVariable
 	]
+	
+]
+
+{ #category : #'code generation' }
+SLVMLirX86CodeGenerator >> moveLocal: localVariable toRegisterLow: registerLow registerHigh: registerHigh [ 
+	self
+		addX86: MOV with: registerLow with: localVariable;
+		addX86: MOV with: registerHigh with: localVariable + 4
+	
 	
 ]
 
@@ -121,12 +194,42 @@ SLVMLirX86CodeGenerator >> stackAlignment [
 ]
 
 { #category : #visitor }
+SLVMLirX86CodeGenerator >> visitAdd: instruction [
+	| values result |
+	values := self ensureInstructionValuesInRegistersOrImmediate: instruction.
+	result := self allocateInstructionResultRegister: instruction.
+	self
+		addX86: MOV with: result with: values first;
+		addX86: ADD with: result with: values second.
+	self instruction: instruction resultInRegister: result.
+]
+
+{ #category : #visitor }
 SLVMLirX86CodeGenerator >> visitAlloca: instruction [
 	| valueType size |
 	valueType := instruction valueType.
 	size := (valueType sizeForTarget: compilationTarget) alignedTo: self stackAlignment.
 	self addX86: SUB with: ESP with: size.
 	self instruction: instruction resultInRegister: ESP.
+]
+
+{ #category : #visitor }
+SLVMLirX86CodeGenerator >> visitBinaryOperation: instruction [
+	| selector |
+	selector := OperationCodeGeneratorMap at: instruction operation.
+	^ self perform: selector with: instruction
+]
+
+{ #category : #visitor }
+SLVMLirX86CodeGenerator >> visitBranch: instruction [
+	| condition trueDestination falseDestination |
+	condition := self ensureInstruction: instruction valueInRegister: instruction condition. 
+	trueDestination := basicBlockDictionary at: instruction trueBlock.
+	falseDestination := basicBlockDictionary at: instruction falseBlock.
+	self
+		addX86: TEST with: condition with: condition;
+		addX86: JNZ with: trueDestination;
+		addX86: JMP with: falseDestination
 ]
 
 { #category : #visitor }
@@ -137,11 +240,43 @@ SLVMLirX86CodeGenerator >> visitJump: instruction [
 ]
 
 { #category : #visitor }
+SLVMLirX86CodeGenerator >> visitReturn: instruction [
+	| returnValue returnValueType returnSize |
+	returnValue := instruction value.
+	returnValueType := returnValue type.
+	returnValueType isMatrixType ifTrue: [ 
+		self halt.
+	].
+
+	returnValueType isVectorType ifTrue: [ 
+	] ifFalse: [
+		returnSize := returnValueType sizeForTarget: compilationTarget.
+		returnSize <= 8 ifTrue: [ 
+			returnValueType isFloatType ifTrue: [
+				self halt. 
+			] ifFalse: [ 
+				returnValueType isIntegerType ifTrue: [
+					returnSize = 8 ifTrue: [
+						self moveValue: returnValue toRegisterLow: TempRegister high: TempRegister2
+					] ifFalse: [
+						self moveValue: returnValue toRegister: TempRegister
+					]
+				].
+			]
+		]
+	].
+
+	self leaveFrame
+]
+
+{ #category : #visitor }
 SLVMLirX86CodeGenerator >> visitReturnVoid: instruction [
-	self
-		addX86: MOV with: ESP with: EBP;
-		addX86: POP with: EBP;
-		addX86: RET
+	self leaveFrame
+]
+
+{ #category : #visitor }
+SLVMLirX86CodeGenerator >> visitSignedLessThan: instruction [
+	self generateIntegerCompare: JL instruction: instruction
 ]
 
 { #category : #visitor }
@@ -175,4 +310,20 @@ SLVMLirX86CodeGenerator >> visitStore: instruction [
 
 	"Large object. Perform memcpy"
 	self halt.
+]
+
+{ #category : #visitor }
+SLVMLirX86CodeGenerator >> visitSub: instruction [
+	| values result |
+	values := self ensureInstructionValuesInRegistersOrImmediate: instruction.
+	result := self allocateInstructionResultRegister: instruction.
+	self
+		addX86: MOV with: result with: values first;
+		addX86: SUB with: result with: values second.
+	self instruction: instruction resultInRegister: result.
+]
+
+{ #category : #visitor }
+SLVMLirX86CodeGenerator >> visitUnreachable: instruction [
+
 ]

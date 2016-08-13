@@ -4,7 +4,10 @@ Class {
 	#instVars : [
 		'localVariables',
 		'alignment',
-		'size'
+		'size',
+		'arguments',
+		'argumentsBaseOffset',
+		'localsBaseOffset'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -14,8 +17,37 @@ SLVMLirStackFrame >> alignment [
 	^ alignment
 ]
 
+{ #category : #accessing }
+SLVMLirStackFrame >> argumentsBaseOffset [
+	^ argumentsBaseOffset
+]
+
+{ #category : #accessing }
+SLVMLirStackFrame >> argumentsBaseOffset: anObject [
+	argumentsBaseOffset := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirStackFrame >> buildArgumentLayout [
+	| argumentsSize |
+	argumentsSize := 0.
+	arguments do: [ :var |
+		argumentsSize := argumentsSize alignedTo: var alignment.
+		var offset: argumentsSize + argumentsBaseOffset.
+		argumentsSize := argumentsSize + var size.
+	].
+
+]
+
 { #category : #'as yet unclassified' }
 SLVMLirStackFrame >> buildLayout [
+	self
+		buildArgumentLayout;
+		buildLocalLayout
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirStackFrame >> buildLocalLayout [
 	localVariables sort: [ :a :b | a alignment < b alignment ].
 	alignment := 1.
 	size := 0.
@@ -23,8 +55,21 @@ SLVMLirStackFrame >> buildLayout [
 		alignment := alignment max: var alignment.
 		size := size alignedTo: var alignment.
 		size := size + var size.
-		var offset: size negated.
+		var offset: size negated + localsBaseOffset.
 	].
+
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirStackFrame >> createArgument: argSize alignment: argAlignment [
+	| result |
+	result := SLVMLirStackFrameVariable new
+		id: arguments size + 1;
+		size: argSize;
+		alignment: argAlignment;
+		yourself.
+	arguments add: result.
+	^ result
 ]
 
 { #category : #'as yet unclassified' }
@@ -33,12 +78,12 @@ SLVMLirStackFrame >> createLocal: sizeAndAlignment [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMLirStackFrame >> createLocalSize: size alignment: alignment [
+SLVMLirStackFrame >> createLocalSize: localSize alignment: localAlignment [
 	| result |
 	result := SLVMLirStackFrameVariable new
 		id: localVariables size + 1;
-		size: size;
-		alignment: alignment;
+		size: localSize;
+		alignment: localAlignment;
 		yourself.
 	localVariables add: result.
 	^ result
@@ -47,6 +92,19 @@ SLVMLirStackFrame >> createLocalSize: size alignment: alignment [
 { #category : #initialization }
 SLVMLirStackFrame >> initialize [
 	localVariables := OrderedCollection new.
+	arguments := OrderedCollection new.
+	argumentsBaseOffset := 0.
+	localsBaseOffset := 0.
+]
+
+{ #category : #accessing }
+SLVMLirStackFrame >> localsBaseOffset [
+	^ localsBaseOffset
+]
+
+{ #category : #accessing }
+SLVMLirStackFrame >> localsBaseOffset: anObject [
+	localsBaseOffset := anObject
 ]
 
 { #category : #'as yet unclassified' }

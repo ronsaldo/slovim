@@ -19,7 +19,7 @@ SLVMX86MachineCodeGenerator >> computeInitialSizeEstimate [
 		instruction offset: streamSize.
 		instruction isInstruction ifTrue: [
 			instruction size: 16.
-			streamSize := 16
+			streamSize := streamSize + 16
 		] ifFalse: [
 			instruction size: 0
 		]
@@ -31,6 +31,152 @@ SLVMX86MachineCodeGenerator >> generate: aStream [
 	instructionStream := aStream.
 	self computeInitialSizeEstimate.
 	^ self generateUntilConvergence
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateADD: instruction [
+	| first second operandSize |
+	first := instruction first.
+	second := instruction second.
+	operandSize := first size.
+	
+	operandSize = 1 ifTrue: [
+		second isImmediate ifTrue: [
+			first == AL ifTrue: [ ^ writer put: 16r04; putInt8: second value ].
+			writer put: 16r80.
+			first encodeModRMWithOpcode: 0 into: writer.
+			^ writer putInt8: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r00.
+			^ first encodeModRMWithRegister: second into: writer.
+		]
+	].
+
+	operandSize = 2 ifTrue: [
+		writer put: 16r66.
+		second isImmediate ifTrue: [
+			first == AX ifTrue: [ ^ writer put: 16r05; putInt16: second value ].
+			writer put: 16r81.
+			first encodeModRMWithOpcode: 0 into: writer.
+			^ writer putInt16: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r01.
+			^ first encodeModRMWithRegister: second into: writer.
+		]
+	].
+
+	operandSize = 4 ifTrue: [
+		second isImmediate ifTrue: [
+			first == EAX ifTrue: [ ^ writer put: 16r05; putInt32: second value ].
+			writer put: 16r81.
+			first encodeModRMWithOpcode: 0 into: writer.
+			^ writer putInt32: second value.
+		].
+
+		second isRegister ifTrue: [
+			writer put: 16r01.
+			^ first encodeModRMWithRegister: second into: writer.
+		].
+	].
+
+	self halt.
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateCMP: instruction [
+	| first second operandSize |
+	first := instruction first.
+	second := instruction second.
+	operandSize := first size.
+	
+	operandSize = 1 ifTrue: [
+		second isImmediate ifTrue: [
+			first == AL ifTrue: [ ^ writer put: 16r3C; putInt8: second value ].
+			writer put: 16r80.
+			first encodeModRMWithOpcode: 7 into: writer.
+			^ writer putInt8: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r38.
+			^ first encodeModRMWithRegister: second into: writer.
+		]
+	].
+
+	operandSize = 2 ifTrue: [
+		writer put: 16r66.
+		second isImmediate ifTrue: [
+			first == AX ifTrue: [ ^ writer put: 16r3D; putInt16: second value ].
+			writer put: 16r81.
+			first encodeModRMWithOpcode: 7 into: writer.
+			^ writer putInt16: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r39.
+			^ first encodeModRMWithRegister: second into: writer.
+		]
+	].
+
+	operandSize = 4 ifTrue: [
+		second isImmediate ifTrue: [
+			first == EAX ifTrue: [ ^ writer put: 16r3D; putInt32: second value ].
+			writer put: 16r81.
+			first encodeModRMWithOpcode: 7 into: writer.
+			^ writer putInt32: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r39.
+			^ first encodeModRMWithRegister: second into: writer.
+		]
+	].
+
+	self halt.
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateJCC: instruction opcode8: opcode8 opcode32: opcode32 [
+	| operand delta |
+	operand := instruction first.
+	self assert: operand isLabel.
+	
+	delta := operand offset - writer position.
+	(self isInShortRange: delta + 2) ifTrue: [
+		^ writer put: opcode8; putInt8: delta - 2
+	] ifFalse: [ 
+		^ writer put: opcode32; putInt32: delta - 5
+	]
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateJL: instruction [
+	^ self generateJCC: instruction opcode8: 16r7C opcode32: 16r8C
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateJMP: instruction [
+	| operand delta |
+	operand := instruction first.
+	operand isLabel ifTrue: [
+		delta := operand offset - writer position.
+		(self isInShortRange: delta + 2) ifTrue: [
+			^ writer put: 16rEB; putInt8: delta - 2
+		] ifFalse: [ 
+			^ writer put: 16rE9; putInt32: delta - 5
+		]
+	].
+
+	self halt.
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateJNZ: instruction [
+	^ self generateJCC: instruction opcode8: 16r75 opcode32: 16r85
 ]
 
 { #category : #'instruction generation' }
@@ -168,6 +314,59 @@ SLVMX86MachineCodeGenerator >> generateSUB: instruction [
 	self halt.
 ]
 
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateTEST: instruction [
+	| first second operandSize |
+	first := instruction first.
+	second := instruction second.
+	operandSize := first size.
+	
+	operandSize = 1 ifTrue: [
+		second isImmediate ifTrue: [
+			first == AL ifTrue: [ ^ writer put: 16rA8; putInt8: second value ].
+			writer put: 16rF6.
+			first encodeModRMWithOpcode: 0 into: writer.
+			^ writer putInt8: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r84.
+			^ first encodeModRMWithRegister: second into: writer.
+		]
+	].
+
+	operandSize = 2 ifTrue: [
+		writer put: 16r66.
+		second isImmediate ifTrue: [
+			first == AX ifTrue: [ ^ writer put: 16rA9; putInt16: second value ].
+			writer put: 16rF7.
+			first encodeModRMWithOpcode: 0 into: writer.
+			^ writer putInt16: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r85.
+			^ first encodeModRMWithRegister: second into: writer.
+		]
+	].
+
+	operandSize = 4 ifTrue: [
+		second isImmediate ifTrue: [
+			first == EAX ifTrue: [ ^ writer put: 16rA9; putInt32: second value ].
+			writer put: 16rF7.
+			first encodeModRMWithOpcode: 0 into: writer.
+			^ writer putInt32: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r85.
+			^ first encodeModRMWithRegister: second into: writer.
+		]
+	].
+
+	self halt.
+]
+
 { #category : #translating }
 SLVMX86MachineCodeGenerator >> generateUntilConvergence [
 	| result oldResult selector |
@@ -190,4 +389,62 @@ SLVMX86MachineCodeGenerator >> generateUntilConvergence [
 	] repeat
 	
 
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateXOR: instruction [
+	| first second operandSize |
+	first := instruction first.
+	second := instruction second.
+	operandSize := first size.
+	
+	operandSize = 1 ifTrue: [
+		second isImmediate ifTrue: [
+			first == AL ifTrue: [ ^ writer put: 16r34; putInt8: second value ].
+			writer put: 16r80.
+			first encodeModRMWithOpcode: 6 into: writer.
+			^ writer putInt8: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r30.
+			^ first encodeModRMWithRegister: second into: writer.
+		]
+	].
+
+	operandSize = 2 ifTrue: [
+		writer put: 16r66.
+		second isImmediate ifTrue: [
+			first == AX ifTrue: [ ^ writer put: 16r35; putInt16: second value ].
+			writer put: 16r81.
+			first encodeModRMWithOpcode: 6 into: writer.
+			^ writer putInt16: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r31.
+			^ first encodeModRMWithRegister: second into: writer.
+		]
+	].
+
+	operandSize = 4 ifTrue: [
+		second isImmediate ifTrue: [
+			first == EAX ifTrue: [ ^ writer put: 16r05; putInt32: second value ].
+			writer put: 16r81.
+			first encodeModRMWithOpcode: 6 into: writer.
+			^ writer putInt32: second value.
+		].
+
+		second isRegister ifTrue: [
+			writer put: 16r31.
+			^ first encodeModRMWithRegister: second into: writer.
+		].
+	].
+
+	self halt.
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> isInShortRange: value [
+	^ value between: -128 and: 127
 ]

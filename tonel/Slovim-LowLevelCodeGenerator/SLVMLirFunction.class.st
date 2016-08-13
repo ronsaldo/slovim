@@ -29,7 +29,10 @@ SLVMLirFunction >> asInstructionStream [
 	blockToLabelMap := Dictionary new.
 	basicBlocks do: [ :bb |
 		label := SLVMLirLabel new name: bb name.
-		blockToLabelMap at: bb put: label
+		blockToLabelMap at: bb put: label.
+		bb instructions do: [ :ins |
+			ins isLabel ifTrue: [ blockToLabelMap at: ins put: ins copy ]
+		]
 	].
 
 	basicBlocks do: [ :bb |

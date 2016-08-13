@@ -14,6 +14,12 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-X86'
 }
 
+{ #category : #'as yet unclassified' }
+SLVMLirX86RegisterAddress >> + displacementOrIndex [
+	displacementOrIndex isInteger ifTrue: [ ^ self copy displacement: displacementOrIndex ].
+	self halt.
+]
+
 { #category : #accessing }
 SLVMLirX86RegisterAddress >> base [
 	^ base
@@ -60,7 +66,7 @@ SLVMLirX86RegisterAddress >> encodeModRMWithOpcode: opcode into: writer [
 	
 	hasDisplacement ifTrue: [
 		hasSmallDisplacement ifTrue: [
-			writer put: displacement
+			writer putInt8: displacement
 		] ifFalse: [
 			writer putInt32: displacement
 		]

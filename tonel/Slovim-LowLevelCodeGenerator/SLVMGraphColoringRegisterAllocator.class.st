@@ -5,6 +5,14 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SLVMGraphColoringRegisterAllocator >> allocateInstructionResultRegister: instruction [
+	| registerClass |
+	registerClass := self findRegisterClassForValue: instruction.
+	self flag: 'Ensure this register is available'.
+	^ registerClass last
+]
+
+{ #category : #'as yet unclassified' }
 SLVMGraphColoringRegisterAllocator >> allocateRegisters [
 	| liveness graph |
 	self buildAllocatableRegisterClasses: lirFunction compilationTarget allocatableRegisters.
@@ -24,7 +32,7 @@ SLVMGraphColoringRegisterAllocator >> allocateSpillLocations: interferenceGraph 
 	temporariesWithClasses := Dictionary new.
 	compilationTarget := lirFunction compilationTarget.
 	
-	order select: [:node | (node variable type sizeForTarget: compilationTarget) > 0 ] thenDo: [ :node |
+	order select: [:node | node variable isFunctionArgument not and: [ (node variable type sizeForTarget: compilationTarget) > 0] ] thenDo: [ :node |
 		spillClass := node spillClassForTarget: compilationTarget.
 		usedColors := usedColorClasses at: spillClass ifAbsentPut: [ OrderedCollection new ].
 		temporaries := temporariesWithClasses at: spillClass ifAbsentPut: [ OrderedCollection new ].
@@ -64,6 +72,16 @@ SLVMGraphColoringRegisterAllocator >> graphColoringOrdering: interferenceGraph [
 { #category : #'as yet unclassified' }
 SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction resultInRegister: register with: codeGenerator [
 	codeGenerator moveRegister: register toLocal: (lirFunction variableMap at: instruction).
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction toRegister: register with: codeGenerator [
+	codeGenerator moveLocal: (lirFunction variableMap at: instruction) toRegister: register
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction toRegisterLow: registerLow high: registerHigh with: codeGenerator [
+	codeGenerator moveLocal: (lirFunction variableMap at: instruction) toRegisterLow: registerLow registerHigh: registerHigh
 ]
 
 { #category : #'as yet unclassified' }

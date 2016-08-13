@@ -12,7 +12,7 @@ Class {
 SLVMLirInstruction >> copyReplaceBlocksWith: dictionary [
 	| result |
 	result := self copy.
-	result operands: (operands collect: [ :op | op class == SLVMLirBasicBlock ifTrue: [ dictionary at: op ] ifFalse: [ op]]).
+	result operands: (operands collect: [ :op | (op class == SLVMLirBasicBlock or: [op isLabel ]) ifTrue: [ dictionary at: op ] ifFalse: [ op]]).
 	^ result
 ]
 

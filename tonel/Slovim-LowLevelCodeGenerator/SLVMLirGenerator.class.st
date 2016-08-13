@@ -18,6 +18,16 @@ SLVMLirGenerator class >> generateFunction: aFunction [
 	^ self new generateFunction: aFunction
 ]
 
+{ #category : #adding }
+SLVMLirGenerator >> addLabel: aLabel [
+	currentBlockTarget addInstruction: aLabel
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirGenerator >> allocateInstructionResultRegister: instruction [
+	^ registerAllocator allocateInstructionResultRegister: instruction
+]
+
 { #category : #accessing }
 SLVMLirGenerator >> compilationTarget [
 	^ compilationTarget
@@ -29,12 +39,26 @@ SLVMLirGenerator >> compilationTarget: anObject [
 ]
 
 { #category : #'code generation' }
+SLVMLirGenerator >> createArguments [
+	| stackFrame argVariable type size alignment |
+	stackFrame := lirFunction stackFrame.
+	function arguments do: [ :arg |
+		type := arg type.
+		size := type sizeForTarget: compilationTarget.
+		alignment := (type alignmentForTarget: compilationTarget) max: self stackElementGranularity.
+		argVariable := stackFrame createArgument: size alignment: alignment.
+		lirFunction mapSSA: arg toStackVariable: argVariable 
+	]
+]
+
+{ #category : #'code generation' }
 SLVMLirGenerator >> generateFunction: aFunction [
 	function := aFunction.
 	function dominanceTopoSort.
 	lirFunction := SLVMLirFunction new compilationTarget: compilationTarget.
 	registerAllocator function: aFunction; lirFunction: lirFunction; allocateRegisters.
 	self
+		createArguments;
 		translateBasicBlocks;
 		postProcessCodeGeneration.
 	^ lirFunction
@@ -48,14 +72,42 @@ SLVMLirGenerator >> initialize [
 	compilationTarget := SLVM32BitsPointerCompilationTarget new.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'code generation' }
 SLVMLirGenerator >> instruction: instruction resultInRegister: register [
 	registerAllocator moveInstruction: instruction resultInRegister: register with: self
 ]
 
 { #category : #'code generation' }
+SLVMLirGenerator >> moveConstant: value toRegisterLow: registerLow high: registerHigh [
+	self subclassResponsibility
+]
+
+{ #category : #'code generation' }
 SLVMLirGenerator >> moveRegister: register toLocal: localVariable [
 	self subclassResponsibility
+]
+
+{ #category : #'code generation' }
+SLVMLirGenerator >> moveValue: value toRegister: register [
+	value isConstant ifTrue: [
+		self moveConstant: value toRegister: register
+	] ifFalse: [
+		registerAllocator moveInstruction: value toRegister: register with: self
+	]
+]
+
+{ #category : #'code generation' }
+SLVMLirGenerator >> moveValue: value toRegisterLow: registerLow high: registerHigh [
+	value isConstant ifTrue: [
+		self moveConstant: value toRegisterLow: registerLow high: registerHigh
+	] ifFalse: [
+		registerAllocator moveInstruction: value toRegisterLow: registerLow high: registerHigh with: self
+	]
+]
+
+{ #category : #adding }
+SLVMLirGenerator >> newLabel: name [
+	^ SLVMLirLabel new name: name
 ]
 
 { #category : #'code generation' }
@@ -70,6 +122,11 @@ SLVMLirGenerator >> registerAllocator [
 { #category : #accessing }
 SLVMLirGenerator >> registerAllocator: anObject [
 	registerAllocator := anObject
+]
+
+{ #category : #'code generation' }
+SLVMLirGenerator >> stackElementGranularity [
+	^ 4
 ]
 
 { #category : #'code generation' }

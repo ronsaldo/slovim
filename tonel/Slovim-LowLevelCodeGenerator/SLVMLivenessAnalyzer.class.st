@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'visitedBlocks',
 		'liveInSets',
-		'liveOutSets'
+		'liveOutSets',
+		'alwaysAlive'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-RegisterAllocation'
 }
@@ -16,6 +17,9 @@ SLVMLivenessAnalyzer class >> analyze: aFunction [
 
 { #category : #'as yet unclassified' }
 SLVMLivenessAnalyzer >> analyze: aFunction [
+	alwaysAlive := Set new.
+	aFunction arguments do: [ :arg | alwaysAlive add: arg ].
+	
 	liveInSets := Dictionary new.
 	liveOutSets := Dictionary new.
 	
@@ -31,16 +35,21 @@ SLVMLivenessAnalyzer >> analyze: aFunction [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMLivenessAnalyzer >> createLiveSet [
+	^ alwaysAlive
+]
+
+{ #category : #'as yet unclassified' }
 SLVMLivenessAnalyzer >> mark: value liveIn: element [
 	| set |
-	set := liveInSets at: element ifAbsentPut: [ Set new ].
+	set := liveInSets at: element ifAbsentPut: [ self createLiveSet ].
 	set add: value
 ]
 
 { #category : #'as yet unclassified' }
 SLVMLivenessAnalyzer >> mark: value liveOut: element [
 	| set |
-	set := liveOutSets at: element ifAbsentPut: [ Set new ].
+	set := liveOutSets at: element ifAbsentPut: [ self createLiveSet ].
 	set add: value
 ]
 

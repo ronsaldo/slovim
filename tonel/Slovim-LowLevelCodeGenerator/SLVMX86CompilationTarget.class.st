@@ -31,7 +31,7 @@ SLVMX86CompilationTarget >> lowerLocalVariables: stream [
 		ins isInstruction ifTrue: [ 
 			ins operands doWithIndex: [ :op :index |
 				op isStackFrameVariable ifTrue: [
-					ins operands at: index put: (EBP asX86Ptr)
+					ins operands at: index put: EBP asX86Ptr + op offset
 				]
 			]
 		]
