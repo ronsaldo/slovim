@@ -24,6 +24,11 @@ SLVMFunctionArgument >> index: anObject [
 	index := anObject
 ]
 
+{ #category : #testing }
+SLVMFunctionArgument >> isFunctionArgument [
+	^ true
+]
+
 { #category : #accessing }
 SLVMFunctionArgument >> name [
 	^ name

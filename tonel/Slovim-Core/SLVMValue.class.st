@@ -45,6 +45,11 @@ SLVMValue >> isFunction [
 ]
 
 { #category : #testing }
+SLVMValue >> isFunctionArgument [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isInstruction [
 	^ false
 ]
