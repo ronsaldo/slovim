@@ -44,6 +44,11 @@ SLVMReferenceType >> accept: aVisitor [
 ]
 
 { #category : #accessing }
+SLVMReferenceType >> alignmentForTarget: compilationTarget [
+	^ compilationTarget referenceAlignment
+]
+
+{ #category : #accessing }
 SLVMReferenceType >> baseType [
 	^ baseType
 ]
@@ -73,6 +78,11 @@ SLVMReferenceType >> printOn: aStream [
 { #category : #accessing }
 SLVMReferenceType >> referenceTypeOfMemberAt: index [
 	^ SLVMReferenceType baseType: (self typeOfMemberAt: index) storage: storage
+]
+
+{ #category : #accessing }
+SLVMReferenceType >> sizeForTarget: compilationTarget [
+	^ compilationTarget referenceSize
 ]
 
 { #category : #accessing }

@@ -29,6 +29,11 @@ SLVMArrayType >> alignment [
 ]
 
 { #category : #accessing }
+SLVMArrayType >> alignmentForTarget: aTarget [
+	^ baseType alignmentForTarget: aTarget
+]
+
+{ #category : #accessing }
 SLVMArrayType >> baseType [
 	^ baseType
 ]
@@ -83,4 +88,9 @@ SLVMArrayType >> printOn: aStream [
 { #category : #accessing }
 SLVMArrayType >> size [
 	^ self isBounded ifTrue: [ baseType size * elements ] ifFalse: [ 0 ]
+]
+
+{ #category : #accessing }
+SLVMArrayType >> sizeForTarget: aTarget [
+	^ self isBounded ifTrue: [ (baseType sizeForTarget: aTarget) * elements ] ifFalse: [ 0 ]
 ]
