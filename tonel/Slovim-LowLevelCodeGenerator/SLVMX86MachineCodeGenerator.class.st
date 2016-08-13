@@ -154,8 +154,23 @@ SLVMX86MachineCodeGenerator >> generateJCC: instruction opcode8: opcode8 opcode3
 ]
 
 { #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateJG: instruction [
+	^ self generateJCC: instruction opcode8: 16r7F opcode32: 16r8F
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateJGE: instruction [
+	^ self generateJCC: instruction opcode8: 16r7D opcode32: 16r8D
+]
+
+{ #category : #'instruction generation' }
 SLVMX86MachineCodeGenerator >> generateJL: instruction [
 	^ self generateJCC: instruction opcode8: 16r7C opcode32: 16r8C
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateJLE: instruction [
+	^ self generateJCC: instruction opcode8: 16r7E opcode32: 16r8E
 ]
 
 { #category : #'instruction generation' }
@@ -177,6 +192,11 @@ SLVMX86MachineCodeGenerator >> generateJMP: instruction [
 { #category : #'instruction generation' }
 SLVMX86MachineCodeGenerator >> generateJNZ: instruction [
 	^ self generateJCC: instruction opcode8: 16r75 opcode32: 16r85
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateJZ: instruction [
+	^ self generateJCC: instruction opcode8: 16r74 opcode32: 16r84
 ]
 
 { #category : #'instruction generation' }
@@ -289,26 +309,53 @@ SLVMX86MachineCodeGenerator >> generateSUB: instruction [
 			writer put: 16r80.
 			first encodeModRMWithOpcode: 5 into: writer.
 			^ writer putInt8: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r28.
+			^ first encodeModRMWithRegister: second into: writer.
 		]
 	].
 
 	operandSize = 2 ifTrue: [
+		writer put: 16r66.
 		second isImmediate ifTrue: [
-			writer put: 16r66.
-			first == AX ifTrue: [ ^ writer put: 16r2D; putInt16: second value ].
-			writer put: 16r81.
-			first encodeModRMWithOpcode: 5 into: writer.
-			^ writer putInt16: second value.
+			(self isInShortRange: second) ifTrue: [ 
+				writer put: 16r83.
+				first encodeModRMWithOpcode: 5 into: writer.
+				^ writer putInt8: second value
+			] ifFalse: [ 
+				first == AX ifTrue: [ ^ writer put: 16r2D; putInt16: second value ].
+				writer put: 16r81.
+				first encodeModRMWithOpcode: 5 into: writer.
+				^ writer putInt16: second value.
+			]
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r29.
+			^ first encodeModRMWithRegister: second into: writer.
 		]
 	].
 
 	operandSize = 4 ifTrue: [
 		second isImmediate ifTrue: [
-			first == EAX ifTrue: [ ^ writer put: 16r2D; putInt32: second value ].
-			writer put: 16r81.
-			first encodeModRMWithOpcode: 5 into: writer.
-			^ writer putInt32: second value.
-		]
+			(self isInShortRange: second) ifTrue: [ 
+				writer put: 16r83.
+				first encodeModRMWithOpcode: 5 into: writer.
+				^ writer putInt8: second value
+			] ifFalse: [ 
+				first == EAX ifTrue: [ ^ writer put: 16r2D; putInt32: second value ].
+				writer put: 16r81.
+				first encodeModRMWithOpcode: 5 into: writer.
+				^ writer putInt32: second value.
+			]
+		].
+
+		second isRegister ifTrue: [
+			writer put: 16r29.
+			^ first encodeModRMWithRegister: second into: writer.
+		].
 	].
 
 	self halt.
@@ -446,5 +493,5 @@ SLVMX86MachineCodeGenerator >> generateXOR: instruction [
 
 { #category : #'instruction generation' }
 SLVMX86MachineCodeGenerator >> isInShortRange: value [
-	^ value between: -128 and: 127
+	^ value value between: -128 and: 127
 ]

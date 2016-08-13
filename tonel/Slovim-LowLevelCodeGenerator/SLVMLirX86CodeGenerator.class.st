@@ -96,7 +96,6 @@ SLVMLirX86CodeGenerator >> generateIntegerCompare: compare instruction: instruct
 		addX86: MOV with: result with: 1;
 		addX86: compare with: continueLabel;
 		addX86: XOR with: result with: result;
-		addX86: JMP with: continueLabel;
 		addLabel: continueLabel.
 	self instruction: instruction resultInRegister: result.
 
@@ -275,8 +274,33 @@ SLVMLirX86CodeGenerator >> visitReturnVoid: instruction [
 ]
 
 { #category : #visitor }
+SLVMLirX86CodeGenerator >> visitSignedEqual: instruction [
+	self generateIntegerCompare: JZ instruction: instruction
+]
+
+{ #category : #visitor }
+SLVMLirX86CodeGenerator >> visitSignedGreaterEqual: instruction [
+	self generateIntegerCompare: JGE instruction: instruction
+]
+
+{ #category : #visitor }
+SLVMLirX86CodeGenerator >> visitSignedGreaterThan: instruction [
+	self generateIntegerCompare: JG instruction: instruction
+]
+
+{ #category : #visitor }
+SLVMLirX86CodeGenerator >> visitSignedLessEqual: instruction [
+	self generateIntegerCompare: JLE instruction: instruction
+]
+
+{ #category : #visitor }
 SLVMLirX86CodeGenerator >> visitSignedLessThan: instruction [
 	self generateIntegerCompare: JL instruction: instruction
+]
+
+{ #category : #visitor }
+SLVMLirX86CodeGenerator >> visitSignedNotEqual: instruction [
+	self generateIntegerCompare: JNZ instruction: instruction
 ]
 
 { #category : #visitor }
