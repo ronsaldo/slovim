@@ -90,6 +90,11 @@ SLVMMatrixType >> isMatrixType [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMMatrixType >> isScalarType [
+	^ false
+]
+
 { #category : #accessing }
 SLVMMatrixType >> memberAt: constantValue [
 	^ self columnType

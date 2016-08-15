@@ -409,6 +409,11 @@ SLVMType >> isSamplerType [
 ]
 
 { #category : #testing }
+SLVMType >> isScalarType [
+	^ false
+]
+
+{ #category : #testing }
 SLVMType >> isSlovimType [
 	^ true
 ]

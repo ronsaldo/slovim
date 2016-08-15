@@ -232,6 +232,13 @@ SLVMBinaryOperation >> foldConstant [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMBinaryOperation >> isBinaryComparison [
+	| operationType |
+	operationType := self operationType.
+	^ operationType == #integerComp or: [ operationType == #floatComp ]
+]
+
+{ #category : #'as yet unclassified' }
 SLVMBinaryOperation >> isPureInstruction [
 	^ true
 ]
@@ -256,6 +263,11 @@ SLVMBinaryOperation >> operation: anOperation left: leftOperand right: rightOper
 	operation := anOperation.
 	type := self computeTypeFor: anOperation left: leftOperand right: rightOperand.
 	self parameters: { leftOperand . rightOperand }
+]
+
+{ #category : #accessing }
+SLVMBinaryOperation >> operationType [
+	^ (OperationSignatures at: operation) first
 ]
 
 { #category : #accessing }

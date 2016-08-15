@@ -69,6 +69,11 @@ SLVMReferenceType >> isReferenceType [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMReferenceType >> isScalarType [
+	^ true
+]
+
 { #category : #printing }
 SLVMReferenceType >> printOn: aStream [
 	aStream print: baseType;

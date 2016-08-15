@@ -77,6 +77,11 @@ SLVMVectorType >> hash [
 ]
 
 { #category : #testing }
+SLVMVectorType >> isScalarType [
+	^ false
+]
+
+{ #category : #testing }
 SLVMVectorType >> isVectorType [
 	^ true
 ]

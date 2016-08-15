@@ -39,6 +39,11 @@ SLVMPrimitiveType >> isPrimitiveType [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMPrimitiveType >> isScalarType [
+	^ true
+]
+
 { #category : #accessing }
 SLVMPrimitiveType >> name [
 	^ name

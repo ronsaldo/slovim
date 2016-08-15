@@ -2,6 +2,7 @@ Class {
 	#name : #SLVMFunctionType,
 	#superclass : #SLVMType,
 	#instVars : [
+		'callingConvention',
 		'arguments',
 		'returnType'
 	],
@@ -10,7 +11,32 @@ Class {
 
 { #category : #construction }
 SLVMFunctionType class >> arguments: argumentTypes returnType: returnType [
-	^ self new arguments: argumentTypes; returnType: returnType; yourself
+	^ self callingConvention: self genericCallingConvention arguments: argumentTypes returnType: returnType
+]
+
+{ #category : #construction }
+SLVMFunctionType class >> callingConvention: callingConvention arguments: argumentTypes returnType: returnType [
+	^ self new callingConvention: callingConvention; arguments: argumentTypes; returnType: returnType; yourself
+]
+
+{ #category : #'calling conventions' }
+SLVMFunctionType class >> cdeclCallingConvention [
+	^ #cdecl
+]
+
+{ #category : #'calling conventions' }
+SLVMFunctionType class >> genericCallingConvention [
+	^ self cdeclCallingConvention
+]
+
+{ #category : #'calling conventions' }
+SLVMFunctionType class >> smalltalkCallingConvention [
+	^ #smalltalk
+]
+
+{ #category : #'calling conventions' }
+SLVMFunctionType class >> stdcallCallingConvention [
+	^ #stdcall
 ]
 
 { #category : #comparing }
@@ -33,6 +59,16 @@ SLVMFunctionType >> arguments: aCollection [
 	aCollection do: [:arg | self assert: arg isSlovimType].
 	arguments := aCollection.
 	
+]
+
+{ #category : #accessing }
+SLVMFunctionType >> callingConvention [
+	^ callingConvention
+]
+
+{ #category : #accessing }
+SLVMFunctionType >> callingConvention: anObject [
+	callingConvention := anObject
 ]
 
 { #category : #comparing }

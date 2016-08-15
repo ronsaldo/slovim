@@ -2,7 +2,8 @@ Class {
 	#name : #SLVMCall,
 	#superclass : #SLVMInstruction,
 	#instVars : [
-		'type'
+		'type',
+		'functionType'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -22,12 +23,24 @@ SLVMCall >> arguments [
 	^ parameters allButFirst
 ]
 
+{ #category : #accessing }
+SLVMCall >> callingConvention [
+	^ functionType callingConvention
+]
+
 { #category : #construction }
 SLVMCall >> function: functionValue arguments: arguments [
 	self parameters: { functionValue } , arguments.
 	self assert: functionValue type isReferenceType.
 	self assert: functionValue type baseType isFunctionType.
-	type := functionValue type baseType returnType
+	functionType := functionValue type baseType.
+	type := functionValue type baseType returnType.
+	
+]
+
+{ #category : #accessing }
+SLVMCall >> functionType [
+	^ functionType
 ]
 
 { #category : #accessing }

@@ -92,6 +92,11 @@ SLVMInstruction >> isAlloca [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isBinaryComparison [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isBranch [
 	^ false
 ]
