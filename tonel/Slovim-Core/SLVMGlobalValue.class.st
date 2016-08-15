@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMConstant,
 	#instVars : [
 		'name',
-		'properties'
+		'properties',
+		'visibility'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -17,6 +18,12 @@ SLVMGlobalValue >> hasProperty: aSymbol [
 SLVMGlobalValue >> initialize [
 	super initialize.
 	properties := IdentityDictionary new.
+	visibility := #public.
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> isExternal [
+	^ visibility == #external
 ]
 
 { #category : #testing }
@@ -27,6 +34,51 @@ SLVMGlobalValue >> isFunction [
 { #category : #testing }
 SLVMGlobalValue >> isGlobalVariable [
 	^ false
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> isInternal [
+	^ visibility == #internal
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> isPrivate [
+	^ visibility == #private
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> isPublic [
+	^ visibility == #public
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> isWeak [
+	^ visibility == #weak
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> makeExternal [
+	visibility := #external
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> makeInternal [
+	visibility := #internal
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> makePrivate [
+	visibility := #private
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> makePublic [
+	visibility := #public
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> makeWeak [
+	visibility := #weak
 ]
 
 { #category : #accessing }
@@ -83,4 +135,14 @@ SLVMGlobalValue >> propertyAt: aSymbol ifPresent: aBlock [
 { #category : #properties }
 SLVMGlobalValue >> propertyAt: aSymbol put: anObject [
 	^ properties at: aSymbol put: anObject
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> visibility [
+	^ visibility
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> visibility: newVisibility [
+	visibility := newVisibility
 ]

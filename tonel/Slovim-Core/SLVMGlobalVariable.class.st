@@ -3,7 +3,9 @@ Class {
 	#superclass : #SLVMGlobalValue,
 	#instVars : [
 		'valueType',
-		'type'
+		'type',
+		'initialValue',
+		'readOnly'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -25,9 +27,35 @@ SLVMGlobalVariable >> fullPrintOn: aStream [
 	aStream cr
 ]
 
+{ #category : #accessing }
+SLVMGlobalVariable >> initialValue [
+	^ initialValue
+]
+
+{ #category : #accessing }
+SLVMGlobalVariable >> initialValue: anObject [
+	initialValue := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGlobalVariable >> initialize [
+	super initialize.
+	readOnly := false.
+]
+
 { #category : #testing }
 SLVMGlobalVariable >> isGlobalVariable [
 	^ true
+]
+
+{ #category : #accessing }
+SLVMGlobalVariable >> readOnly [
+	^ readOnly
+]
+
+{ #category : #accessing }
+SLVMGlobalVariable >> readOnly: anObject [
+	readOnly := anObject
 ]
 
 { #category : #accessing }

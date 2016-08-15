@@ -11,8 +11,7 @@ Class {
 		'postOrder',
 		'preOrder',
 		'haveDominance',
-		'dynamicLiterals',
-		'visibility'
+		'dynamicLiterals'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -243,7 +242,6 @@ SLVMFunction >> initialize [
 	arguments := #().
 	gensymCount := 0.
 	haveDominance := false.
-	visibility := #public.
 ]
 
 { #category : #'control flow' }
@@ -254,28 +252,13 @@ SLVMFunction >> invalidateControlFlowCaches [
 ]
 
 { #category : #testing }
+SLVMFunction >> isEmpty [
+	^ basicBlocks isEmpty
+]
+
+{ #category : #testing }
 SLVMFunction >> isFunction [
 	^ true
-]
-
-{ #category : #visibility }
-SLVMFunction >> isInternal [
-	^ visibility == #internal
-]
-
-{ #category : #visibility }
-SLVMFunction >> isPrivate [
-	^ visibility == #private
-]
-
-{ #category : #visibility }
-SLVMFunction >> isPublic [
-	^ visibility == #public
-]
-
-{ #category : #visibility }
-SLVMFunction >> isWeak [
-	^ visibility == #weak
 ]
 
 { #category : #private }
@@ -287,26 +270,6 @@ SLVMFunction >> makeArguments [
 			name: (#arg , index printString) asSymbol;
 			yourself
 	]
-]
-
-{ #category : #visibility }
-SLVMFunction >> makeInternal [
-	visibility := #internal
-]
-
-{ #category : #visibility }
-SLVMFunction >> makePrivate [
-	visibility := #private
-]
-
-{ #category : #visibility }
-SLVMFunction >> makePublic [
-	visibility := #public
-]
-
-{ #category : #visibility }
-SLVMFunction >> makeWeak [
-	visibility := #weak
 ]
 
 { #category : #'control flow' }
@@ -342,9 +305,4 @@ SLVMFunction >> unmangledName [
 { #category : #accessing }
 SLVMFunction >> unmangledName: aSymbol [
 	unmangledName := aSymbol
-]
-
-{ #category : #accessing }
-SLVMFunction >> visibility [
-	^ visibility
 ]

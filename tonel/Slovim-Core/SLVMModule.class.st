@@ -30,6 +30,15 @@ SLVMModule >> createFunctionOptimizationPassesForLevel: optimizationLevel [
 	^ passes asArray
 ]
 
+{ #category : #building }
+SLVMModule >> functionName: name arguments: arguments returnType: returnType build: aBlock [
+	| function |
+	function := SLVMFunction name: name functionType: (SLVMFunctionType arguments: arguments returnType: returnType).
+	self add: function.
+	aBlock value: function.
+	^ function
+]
+
 { #category : #adding }
 SLVMModule >> globalNamed: aSymbol [
 	^ globalValues at: aSymbol

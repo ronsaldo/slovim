@@ -18,6 +18,11 @@ SLVMConstantValue >> accept: aVisitor [
 	^ aVisitor visitConstantValue: self
 ]
 
+{ #category : #converting }
+SLVMConstantValue >> asBlob [
+	^ ByteArray streamContents: [ :out | type encodeConstant: value bigEndian: false intoByteStream: out ]
+]
+
 { #category : #comparing }
 SLVMConstantValue >> hash [
 	^ (self class hash bitXor: type hash) bitXor: value hash

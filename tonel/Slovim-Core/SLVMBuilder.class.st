@@ -66,6 +66,17 @@ SLVMBuilder >> alloca: valueType name: variableName [
 	^ self addInstruction: (SLVMAlloca valueType: valueType) name: variableName
 ]
 
+{ #category : #'instance creation' }
+SLVMBuilder >> basicBlock: aName do: aBlock [
+	| basicBlock oldCurrentBlock |
+	basicBlock := self newBasicBlock: aName.
+	oldCurrentBlock := currentBlock.
+	currentBlock := basicBlock.
+	
+	[ aBlock cull: self cull: basicBlock ] ensure: [ currentBlock := oldCurrentBlock ].
+	^ basicBlock
+]
+
 { #category : #instructions }
 SLVMBuilder >> branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock [
 	^ self branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock name: function generateSymbol
