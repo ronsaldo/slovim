@@ -167,16 +167,28 @@ SLVMLirX86FunctionCodeGenerator >> generatePrologue [
 	currentBlockTarget := prologueBlock.
 
 	"Create the stack frame"
+	self generateStackFrameBuildingJumpingInto: entryBlock
+]
+
+{ #category : #'stack frame' }
+SLVMLirX86FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryBlock [
+	| stackFrame |
 	self
 		addX86: PUSH with: EBP;
 		addX86: MOV with: EBP with: ESP.
 
+	stackFrame := lirFunction stackFrame. 
 	stackFrame size ~= 0 ifTrue: [
 		self addX86: SUB with: ESP with: (stackFrame size alignedTo: self stackAlignment).
 	].
 
 	self
 		addX86: JMP with: entryBlock
+]
+
+{ #category : #'code generation' }
+SLVMLirX86FunctionCodeGenerator >> intResultRegister [
+	^ EAX
 ]
 
 { #category : #'code generation' }
@@ -223,6 +235,11 @@ SLVMLirX86FunctionCodeGenerator >> postProcessCodeGeneration [
 	self
 		generatePrologue;
 		generateActualReturns
+]
+
+{ #category : #'code generation' }
+SLVMLirX86FunctionCodeGenerator >> secondIntResultRegister [
+	^ ECX
 ]
 
 { #category : #visitor }
@@ -370,9 +387,9 @@ SLVMLirX86FunctionCodeGenerator >> visitReturn: instruction [
 			] ifFalse: [ 
 				returnValueType isIntegerType ifTrue: [
 					returnSize = 8 ifTrue: [
-						self moveValue: returnValue toRegisterLow: TempRegister high: TempRegister2
+						self moveValue: returnValue toRegisterLow: self intResultRegister high: self secondIntResultRegister
 					] ifFalse: [
-						self moveValue: returnValue toRegister: TempRegister
+						self moveValue: returnValue toRegister: self intResultRegister
 					]
 				].
 			]

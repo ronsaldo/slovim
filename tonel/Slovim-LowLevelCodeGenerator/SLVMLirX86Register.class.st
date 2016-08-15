@@ -17,15 +17,15 @@ SLVMLirX86Register class >> canHoldValueOfType: aValue forTarget: compilationTar
 ]
 
 { #category : #'as yet unclassified' }
-SLVMLirX86Register >> encodeModRMWithOpcode: opcode into: writer [
+SLVMLirX86Register >> encodeModRMWithOpcode: opcode immediate: immediateSizee longMode: longMod into: writer [
 	| mod |
 	mod := 3.
-	writer put: (mod << 6) | (opcode << 3) | value
+	writer put: (mod << 6) | (opcode << 3) | self valueLow
 ]
 
-{ #category : #'as yet unclassified' }
-SLVMLirX86Register >> encodeModRMWithRegister: register into: writer [
-	self encodeModRMWithOpcode: register value into: writer
+{ #category : #accessing }
+SLVMLirX86Register >> isHighRegister [
+	^ value > 7
 ]
 
 { #category : #testing }
@@ -66,4 +66,9 @@ SLVMLirX86Register >> value [
 { #category : #accessing }
 SLVMLirX86Register >> value: anObject [
 	value := anObject
+]
+
+{ #category : #accessing }
+SLVMLirX86Register >> valueLow [
+	^ value bitAnd: 15
 ]

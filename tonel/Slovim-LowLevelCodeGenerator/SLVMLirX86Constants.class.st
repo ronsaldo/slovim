@@ -166,8 +166,6 @@ Class {
 		'RORX',
 		'RSI',
 		'RSP',
-		'RTempRegister',
-		'RTempRegister2',
 		'SAHF',
 		'SAL',
 		'SALX',
@@ -198,8 +196,6 @@ Class {
 		'SYSRET',
 		'TEST',
 		'TZCNT',
-		'TempRegister',
-		'TempRegister2',
 		'UD2',
 		'WAIT',
 		'WRMSR',
@@ -393,9 +389,4 @@ SLVMLirX86Constants class >> initializeRegisters [
 		declareRegisters: #(XMM0 XMM1 XMM2 XMM3 XMM4 XMM5 XMM6 XMM7
 			XMM8 XMM9 XMM10 XMM11 XMM12 XMM13 XMM14 XMM15)
 		withClass: SLVMLirX86RegisterVector.
-
-	TempRegister := EAX.
-	TempRegister2 := ECX.
-	RTempRegister := RAX.
-	RTempRegister2 := RCX.
 ]

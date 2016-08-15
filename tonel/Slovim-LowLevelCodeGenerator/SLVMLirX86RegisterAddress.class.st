@@ -60,12 +60,12 @@ SLVMLirX86RegisterAddress >> displacement: anObject [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMLirX86RegisterAddress >> encodeModRMWithOpcode: opcode into: writer [
+SLVMLirX86RegisterAddress >> encodeModRMWithOpcode: opcode immediate: immediateSize longMode: longMode into: writer [
 	| mod baseValue hasDisplacement hasSmallDisplacement sibByte indexValue scaleValue |
 	sibByte := nil.
 	self needsSibByte ifTrue: [
-		baseValue := base ifNil: [ 5 ] ifNotNil: [ base value ].
-		indexValue := index ifNil: [ 4 ] ifNotNil: [ index value ].
+		baseValue := base ifNil: [ 5 ] ifNotNil: [ base valueLow ].
+		indexValue := index ifNil: [ 4 ] ifNotNil: [ index valueLow ].
 		scaleValue := ScaleValueMap at: scale.
 		sibByte := (scaleValue << 6) | (indexValue << 3) | baseValue.
 	].
@@ -89,7 +89,7 @@ SLVMLirX86RegisterAddress >> encodeModRMWithOpcode: opcode into: writer [
 		baseValue := 4
  	] ifNil: [ 
 		base ifNotNil: [
-			baseValue := base value.
+			baseValue := base valueLow.
 		] ifNil: [
 			hasSmallDisplacement := false.
 			self assert: displacement isNotNil.
@@ -108,11 +108,6 @@ SLVMLirX86RegisterAddress >> encodeModRMWithOpcode: opcode into: writer [
 		]
 	].
 
-]
-
-{ #category : #'as yet unclassified' }
-SLVMLirX86RegisterAddress >> encodeModRMWithRegister: register into: writer [
-	self encodeModRMWithOpcode: register value into: writer
 ]
 
 { #category : #'as yet unclassified' }
