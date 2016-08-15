@@ -562,7 +562,7 @@ SLVMX86MachineCodeGenerator >> generateUntilConvergence [
 				]
 			]
 		].
-		oldResult = result ifTrue: [ ^ result compilationTarget: SLVMX86CompilationTarget new ].
+		oldResult = result ifTrue: [ ^ result compilationTarget: instructionStream compilationTarget ].
 		oldResult := result
 	] repeat
 	

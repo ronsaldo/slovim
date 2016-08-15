@@ -17,7 +17,7 @@ SLVMX86_64CompilationTarget >> allocatableRegisters [
 
 { #category : #'elf constants' }
 SLVMX86_64CompilationTarget >> elfMachine [
-	^ 3
+	^ 16r3E
 ]
 
 { #category : #'as yet unclassified' }
