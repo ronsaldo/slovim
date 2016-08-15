@@ -8,6 +8,9 @@ Class {
 		'scale',
 		'displacement'
 	],
+	#classVars : [
+		'ScaleValueMap'
+	],
 	#pools : [
 		'SLVMLirX86Constants'
 	],
@@ -15,7 +18,23 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SLVMLirX86RegisterAddress class >> initialize [
+	"
+	super initialize.
+	"
+	
+	ScaleValueMap := Dictionary newFromPairs: #(
+		1 0
+		2 1
+		4 2
+		8 3
+	)
+]
+
+{ #category : #'as yet unclassified' }
 SLVMLirX86RegisterAddress >> + displacementOrIndex [
+	| result |
+	result := self copy.
 	displacementOrIndex isInteger ifTrue: [ ^ self copy displacement: displacementOrIndex ].
 	self halt.
 ]
@@ -42,33 +61,50 @@ SLVMLirX86RegisterAddress >> displacement: anObject [
 
 { #category : #'as yet unclassified' }
 SLVMLirX86RegisterAddress >> encodeModRMWithOpcode: opcode into: writer [
-	| mod baseValue hasDisplacement hasSmallDisplacement |
-	self needsSibByte ifTrue: [ 
-		self halt.
-	].
-
-	base ifNil: [ 
-		self halt.
+	| mod baseValue hasDisplacement hasSmallDisplacement sibByte indexValue scaleValue |
+	sibByte := nil.
+	self needsSibByte ifTrue: [
+		baseValue := base ifNil: [ 5 ] ifNotNil: [ base value ].
+		indexValue := index ifNil: [ 4 ] ifNotNil: [ index value ].
+		scaleValue := ScaleValueMap at: scale.
+		sibByte := (scaleValue << 6) | (indexValue << 3) | baseValue.
 	].
 
 	hasDisplacement := false.
-	(displacement = 0 and: [ base value ~~ EBP value ]) ifTrue: [
-		mod := 0
-	] ifFalse: [
+	(sibByte isNotNil and: [ base value == EBP value ]) ifTrue: [
 		hasDisplacement := true.
 		hasSmallDisplacement := self hasSmallDisplacement.
 		mod := hasSmallDisplacement ifTrue: [ 1 ] ifFalse: [ 2 ].
+	] ifFalse: [
+		(displacement = 0 and: [ base value ~~ EBP value ]) ifTrue: [
+			mod := 0
+		] ifFalse: [
+			hasDisplacement := true.
+			hasSmallDisplacement := self hasSmallDisplacement.
+			mod := hasSmallDisplacement ifTrue: [ 1 ] ifFalse: [ 2 ].
+		].
 	].
 
-	baseValue := base ifNil: [ 0 ] ifNotNil: [ base value ].
+	sibByte ifNotNil: [ 
+		baseValue := 4
+ 	] ifNil: [ 
+		base ifNotNil: [
+			baseValue := base value.
+		] ifNil: [
+			hasSmallDisplacement := false.
+			self assert: displacement isNotNil.
+			baseValue := 5
+		].
+	].
 	
 	writer put: (mod << 6) | (opcode << 3) | baseValue.
+	sibByte ifNotNil: [ writer put: sibByte ].
 	
 	hasDisplacement ifTrue: [
 		hasSmallDisplacement ifTrue: [
 			writer putInt8: displacement
 		] ifFalse: [
-			writer putInt32: displacement
+			writer putMaybeReloc32: displacement
 		]
 	].
 

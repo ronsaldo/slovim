@@ -1,15 +1,18 @@
 Class {
 	#name : #SLVMLirLabel,
-	#superclass : #SLVMLirInstructionStreamElement,
-	#instVars : [
-		'name'
-	],
+	#superclass : #SLVMLirExternalLabel,
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #copying }
 SLVMLirLabel >> copyReplaceBlocksWith: dict [
 	^ dict at: self
+]
+
+{ #category : #initialization }
+SLVMLirLabel >> initialize [
+	super initialize.
+	visibility := #private.
 ]
 
 { #category : #testing }
@@ -27,7 +30,7 @@ SLVMLirLabel >> name: anObject [
 	name := anObject
 ]
 
-{ #category : #printing }
-SLVMLirLabel >> printOn: aStream [
-	aStream nextPutAll: name; nextPut: $:
+{ #category : #testing }
+SLVMLirLabel >> value [
+	^ offset
 ]

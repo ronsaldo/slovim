@@ -9,10 +9,24 @@ Class {
 }
 
 { #category : #copying }
-SLVMLirInstruction >> copyReplaceBlocksWith: dictionary [
+SLVMLirInstruction >> copyReplaceModuleElementsWith: moduleElementDictionary replaceBlocksWith: blockLabelDictionary lowerVariablesWith: lirFunction [
 	| result |
 	result := self copy.
-	result operands: (operands collect: [ :op | (op class == SLVMLirBasicBlock or: [op isLabel ]) ifTrue: [ dictionary at: op ] ifFalse: [ op]]).
+	result operands: (operands collect: [ :op |
+		(op isBasicBlock or: [ op isLabel ]) ifTrue: [
+			blockLabelDictionary at: op
+		] ifFalse: [
+			op isModuleElement ifTrue: [
+				moduleElementDictionary at: op
+			] ifFalse: [
+				op isStackFrameVariable ifTrue: [
+					lirFunction lowerVariable: op
+				] ifFalse: [
+					op
+				]
+			]
+		]
+	]).
 	^ result
 ]
 

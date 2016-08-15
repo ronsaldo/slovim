@@ -15,6 +15,11 @@ SLVMX86CompilationTarget >> allocatableRegisters [
 	}
 ]
 
+{ #category : #'elf constants' }
+SLVMX86CompilationTarget >> elfMachine [
+	^ 3
+]
+
 { #category : #'as yet unclassified' }
 SLVMX86CompilationTarget >> generateMachineCodeFromInstructionStream: aStream [
 	^ SLVMX86MachineCodeGenerator new generate: aStream
@@ -22,7 +27,17 @@ SLVMX86CompilationTarget >> generateMachineCodeFromInstructionStream: aStream [
 
 { #category : #accessing }
 SLVMX86CompilationTarget >> lowLevelCodeGeneratorClass [
-	^ SLVMLirX86CodeGenerator
+	^ SLVMLirX86FunctionCodeGenerator
+]
+
+{ #category : #'as yet unclassified' }
+SLVMX86CompilationTarget >> lowerLocalVariable: localVariable in: stackFrame [
+	stackFrame frameLessMethod ifTrue: [ 
+		^ ESP asX86Ptr + localVariable offset
+	].
+
+	^ EBP asX86Ptr + localVariable offset
+
 ]
 
 { #category : #'as yet unclassified' }
@@ -42,15 +57,16 @@ SLVMX86CompilationTarget >> lowerLocalVariables: stream [
 { #category : #'as yet unclassified' }
 SLVMX86CompilationTarget >> optimizeLirStream: stream [
 	self
-		lowerLocalVariables: stream;
 		removeExtraJmpFrom: stream
 ]
 
 { #category : #'as yet unclassified' }
 SLVMX86CompilationTarget >> removeExtraJmpFrom: stream [
-	stream instructionsDo: [ :instruction |
-		(instruction isInstruction and: [instruction opcode = JMP and: [ instruction operands first == instruction next ]]) ifTrue: [
-			instruction removeFromStream
+	stream sections valuesDo: [ :section |
+		section instructionsDo: [ :instruction |
+			(instruction isInstruction and: [instruction opcode = JMP and: [ instruction operands first == instruction next ]]) ifTrue: [
+				instruction removeFromStream
+			]
 		]
 	]
 

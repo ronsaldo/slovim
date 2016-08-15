@@ -5,10 +5,21 @@ Class {
 		'id',
 		'offset',
 		'size',
-		'alignment'
+		'alignment',
+		'actuallyUsed'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
+
+{ #category : #accessing }
+SLVMLirStackFrameVariable >> actuallyUsed [
+	^ actuallyUsed
+]
+
+{ #category : #accessing }
+SLVMLirStackFrameVariable >> actuallyUsed: anObject [
+	actuallyUsed := anObject
+]
 
 { #category : #accessing }
 SLVMLirStackFrameVariable >> alignment [
@@ -28,6 +39,12 @@ SLVMLirStackFrameVariable >> id [
 { #category : #accessing }
 SLVMLirStackFrameVariable >> id: anObject [
 	id := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirStackFrameVariable >> initialize [
+	super initialize.
+	actuallyUsed := false.
 ]
 
 { #category : #testing }

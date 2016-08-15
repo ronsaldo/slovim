@@ -1,7 +1,8 @@
 Class {
 	#name : #SLVMLirFunction,
-	#superclass : #Object,
+	#superclass : #SLVMLirModuleElement,
 	#instVars : [
+		'name',
 		'compilationTarget',
 		'stackFrame',
 		'variableMap',
@@ -22,30 +23,6 @@ SLVMLirFunction >> addFirstBasicBlock: aBasicBlock [
 	basicBlocks addFirst: aBasicBlock.
 ]
 
-{ #category : #'as yet unclassified' }
-SLVMLirFunction >> asInstructionStream [
-	| result blockToLabelMap label |
-	result := SLVMLirInstructionStream new compilationTarget: compilationTarget.
-	blockToLabelMap := Dictionary new.
-	basicBlocks do: [ :bb |
-		label := SLVMLirLabel new name: bb name.
-		blockToLabelMap at: bb put: label.
-		bb instructions do: [ :ins |
-			ins isLabel ifTrue: [ blockToLabelMap at: ins put: ins copy ]
-		]
-	].
-
-	basicBlocks do: [ :bb |
-		label := blockToLabelMap at: bb.
-		result add: label.
-		bb instructions do: [ :ins |
-			result add: (ins copyReplaceBlocksWith: blockToLabelMap)
-		]
-	].
-
-	^ result
-]
-
 { #category : #accessing }
 SLVMLirFunction >> basicBlocks [
 	^ basicBlocks
@@ -61,6 +38,13 @@ SLVMLirFunction >> compilationTarget: anObject [
 	compilationTarget := anObject
 ]
 
+{ #category : #printing }
+SLVMLirFunction >> fullPrintOn: aStream [
+	self printOn: aStream.
+	aStream nextPut: $:; cr.
+	basicBlocks do: [ :bb | bb fullPrintOn: aStream ].
+]
+
 { #category : #initialization }
 SLVMLirFunction >> initialize [
 	basicBlocks := OrderedCollection new.
@@ -70,13 +54,33 @@ SLVMLirFunction >> initialize [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMLirFunction >> lowerVariable: stackFrameVariable [
+	^ compilationTarget lowerLocalVariable: stackFrameVariable in: stackFrame
+]
+
+{ #category : #'as yet unclassified' }
 SLVMLirFunction >> mapSSA: value toStackVariable: local [
 	variableMap at: value put: local.
 ]
 
+{ #category : #accessing }
+SLVMLirFunction >> name [
+	^ name
+]
+
+{ #category : #accessing }
+SLVMLirFunction >> name: anObject [
+	name := anObject
+]
+
 { #category : #printing }
 SLVMLirFunction >> printOn: aStream [
-	basicBlocks do: [ :bb | bb fullPrintOn: aStream ].
+	aStream nextPutAll: name
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirFunction >> section [
+	^ #'.text'
 ]
 
 { #category : #accessing }
@@ -87,4 +91,29 @@ SLVMLirFunction >> stackFrame [
 { #category : #accessing }
 SLVMLirFunction >> variableMap [
 	^ variableMap
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirFunction >> writeToInstructionStream: instructionStream moduleElementDictionary: moduleElementDictionary [
+	| blockToLabelMap label |
+	blockToLabelMap := Dictionary new.
+	basicBlocks do: [ :bb |
+		label := SLVMLirLabel new name: bb name.
+		blockToLabelMap at: bb put: label.
+		bb instructions do: [ :ins |
+			ins isLabel ifTrue: [ blockToLabelMap at: ins put: ins copy ]
+		]
+	].
+
+	basicBlocks do: [ :bb |
+		label := blockToLabelMap at: bb.
+		instructionStream add: label.
+		bb instructions do: [ :ins |
+			instructionStream add: (
+				ins
+					copyReplaceModuleElementsWith: moduleElementDictionary
+					replaceBlocksWith: blockToLabelMap
+					lowerVariablesWith: self)
+		]
+	].
 ]

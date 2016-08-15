@@ -1,5 +1,5 @@
 Class {
-	#name : #SLVMLirGenerator,
+	#name : #SLVMLirFunctionGenerator,
 	#superclass : #Object,
 	#instVars : [
 		'registerAllocator',
@@ -13,33 +13,28 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
 
-{ #category : #'code generation' }
-SLVMLirGenerator class >> generateFunction: aFunction [
-	^ self new generateFunction: aFunction
-]
-
 { #category : #adding }
-SLVMLirGenerator >> addLabel: aLabel [
+SLVMLirFunctionGenerator >> addLabel: aLabel [
 	currentBlockTarget addInstruction: aLabel
 ]
 
 { #category : #'as yet unclassified' }
-SLVMLirGenerator >> allocateInstructionResultRegister: instruction [
+SLVMLirFunctionGenerator >> allocateInstructionResultRegister: instruction [
 	^ registerAllocator allocateInstructionResultRegister: instruction
 ]
 
 { #category : #accessing }
-SLVMLirGenerator >> compilationTarget [
+SLVMLirFunctionGenerator >> compilationTarget [
 	^ compilationTarget
 ]
 
 { #category : #accessing }
-SLVMLirGenerator >> compilationTarget: anObject [
+SLVMLirFunctionGenerator >> compilationTarget: anObject [
 	compilationTarget := anObject
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> createArguments [
+SLVMLirFunctionGenerator >> createArguments [
 	| stackFrame argVariable type size alignment |
 	stackFrame := lirFunction stackFrame.
 	function arguments do: [ :arg |
@@ -52,10 +47,17 @@ SLVMLirGenerator >> createArguments [
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> generateFunction: aFunction [
+SLVMLirFunctionGenerator >> generateFunction: aFunction [
+	^ self generateFunction: aFunction into: (SLVMLirFunction new compilationTarget: compilationTarget).
+
+
+]
+
+{ #category : #'code generation' }
+SLVMLirFunctionGenerator >> generateFunction: aFunction into: aLirFunction [
 	function := aFunction.
 	function dominanceTopoSort.
-	lirFunction := SLVMLirFunction new compilationTarget: compilationTarget.
+	lirFunction := aLirFunction.
 	registerAllocator function: aFunction; lirFunction: lirFunction; allocateRegisters.
 	self
 		createArguments;
@@ -66,29 +68,29 @@ SLVMLirGenerator >> generateFunction: aFunction [
 ]
 
 { #category : #initialization }
-SLVMLirGenerator >> initialize [
+SLVMLirFunctionGenerator >> initialize [
 	super initialize.
 	registerAllocator := SLVMGreedyRegisterAllocator new.
 	compilationTarget := SLVM32BitsPointerCompilationTarget new.
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> instruction: instruction resultInRegister: register [
+SLVMLirFunctionGenerator >> instruction: instruction resultInRegister: register [
 	registerAllocator moveInstruction: instruction resultInRegister: register with: self
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> moveConstant: value toRegisterLow: registerLow high: registerHigh [
+SLVMLirFunctionGenerator >> moveConstant: value toRegisterLow: registerLow high: registerHigh [
 	self subclassResponsibility
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> moveRegister: register toLocal: localVariable [
+SLVMLirFunctionGenerator >> moveRegister: register toLocal: localVariable [
 	self subclassResponsibility
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> moveValue: value toRegister: register [
+SLVMLirFunctionGenerator >> moveValue: value toRegister: register [
 	value isConstant ifTrue: [
 		self moveConstant: value toRegister: register
 	] ifFalse: [
@@ -97,7 +99,7 @@ SLVMLirGenerator >> moveValue: value toRegister: register [
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> moveValue: value toRegisterLow: registerLow high: registerHigh [
+SLVMLirFunctionGenerator >> moveValue: value toRegisterLow: registerLow high: registerHigh [
 	value isConstant ifTrue: [
 		self moveConstant: value toRegisterLow: registerLow high: registerHigh
 	] ifFalse: [
@@ -106,37 +108,43 @@ SLVMLirGenerator >> moveValue: value toRegisterLow: registerLow high: registerHi
 ]
 
 { #category : #adding }
-SLVMLirGenerator >> newLabel: name [
+SLVMLirFunctionGenerator >> newLabel: name [
 	^ SLVMLirLabel new name: name
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> postProcessCodeGeneration [
+SLVMLirFunctionGenerator >> postProcessCodeGeneration [
 ]
 
 { #category : #accessing }
-SLVMLirGenerator >> registerAllocator [
+SLVMLirFunctionGenerator >> registerAllocator [
 	^ registerAllocator
 ]
 
 { #category : #accessing }
-SLVMLirGenerator >> registerAllocator: anObject [
+SLVMLirFunctionGenerator >> registerAllocator: anObject [
 	registerAllocator := anObject
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> stackElementGranularity [
+SLVMLirFunctionGenerator >> stackElementGranularity [
 	^ 4
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> translateBasicBlock: basicBlock [
+SLVMLirFunctionGenerator >> translateBasicBlock: basicBlock [
 	self translateBasicBlock: basicBlock into: (basicBlockDictionary at: basicBlock)
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> translateBasicBlock: basicBlock into: lirBasicBlock [
+SLVMLirFunctionGenerator >> translateBasicBlock: basicBlock into: lirBasicBlock [
 	currentBlockTarget := lirBasicBlock.
+	self translateBasicBlockInstructions: basicBlock
+
+]
+
+{ #category : #'code generation' }
+SLVMLirFunctionGenerator >> translateBasicBlockInstructions: basicBlock [
 	basicBlock instructionsDo: [ :ins |
 		ins accept: self
 	].
@@ -144,12 +152,12 @@ SLVMLirGenerator >> translateBasicBlock: basicBlock into: lirBasicBlock [
 ]
 
 { #category : #'code generation' }
-SLVMLirGenerator >> translateBasicBlocks [
+SLVMLirFunctionGenerator >> translateBasicBlocks [
 	"Create the new basic blocks"
 	| lirBlock |
 	basicBlockDictionary := Dictionary new.
 	function basicBlocks do: [ :bb |
-		lirBlock := SLVMLirBasicBlock new name: bb name.
+		lirBlock := SLVMLirBasicBlock new name: bb name asSymbol.
 		lirFunction addBasicBlock: lirBlock.
 		basicBlockDictionary at: bb put: lirBlock.
 	].

@@ -10,12 +10,27 @@ SLVMLirInstructionOperand >> asLirInstructionOperand [
 ]
 
 { #category : #testing }
+SLVMLirInstructionOperand >> isBasicBlock [
+	^ false
+]
+
+{ #category : #testing }
+SLVMLirInstructionOperand >> isExternalLabel [
+	^ false
+]
+
+{ #category : #testing }
 SLVMLirInstructionOperand >> isImmediate [
 	^ false
 ]
 
 { #category : #testing }
 SLVMLirInstructionOperand >> isLabel [
+	^ false
+]
+
+{ #category : #testing }
+SLVMLirInstructionOperand >> isModuleElement [
 	^ false
 ]
 

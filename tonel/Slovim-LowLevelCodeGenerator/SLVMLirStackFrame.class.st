@@ -7,7 +7,8 @@ Class {
 		'size',
 		'arguments',
 		'argumentsBaseOffset',
-		'localsBaseOffset'
+		'localsBaseOffset',
+		'frameLessMethod'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -89,12 +90,28 @@ SLVMLirStackFrame >> createLocalSize: localSize alignment: localAlignment [
 	^ result
 ]
 
+{ #category : #accessing }
+SLVMLirStackFrame >> frameLessMethod [
+	^ frameLessMethod
+]
+
+{ #category : #accessing }
+SLVMLirStackFrame >> frameLessMethod: anObject [
+	frameLessMethod := anObject
+]
+
 { #category : #initialization }
 SLVMLirStackFrame >> initialize [
 	localVariables := OrderedCollection new.
 	arguments := OrderedCollection new.
 	argumentsBaseOffset := 0.
 	localsBaseOffset := 0.
+	frameLessMethod := false.
+]
+
+{ #category : #accessing }
+SLVMLirStackFrame >> localVariables [
+	^ localVariables
 ]
 
 { #category : #accessing }
@@ -107,9 +124,16 @@ SLVMLirStackFrame >> localsBaseOffset: anObject [
 	localsBaseOffset := anObject
 ]
 
+{ #category : #optimizing }
+SLVMLirStackFrame >> optimize [
+	localVariables := localVariables select: #actuallyUsed
+]
+
 { #category : #'as yet unclassified' }
 SLVMLirStackFrame >> optimizeAndBuildLayout [
-	self buildLayout
+	self
+		optimize;
+		buildLayout
 ]
 
 { #category : #accessing }

@@ -1,6 +1,6 @@
 Class {
 	#name : #SLVMLirBasicBlock,
-	#superclass : #Object,
+	#superclass : #SLVMLirInstructionOperand,
 	#instVars : [
 		'name',
 		'function',
@@ -12,11 +12,6 @@ Class {
 { #category : #adding }
 SLVMLirBasicBlock >> addInstruction: anInstruction [
 	^ instructions add: anInstruction
-]
-
-{ #category : #'as yet unclassified' }
-SLVMLirBasicBlock >> asLirInstructionOperand [
-	^ self
 ]
 
 { #category : #printing }
@@ -47,6 +42,11 @@ SLVMLirBasicBlock >> instructions [
 	^ instructions
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirBasicBlock >> isBasicBlock [
+	^ true
+]
+
 { #category : #accessing }
 SLVMLirBasicBlock >> name [
 	^ name
@@ -59,5 +59,5 @@ SLVMLirBasicBlock >> name: anObject [
 
 { #category : #printing }
 SLVMLirBasicBlock >> printOn: aStream [
-	aStream print: name
+	aStream nextPutAll: '.L'; nextPutAll: name
 ]
