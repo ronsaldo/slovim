@@ -1,33 +1,37 @@
 Class {
 	#name : #SLVMLirLabel,
 	#superclass : #SLVMLirExternalLabel,
+	#instVars : [
+		'contentSize'
+	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
 
+{ #category : #accessing }
+SLVMLirLabel >> contentSize [
+	^ contentSize
+]
+
+{ #category : #accessing }
+SLVMLirLabel >> contentSize: anObject [
+	contentSize := anObject
+]
+
 { #category : #copying }
-SLVMLirLabel >> copyReplaceBlocksWith: dict [
-	^ dict at: self
+SLVMLirLabel >> copyReplaceModuleElementsWith: moduleElementDictionary replaceBlocksWith: blockLabelDictionary lowerVariablesWith: lirFunction [
+	^ blockLabelDictionary at: self
 ]
 
 { #category : #initialization }
 SLVMLirLabel >> initialize [
 	super initialize.
 	visibility := #private.
+	contentSize := 0.
 ]
 
-{ #category : #testing }
-SLVMLirLabel >> isLabel [
-	^ true
-]
-
-{ #category : #accessing }
-SLVMLirLabel >> name [
-	^ name
-]
-
-{ #category : #accessing }
-SLVMLirLabel >> name: anObject [
-	name := anObject
+{ #category : #'as yet unclassified' }
+SLVMLirLabel >> isExternalLabel [
+	^ false
 ]
 
 { #category : #testing }

@@ -76,12 +76,21 @@ SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction resultInRegis
 
 { #category : #'as yet unclassified' }
 SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction toRegister: register with: codeGenerator [
-	codeGenerator moveLocal: (lirFunction variableMap at: instruction) toRegister: register
+	codeGenerator moveLocal: (lirFunction variableMap at: instruction) type: instruction type toRegister: register
 ]
 
 { #category : #'as yet unclassified' }
 SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction toRegisterLow: registerLow high: registerHigh with: codeGenerator [
 	codeGenerator moveLocal: (lirFunction variableMap at: instruction) toRegisterLow: registerLow registerHigh: registerHigh
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction value: value toMemoryWith: codeGenerator [
+	value isConstant ifTrue: [
+		^ codeGenerator putConstantInConstantZone: value
+	] ifFalse: [
+		^ lirFunction variableMap at: value
+	]
 ]
 
 { #category : #'as yet unclassified' }
@@ -110,7 +119,7 @@ SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction value: value 
 		codeGenerator moveConstant: value toRegister: register.
 	] ifFalse: [
 		register := registerClass at: valueIndex.
-		codeGenerator moveLocal: (lirFunction variableMap at: value) toRegister: register.
+		codeGenerator moveLocal: (lirFunction variableMap at: value) type: value type toRegister: register.
 	].
 
 	^ register

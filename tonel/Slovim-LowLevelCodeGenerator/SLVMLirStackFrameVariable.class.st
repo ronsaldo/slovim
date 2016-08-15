@@ -31,6 +31,12 @@ SLVMLirStackFrameVariable >> alignment: anObject [
 	alignment := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirStackFrameVariable >> asX86PtrOfSize: newSize [
+	size = newSize ifTrue: [ ^ self ].
+	self halt.
+]
+
 { #category : #accessing }
 SLVMLirStackFrameVariable >> id [
 	^ id

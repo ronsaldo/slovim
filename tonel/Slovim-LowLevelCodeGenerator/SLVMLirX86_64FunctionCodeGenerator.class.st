@@ -7,7 +7,12 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-X86'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #'stack frame' }
+SLVMLirX86_64FunctionCodeGenerator >> floatReturnRegister [
+	^ XMM0
+]
+
+{ #category : #'stack frame' }
 SLVMLirX86_64FunctionCodeGenerator >> generateActualReturn: instruction [
 	lirFunction stackFrame frameLessMethod ifFalse: [
 		self
@@ -19,7 +24,7 @@ SLVMLirX86_64FunctionCodeGenerator >> generateActualReturn: instruction [
 		addX86: RET
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'stack frame' }
 SLVMLirX86_64FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryBlock [
 	| stackFrame |
 	self
@@ -35,12 +40,18 @@ SLVMLirX86_64FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: ent
 		addX86: JMP with: entryBlock
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #initialization }
+SLVMLirX86_64FunctionCodeGenerator >> initialize [
+	super initialize.
+	longMode := true.
+]
+
+{ #category : #'stack frame' }
 SLVMLirX86_64FunctionCodeGenerator >> intResultRegister [
 	^ RAX
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'stack frame' }
 SLVMLirX86_64FunctionCodeGenerator >> secondIntResultRegister [
 	^ RCX
 ]

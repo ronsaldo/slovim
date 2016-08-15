@@ -15,7 +15,7 @@ SLVMElf32SymbolTable >> addSymbol: symbol stringTable: stringTable sectionDictio
 		ifFalse: [ symbol isWeak ifTrue: [ 2 ] ifFalse: [ 0 ] ].
 	type := 0.
 	elfSymbol := SLVMElf32SymbolTableEntry new
-		name: (stringTable addString: symbol name);
+		name: (symbol isPrivate ifTrue: [ 0 ] ifFalse: [ stringTable addString: symbol name ]);
 		value: symbol position;
 		size: symbol size;
 		info: binding << 4 | (type bitAnd: 16rf);

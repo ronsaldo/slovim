@@ -11,3 +11,8 @@ Class {
 SLVMLirX86RegisterInt >> asX86Ptr [
 	^ SLVMLirX86RegisterAddress new base: self; size: self size
 ]
+
+{ #category : #converting }
+SLVMLirX86RegisterInt >> asX86PtrOfSize: ptrSize [
+	^ SLVMLirX86RegisterAddress new base: self; size: ptrSize
+]

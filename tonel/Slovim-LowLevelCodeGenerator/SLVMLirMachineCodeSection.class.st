@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'name',
 		'base',
-		'code'
+		'code',
+		'relocations'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -13,7 +14,13 @@ Class {
 SLVMLirMachineCodeSection >> = other [
 	^ self class = other class and:
 	[ base = other base and:
-	[ name = other name] ]
+	[ name = other name and:
+	[ relocations = other relocations ] ] ]
+]
+
+{ #category : #accessing }
+SLVMLirMachineCodeSection >> addRelocation: aRelocation [
+	relocations add: aRelocation
 ]
 
 { #category : #accessing }
@@ -40,6 +47,7 @@ SLVMLirMachineCodeSection >> code: anObject [
 SLVMLirMachineCodeSection >> initialize [
 	super initialize.
 	base := 0.
+	relocations := OrderedCollection new.
 ]
 
 { #category : #accessing }
@@ -52,12 +60,17 @@ SLVMLirMachineCodeSection >> name: anObject [
 	name := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
+SLVMLirMachineCodeSection >> relocations [
+	^ relocations
+]
+
+{ #category : #accessing }
 SLVMLirMachineCodeSection >> size [
 	^ code size
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #writing }
 SLVMLirMachineCodeSection >> writeOn: aStream [
 	aStream nextPutAll: code
 ]

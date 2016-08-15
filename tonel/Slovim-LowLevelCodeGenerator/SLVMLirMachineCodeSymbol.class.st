@@ -75,7 +75,7 @@ SLVMLirMachineCodeSymbol >> section: anObject [
 
 { #category : #initialization }
 SLVMLirMachineCodeSymbol >> shouldBeKeep [
-	^ self isPublic or: [ self usedForReloc ]
+	^ self isPublic
 ]
 
 { #category : #accessing }

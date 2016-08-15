@@ -18,7 +18,7 @@ SLVMLirInstructionStreamSection >> add: element [
 { #category : #'adding/removing' }
 SLVMLirInstructionStreamSection >> addLast: element [
 	element
-		stream: self;
+		section: self;
 		previous: lastInstruction;
 		next: nil.
 		
@@ -88,7 +88,7 @@ SLVMLirInstructionStreamSection >> removeElement: anElement [
 	].
 
 	anElement
-		stream: nil;
+		section: nil;
 		previous: nil;
 		next: nil
 

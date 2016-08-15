@@ -6,7 +6,8 @@ Class {
 		'currentSection',
 		'sections',
 		'symbols',
-		'symbolTable'
+		'symbolTable',
+		'currentSectionSource'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -34,6 +35,16 @@ SLVMLirMachineCodeWriter >> initialize [
 SLVMLirMachineCodeWriter >> lastSectionEnding [
 	sections ifEmpty: [ ^ 0 ].
 	^ sections last base + sections code size
+]
+
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> nextPut: value [
+	stream nextPut: value
+]
+
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> nextPutAll: value [
+	stream nextPutAll: value
 ]
 
 { #category : #accessing }
@@ -67,17 +78,83 @@ SLVMLirMachineCodeWriter >> putInt32: value [
 ]
 
 { #category : #adding }
+SLVMLirMachineCodeWriter >> putInt64: value [
+	self
+		put: (value bitAnd: 16rff);
+		put: ((value >> 8) bitAnd: 16rff);
+		put: ((value >> 16) bitAnd: 16rff);
+		put: ((value >> 24) bitAnd: 16rff);
+		put: ((value >> 32) bitAnd: 16rff);
+		put: ((value >> 40) bitAnd: 16rff);
+		put: ((value >> 48) bitAnd: 16rff);
+		put: ((value >> 56) bitAnd: 16rff).
+]
+
+{ #category : #adding }
 SLVMLirMachineCodeWriter >> putInt8: value [
 	self put: (value bitAnd: 16rFF)
 ]
 
 { #category : #adding }
 SLVMLirMachineCodeWriter >> putMaybeReloc32: value [
-	value isInteger ifTrue: [
-		self putInt32: value
-	] ifFalse: [ 
+	(value isInteger or: [ value isImmediateConstant ]) ifTrue: [
+		^self putInt32: value value
+	].
+
+	value isExternalLabel ifTrue: [
+		self recordReloc32Into: value.
+		^ self putInt32: 0
+	].
+
+	value isLabel ifTrue: [ 
+		self recordReloc32Into: value.
+		^ self putInt32: value offset
+	].
+	
+	self halt.
+]
+
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> putMaybeReloc32: value nextIPRelative: immediateSize [
+	| subtractionValue extraOffset |
+	extraOffset := 4 + immediateSize.
+	subtractionValue := self position + 4 + immediateSize.
+	(value isInteger or: [ value isImmediateConstant ]) ifTrue: [
+		^self putInt32: value value - subtractionValue
+	].
+
+	value isExternalLabel ifTrue: [
 		self halt.
-	]
+	].
+
+	value isLabel ifTrue: [ 
+		value section == currentSectionSource ifTrue: [ 
+			^ self putInt32: value offset - subtractionValue
+		] ifFalse: [
+			self halt
+		]
+	].
+	
+	self halt.
+]
+
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> putMaybeReloc64: value [
+	(value isInteger or: [ value isImmediateConstant ]) ifTrue: [
+		^self putInt64: value value
+	].
+
+	value isExternalLabel ifTrue: [
+		self recordReloc64Into: value.
+		^ self putInt64: 0
+	].
+
+	value isLabel ifTrue: [ 
+		self recordReloc64Into: value.
+		^ self putInt64: value offset
+	].
+	
+	self halt.
 ]
 
 { #category : #adding }
@@ -92,16 +169,32 @@ SLVMLirMachineCodeWriter >> putNextIPRelativeLabel8: label [
 
 { #category : #adding }
 SLVMLirMachineCodeWriter >> recordLabel: label [
-	(self symbolForLabel: label)
+	^ (self symbolForLabel: label)
 		visibility: label visibility;
 		section: currentSection;
 		position: stream position;
+		size: label contentSize;
 		yourself.	
 ]
 
 { #category : #adding }
-SLVMLirMachineCodeWriter >> section: sectionName alignment: sectionAlignment do: aBlock [
-	currentSection := SLVMLirMachineCodeSection new name: sectionName.
+SLVMLirMachineCodeWriter >> recordReloc32Into: destinationSymbol [
+	| symbol reloc |
+	symbol := self symbolForLabel: destinationSymbol.
+	symbol usedForReloc: true.
+	
+	reloc := SLVMLirMachineCodeRelocation new
+		absoluteOffset32;
+		offset: stream position - 1;
+		symbol: (symbol shouldBeKeep ifTrue: [ symbol ] ifFalse: [ nil ]);
+		yourself.
+	currentSection addRelocation: reloc 
+]
+
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> section: section alignment: sectionAlignment do: aBlock [
+	currentSectionSource := section. 
+	currentSection := SLVMLirMachineCodeSection new name: section name.
 	currentSection base: (self lastSectionEnding alignedTo: sectionAlignment).
 	sections add: currentSection.
 	currentSection code: (ByteArray streamContents: [ :out |

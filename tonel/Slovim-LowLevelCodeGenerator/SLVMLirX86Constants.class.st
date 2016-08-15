@@ -6,6 +6,7 @@ Class {
 		'ADD',
 		'ADDPD',
 		'ADDPS',
+		'ADDSD',
 		'ADDSS',
 		'ADDSUBPD',
 		'ADDSUBPS',
@@ -42,6 +43,7 @@ Class {
 		'DIV',
 		'DIVPD',
 		'DIVPS',
+		'DIVSD',
 		'DIVSS',
 		'DL',
 		'DPPD',
@@ -125,16 +127,41 @@ Class {
 		'MM6',
 		'MM7',
 		'MOV',
+		'MOVAPD',
+		'MOVAPS',
+		'MOVSD',
+		'MOVSS',
+		'MUL',
+		'MULPD',
+		'MULPS',
+		'MULSD',
+		'MULSS',
 		'NEG',
 		'NOP',
 		'OR',
 		'OUT',
+		'PADDB',
+		'PADDD',
+		'PADDQ',
+		'PADDW',
+		'PAND',
+		'PANDN',
 		'POP',
 		'POPA',
 		'POPF',
+		'POR',
+		'PRLLQ',
+		'PSLLD',
+		'PSLLQ',
+		'PSLLW',
+		'PSRAD',
+		'PSRAW',
+		'PSRLD',
+		'PSRLW',
 		'PUSH',
 		'PUSHA',
 		'PUSHF',
+		'PXOR',
 		'R10',
 		'R11',
 		'R12',
@@ -190,6 +217,10 @@ Class {
 		'STD',
 		'STI',
 		'SUB',
+		'SUBPD',
+		'SUBPS',
+		'SUBSD',
+		'SUBSS',
 		'SYSCALL',
 		'SYSENTER',
 		'SYSEXIT',
@@ -252,6 +283,7 @@ SLVMLirX86Constants class >> initializeMnemonics [
 	ADDPD
 	ADDPS
 	ADDSS
+	ADDSD
 	ADDSUBPD
 	ADDSUBPS
 	AND
@@ -276,6 +308,7 @@ SLVMLirX86Constants class >> initializeMnemonics [
 	DIVPD
 	DIVPS
 	DIVSS
+	DIVSD
 	DPPD
 	DPPS
 	EMMS
@@ -307,10 +340,24 @@ SLVMLirX86Constants class >> initializeMnemonics [
 	LTR
 	MFENCE
 	MOV
+	MOVAPD
+	MOVAPS
+	MOVSS
+	MOVSD
+	MUL
+	MULPD
+	MULPS
+	MULSS
+	MULSD
 	NEG
 	NOP
 	OR
 	OUT
+	PADDB PADDW PADDD PADDQ
+	PAND PANDN POR PXOR
+	PSLLW PSLLD PSLLQ
+	PSRLW PSRLD PRLLQ
+	PSRAW PSRAD
 	POP
 	POPA
 	POPF
@@ -340,6 +387,10 @@ SLVMLirX86Constants class >> initializeMnemonics [
 	STD
 	STI
 	SUB
+	SUBPD
+	SUBPS
+	SUBSS
+	SUBSD
 	SYSCALL
 	SYSENTER
 	SYSEXIT

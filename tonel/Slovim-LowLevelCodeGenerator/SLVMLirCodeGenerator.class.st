@@ -14,7 +14,7 @@ Class {
 SLVMLirCodeGenerator >> initialize [
 	super initialize.
 	compilationTarget := SLVM32BitsPointerCompilationTarget new.
-	functionCodeGeneratorClass := SLVMLirFunctionGenerator.
+	functionCodeGeneratorClass := SLVMLirFunctionCodeGenerator.
 ]
 
 { #category : #'code generation' }

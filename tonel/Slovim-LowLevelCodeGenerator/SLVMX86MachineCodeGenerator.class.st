@@ -23,7 +23,9 @@ SLVMX86MachineCodeGenerator >> computeInitialSizeEstimate [
 				instruction size: 16.
 				streamSize := streamSize + 16
 			] ifFalse: [
-				instruction size: 0
+				instruction isBlob ifTrue: [ 
+					streamSize := streamSize + instruction size
+				] ifFalse: [ instruction size: 0 ]
 			]
 		].
 	]
@@ -173,6 +175,32 @@ SLVMX86MachineCodeGenerator >> generateADD: instruction [
 ]
 
 { #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateADDSD: instruction [
+	| first second |
+	first := instruction first.
+	second := instruction second.
+	self assert: first isRegister.
+	self assert: second isRegisterOrRegisterAddress.
+	self encodeRexSize: 4 rm: first reg: second.	
+	writer put: 16rF2; put: 16r0F; put: 16r58.
+	^ self encodeModRM: second reg: first.
+
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateADDSS: instruction [
+	| first second |
+	first := instruction first.
+	second := instruction second.
+	self assert: first isRegister.
+	self assert: second isRegisterOrRegisterAddress.
+	self encodeRexSize: 4 rm: first reg: second.	
+	writer put: 16rF3; put: 16r0F; put: 16r58.
+	^ self encodeModRM: second reg: first.
+
+]
+
+{ #category : #'instruction generation' }
 SLVMX86MachineCodeGenerator >> generateCMP: instruction [
 	| first second operandSize |
 	first := instruction first.
@@ -226,6 +254,28 @@ SLVMX86MachineCodeGenerator >> generateCMP: instruction [
 	].
 
 	self invalidInstruction
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateFLD: instruction [
+	| operand operandSize |
+	operand := instruction operands first.
+	self assert: operand isRegisterOrRegisterAddress.
+	
+	operandSize := operand size.
+	operandSize = 4 ifTrue: [
+		self encodeRexRM: operand.
+		writer put: 16rd9.
+		^ self encodeModRM: operand opcode: 0 
+	].
+	operandSize = 8 ifTrue: [
+		self encodeRexRM: operand.
+		writer put: 16rdd.
+		^ self encodeModRM: operand opcode: 0
+	].
+
+	self halt.
+	self invalidInstruction.
 ]
 
 { #category : #'instruction generation' }
@@ -313,17 +363,25 @@ SLVMX86MachineCodeGenerator >> generateMOV: instruction [
 	(first isRegister and: [ second isImmediate ]) ifTrue: [
 		operandSize := first size.
 		operandSize = 1 ifTrue: [
-			self encodeRexSize: operandSize rm: first reg: second.
 			writer put: 16rB0 + first value; put: second value
 		].
 		operandSize = 2 ifTrue: [
 			writer put: 16r66.
-			self encodeRexSize: operandSize rm: first reg: second.
 			writer put: 16rB8 + first value; putInt16: second value
 		].
-		operandSize <= 8 ifTrue: [
-			self encodeRexSize: operandSize rm: first reg: second.
+		operandSize = 4 ifTrue: [
 			writer put: 16rB8 + first value; putMaybeReloc32: second
+		].
+		operandSize = 8 ifTrue: [
+			(self isInInt32Range: second) ifTrue: [
+				self encodeRexSize: operandSize rm: first reg: second.
+				writer put: 16rC7.
+				self encodeModRM: first opcode: 0 immediate: 4.
+				writer putMaybeReloc32: second.  
+			] ifFalse: [ 
+				self encodeRexSize: operandSize rm: first reg: second.
+				writer put: 16rB8 + first valueLow; putMaybeReloc64: second
+			]
 		].
 		^ self
 	].
@@ -359,6 +417,42 @@ SLVMX86MachineCodeGenerator >> generateMOV: instruction [
 	].
 
 	self invalidInstruction
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateMOVAPD: instruction [
+	| first second |
+	first := instruction first.
+	second := instruction second.
+	self assert: first isRegisterOrRegisterAddress.
+	self assert: second isRegisterOrRegisterAddress.
+	self encodeRexSize: 4 rm: first reg: second.
+	
+	second isRegisterAddress ifTrue: [
+		writer put: 16r66; put: 16r0F; put: 16r28.
+		^ self encodeModRM: second reg: first 
+	].
+	writer put: 16r66; put: 16r0F; put: 16r29.
+	^ self encodeModRM: first reg: second.
+
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateMOVSS: instruction [
+	| first second |
+	first := instruction first.
+	second := instruction second.
+	self assert: first isRegisterOrRegisterAddress.
+	self assert: second isRegisterOrRegisterAddress.
+	self encodeRexSize: 4 rm: first reg: second.
+	
+	second isRegisterAddress ifTrue: [
+		writer put: 16rF3; put: 16r0F; put: 16r10.
+		^ self encodeModRM: second reg: first 
+	].
+	writer put: 16rF3; put: 16r0F; put: 16r11.
+	^ self encodeModRM: first reg: second.
+
 ]
 
 { #category : #'instruction generation' }
@@ -544,12 +638,16 @@ SLVMX86MachineCodeGenerator >> generateUntilConvergence [
 	[
 		result := SLVMLirMachineCodeWriter do: [ :out |
 			instructionStream sections do: [:section |
-				out section: section name alignment: self sectionAlignment do: [:sectionWriter |
+				out section: section alignment: self sectionAlignment do: [:sectionWriter |
 					writer := sectionWriter.
 					section instructionsDo: [ :ins |
 						ins offset: out position.
 						ins isLabel ifTrue: [
 							writer recordLabel: ins.
+						].
+					
+						ins isBlob ifTrue: [
+							writer nextPutAll: ins content
 						].
 				
 						ins isInstruction ifTrue: [ 
@@ -647,6 +745,12 @@ SLVMX86MachineCodeGenerator >> initialize [
 { #category : #'as yet unclassified' }
 SLVMX86MachineCodeGenerator >> invalidInstruction [
 	self error: 'Trying to generate an invalid instruction'
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> isInInt32Range: value [
+	value isInteger ifTrue: [ ^ value between: -2147483648 and: 2147483647 ].
+	^ value isImmediateInInt32Range
 ]
 
 { #category : #'instruction generation' }

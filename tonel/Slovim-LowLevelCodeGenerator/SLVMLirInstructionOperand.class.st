@@ -15,12 +15,27 @@ SLVMLirInstructionOperand >> isBasicBlock [
 ]
 
 { #category : #testing }
+SLVMLirInstructionOperand >> isBlob [
+	^ false
+]
+
+{ #category : #testing }
 SLVMLirInstructionOperand >> isExternalLabel [
 	^ false
 ]
 
 { #category : #testing }
 SLVMLirInstructionOperand >> isImmediate [
+	^ false
+]
+
+{ #category : #testing }
+SLVMLirInstructionOperand >> isImmediateConstant [
+	^ false
+]
+
+{ #category : #testing }
+SLVMLirInstructionOperand >> isImmediateInInt32Range [
 	^ false
 ]
 

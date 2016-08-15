@@ -1,6 +1,9 @@
 Class {
 	#name : #SLVMLirX86FunctionCodeGenerator,
-	#superclass : #SLVMLirFunctionGenerator,
+	#superclass : #SLVMLirFunctionCodeGenerator,
+	#instVars : [
+		'longMode'
+	],
 	#classVars : [
 		'ComparisonBranchMap',
 		'ComparisonNegatedBranchMap',
@@ -30,6 +33,7 @@ SLVMLirX86FunctionCodeGenerator class >> initialize [
 		
 		shiftleft visitShiftLeft:
 		shiftright visitShiftRight:
+		shiftrightarithmetic visitShiftRightArithmetic:
 		
 		fadd visitFloatAdd:
 		fsub visitFloatSub:
@@ -96,12 +100,7 @@ SLVMLirX86FunctionCodeGenerator >> canBeFrameLess [
 	^ true
 ]
 
-{ #category : #'code generation' }
-SLVMLirX86FunctionCodeGenerator >> ensureInstruction: instruction valueInRegister: value [
-	^ registerAllocator moveInstruction: instruction value: value toRegisterWith: self
-]
-
-{ #category : #'code generation' }
+{ #category : #'register allocation' }
 SLVMLirX86FunctionCodeGenerator >> ensureInstructionValuesInRegistersOrImmediate: instruction [
 	| first second |
 	self assert: instruction parameters size = 2.
@@ -115,6 +114,21 @@ SLVMLirX86FunctionCodeGenerator >> ensureInstructionValuesInRegistersOrImmediate
 	first isConstant ifTrue: [ ^ { first . self ensureInstruction: instruction valueInRegister: second } ].
 	second isConstant ifTrue: [ ^ { self ensureInstruction: instruction valueInRegister: first . second } ].
 	^ { self ensureInstruction: instruction valueInRegister: first . self ensureInstruction: instruction valueInRegister: second }
+]
+
+{ #category : #'register allocation' }
+SLVMLirX86FunctionCodeGenerator >> ensureInstructionValuesInRegistersOrMemory: instruction [
+	| first second |
+	self assert: instruction parameters size = 2.
+	first := instruction parameters first.
+	second := instruction parameters second.
+	
+	^ {self ensureInstruction: instruction valueInRegister: first . self ensureInstruction: instruction valueInRegister: second }
+]
+
+{ #category : #'stack frame' }
+SLVMLirX86FunctionCodeGenerator >> floatReturnRegister [
+	^ nil
 ]
 
 { #category : #'stack frame' }
@@ -186,7 +200,13 @@ SLVMLirX86FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryB
 		addX86: JMP with: entryBlock
 ]
 
-{ #category : #'code generation' }
+{ #category : #initialization }
+SLVMLirX86FunctionCodeGenerator >> initialize [
+	super initialize.
+	longMode := false.
+]
+
+{ #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> intResultRegister [
 	^ EAX
 ]
@@ -197,18 +217,31 @@ SLVMLirX86FunctionCodeGenerator >> moveConstant: constant toMemoryInRegister: po
 ]
 
 { #category : #'code generation' }
-SLVMLirX86FunctionCodeGenerator >> moveConstant: value toRegister: register. [
-	self halt.
-]
-
-{ #category : #'code generation' }
-SLVMLirX86FunctionCodeGenerator >> moveLocal: localVariable toRegister: register [
+SLVMLirX86FunctionCodeGenerator >> moveConstant: value toRegister: register [
+	| memoryLocation valueType |
+	valueType := value type.
 	register isVectorRegister ifTrue: [
-		self halt. 
+		memoryLocation := self putConstantInConstantZone: value.
+		valueType isVectorType ifTrue: [
+			valueType baseType size = 8 ifTrue: [
+				self halt.
+			] ifFalse: [
+				self halt. 
+			]
+		] ifFalse: [ 
+			valueType size = 8 ifTrue: [
+				self addX86: MOVSD with: register with: memoryLocation asX86Ptr
+			] ifFalse: [
+				self addX86: MOVSS with: register with: memoryLocation asX86Ptr
+			]
+		]
 	] ifFalse: [
-		self addX86: MOV with: register with: localVariable
+		register size <= 8 ifTrue: [
+			self addX86: MOV with: register with: value value
+		] ifFalse: [ 
+			self halt.
+		]
 	]
-	
 ]
 
 { #category : #'code generation' }
@@ -217,6 +250,28 @@ SLVMLirX86FunctionCodeGenerator >> moveLocal: localVariable toRegisterLow: regis
 		addX86: MOV with: registerLow with: localVariable;
 		addX86: MOV with: registerHigh with: localVariable + 4
 	
+	
+]
+
+{ #category : #'code generation' }
+SLVMLirX86FunctionCodeGenerator >> moveLocal: localVariable type: localType toRegister: register [
+	register isVectorRegister ifTrue: [
+		localType isVectorType ifTrue: [
+			localType baseType size = 8 ifTrue: [
+				self halt.
+			] ifFalse: [
+				self halt. 
+			]
+		] ifFalse: [ 
+			localType size = 8 ifTrue: [
+				self addX86: MOVSD with: register with: localVariable
+			] ifFalse: [
+				self addX86: MOVSS with: register with: localVariable
+			]
+		]
+	] ifFalse: [
+		self addX86: MOV with: register with: localVariable
+	]
 	
 ]
 
@@ -237,7 +292,46 @@ SLVMLirX86FunctionCodeGenerator >> postProcessCodeGeneration [
 		generateActualReturns
 ]
 
-{ #category : #'code generation' }
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> scalarFloatBinaryInstruction: instruction x86Instruction: x86Instruction [
+	| values result |
+	values := self ensureInstructionValuesInRegistersOrMemory: instruction.
+	result := self allocateInstructionResultRegister: instruction.
+		
+	self
+		addX86: MOVAPD with: result with: values first;
+		addX86: x86Instruction with: result with: values second.
+	self instruction: instruction resultInRegister: result.
+
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> scalarIntegerBinaryInstruction: instruction x86Instruction: x86Instruction carryDo: carryBlock [
+	| values result |
+	values := self ensureInstructionValuesInRegistersOrImmediate: instruction.
+	result := self allocateInstructionResultRegister: instruction.
+		
+	self
+		addX86: MOV with: result with: values first;
+		addX86: x86Instruction with: result with: values second.
+	self instruction: instruction resultInRegister: result.
+
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> scalarIntegerBinaryInstruction: instruction x86Instruction: x86Instruction carryInstruction: carryInstruction [
+	| values result |
+	values := self ensureInstructionValuesInRegistersOrImmediate: instruction.
+	result := self allocateInstructionResultRegister: instruction.
+		
+	self
+		addX86: MOV with: result with: values first;
+		addX86: x86Instruction with: result with: values second.
+	self instruction: instruction resultInRegister: result.
+
+]
+
+{ #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> secondIntResultRegister [
 	^ ECX
 ]
@@ -320,13 +414,18 @@ SLVMLirX86FunctionCodeGenerator >> translateComparison: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitAdd: instruction [
-	| values result |
-	values := self ensureInstructionValuesInRegistersOrImmediate: instruction.
-	result := self allocateInstructionResultRegister: instruction.
-	self
-		addX86: MOV with: result with: values first;
-		addX86: ADD with: result with: values second.
-	self instruction: instruction resultInRegister: result.
+	| baseType |
+	(instruction type isVectorType or: [ instruction type isMatrixType ]) ifTrue: [
+		baseType := instruction type baseType.
+		baseType size = 1 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PADDB ].
+		baseType size = 2 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PADDW ].
+		baseType size = 4 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PADDD ].
+		baseType size = 8 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PADDQ ].		
+	] ifFalse: [
+		self scalarIntegerBinaryInstruction: instruction x86Instruction: ADD carryInstruction: ADC
+	].
+
+
 ]
 
 { #category : #visitor }
@@ -351,6 +450,33 @@ SLVMLirX86FunctionCodeGenerator >> visitBinaryOperation: instruction [
 ]
 
 { #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitBitAnd: instruction [
+	(instruction type isVectorType or: [ instruction type isMatrixType ]) ifTrue: [
+		self vectorBinaryInstruction: instruction x86Instruction: PAND		
+	] ifFalse: [
+		self scalarIntegerBinaryInstruction: instruction x86Instruction: AND carryInstruction: AND
+	].
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitBitOr: instruction [
+	(instruction type isVectorType or: [ instruction type isMatrixType ]) ifTrue: [
+		self vectorBinaryInstruction: instruction x86Instruction: POR	
+	] ifFalse: [
+		self scalarIntegerBinaryInstruction: instruction x86Instruction: OR carryInstruction: OR
+	].
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitBitXor: instruction [
+	(instruction type isVectorType or: [ instruction type isMatrixType ]) ifTrue: [
+		self vectorBinaryInstruction: instruction x86Instruction: PXOR	
+	] ifFalse: [
+		self scalarIntegerBinaryInstruction: instruction x86Instruction: XOR carryInstruction: XOR
+	].
+]
+
+{ #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitBranch: instruction [
 	| condition trueDestination falseDestination |
 	condition := self ensureInstruction: instruction valueInRegister: instruction condition. 
@@ -363,6 +489,70 @@ SLVMLirX86FunctionCodeGenerator >> visitBranch: instruction [
 ]
 
 { #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitFloatAdd: instruction [
+	| instructionType baseType |
+	instructionType := instruction type.
+	(instructionType isVectorType or: [ instructionType isMatrixType ]) ifTrue: [
+		baseType := instruction type baseType.
+		baseType size = 4 ifTrue: [ ^ self vectorBinaryInstruction: instruction x86Instruction: ADDPS ].
+		baseType size = 8 ifTrue: [ ^ self vectorBinaryInstruction: instruction x86Instruction: ADDPD ].		
+	] ifFalse: [
+		instructionType size = 4 ifTrue: [ self scalarFloatBinaryInstruction: instruction x86Instruction: ADDSS ].
+		instructionType size = 8 ifTrue: [ self scalarFloatBinaryInstruction: instruction x86Instruction: ADDSD ].
+	].
+
+
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitFloatDiv: instruction [
+	| instructionType baseType |
+	instructionType := instruction type.
+	(instructionType isVectorType or: [ instructionType isMatrixType ]) ifTrue: [
+		baseType := instruction type baseType.
+		baseType size = 4 ifTrue: [ ^ self vectorBinaryInstruction: instruction x86Instruction: DIVPS ].
+		baseType size = 8 ifTrue: [ ^ self vectorBinaryInstruction: instruction x86Instruction: DIVPD ].		
+	] ifFalse: [
+		instructionType size = 4 ifTrue: [ self scalarFloatBinaryInstruction: instruction x86Instruction: DIVSS ].
+		instructionType size = 8 ifTrue: [ self scalarFloatBinaryInstruction: instruction x86Instruction: DIVSD ].
+	].
+
+
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitFloatMul: instruction [
+	| instructionType baseType |
+	instructionType := instruction type.
+	(instructionType isVectorType or: [ instructionType isMatrixType ]) ifTrue: [
+		baseType := instruction type baseType.
+		baseType size = 4 ifTrue: [ ^ self vectorBinaryInstruction: instruction x86Instruction: MULPS ].
+		baseType size = 8 ifTrue: [ ^ self vectorBinaryInstruction: instruction x86Instruction: MULPD ].		
+	] ifFalse: [
+		instructionType size = 4 ifTrue: [ self scalarFloatBinaryInstruction: instruction x86Instruction: MULSS ].
+		instructionType size = 8 ifTrue: [ self scalarFloatBinaryInstruction: instruction x86Instruction: MULSD ].
+	].
+
+
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitFloatSub: instruction [
+	| instructionType baseType |
+	instructionType := instruction type.
+	(instructionType isVectorType or: [ instructionType isMatrixType ]) ifTrue: [
+		baseType := instruction type baseType.
+		baseType size = 4 ifTrue: [ ^ self vectorBinaryInstruction: instruction x86Instruction: SUBPS ].
+		baseType size = 8 ifTrue: [ ^ self vectorBinaryInstruction: instruction x86Instruction: SUBPD ].		
+	] ifFalse: [
+		instructionType size = 4 ifTrue: [ self scalarFloatBinaryInstruction: instruction x86Instruction: SUBSS ].
+		instructionType size = 8 ifTrue: [ self scalarFloatBinaryInstruction: instruction x86Instruction: SUBSD ].
+	].
+
+
+]
+
+{ #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitJump: instruction [
 	| destination |
 	destination := basicBlockDictionary at: instruction destination.
@@ -371,7 +561,7 @@ SLVMLirX86FunctionCodeGenerator >> visitJump: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitReturn: instruction [
-	| returnValue returnValueType returnSize |
+	| returnValue returnValueType returnSize floatReg memoryLocation |
 	returnValue := instruction value.
 	returnValueType := returnValue type.
 	returnValueType isMatrixType ifTrue: [ 
@@ -383,7 +573,13 @@ SLVMLirX86FunctionCodeGenerator >> visitReturn: instruction [
 		returnSize := returnValueType sizeForTarget: compilationTarget.
 		returnSize <= 8 ifTrue: [ 
 			returnValueType isFloatType ifTrue: [
-				self halt. 
+				floatReg := self floatReturnRegister.
+				floatReg ifNil: [ 
+					memoryLocation := self ensureInstruction: instruction valueInMemory: returnValue.
+					self addX86: FLD with: (memoryLocation asX86PtrOfSize: returnSize)
+				] ifNotNil: [
+					self moveValue: returnValue toRegister: floatReg
+				] 
 			] ifFalse: [ 
 				returnValueType isIntegerType ifTrue: [
 					returnSize = 8 ifTrue: [
@@ -400,6 +596,60 @@ SLVMLirX86FunctionCodeGenerator >> visitReturn: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitReturnVoid: instruction [
+
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitShiftLeft: instruction [
+	| baseType |
+	(instruction type isVectorType or: [ instruction type isMatrixType ]) ifTrue: [
+		baseType := instruction type baseType.
+		baseType size = 1 ifTrue: [ self halt. ].
+		baseType size = 2 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PSLLW ].
+		baseType size = 4 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PSLLD ].
+		baseType size = 8 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PSLLQ ].		
+	] ifFalse: [
+		self scalarIntegerBinaryInstruction: instruction x86Instruction: SHR carryDo: [
+			self halt
+		]
+	].
+
+
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitShiftRight: instruction [
+	| baseType |
+	(instruction type isVectorType or: [ instruction type isMatrixType ]) ifTrue: [
+		baseType := instruction type baseType.
+		baseType size = 1 ifTrue: [ self halt. ].
+		baseType size = 2 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PSLLW ].
+		baseType size = 4 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PSLLD ].
+		baseType size = 8 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PSLLQ ].		
+	] ifFalse: [
+		self scalarIntegerBinaryInstruction: instruction x86Instruction: SHL carryDo: [
+			self halt
+		]
+	].
+
+
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitShiftRightArithmetic: instruction [
+	| baseType |
+	(instruction type isVectorType or: [ instruction type isMatrixType ]) ifTrue: [
+		baseType := instruction type baseType.
+		baseType size = 1 ifTrue: [ self halt. ].
+		baseType size = 2 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PSRAW ].
+		baseType size = 4 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PSRAD ].
+		baseType size = 8 ifTrue: [ self halt ].		
+	] ifFalse: [
+		self scalarIntegerBinaryInstruction: instruction x86Instruction: SAR carryDo: [
+			self halt
+		]
+	].
+
 
 ]
 
@@ -438,13 +688,16 @@ SLVMLirX86FunctionCodeGenerator >> visitStore: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitSub: instruction [
-	| values result |
-	values := self ensureInstructionValuesInRegistersOrImmediate: instruction.
-	result := self allocateInstructionResultRegister: instruction.
-	self
-		addX86: MOV with: result with: values first;
-		addX86: SUB with: result with: values second.
-	self instruction: instruction resultInRegister: result.
+	| baseType |
+	(instruction type isVectorType or: [ instruction type isMatrixType ]) ifTrue: [
+		baseType := instruction type baseType.
+		baseType size = 1 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PADDB ].
+		baseType size = 2 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PADDW ].
+		baseType size = 4 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PADDD ].
+		baseType size = 8 ifTrue: [ self vectorBinaryInstruction: instruction x86Instruction: PADDQ ].		
+	] ifFalse: [
+		self scalarIntegerBinaryInstruction: instruction x86Instruction: SUB carryInstruction: SBB
+	].
 ]
 
 { #category : #visitor }

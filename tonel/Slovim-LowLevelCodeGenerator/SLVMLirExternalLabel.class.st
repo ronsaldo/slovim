@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMLirInstructionStreamElement,
 	#instVars : [
 		'name',
-		'visibility'
+		'visibility',
+		'alignment'
 	],
 	#classVars : [
 		'VisibilityPrintingPrefix'
@@ -25,8 +26,34 @@ SLVMLirExternalLabel class >> initialize [
 ]
 
 { #category : #accessing }
+SLVMLirExternalLabel >> alignment [
+	^ alignment
+]
+
+{ #category : #accessing }
+SLVMLirExternalLabel >> alignment: anObject [
+	alignment := anObject
+]
+
+{ #category : #accessing }
 SLVMLirExternalLabel >> asElfSymbol [
 	^ self printString
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirExternalLabel >> asX86Ptr [
+	^ self asX86PtrOfSize: 4
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirExternalLabel >> asX86PtrOfSize: accessSize [
+	^ SLVMLirX86RegisterAddress new size: accessSize; displacement: self
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirExternalLabel >> initialize [
+	super initialize.
+	alignment := 1.
 ]
 
 { #category : #visibility }
@@ -45,8 +72,23 @@ SLVMLirExternalLabel >> isImmediate [
 ]
 
 { #category : #testing }
+SLVMLirExternalLabel >> isLabel [
+	^ true
+]
+
+{ #category : #testing }
 SLVMLirExternalLabel >> isSmallImmediate [
 	^ false
+]
+
+{ #category : #accessing }
+SLVMLirExternalLabel >> name [
+	^ name
+]
+
+{ #category : #accessing }
+SLVMLirExternalLabel >> name: anObject [
+	name := anObject
 ]
 
 { #category : #printing }

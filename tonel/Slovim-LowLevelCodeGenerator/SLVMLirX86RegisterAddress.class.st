@@ -82,6 +82,7 @@ SLVMLirX86RegisterAddress >> encodeModRMWithOpcode: opcode immediate: immediateS
 			hasDisplacement := true.
 			hasSmallDisplacement := self hasSmallDisplacement.
 			mod := hasSmallDisplacement ifTrue: [ 1 ] ifFalse: [ 2 ].
+			(base isNil and: [hasSmallDisplacement not and: [ sibByte isNil ]]) ifTrue: [ mod := 0 ]
 		].
 	].
 
@@ -104,7 +105,11 @@ SLVMLirX86RegisterAddress >> encodeModRMWithOpcode: opcode immediate: immediateS
 		hasSmallDisplacement ifTrue: [
 			writer putInt8: displacement
 		] ifFalse: [
-			writer putMaybeReloc32: displacement
+			(mod = 0 and: longMode) ifTrue: [ 
+				writer putMaybeReloc32: displacement nextIPRelative: immediateSize
+			] ifFalse: [ 
+				writer putMaybeReloc32: displacement
+			]
 		]
 	].
 

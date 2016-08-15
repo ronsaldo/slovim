@@ -7,17 +7,27 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
 SLVMLirImmediate >> isImmediate [
 	^ true
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
+SLVMLirImmediate >> isImmediateConstant [
+	^ true
+]
+
+{ #category : #testing }
+SLVMLirImmediate >> isImmediateInInt32Range [
+	^ value between: -2147483648 and: 2147483647
+]
+
+{ #category : #testing }
 SLVMLirImmediate >> isSmallImmediate [
 	^ value between: -128 and: 127
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #printing }
 SLVMLirImmediate >> printOn: aStream [
 	aStream nextPutAll: 'imm '; print: value
 ]

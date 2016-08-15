@@ -13,19 +13,10 @@ SLVMLirInstruction >> copyReplaceModuleElementsWith: moduleElementDictionary rep
 	| result |
 	result := self copy.
 	result operands: (operands collect: [ :op |
-		(op isBasicBlock or: [ op isLabel ]) ifTrue: [
-			blockLabelDictionary at: op
-		] ifFalse: [
-			op isModuleElement ifTrue: [
-				moduleElementDictionary at: op
-			] ifFalse: [
-				op isStackFrameVariable ifTrue: [
-					lirFunction lowerVariable: op
-				] ifFalse: [
-					op
-				]
-			]
-		]
+			self mapOperand: op
+			replaceModuleElementsWith: moduleElementDictionary
+			replaceBlocksWith: blockLabelDictionary
+			lowerVariablesWith: lirFunction
 	]).
 	^ result
 ]
@@ -38,6 +29,21 @@ SLVMLirInstruction >> first [
 { #category : #testing }
 SLVMLirInstruction >> isInstruction [
 	^ true
+]
+
+{ #category : #copying }
+SLVMLirInstruction >> mapOperand: operand replaceModuleElementsWith: moduleElementDictionary replaceBlocksWith: blockLabelDictionary lowerVariablesWith: lirFunction [
+	(operand isBasicBlock or: [ operand isLabel ]) ifTrue: [
+		^blockLabelDictionary at: operand
+	].
+	operand isModuleElement ifTrue: [
+		^ moduleElementDictionary at: operand
+	].
+	operand isStackFrameVariable ifTrue: [
+		^ lirFunction lowerVariable: operand.
+	].
+
+	^ operand
 ]
 
 { #category : #accessing }

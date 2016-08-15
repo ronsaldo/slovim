@@ -2,7 +2,7 @@ Class {
 	#name : #SLVMLirInstructionStreamElement,
 	#superclass : #SLVMLirInstructionOperand,
 	#instVars : [
-		'stream',
+		'section',
 		'size',
 		'offset',
 		'previous',
@@ -10,6 +10,11 @@ Class {
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
+
+{ #category : #accessing }
+SLVMLirInstructionStreamElement >> alignment [
+	^ 1
+]
 
 { #category : #testing }
 SLVMLirInstructionStreamElement >> isInstruction [
@@ -53,7 +58,17 @@ SLVMLirInstructionStreamElement >> printOnInstructionStream: aStream [
 
 { #category : #'as yet unclassified' }
 SLVMLirInstructionStreamElement >> removeFromStream [
-	stream removeElement: self
+	section removeElement: self
+]
+
+{ #category : #accessing }
+SLVMLirInstructionStreamElement >> section [
+	^ section
+]
+
+{ #category : #accessing }
+SLVMLirInstructionStreamElement >> section: anObject [
+	section := anObject
 ]
 
 { #category : #accessing }
@@ -69,9 +84,4 @@ SLVMLirInstructionStreamElement >> size: anObject [
 { #category : #accessing }
 SLVMLirInstructionStreamElement >> stream [
 	^ stream
-]
-
-{ #category : #accessing }
-SLVMLirInstructionStreamElement >> stream: anObject [
-	stream := anObject
 ]
