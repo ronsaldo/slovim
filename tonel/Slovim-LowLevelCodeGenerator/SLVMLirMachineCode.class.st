@@ -18,6 +18,27 @@ SLVMLirMachineCode >> = other [
 	[ compilationTarget = other compilationTarget ] ] ]
 ]
 
+{ #category : #writing }
+SLVMLirMachineCode >> buildElfOn: builder [
+	| elfSection |
+	builder header 
+		machine: compilationTarget elfMachine.
+	builder createSymbolTable.
+	builder createDynSymbolTable.
+	
+	sections do: [ :section |
+		elfSection := builder addFirstComponent: section sectionNamed: section name.
+		elfSection programBits; allocated.
+		elfSection address: section base.
+		section name = #'.text' ifTrue: [ elfSection executableInstructions ].
+		(section name = #'.data' or: [ section name = #'.bss' ]) ifTrue: [ elfSection writeable ].
+	].
+
+	symbols do: [ :symbol |
+		builder addSymbol: symbol.
+	].
+]
+
 { #category : #accessing }
 SLVMLirMachineCode >> compilationTarget [
 	^ compilationTarget
@@ -97,127 +118,10 @@ SLVMLirMachineCode >> writeElf32ToFile: fileName [
 
 { #category : #writing }
 SLVMLirMachineCode >> writeElf32ToStream: stream [
-	| header elfSections allElements sectionNameTable sectionNameTableSection allElfSections symbolStringTable symbolStringTableSection dynSymbolStringTable dynSymbolStringTableSection dynSymbolTable dynSymbolTableSection symbolTable symbolTableSection elfSectionIndexDictionary baseElfSections |
-	header := SLVMElf32Header new.
-	
-	sectionNameTable := SLVMElfStringTable new.
-	sectionNameTableSection := SLVMElf32SectionHeader new
-		name: (sectionNameTable addString:'.shstrtab');
-		stringTable;
-		yourself.
-		
-	self isObjectCode ifFalse: [
-		dynSymbolStringTable := SLVMElfStringTable new.
-		dynSymbolStringTableSection := SLVMElf32SectionHeader new
-			name: (sectionNameTable addString:'.dynstr');
-			stringTable;
-			allocated;
-			yourself.
-
-		dynSymbolTable := SLVMElf32SymbolTable new.
-		dynSymbolTableSection := SLVMElf32SectionHeader new
-			name: (sectionNameTable addString:'.dyntab');
-			symbolTable;
-			allocated;
-			yourself.
-	].
-		
-	symbolStringTable := SLVMElfStringTable new.
-	symbolStringTableSection := SLVMElf32SectionHeader new
-		name: (sectionNameTable addString:'.strtab');
-		stringTable;
-		yourself.
-
-	symbolTable := SLVMElf32SymbolTable new.
-	symbolTableSection := SLVMElf32SectionHeader new
-		name: (sectionNameTable addString:'.symtab');
-		symbolTable;
-		yourself.
-		
-	elfSections := sections collect: [ :section |
-		| elfSection |
-		elfSection := SLVMElf32SectionHeader new
-			name: (sectionNameTable addString: section name);
-			programBits;
-			allocated;
-			address: section base;
-			size: section size;
-			yourself.
-		section name = #'.text' ifTrue: [ elfSection executableInstructions ].
-		(section name = #'.data' or: [ section name = #'.bss' ]) ifTrue: [ elfSection writeable ].
-		elfSection
-	].
-
-	baseElfSections := { SLVMElf32SectionHeader new .
-		sectionNameTableSection .
-		symbolTableSection . symbolStringTableSection . }.
-	dynSymbolTableSection ifNotNil: [
-		baseElfSections := baseElfSections , { dynSymbolTableSection . dynSymbolStringTableSection }.
-	].
-
-	allElfSections := baseElfSections , elfSections.
-	symbolTableSection link: (allElfSections indexOf: symbolStringTableSection) - 1.
-	dynSymbolTableSection ifNotNil: [
-		dynSymbolTableSection link: (allElfSections indexOf: dynSymbolStringTableSection) - 1.
-	].
-
-	"Translate the symbol table"
-	elfSectionIndexDictionary := Dictionary new.
-	elfSections doWithIndex: [ :elfSection :sectionIndex |
-		elfSectionIndexDictionary at: (sections at: sectionIndex) put: (allElfSections indexOf: elfSection) - 1
-	].
-
-	symbols do: [ :symbol |
-		dynSymbolTable ifNotNil: [
-			dynSymbolTable addSymbol: symbol stringTable: dynSymbolStringTable sectionDictionary: elfSectionIndexDictionary.
-		].
-		symbolTable addSymbol: symbol stringTable: symbolStringTable sectionDictionary: elfSectionIndexDictionary.
-	].
-
-	"Compute the final location of the elements."
-	allElements := { header } , sections ,
-	{ sectionNameTable .
-	 symbolTable . symbolStringTable }.
-	dynSymbolTable ifNotNil: [
-		allElements := allElements , { dynSymbolTable . dynSymbolStringTable }.
-	].
-	allElements := allElements , allElfSections.
-	self computeFileBinaryElementsOffsets: allElements.
-	
-	sections doWithIndex: [ :section :index |
-		(elfSections at: index)
-			offset: section fileOffset
-	].
- 
-	header
-		machine: compilationTarget elfMachine;
-		sectionHeaderOffset: allElfSections first fileOffset;
-		sectionHeaderEntries: allElfSections size;
-		sectionNameStringSectionIndex: 1.
-		
-	sectionNameTableSection
-		offset: sectionNameTable fileOffset;
-		size: sectionNameTable size.
-
-	dynSymbolTable ifNotNil: [
-		dynSymbolStringTableSection 
-			offset: dynSymbolStringTable fileOffset;
-			size: dynSymbolStringTable size.
-			
-		dynSymbolTableSection
-			offset: dynSymbolTable fileOffset;
-			size: dynSymbolTable size.
-	].
-
-	symbolStringTableSection 
-		offset: symbolStringTable fileOffset;
-		size: symbolStringTable size.
-			
-	symbolTableSection
-		offset: symbolTable fileOffset;
-		size: symbolTable size.
-
-	allElements do: [ :el | el writeOn: stream ].
+	| builder |
+	builder := SLVMElf32Builder new.
+	self buildElfOn: builder.
+	builder writeToStream: stream
 ]
 
 { #category : #writing }

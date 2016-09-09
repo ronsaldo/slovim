@@ -8,6 +8,11 @@ Class {
 }
 
 { #category : #accessing }
+SLVMLirBinaryFileComponent >> alignment [
+	^ 1
+]
+
+{ #category : #accessing }
 SLVMLirBinaryFileComponent >> fileOffset [
 	^ fileOffset
 ]
@@ -15,4 +20,15 @@ SLVMLirBinaryFileComponent >> fileOffset [
 { #category : #accessing }
 SLVMLirBinaryFileComponent >> fileOffset: anObject [
 	fileOffset := anObject
+]
+
+{ #category : #writing }
+SLVMLirBinaryFileComponent >> prepareForWritingToFile: baseAddress [
+	"Do nothing for now"
+	^ baseAddress
+]
+
+{ #category : #accessing }
+SLVMLirBinaryFileComponent >> size [
+	self subclassResponsibility.
 ]

@@ -60,6 +60,7 @@ SLVMLirCodeGenerator >> visitFunction: aFunction [
 	lirModule addElement: result.
 	
 	functionCodeGenerator := functionCodeGeneratorClass new.
+	functionCodeGenerator moduleTranslator: self.
 	functionCodeGenerator generateFunction: aFunction into: result.
 	^ result
 ]

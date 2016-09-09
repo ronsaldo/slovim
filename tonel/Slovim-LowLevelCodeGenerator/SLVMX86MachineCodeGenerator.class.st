@@ -201,6 +201,24 @@ SLVMX86MachineCodeGenerator >> generateADDSS: instruction [
 ]
 
 { #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateCALL: instruction [
+	| operand |
+	operand := instruction first.
+
+	operand isLabel ifTrue: [
+		^ writer put: 16rE8; putNextIPRelativeLabel32: operand
+	].
+
+	operand isRegisterOrRegisterAddress ifTrue: [
+		writer put: 16rFF.
+		^ self encodeModRM: operand opcode: 2
+	].
+
+	self invalidInstruction.
+
+]
+
+{ #category : #'instruction generation' }
 SLVMX86MachineCodeGenerator >> generateCMP: instruction [
 	| first second operandSize |
 	first := instruction first.
@@ -321,7 +339,6 @@ SLVMX86MachineCodeGenerator >> generateJLE: instruction [
 SLVMX86MachineCodeGenerator >> generateJMP: instruction [
 	| operand |
 	operand := instruction first.
-	self assert: operand isLabel.
 
 	operand isLabel ifTrue: [
 		(operand isExternalLabel not and: [self isInShortRange: operand offset - (writer position + 2)]) ifTrue: [
@@ -332,7 +349,8 @@ SLVMX86MachineCodeGenerator >> generateJMP: instruction [
 	].
 
 	operand isRegisterOrRegisterAddress ifTrue: [ 
-		self halt.
+		writer put: 16rFF.
+		^ self encodeModRM: operand opcode: 4
 	].
 
 	self invalidInstruction.
@@ -483,8 +501,10 @@ SLVMX86MachineCodeGenerator >> generatePUSH: instruction [
 	| operand |
 	operand := instruction first.
 	operand isImmediate ifTrue: [
-		operand isSmallImmediate ifTrue: [ 
-		] ifFalse: [ 
+		operand isSmallImmediate ifTrue: [
+			^ writer put: 16r6A; putInt8: operand value.
+		] ifFalse: [
+			^ writer put: 16r68; putMaybeReloc32: operand.
 		]
 	].
 
@@ -496,7 +516,7 @@ SLVMX86MachineCodeGenerator >> generatePUSH: instruction [
 	operand isRegisterOrRegisterAddress ifTrue: [
 		self encodeRexRM: operand.
 		writer put: 16rFF.
-		^ self encodeModRM: operand opcode: 0.
+		^ self encodeModRM: operand opcode: 6.
 	].
 
 ]

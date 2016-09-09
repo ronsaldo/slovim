@@ -7,7 +7,7 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-Elf'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #adding }
 SLVMElf32SymbolTable >> addSymbol: symbol stringTable: stringTable sectionDictionary: sectionIndexDictionary [
 	| elfSymbol binding type |
 	binding := symbol isPublic

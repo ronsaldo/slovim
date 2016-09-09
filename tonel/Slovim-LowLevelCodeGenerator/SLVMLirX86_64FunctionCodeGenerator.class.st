@@ -12,6 +12,11 @@ SLVMLirX86_64FunctionCodeGenerator >> floatReturnRegister [
 	^ XMM0
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirX86_64FunctionCodeGenerator >> framePointerRegister [
+	^ RBP
+]
+
 { #category : #'stack frame' }
 SLVMLirX86_64FunctionCodeGenerator >> generateActualReturn: instruction [
 	lirFunction stackFrame frameLessMethod ifFalse: [
@@ -54,4 +59,9 @@ SLVMLirX86_64FunctionCodeGenerator >> intResultRegister [
 { #category : #'stack frame' }
 SLVMLirX86_64FunctionCodeGenerator >> secondIntResultRegister [
 	^ RCX
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirX86_64FunctionCodeGenerator >> stackPointerRegister [
+	^ RSP
 ]

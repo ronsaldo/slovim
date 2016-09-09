@@ -1,6 +1,6 @@
 Class {
 	#name : #SLVMElf32SectionHeader,
-	#superclass : #SLVMLirBinaryFileComponent,
+	#superclass : #SLVMElfSectionHeader,
 	#instVars : [
 		'name',
 		'type',
@@ -48,7 +48,8 @@ SLVMElf32SectionHeader >> dynamics [
 
 { #category : #types }
 SLVMElf32SectionHeader >> dynsym [
-	type := 11
+	type := 11.
+	entrySize := 16.
 ]
 
 { #category : #flags }
@@ -94,6 +95,11 @@ SLVMElf32SectionHeader >> initialize [
 	info := 0.
 	addressAlign := 1.
 	entrySize := 0.
+]
+
+{ #category : #flags }
+SLVMElf32SectionHeader >> isAllocated [
+	^ flags anyMask: 2
 ]
 
 { #category : #accessing }

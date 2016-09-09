@@ -10,7 +10,8 @@ Class {
 		'compilationTarget',
 		'codeGenerator',
 		'constantBlock',
-		'constantZoneDictionary'
+		'constantZoneDictionary',
+		'moduleTranslator'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -90,6 +91,16 @@ SLVMLirFunctionCodeGenerator >> initialize [
 { #category : #'register allocation' }
 SLVMLirFunctionCodeGenerator >> instruction: instruction resultInRegister: register [
 	registerAllocator moveInstruction: instruction resultInRegister: register with: self
+]
+
+{ #category : #accessing }
+SLVMLirFunctionCodeGenerator >> moduleTranslator [
+	^ moduleTranslator
+]
+
+{ #category : #accessing }
+SLVMLirFunctionCodeGenerator >> moduleTranslator: anObject [
+	moduleTranslator := anObject
 ]
 
 { #category : #'code generation' }
