@@ -56,6 +56,12 @@ SLVMCodeGenerator >> applyOptimizationsIn: ssaModule functionList: functionList 
 	globalOptimization passOnFunctions: functionList.
 ]
 
+{ #category : #initialization }
+SLVMCodeGenerator >> initialize [
+	super initialize.
+	optimizationLevel := 0.
+]
+
 { #category : #testing }
 SLVMCodeGenerator >> isInliningMandatory [
 	self subclassResponsibility

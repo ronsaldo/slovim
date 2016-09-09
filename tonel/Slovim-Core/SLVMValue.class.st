@@ -50,6 +50,11 @@ SLVMValue >> isFunctionArgument [
 ]
 
 { #category : #testing }
+SLVMValue >> isGlobalValue [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isInstruction [
 	^ false
 ]

@@ -32,6 +32,11 @@ SLVMGlobalValue >> isFunction [
 ]
 
 { #category : #testing }
+SLVMGlobalValue >> isGlobalValue [
+	^ true
+]
+
+{ #category : #testing }
 SLVMGlobalValue >> isGlobalVariable [
 	^ false
 ]
