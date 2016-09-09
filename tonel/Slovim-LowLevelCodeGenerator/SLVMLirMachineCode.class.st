@@ -64,6 +64,14 @@ SLVMLirMachineCode >> generateElf32 [
 	^ stream contents
 ]
 
+{ #category : #writing }
+SLVMLirMachineCode >> generateElf64 [
+	| stream |
+	stream := SLVMLirBinaryStream on: (ByteArray new: 100).
+	self writeElf64ToStream: stream.
+	^ stream contents
+]
+
 { #category : #initialization }
 SLVMLirMachineCode >> initialize [
 	super initialize.
@@ -126,6 +134,27 @@ SLVMLirMachineCode >> writeElf32ToStream: stream [
 
 { #category : #writing }
 SLVMLirMachineCode >> writeElf64ToFile: fileName [
+	fileName asFileReference writeStreamDo: [ :out |
+		out truncate; binary.
+		out nextPutAll: self generateElf64
+	]
+]
+
+{ #category : #writing }
+SLVMLirMachineCode >> writeElf64ToStream: stream [
+	| builder |
+	builder := SLVMElf64Builder new.
+	self buildElfOn: builder.
+	builder writeToStream: stream
+]
+
+{ #category : #writing }
+SLVMLirMachineCode >> writeElfToFile: fileName [
+	compilationTarget usesElf64 ifTrue: [
+		self writeElf64ToFile: fileName
+	] ifFalse: [
+		self writeElf32ToFile: fileName
+	]
 ]
 
 { #category : #writing }

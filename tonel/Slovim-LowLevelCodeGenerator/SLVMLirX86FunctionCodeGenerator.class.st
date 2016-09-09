@@ -284,14 +284,31 @@ SLVMLirX86FunctionCodeGenerator >> moveLocal: localVariable type: localType toRe
 			]
 		]
 	] ifFalse: [
-		self addX86: MOV with: register with: localVariable
+		localVariable size < register size ifTrue: [
+			self halt.
+		] ifFalse: [ 
+			self addX86: MOV with: register with: localVariable
+		]
 	]
 	
 ]
 
 { #category : #'code generation' }
 SLVMLirX86FunctionCodeGenerator >> moveRegister: register toLocal: localVariable [
-	self addX86: MOV with: localVariable with: register
+	register isVectorRegister ifTrue: [
+		localVariable size = 4 ifTrue: [ 
+			self addX86: MOVSS with: localVariable with: register
+		] ifFalse: [ 
+			self addX86: MOVSD with: localVariable with: register
+		]
+	] ifFalse: [
+		localVariable size < register size ifTrue: [ 
+			self halt
+		] ifFalse: [
+			self addX86: MOV with: localVariable with: register
+		]
+	]
+
 ]
 
 { #category : #'code generation' }
@@ -406,6 +423,11 @@ SLVMLirX86FunctionCodeGenerator >> secondIntResultRegister [
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> stackAlignment [
 	^ 16
+]
+
+{ #category : #accessing }
+SLVMLirX86FunctionCodeGenerator >> stackArgumentAlignment [
+	^ 4
 ]
 
 { #category : #accessing }
@@ -575,7 +597,7 @@ SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
 	instruction arguments do: [ :arg |
 		usesStackPointer := true.
 		self pushValue: arg.
-		cleanUpSize := cleanUpSize + (arg type size alignedTo: 4).
+		cleanUpSize := cleanUpSize + (arg type size alignedTo: self stackArgumentAlignment).
 	].
 
 	calledFunction := self ensureInstruction: instruction valueInRegisterOrImmediate: instruction functionValue.

@@ -57,3 +57,8 @@ SLVMX86_64CompilationTarget >> removeExtraJmpFrom: stream [
 	]
 
 ]
+
+{ #category : #accessing }
+SLVMX86_64CompilationTarget >> usesElf64 [
+	^ true
+]

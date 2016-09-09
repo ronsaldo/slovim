@@ -146,7 +146,7 @@ SLVMElfBuilder >> initialize [
 	sectionIndexDictionary := IdentityDictionary new.
 	sections add: self sectionHeaderClass new.	"Null section."
 		
-	header := SLVMElf32Header new.
+	header := self headerClass new.
 	sectionNameTable := self addComponent: self stringTableClass new.
 	(self addSectionNamed: '.shstrtab' content: sectionNameTable)
 		stringTable.

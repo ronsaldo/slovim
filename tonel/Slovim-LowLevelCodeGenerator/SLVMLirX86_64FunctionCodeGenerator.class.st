@@ -12,7 +12,7 @@ SLVMLirX86_64FunctionCodeGenerator >> floatReturnRegister [
 	^ XMM0
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SLVMLirX86_64FunctionCodeGenerator >> framePointerRegister [
 	^ RBP
 ]
@@ -61,7 +61,12 @@ SLVMLirX86_64FunctionCodeGenerator >> secondIntResultRegister [
 	^ RCX
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
+SLVMLirX86_64FunctionCodeGenerator >> stackArgumentAlignment [
+	^ 8
+]
+
+{ #category : #accessing }
 SLVMLirX86_64FunctionCodeGenerator >> stackPointerRegister [
 	^ RSP
 ]

@@ -33,7 +33,7 @@ SLVMElfSectionHeader >> prepareForWritingToFile: baseAddress [
 	content ifNil: [ ^ baseAddress ].
 	
 	self offset: content fileOffset.
-	self size: content size.
+	self contentSize: content size.
 	self isAllocated ifFalse: [
 		^ baseAddress 
 	].

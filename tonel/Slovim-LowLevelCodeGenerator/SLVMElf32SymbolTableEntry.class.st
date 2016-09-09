@@ -12,6 +12,11 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-Elf'
 }
 
+{ #category : #'as yet unclassified' }
+SLVMElf32SymbolTableEntry class >> entrySize [
+	^ 16
+]
+
 { #category : #accessing }
 SLVMElf32SymbolTableEntry >> info [
 	^ info

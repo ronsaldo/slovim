@@ -14,7 +14,7 @@ SLVMElf32SymbolTable >> addSymbol: symbol stringTable: stringTable sectionDictio
 		ifTrue: [ 1 ]
 		ifFalse: [ symbol isWeak ifTrue: [ 2 ] ifFalse: [ 0 ] ].
 	type := 0.
-	elfSymbol := SLVMElf32SymbolTableEntry new
+	elfSymbol := self symbolEntryClass new
 		name: (symbol isPrivate ifTrue: [ 0 ] ifFalse: [ stringTable addString: symbol name ]);
 		value: symbol position;
 		size: symbol size;
@@ -27,12 +27,17 @@ SLVMElf32SymbolTable >> addSymbol: symbol stringTable: stringTable sectionDictio
 SLVMElf32SymbolTable >> initialize [
 	super initialize.
 	entries := OrderedCollection new.
-	entries add: SLVMElf32SymbolTableEntry new.
+	entries add: self symbolEntryClass new.
 ]
 
 { #category : #accessing }
 SLVMElf32SymbolTable >> size [
-	^ 16 * entries size
+	^ self symbolEntryClass entrySize * entries size
+]
+
+{ #category : #factory }
+SLVMElf32SymbolTable >> symbolEntryClass [
+	^ SLVMElf32SymbolTableEntry
 ]
 
 { #category : #writing }

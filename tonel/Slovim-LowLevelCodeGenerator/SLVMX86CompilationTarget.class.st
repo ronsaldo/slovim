@@ -71,3 +71,8 @@ SLVMX86CompilationTarget >> removeExtraJmpFrom: stream [
 	]
 
 ]
+
+{ #category : #'as yet unclassified' }
+SLVMX86CompilationTarget >> usesElf64 [
+	^ false
+]

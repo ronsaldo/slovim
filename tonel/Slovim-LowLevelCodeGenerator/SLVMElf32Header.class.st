@@ -147,7 +147,7 @@ SLVMElf32Header >> sectionHeaderEntries: anObject [
 
 { #category : #writing }
 SLVMElf32Header >> sectionHeaderEntrySize [
-	^ 40
+	^ 64
 ]
 
 { #category : #accessing }

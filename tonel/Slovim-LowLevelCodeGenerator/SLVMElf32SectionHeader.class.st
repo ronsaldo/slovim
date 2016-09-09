@@ -41,6 +41,11 @@ SLVMElf32SectionHeader >> allocated [
 	flags := flags | 2
 ]
 
+{ #category : #accessing }
+SLVMElf32SectionHeader >> contentSize: anObject [
+	size := anObject
+]
+
 { #category : #types }
 SLVMElf32SectionHeader >> dynamics [
 	type := 6
@@ -157,6 +162,11 @@ SLVMElf32SectionHeader >> rela [
 	type := 4
 ]
 
+{ #category : #accessing }
+SLVMElf32SectionHeader >> sectionSize [
+	^ size
+]
+
 { #category : #types }
 SLVMElf32SectionHeader >> shlib [
 	type := 10
@@ -165,16 +175,6 @@ SLVMElf32SectionHeader >> shlib [
 { #category : #accessing }
 SLVMElf32SectionHeader >> size [
 	^ 40
-]
-
-{ #category : #accessing }
-SLVMElf32SectionHeader >> size1 [
-	^ size
-]
-
-{ #category : #accessing }
-SLVMElf32SectionHeader >> size: anObject [
-	size := anObject
 ]
 
 { #category : #types }

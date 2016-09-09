@@ -10,3 +10,8 @@ SLVMLirX86_64CodeGenerator >> initialize [
 	compilationTarget := SLVMX86_64CompilationTarget new.
 	functionCodeGeneratorClass := SLVMLirX86_64FunctionCodeGenerator.
 ]
+
+{ #category : #'as yet unclassified' }
+SLVMLirX86_64CodeGenerator >> usesElf64 [
+	^ true
+]
