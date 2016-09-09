@@ -880,14 +880,14 @@ SLVMSpirVCodeGenerator >> visitStructureType: structureType [
 			)
 		].
 	
-		structureType kind = DASLStructureType blockKind ifTrue: [ 
+		structureType kind = SLVMStructureType blockKind ifTrue: [ 
 			builder addAnnotationInstruction: (SpirVInstruction
 				opcode: SpvOpDecorate
 				operands: { id . SpvDecorationBlock }
 			)
 		].
 	
-		structureType kind = DASLStructureType bufferBlockKind ifTrue: [ 
+		structureType kind = SLVMStructureType bufferBlockKind ifTrue: [ 
 			builder addAnnotationInstruction: (SpirVInstruction
 				opcode: SpvOpDecorate
 				operands: { id . SpvDecorationBufferBlock }
