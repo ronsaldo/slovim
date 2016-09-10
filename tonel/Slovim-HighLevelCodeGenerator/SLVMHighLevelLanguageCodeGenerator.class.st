@@ -908,6 +908,14 @@ SLVMHighLevelLanguageCodeGenerator >> translateModule: ssaModule exportList: exp
 ]
 
 { #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translatePointerType: type [
+	| baseType name |
+	baseType := self translateType: type baseType.
+	name := baseType name , '*'.
+	^ SLVMHLReferenceTypeNode new baseType: baseType; name: name asSymbol; yourself
+]
+
+{ #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateReferenceType: type [
 	| baseType name |
 	baseType := self translateType: type baseType.
@@ -954,7 +962,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateType: aType [
 	aType isStructureType ifTrue: [ ^ self translateStructureType: aType ].
 	aType isArrayType ifTrue: [ ^ self translateArrayType: aType ].
 	aType isFunctionType ifTrue: [ ^ self translateFunctionType: aType ].
-	aType isReferenceType ifTrue: [ ^ self translateReferenceType: aType ]. 
+	aType isPointerType ifTrue: [ ^ self translatePointerType: aType ]. 
 	^ self translateBasicType: aType
 ]
 
@@ -1150,6 +1158,29 @@ SLVMHighLevelLanguageCodeGenerator >> visitFunction: function [
 		functionNode dynamicLiterals: (function dynamicLiterals collect: [ :arg | self translateFunctionDynamicLiteral: arg ] ).
 		
 		self translateFunction: function contentInto: functionNode
+	]
+]
+
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> visitGetElementPointer: instruction [
+	| baseType index |
+	^ self instructionTranslation: instruction allocate: [ SLVMHLElementReference new ] do: [ :node |
+		node reference: (self translateValue: instruction pointer).
+		instruction isElementAccess ifTrue: [
+			self assert: instruction indices size = 2.
+			self flag: 'ToDo: Support more indices.'.
+			baseType := (self translateType: instruction pointer type baseType).
+			index := instruction indices second.
+			(index isConstant and: [ baseType isStructureType ]) ifTrue: [
+				node isStructureMember: true.
+				node member: (baseType fields at: index value + 1)
+			] ifFalse: [
+				node isStructureMember: false.
+				node member: (self translateValue: index).
+			]
+		] ifFalse: [ 
+			self halt
+		]
 	]
 ]
 

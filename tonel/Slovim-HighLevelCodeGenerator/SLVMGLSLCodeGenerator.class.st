@@ -35,6 +35,8 @@ SLVMGLSLCodeGenerator class >> initialize [
 SLVMGLSLCodeGenerator class >> initializeBuiltInVariableMappings [
 	BuiltInVariableMappings := Dictionary newFromPairs: #(
 		-1 gl_Position
+		-6 gl_VertexID
+		-7 gl_InstanceID
 	)
 ]
 
@@ -410,7 +412,7 @@ SLVMGLSLCodeGenerator >> translateModule: module [
 ]
 
 { #category : #'code generation' }
-SLVMGLSLCodeGenerator >> translateReferenceType: type [
+SLVMGLSLCodeGenerator >> translatePointerType: type [
 	| baseType name |
 	baseType := self translateType: type baseType.
 	name := 'inout ', baseType name.
