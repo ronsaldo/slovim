@@ -8,8 +8,8 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-SLVMLirX86RegisterInt32 class >> canHoldValueOfType: type forTarget: compilationTarget [
-	^ (type sizeForTarget: compilationTarget) <= 4 and: [
+SLVMLirX86RegisterInt32 class >> canHoldValueOfType: type [
+	^ type size <= 4 and: [
 			(type isIntegerType or:
 			[ type isReferenceType or:
 			[ type isBooleanType ] ])

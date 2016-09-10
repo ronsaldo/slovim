@@ -190,6 +190,11 @@ SLVMLirMachineCodeWriter >> putMaybeReloc64: value [
 
 { #category : #adding }
 SLVMLirMachineCodeWriter >> putNextIPRelativeLabel32: label [
+	label isExternalLabel ifTrue: [
+		self recordRelativeRelocS32Into: label.
+		^ self putInt32: -4.
+	].
+
 	self putInt32: label offset - (self position + 4)
 ]
 
@@ -200,13 +205,17 @@ SLVMLirMachineCodeWriter >> putNextIPRelativeLabel8: label [
 
 { #category : #adding }
 SLVMLirMachineCodeWriter >> recordLabel: label [
+	label isExternalLabel ifTrue: [ 
+		^ self symbolForLabel: label
+	].
+
 	^ (self symbolForLabel: label)
-		visibility: label visibility;
-		section: currentSection;
-		position: stream position;
-		size: label contentSize;
-		type: label type;
-		yourself.	
+			visibility: label visibility;
+			section: currentSection;
+			position: stream position;
+			size: label contentSize;
+			type: label type;
+			yourself.	
 ]
 
 { #category : #adding }
@@ -214,6 +223,23 @@ SLVMLirMachineCodeWriter >> recordLabelEnd: label [
 	| symbol |
 	symbol := self symbolForLabel: label.
 	symbol size: self position - symbol position.
+]
+
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> recordRelativeRelocS32Into: destinationLabel [
+	| symbol reloc |
+	symbol := self symbolForLabel: destinationLabel.
+	self assert: symbol isNotNil.
+	reloc := SLVMLirMachineCodeRelocation new
+		relativeSOffset32;
+		offset: stream position;
+		symbol: (symbol shouldBeKeep ifTrue: [ symbol ] ifFalse: [nil]);
+		yourself.
+	destinationLabel section ifNotNil: [
+		reloc section: (self getOrCreateSectionNamed: destinationLabel section name).
+	].
+
+	currentSection addRelocation: reloc 
 ]
 
 { #category : #adding }
@@ -264,6 +290,14 @@ SLVMLirMachineCodeWriter >> symbolForLabel: label [
 		result := SLVMLirMachineCodeSymbol new
 			name: label name;
 			yourself.
+		label isExternalLabel ifTrue: [
+			result
+				visibility: label visibility;
+				type: label type;
+				position: 0;
+				size: 0.
+		].
+	
 		symbols add: result.
 		result
 	].

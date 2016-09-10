@@ -36,6 +36,10 @@ Class {
 		'CMPSD',
 		'CMPSS',
 		'CMPXCHG',
+		'CVTPD2PS',
+		'CVTPS2PD',
+		'CVTSD2SS',
+		'CVTSS2SD',
 		'CX',
 		'DEC',
 		'DH',
@@ -303,6 +307,10 @@ SLVMLirX86Constants class >> initializeMnemonics [
 	CMPSD
 	CMPSS
 	CMPXCHG
+	CVTSS2SD
+	CVTSD2SS
+	CVTPS2PD
+	CVTPD2PS
 	DEC
 	DIV
 	DIVPD

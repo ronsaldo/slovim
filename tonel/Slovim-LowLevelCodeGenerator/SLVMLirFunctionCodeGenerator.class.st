@@ -42,8 +42,8 @@ SLVMLirFunctionCodeGenerator >> createArguments [
 	stackFrame := lirFunction stackFrame.
 	function arguments do: [ :arg |
 		type := arg type.
-		size := type sizeForTarget: compilationTarget.
-		alignment := (type alignmentForTarget: compilationTarget) max: self stackElementGranularity.
+		size := type size.
+		alignment := type alignment max: self stackElementGranularity.
 		argVariable := stackFrame createArgument: size alignment: alignment.
 		lirFunction mapSSA: arg toStackVariable: argVariable 
 	]
@@ -59,6 +59,16 @@ SLVMLirFunctionCodeGenerator >> ensureInstruction: instruction valueInRegister: 
 	^ registerAllocator moveInstruction: instruction value: value toRegisterWith: self
 ]
 
+{ #category : #'register allocation' }
+SLVMLirFunctionCodeGenerator >> ensureInstruction: instruction valueInRegisterForPushing: value [
+	^ registerAllocator moveInstruction: instruction value: value toRegisterForPushingWith: self
+]
+
+{ #category : #'register allocation' }
+SLVMLirFunctionCodeGenerator >> ensureInstruction: instruction valueInRegisterOrLocalForPushing: value [
+	^ registerAllocator moveInstruction: instruction value: value toRegisterOrLocalForPushingWith: self
+]
+
 { #category : #'code generation' }
 SLVMLirFunctionCodeGenerator >> generateFunction: aFunction [
 	^ self generateFunction: aFunction into: (SLVMLirFunction new compilationTarget: compilationTarget).
@@ -68,6 +78,8 @@ SLVMLirFunctionCodeGenerator >> generateFunction: aFunction [
 
 { #category : #'code generation' }
 SLVMLirFunctionCodeGenerator >> generateFunction: aFunction into: aLirFunction [
+	aFunction isEmpty ifTrue: [ ^ aLirFunction ].
+	
 	function := aFunction.
 	function dominanceTopoSort.
 	lirFunction := aLirFunction.
@@ -142,14 +154,11 @@ SLVMLirFunctionCodeGenerator >> postProcessCodeGeneration [
 
 { #category : #'code generation' }
 SLVMLirFunctionCodeGenerator >> putConstantInConstantZone: aConstant [
-	| label blob |
+	| label |
 	^ constantZoneDictionary at: aConstant ifAbsentPut: [
 		label := SLVMLirLabel new name: #constant.
-		blob := aConstant asLirBlob.
-		label contentSize: blob content size.
-		constantBlock
-			addInstruction: label;
-			addInstruction: blob.
+		constantBlock addInstruction: label.
+		aConstant writeToLirBlock: constantBlock withLabel: label withGenerator: self.
 		label
 	]
 	

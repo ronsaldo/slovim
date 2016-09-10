@@ -17,7 +17,7 @@ Class {
 SLVMLirMachineCodeSymbol >> = other [
 	^ self class = other class and:
 	[ position = other position and:
-	[ section name = other section name and:
+	[ ((section isNil and: [other section isNil]) or: [ section name = other section name ]) and:
 	[ usedForReloc = other usedForReloc and:
 	[ visibility = other visibility ] ] ] ]
 ]

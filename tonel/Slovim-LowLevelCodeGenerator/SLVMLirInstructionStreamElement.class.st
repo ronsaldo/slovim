@@ -51,12 +51,12 @@ SLVMLirInstructionStreamElement >> previous: anObject [
 	previous := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #printing }
 SLVMLirInstructionStreamElement >> printOnInstructionStream: aStream [
 	self printOn: aStream
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #removing }
 SLVMLirInstructionStreamElement >> removeFromStream [
 	section removeElement: self
 ]

@@ -219,6 +219,50 @@ SLVMLirX86FunctionCodeGenerator >> initialize [
 	usesStackPointer := false.
 ]
 
+{ #category : #'code generation' }
+SLVMLirX86FunctionCodeGenerator >> instruction: instruction pushValue: value variadicArgument: isVariadicArgument [
+	| valueType register stackAddress stackArgumentSize |
+	value isConstant ifTrue: [ ^ self pushConstantValue: value variadicArgument: isVariadicArgument].
+	valueType := value type.
+	valueType isIntegerType ifTrue: [
+		((longMode not and: [ valueType size > 4 ]) or:
+		 [longMode and: [ valueType size > 8 ]]) ifTrue: [
+			register := self ensureInstruction: instruction valueInRegisterOrLocalForPushing: value.
+			self addX86: PUSH with: register.
+		] ifFalse: [
+			self halt.
+		]
+	].
+
+	valueType isFloatType ifTrue: [
+		register := self ensureInstruction: instruction valueInRegisterForPushing: value.
+		stackArgumentSize := valueType size alignedTo: self stackArgumentAlignment.
+		stackAddress := (self stackPointerRegister asX86PtrOfSize: valueType size) - stackArgumentSize.
+		valueType size = 4 ifTrue: [
+			isVariadicArgument ifTrue: [
+				"Variadic floats are passed as doubles"
+				stackArgumentSize := 8.
+				stackAddress := (self stackPointerRegister asX86PtrOfSize: valueType size) - stackArgumentSize.
+				self addX86: CVTSS2SD with: register with: register.
+				self addX86: MOVSD with: stackAddress with: register.
+			] ifFalse: [ 
+				self addX86: MOVSS with: stackAddress with: register.
+			]
+		].
+		valueType size = 8 ifTrue: [
+			self addX86: MOVSD with: stackAddress with: register.
+		].
+
+		^ self addX86: SUB with: self stackPointerRegister with: stackArgumentSize.
+	].
+
+	valueType isVectorType ifTrue: [
+		self halt.
+	].
+
+	self halt.
+]
+
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> intResultRegister [
 	^ EAX
@@ -324,15 +368,24 @@ SLVMLirX86FunctionCodeGenerator >> postProcessCodeGeneration [
 ]
 
 { #category : #'code generation' }
-SLVMLirX86FunctionCodeGenerator >> pushConstantValue: value [
+SLVMLirX86FunctionCodeGenerator >> pushConstantValue: value variadicArgument: isVariadicArgument [
 	| valueType memoryLocation integerData bitMask |
 	valueType := value type.
+	value isConstantPointer ifTrue: [
+		value constant ifNil: [
+			^ self addX86: PUSH with: 0.
+		] ifNotNil: [ 
+			memoryLocation := self putConstantInConstantZone: value constant.
+			^ self addX86: PUSH with: memoryLocation.
+		]
+	].
+
 	(value isConstantValue and: [ valueType isIntegerType or: [ valueType isFloatType ] ]) ifTrue: [ 
 		valueType isFloatType ifTrue: [ 
-			valueType size <= 4 ifTrue: [
+			(valueType size <= 4 and: [ isVariadicArgument not ]) ifTrue: [
 				integerData := value value asIEEE32BitWord
  			].
-			valueType size = 8 ifTrue: [
+			(valueType size = 8 or: [valueType size <= 8 and: [ isVariadicArgument ]]) ifTrue: [
 				integerData := ((value value basicAt: 1) << 32) | (value value basicAt: 2).
 			].
 		] ifFalse: [
@@ -349,31 +402,18 @@ SLVMLirX86FunctionCodeGenerator >> pushConstantValue: value [
 
 		self addX86: PUSH with: (integerData bitAnd: 16rFFFFFFFF).
 		integerData := integerData >> 32.
-		integerData ~= 0 ifTrue: [ self addX86: PUSH with: (integerData bitAnd: 16rFFFFFFFF) ]
-	] ifFalse: [
-		memoryLocation := self putConstantInConstantZone: value. 
+		integerData ~= 0 ifTrue: [ self addX86: PUSH with: (integerData bitAnd: 16rFFFFFFFF) ].
+		^ self
+	].
+
+	"Big constant"
+	memoryLocation := self putConstantInConstantZone: value.
+	valueType size <= self stackArgumentAlignment ifTrue: [ 
 		self addX86: PUSH with: memoryLocation asX86Ptr
-	]
+	] ifFalse: [
+		self halt
+	] 
 	
-]
-
-{ #category : #'code generation' }
-SLVMLirX86FunctionCodeGenerator >> pushValue: value [
-	| valueType |
-	value isConstant ifTrue: [ ^ self pushConstantValue: value ].
-	valueType := value type.
-	valueType isIntegerType ifTrue: [
-		((longMode not and: [ valueType size > 4 ]) or:
-		 [longMode and: [ valueType size > 8 ]]) ifTrue: [
-			self halt.
-		] ifFalse: [
-			self halt.
-		]
-	].
-
-	valueType isVectorType ifTrue: [
-		self halt.
-	].
 ]
 
 { #category : #visitor }
@@ -534,7 +574,7 @@ SLVMLirX86FunctionCodeGenerator >> visitAdd: instruction [
 SLVMLirX86FunctionCodeGenerator >> visitAlloca: instruction [
 	| valueType size |
 	valueType := instruction valueType.
-	size := (valueType sizeForTarget: compilationTarget) alignedTo: self stackAlignment.
+	size := valueType size alignedTo: self stackAlignment.
 	self addX86: SUB with: ESP with: size.
 	self instruction: instruction resultInRegister: ESP.
 ]
@@ -592,11 +632,15 @@ SLVMLirX86FunctionCodeGenerator >> visitBranch: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
-	| cleanUpSize calledFunction |
+	| cleanUpSize calledFunction resultType tempAddress emittedCount variadicArgumentCount |
 	cleanUpSize := 0.
-	instruction arguments do: [ :arg |
-		usesStackPointer := true.
-		self pushValue: arg.
+	usesStackPointer := true.
+	variadicArgumentCount := instruction arguments size - instruction functionType arguments size.
+	
+	emittedCount := 0.
+	instruction arguments reverseDo: [ :arg |
+		self instruction: instruction pushValue: arg variadicArgument: emittedCount < variadicArgumentCount.
+		emittedCount := emittedCount + 1.
 		cleanUpSize := cleanUpSize + (arg type size alignedTo: self stackArgumentAlignment).
 	].
 
@@ -604,7 +648,45 @@ SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
 	self addX86: CALL with: calledFunction.
 	cleanUpSize > 0 ifTrue: [
 		self addX86: ADD with: self stackPointerRegister with: cleanUpSize
+	].
+
+	instruction instructionReferences ifEmpty: [ ^ self ].
+	resultType := instruction type.
+	resultType isVectorType ifTrue: [
+		resultType size <= 16 ifTrue: [ 
+			self instruction: instruction resultInRegister: XMM0.
+		].
+		resultType size <= 32 ifTrue: [ 
+			self instruction: instruction resultInRegister: XMM0 secondRegister: XMM1.
+		].
+		resultType size > 32 ifTrue: [
+			self error: 'unsupported argument type.'
+		].
+		
+	] ifFalse: [
+		resultType isFloatType ifTrue: [
+			longMode ifFalse: [
+				tempAddress := (self stackPointerRegister asX86PtrOfSize: resultType size) - resultType size.
+				self addX86: FST with: tempAddress. 
+				self assert: (#(4 8) includes: resultType size).
+				resultType size = 4 ifTrue: [
+					self addX86: MOVSS with: XMM0 with: tempAddress. 
+				].
+				resultType size = 8 ifTrue: [
+					self addX86: MOVSD with: XMM0 with: tempAddress. 
+				].
+			].
+		
+			self instruction: instruction resultInRegister: XMM0.
+		] ifFalse: [ 
+			(resultType size <= 4 or: [ longMode and: [ resultType size <= 8] ])  ifTrue: [ 
+				self instruction: instruction resultInRegister: self intResultRegister
+			] ifFalse: [ 
+				self instruction: instruction resultInRegister: self intResultRegister secondRegister: self secondIntResultRegister.
+			].
+		]
 	]
+	
 ]
 
 { #category : #visitor }
@@ -685,7 +767,7 @@ SLVMLirX86FunctionCodeGenerator >> visitReturn: instruction [
 	returnValueType := returnValue type.
 	returnValueType isVectorType ifTrue: [ 
 	] ifFalse: [
-		returnSize := returnValueType sizeForTarget: compilationTarget.
+		returnSize := returnValueType size.
 		returnSize <= 8 ifTrue: [ 
 			returnValueType isFloatType ifTrue: [
 				floatReg := self floatReturnRegister.

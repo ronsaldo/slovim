@@ -12,7 +12,7 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-SLVMLirX86Register class >> canHoldValueOfType: aValue forTarget: compilationTarget [
+SLVMLirX86Register class >> canHoldValueOfType: aValue [
 	self subclassResponsibility
 ]
 

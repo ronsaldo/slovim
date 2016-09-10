@@ -8,8 +8,11 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-SLVMLirX86RegisterVector class >> canHoldValueOfType: aValue forTarget: compilationTarget [
-	^ (aValue sizeForTarget: compilationTarget) <= 16 and: [ aValue isMatrixType not ]
+SLVMLirX86RegisterVector class >> canHoldValueOfType: type [
+	^ type size <= 16 and: [
+			(type isVectorType or:
+			[ type isFloatType])
+	]
 ]
 
 { #category : #'as yet unclassified' }

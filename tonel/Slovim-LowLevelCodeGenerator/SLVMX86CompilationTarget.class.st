@@ -63,6 +63,9 @@ SLVMX86CompilationTarget >> convertRelocation: relocation section: section elfBu
 	relocation isAbsoluteOffset32 ifTrue: [
 		^ elfReloc symbol: symbolIndex type: R_386_32
 	].
+	relocation isRelativeSOffset32 ifTrue: [
+		^ elfReloc symbol: symbolIndex type: R_386_PC32
+	].
 
 	self error: 'Unsupported relocation type.'
 ]

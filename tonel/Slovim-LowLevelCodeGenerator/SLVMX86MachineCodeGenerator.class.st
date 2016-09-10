@@ -275,6 +275,62 @@ SLVMX86MachineCodeGenerator >> generateCMP: instruction [
 ]
 
 { #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateCVTPD2PS: instruction [
+	| first second |
+	first := instruction first.
+	second := instruction second.
+	self assert: first isRegister.
+	self assert: second isRegisterOrRegisterAddress.
+	self encodeRexSize: 4 rm: first reg: second.
+
+	writer put: 16r66; put: 16r0F; put: 16r5A.
+	^ self encodeModRM: second reg: first 
+
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateCVTPS2PD: instruction [
+	| first second |
+	first := instruction first.
+	second := instruction second.
+	self assert: first isRegister.
+	self assert: second isRegisterOrRegisterAddress.
+	self encodeRexSize: 4 rm: first reg: second.
+
+	writer put: 16r0F; put: 16r5A.
+	^ self encodeModRM: second reg: first 
+
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateCVTSD2SS: instruction [
+	| first second |
+	first := instruction first.
+	second := instruction second.
+	self assert: first isRegister.
+	self assert: second isRegisterOrRegisterAddress.
+	self encodeRexSize: 4 rm: first reg: second.
+
+	writer put: 16rF2; put: 16r0F; put: 16r5A.
+	^ self encodeModRM: second reg: first 
+
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateCVTSS2SD: instruction [
+	| first second |
+	first := instruction first.
+	second := instruction second.
+	self assert: first isRegister.
+	self assert: second isRegisterOrRegisterAddress.
+	self encodeRexSize: 4 rm: first reg: second.
+
+	writer put: 16rF3; put: 16r0F; put: 16r5A.
+	^ self encodeModRM: second reg: first 
+
+]
+
+{ #category : #'instruction generation' }
 SLVMX86MachineCodeGenerator >> generateFLD: instruction [
 	| operand operandSize |
 	operand := instruction operands first.
@@ -292,7 +348,27 @@ SLVMX86MachineCodeGenerator >> generateFLD: instruction [
 		^ self encodeModRM: operand opcode: 0
 	].
 
-	self halt.
+	self invalidInstruction.
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateFST: instruction [
+	| operand operandSize |
+	operand := instruction operands first.
+	self assert: operand isRegisterOrRegisterAddress.
+	
+	operandSize := operand size.
+	operandSize = 4 ifTrue: [
+		self encodeRexRM: operand.
+		writer put: 16rd9.
+		^ self encodeModRM: operand opcode: 2 
+	].
+	operandSize = 8 ifTrue: [
+		self encodeRexRM: operand.
+		writer put: 16rdd.
+		^ self encodeModRM: operand opcode: 2
+	].
+
 	self invalidInstruction.
 ]
 
@@ -451,6 +527,24 @@ SLVMX86MachineCodeGenerator >> generateMOVAPD: instruction [
 		^ self encodeModRM: second reg: first 
 	].
 	writer put: 16r66; put: 16r0F; put: 16r29.
+	^ self encodeModRM: first reg: second.
+
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateMOVSD: instruction [
+	| first second |
+	first := instruction first.
+	second := instruction second.
+	self assert: first isRegisterOrRegisterAddress.
+	self assert: second isRegisterOrRegisterAddress.
+	self encodeRexSize: 4 rm: first reg: second.
+	
+	second isRegisterAddress ifTrue: [
+		writer put: 16rF2; put: 16r0F; put: 16r10.
+		^ self encodeModRM: second reg: first 
+	].
+	writer put: 16rF2; put: 16r0F; put: 16r11.
 	^ self encodeModRM: first reg: second.
 
 ]

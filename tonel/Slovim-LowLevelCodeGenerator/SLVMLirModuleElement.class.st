@@ -8,6 +8,11 @@ Class {
 }
 
 { #category : #testing }
+SLVMLirModuleElement >> isExternal [
+	^ false
+]
+
+{ #category : #testing }
 SLVMLirModuleElement >> isModuleElement [
 	^ true
 ]

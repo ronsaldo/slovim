@@ -33,6 +33,8 @@ SLVMLirInstruction >> isInstruction [
 
 { #category : #copying }
 SLVMLirInstruction >> mapOperand: operand replaceModuleElementsWith: moduleElementDictionary replaceBlocksWith: blockLabelDictionary lowerVariablesWith: lirFunction [
+	operand isNumber ifTrue: [ ^ operand ].
+	
 	(operand isBasicBlock or: [ operand isLabel ]) ifTrue: [
 		^blockLabelDictionary at: operand
 	].

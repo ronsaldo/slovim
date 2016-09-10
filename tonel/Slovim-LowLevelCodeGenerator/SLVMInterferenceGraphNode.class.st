@@ -39,7 +39,7 @@ SLVMInterferenceGraphNode >> spillClass [
 
 { #category : #'as yet unclassified' }
 SLVMInterferenceGraphNode >> spillClassForTarget: compilationTarget [
-	^ variable type sizeAndAlignmentForTarget: compilationTarget
+	^ variable type sizeAndAlignment
 ]
 
 { #category : #accessing }

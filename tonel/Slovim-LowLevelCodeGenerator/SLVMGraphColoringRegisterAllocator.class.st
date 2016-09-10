@@ -32,7 +32,7 @@ SLVMGraphColoringRegisterAllocator >> allocateSpillLocations: interferenceGraph 
 	temporariesWithClasses := Dictionary new.
 	compilationTarget := lirFunction compilationTarget.
 	
-	order select: [:node | node variable isFunctionArgument not and: [ (node variable type sizeForTarget: compilationTarget) > 0] ] thenDo: [ :node |
+	order select: [:node | node variable isFunctionArgument not and: [ (node variable type size) > 0] ] thenDo: [ :node |
 		spillClass := node spillClassForTarget: compilationTarget.
 		usedColors := usedColorClasses at: spillClass ifAbsentPut: [ OrderedCollection new ].
 		temporaries := temporariesWithClasses at: spillClass ifAbsentPut: [ OrderedCollection new ].
@@ -91,6 +91,32 @@ SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction value: value 
 	] ifFalse: [
 		^ lirFunction variableMap at: value
 	]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction value: value toRegisterForPushingWith: codeGenerator [
+	| register registerClass registerOrSpillParamCount constantParamCount |
+	registerClass := self findRegisterClassForValue: value.
+	registerOrSpillParamCount := 0.
+	constantParamCount := 0.
+
+	register := registerClass at: 1.
+	value isConstant ifTrue: [
+		codeGenerator moveConstant: value toRegister: register.
+	] ifFalse: [
+		codeGenerator moveLocal: (lirFunction variableMap at: value) type: value type toRegister: register.
+	].
+
+	^ register
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction value: value toRegisterOrLocalForPushingWith: codeGenerator [
+	value isConstant ifFalse: [ 
+		^ lirFunction variableMap at: value
+	].
+	^ self moveInstruction: instruction value: value toRegisterForPushingWith: codeGenerator
+
 ]
 
 { #category : #'as yet unclassified' }

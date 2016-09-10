@@ -62,17 +62,24 @@ SLVMLirModule >> writeToInstructionStream: instructionStream [
 	| elementToLabelMap label |
 	elementToLabelMap := Dictionary new.
 	elements do: [ :element |
-		label := SLVMLirLabel new name: element name; visibility: element visibility.
-		label type: element labelType.
+		element isExternal ifTrue: [ 
+			label := SLVMLirExternalLabel new name: element name; visibility: element visibility.
+		] ifFalse: [ 
+			label := SLVMLirLabel new name: element name; visibility: element visibility.
+			label type: element labelType.
+		].
+	
 		elementToLabelMap at: element put: label
 	].
 
 	elements do: [ :element |
 		label := elementToLabelMap at: element.
-		instructionStream withSectionNamed: element section do: [
-			instructionStream add: label.
-			element writeToInstructionStream: instructionStream moduleElementDictionary: elementToLabelMap.
-			instructionStream add: (SLVMLirLabelContentEnd new label: label)
+		label isExternalLabel ifFalse: [ 
+			instructionStream withSectionNamed: element section do: [
+				instructionStream add: label.
+				element writeToInstructionStream: instructionStream moduleElementDictionary: elementToLabelMap.
+				instructionStream add: (SLVMLirLabelContentEnd new label: label)
+			]
 		]
 	].
 

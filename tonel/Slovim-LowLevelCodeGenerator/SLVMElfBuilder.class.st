@@ -242,6 +242,7 @@ SLVMElfBuilder >> relocationWithAddendTableClass [
 
 { #category : #accessing }
 SLVMElfBuilder >> sectionFromContent: content [
+	content ifNil: [ ^ nil ].
 	^ sectionContentDictionary at: content
 ]
 

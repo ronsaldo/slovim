@@ -39,6 +39,14 @@ SLVMLirX86RegisterAddress >> + displacementOrIndex [
 	self halt.
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirX86RegisterAddress >> - displacementOrIndex [
+	| result |
+	result := self copy.
+	displacementOrIndex isInteger ifTrue: [ ^ self copy displacement: displacementOrIndex negated ].
+	self halt.
+]
+
 { #category : #accessing }
 SLVMLirX86RegisterAddress >> base [
 	^ base

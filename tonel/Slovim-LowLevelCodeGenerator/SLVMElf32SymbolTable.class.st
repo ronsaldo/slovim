@@ -40,12 +40,12 @@ SLVMElf32SymbolTable >> addSymbol: symbol stringTable: stringTable sectionDictio
 		value: symbol position;
 		size: symbol size;
 		info: binding << 4 | (type bitAnd: 16rf);
-		sectionHeaderIndex: (sectionIndexDictionary at: symbol section).
+		sectionHeaderIndex: (symbol section ifNil: [0] ifNotNil: [sectionIndexDictionary at: symbol section]).
 	binding = 0 ifTrue: [
 		elfSymbol index: localEntries size.
 		localEntries add: elfSymbol
 	] ifFalse: [
-		elfSymbol index: entries size.
+		elfSymbol index: localEntries size + entries size.
 		entries add: elfSymbol
 	].
 

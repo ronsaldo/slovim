@@ -27,7 +27,7 @@ SLVMRegisterAllocator >> buildAllocatableRegisterClasses: allocatableRegisters [
 { #category : #'as yet unclassified' }
 SLVMRegisterAllocator >> findRegisterClassForValue: value [
 	allocatableRegisterClasses keysAndValuesDo: [ :key :values|
-		(key canHoldValueOfType: value type forTarget: lirFunction compilationTarget ) ifTrue: [ ^values ]
+		(key canHoldValueOfType: value type) ifTrue: [ ^values ]
 	].
 	^ nil
 ]

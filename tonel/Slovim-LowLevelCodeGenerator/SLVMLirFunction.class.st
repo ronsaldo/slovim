@@ -53,6 +53,11 @@ SLVMLirFunction >> initialize [
 	variableMap := Dictionary new.
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirFunction >> isExternal [
+	^ basicBlocks isEmpty
+]
+
 { #category : #accessing }
 SLVMLirFunction >> labelType [
 	^ #function
