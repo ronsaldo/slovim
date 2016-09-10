@@ -2,6 +2,7 @@ Class {
 	#name : #SLVMOpalASTTranslator,
 	#superclass : #RBProgramNodeVisitor,
 	#instVars : [
+		'compilationTarget',
 		'methodIR',
 		'currentScope',
 		'irBuilder',
@@ -80,7 +81,6 @@ SLVMOpalASTTranslator >> emitMessageNode: aMessageNode [
 { #category : #'visitor-double dispatching' }
 SLVMOpalASTTranslator >> emitMessageNode: aMessageNode receiver: receiverValue [
 	| arguments |
-	self assert: aMessageNode isCascaded not.
 	arguments := aMessageNode arguments collect: [ :arg | self visitNode: arg ].
 	^ aMessageNode isSuperSend
 		ifTrue: [ self halt. ]
@@ -154,7 +154,7 @@ SLVMOpalASTTranslator >> emitToDo: aMessageNode receiver: receiverValue step: st
 
 { #category : #initialization }
 SLVMOpalASTTranslator >> initialize [
-	
+	compilationTarget := SLVM32BitsPointerCompilationTarget new.
 ]
 
 { #category : #accessing }
@@ -241,7 +241,8 @@ SLVMOpalASTTranslator >> visitMethodNode: aMethodNode [
 	argumentTypes := {objectType} , aMethodNode arguments collect: [ :arg | objectType ].
 	functionType := SLVMFunctionType arguments: argumentTypes returnType: objectType.
 	
-	currentFunction := SLVMFunction functionType: functionType.
+	currentFunction := SLVMFunction pointerSize: compilationTarget pointerSize functionType: functionType.
+	currentFunction compilationTarget: compilationTarget.
 	methodIR := SLVMOpalMethodIR new function: currentFunction.
 	
 	currentScope := SLVMOpalLocalScope new.
