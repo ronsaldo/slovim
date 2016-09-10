@@ -334,7 +334,7 @@ SLVMType >> alignment [
 ]
 
 { #category : #testing }
-SLVMType >> asSlovimType [
+SLVMType >> asSlovimType: compilationTarget [
 	^ self
 ]
 
@@ -380,6 +380,11 @@ SLVMType >> isMatrixType [
 
 { #category : #testing }
 SLVMType >> isOpaqueType [
+	^ false
+]
+
+{ #category : #testing }
+SLVMType >> isPointerType [
 	^ false
 ]
 

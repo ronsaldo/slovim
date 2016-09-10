@@ -44,7 +44,7 @@ SLVMModule >> createFunctionOptimizationPassesForLevel: optimizationLevel [
 { #category : #building }
 SLVMModule >> functionName: name arguments: arguments returnType: returnType [
 	| function |
-	function := SLVMFunction name: name functionType: (SLVMFunctionType arguments: arguments returnType: returnType).
+	function := SLVMFunction pointerSize: compilationTarget pointerSize name: name functionType: (SLVMFunctionType arguments: arguments returnType: returnType).
 	function compilationTarget: compilationTarget.
 	
 	self add: function.
@@ -55,7 +55,7 @@ SLVMModule >> functionName: name arguments: arguments returnType: returnType [
 SLVMModule >> functionName: name fixedArguments: arguments returnType: returnType [
 	| function functionType |
 	functionType := (SLVMFunctionType arguments: arguments returnType: returnType) variadic: true.
-	function := SLVMFunction name: name functionType: functionType.
+	function := SLVMFunction pointerSize: compilationTarget pointerSize name: name functionType: functionType.
 	function compilationTarget: compilationTarget.
 	self add: function.
 	^ function

@@ -31,7 +31,7 @@ SLVMCall >> callingConvention [
 { #category : #construction }
 SLVMCall >> function: functionValue arguments: arguments [
 	self parameters: { functionValue } , arguments.
-	self assert: functionValue type isReferenceType.
+	self assert: functionValue type isPointerType.
 	self assert: functionValue type baseType isFunctionType.
 	functionType := functionValue type baseType.
 	type := functionValue type baseType returnType.

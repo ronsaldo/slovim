@@ -63,7 +63,7 @@ SLVMBuilder >> alloca: valueType [
 
 { #category : #instructions }
 SLVMBuilder >> alloca: valueType name: variableName [
-	^ self addInstruction: (SLVMAlloca valueType: valueType) name: variableName
+	^ self addInstruction: (SLVMAlloca pointerSize: self compilationTarget pointerSize valueType: valueType) name: variableName
 ]
 
 { #category : #'instance creation' }
@@ -289,7 +289,7 @@ SLVMBuilder >> getReference: reference element: element [
 
 { #category : #instructions }
 SLVMBuilder >> getReference: reference element: element resultName: resultName [
-	^ self addInstruction: (SLVMGetElementReference reference: reference index: element) name: resultName
+	^ self getPointer: reference element: {self constInt: 0 . element } resultName: resultName
 ]
 
 { #category : #testing }

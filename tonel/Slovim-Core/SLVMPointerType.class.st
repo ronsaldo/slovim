@@ -56,9 +56,9 @@ SLVMPointerType >> isScalarType [
 ]
 
 { #category : #accessing }
-SLVMPointerType >> pointerTypeOfMemberAt: index depth: depth [
+SLVMPointerType >> pointerSize: pointerSize typeOfMemberAt: index depth: depth [
 	depth = 0 ifTrue: [ ^ self ].
-	^ SLVMPointerType size: size baseType: (self typeOfMemberAt: index) storage: storage
+	^ SLVMPointerType size: pointerSize baseType: (self typeOfMemberAt: index) storage: storage
 ]
 
 { #category : #printing }

@@ -18,8 +18,13 @@ SLVMGetElementPointer >> accept: aVisitor [
 ]
 
 { #category : #accessing }
-SLVMGetElementPointer >> index [
-	^ parameters second
+SLVMGetElementPointer >> indices [
+	^ parameters allButFirst
+]
+
+{ #category : #testing }
+SLVMGetElementPointer >> isElementAccess [
+	^ parameters second isConstantValue and: [ parameters second value = 0 ]
 ]
 
 { #category : #printing }
@@ -38,10 +43,9 @@ SLVMGetElementPointer >> pointer: pointer indices: indices [
 	self assert: (pointer type isPointerType or: [pointer type isDynamicObjectType ]).
 	type := pointer type.
 	indices doWithIndex: [ :index :depth |
-		type := type pointerTypeOfMemberAt: index depth: depth.
+		type := type pointerSize: pointer type size typeOfMemberAt: index depth: depth - 1.
 	].
 
-	 
 ]
 
 { #category : #accessing }

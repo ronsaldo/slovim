@@ -11,8 +11,8 @@ Class {
 }
 
 { #category : #construction }
-SLVMGlobalVariable class >> name: aString valueType: aFunctionType storage: storageClass [
-	^ self new name: aString; valueType: aFunctionType storage: storageClass; yourself
+SLVMGlobalVariable class >> pointerSize: pointerSize name: aString valueType: aFunctionType storage: storageClass [
+	^ self new name: aString; pointerSize: pointerSize valueType: aFunctionType storage: storageClass; yourself
 ]
 
 { #category : #visitor }
@@ -49,6 +49,13 @@ SLVMGlobalVariable >> isGlobalVariable [
 ]
 
 { #category : #accessing }
+SLVMGlobalVariable >> pointerSize: pointerSize valueType: aType storage: storageClass [
+	self assert: aType isSlovimType.
+	valueType := aType.
+	type := SLVMPointerType size: pointerSize baseType: valueType storage: storageClass.
+]
+
+{ #category : #accessing }
 SLVMGlobalVariable >> readOnly [
 	^ readOnly
 ]
@@ -66,11 +73,4 @@ SLVMGlobalVariable >> type [
 { #category : #accessing }
 SLVMGlobalVariable >> valueType [
 	^ valueType
-]
-
-{ #category : #accessing }
-SLVMGlobalVariable >> valueType: aType storage: storageClass [
-	self assert: aType isSlovimType.
-	valueType := aType.
-	type := SLVMReferenceType baseType: valueType storage: storageClass.
 ]

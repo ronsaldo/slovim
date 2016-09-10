@@ -9,8 +9,8 @@ Class {
 }
 
 { #category : #construction }
-SLVMAlloca class >> valueType: valueType [
-	^ self new valueType: valueType
+SLVMAlloca class >> pointerSize: pointerSize valueType: valueType [
+	^ self new pointerSize: pointerSize valueType: valueType
 ]
 
 { #category : #visitor }
@@ -36,6 +36,13 @@ SLVMAlloca >> mnemonic [
 ]
 
 { #category : #accessing }
+SLVMAlloca >> pointerSize: pointerSize valueType: aType [
+	self assert: aType isSlovimType.
+	valueType := aType.
+	type := SLVMPointerType size: pointerSize baseType: valueType storage: SLVMType functionStorage
+]
+
+{ #category : #accessing }
 SLVMAlloca >> type [
 	^ type
 ]
@@ -43,11 +50,4 @@ SLVMAlloca >> type [
 { #category : #accessing }
 SLVMAlloca >> valueType [
 	^ valueType
-]
-
-{ #category : #accessing }
-SLVMAlloca >> valueType: aType [
-	self assert: aType isSlovimType.
-	valueType := aType.
-	type := SLVMReferenceType baseType: valueType storage: SLVMType functionStorage
 ]

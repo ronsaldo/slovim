@@ -42,6 +42,6 @@ SLVMLoadInstruction >> variable: variableReference [
 	| refType |
 	self parameters: { variableReference }.
 	refType := variableReference type.
-	self assert: refType isReferenceType.
+	self assert: refType isPointerType.
 	type := refType baseType.
 ]

@@ -61,8 +61,8 @@ SLVMConstantBuiltInFunction class >> initialize [
 ]
 
 { #category : #construction }
-SLVMConstantBuiltInFunction class >> name: aName functionType: aFunctionType [
-	^ self new name: aName functionType: aFunctionType
+SLVMConstantBuiltInFunction class >> pointerSize: pointerSize name: aName functionType: aFunctionType [
+	^ self new pointerSize: pointerSize name: aName functionType: aFunctionType
 ]
 
 { #category : #'as yet unclassified' }
@@ -102,12 +102,12 @@ SLVMConstantBuiltInFunction >> name [
 ]
 
 { #category : #construction }
-SLVMConstantBuiltInFunction >> name: aName functionType: aFunctionType [
+SLVMConstantBuiltInFunction >> pointerSize: pointerSize name: aName functionType: aFunctionType [
 	self assert: (ValidBuiltInFunctionNames includes: aName).
 	self assert: aFunctionType isSlovimType.
 	name := aName.
 	functionType := aFunctionType.
-	type := SLVMReferenceType baseType: functionType storage: SLVMType genericStorage.
+	type := SLVMPointerType size: pointerSize baseType: functionType storage: SLVMType genericStorage.
 	
 ]
 

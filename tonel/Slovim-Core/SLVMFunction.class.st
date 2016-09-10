@@ -18,13 +18,13 @@ Class {
 }
 
 { #category : #construction }
-SLVMFunction class >> functionType: aFunctionType [
-	^ self new functionType: aFunctionType; yourself
+SLVMFunction class >> pointerSize: pointerSize functionType: aFunctionType [
+	^ self new pointerSize: pointerSize functionType: aFunctionType; yourself
 ]
 
 { #category : #construction }
-SLVMFunction class >> name: aString functionType: aFunctionType [
-	^ self new name: aString; functionType: aFunctionType; yourself
+SLVMFunction class >> pointerSize: pointerSize name: aString functionType: aFunctionType [
+	^ self new name: aString; pointerSize: pointerSize functionType: aFunctionType; yourself
 ]
 
 { #category : #visitor }
@@ -236,14 +236,6 @@ SLVMFunction >> functionType [
 	^ functionType
 ]
 
-{ #category : #accessing }
-SLVMFunction >> functionType: aFunctionType [
-	self assert: aFunctionType isSlovimType.
-	functionType := aFunctionType.
-	type := SLVMReferenceType baseType: functionType storage: SLVMType genericStorage.
-	self makeArguments.
-]
-
 { #category : #private }
 SLVMFunction >> generateSymbol [
 	gensymCount := gensymCount + 1.
@@ -286,6 +278,14 @@ SLVMFunction >> makeArguments [
 			name: (#arg , index printString) asSymbol;
 			yourself
 	]
+]
+
+{ #category : #accessing }
+SLVMFunction >> pointerSize: pointerSize functionType: aFunctionType [
+	self assert: aFunctionType isSlovimType.
+	functionType := aFunctionType.
+	type := SLVMPointerType size: pointerSize baseType: functionType storage: SLVMType genericStorage.
+	self makeArguments.
 ]
 
 { #category : #'control flow' }
