@@ -581,14 +581,16 @@ SLVMSpirVCodeGenerator >> visitFunctionType: functionType [
 
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitGetElementPointer: getElementPointer [
-	| resultType pointer indices |
+	| resultType pointer indices rawIndices hasNonConstantIndex |
 	^ self instructionTranslation: getElementPointer do: [ :id |
-		pointer := self translateValue: getElementPointer reference.
-		indices := getElementPointer indices collect: [:index | self translateValue: index ].
+		pointer := self translateValue: getElementPointer pointer.
+		rawIndices := getElementPointer indices.
+		indices := rawIndices collect: [:index | self translateValue: index ].
 		resultType := self translateValue: getElementPointer type.
 		getElementPointer isElementAccess ifTrue: [ 
+			hasNonConstantIndex := rawIndices detect: [:index | index isConstant not] ifFound:[true] ifNone: [false].
 			builder addFunctionInstruction: (SpirVInstruction
-				opcode: SpvOpAccessChain
+				opcode: (hasNonConstantIndex ifTrue: [ SpvOpAccessChain ] ifFalse: [ SpvOpInBoundsAccessChain ]) 
 				type: resultType
 				result: id
 				operands: { pointer } , indices allButFirst)
@@ -761,11 +763,11 @@ SLVMSpirVCodeGenerator >> visitPhi: phiInstruction [
 ]
 
 { #category : #visitor }
-SLVMSpirVCodeGenerator >> visitReferenceType: referenceType [
+SLVMSpirVCodeGenerator >> visitPointerType: pointerType [
 	| baseType storage |
-	^ self valueTranslation: referenceType do: [ :id |
-		baseType := self translateValue: referenceType baseType.
-		storage := StorageClassMap at: referenceType storage.
+	^ self valueTranslation: pointerType do: [ :id |
+		baseType := self translateValue: pointerType baseType.
+		storage := StorageClassMap at: pointerType storage.
 		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypePointer result: id operands: { storage . baseType })
 	]
 ]
