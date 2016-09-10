@@ -45,6 +45,11 @@ SLVMLirInstructionOperand >> isLabel [
 ]
 
 { #category : #testing }
+SLVMLirInstructionOperand >> isLabelContentEnd [
+	^ false
+]
+
+{ #category : #testing }
 SLVMLirInstructionOperand >> isModuleElement [
 	^ false
 ]

@@ -12,6 +12,11 @@ SLVMLirModuleElement >> isModuleElement [
 	^ true
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirModuleElement >> labelType [
+	self subclassResponsibility
+]
+
 { #category : #accessing }
 SLVMLirModuleElement >> section [
 	^ self subclassResponsibility

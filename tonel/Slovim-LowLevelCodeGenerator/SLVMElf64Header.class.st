@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SLVMElf64Header >> sectionHeaderEntrySize [
+	^ 64
+]
+
+{ #category : #'as yet unclassified' }
 SLVMElf64Header >> size [
 	^ 64
 ]

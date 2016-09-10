@@ -53,6 +53,11 @@ SLVMLirFunction >> initialize [
 	variableMap := Dictionary new.
 ]
 
+{ #category : #accessing }
+SLVMLirFunction >> labelType [
+	^ #function
+]
+
 { #category : #'as yet unclassified' }
 SLVMLirFunction >> lowerVariable: stackFrameVariable [
 	^ compilationTarget lowerLocalVariable: stackFrameVariable in: stackFrame
@@ -107,13 +112,15 @@ SLVMLirFunction >> writeToInstructionStream: instructionStream moduleElementDict
 
 	basicBlocks do: [ :bb |
 		label := blockToLabelMap at: bb.
-		instructionStream add: label.
-		bb instructions do: [ :ins |
-			instructionStream add: (
-				ins
-					copyReplaceModuleElementsWith: moduleElementDictionary
-					replaceBlocksWith: blockToLabelMap
-					lowerVariablesWith: self)
+		instructionStream withSectionNamed: bb sectionName do: [
+			instructionStream add: label.
+			bb instructions do: [ :ins |
+				instructionStream add: (
+					ins
+						copyReplaceModuleElementsWith: moduleElementDictionary
+						replaceBlocksWith: blockToLabelMap
+						lowerVariablesWith: self)
+			]
 		]
 	].
 ]

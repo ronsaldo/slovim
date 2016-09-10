@@ -7,7 +7,10 @@ Class {
 		'sections',
 		'symbols',
 		'symbolTable',
-		'currentSectionSource'
+		'currentSectionSource',
+		'compilationTarget',
+		'sectionDictionary',
+		'lastSection'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -17,10 +20,35 @@ SLVMLirMachineCodeWriter class >> do: aBlock [
 	^ self new do: aBlock
 ]
 
+{ #category : #accessing }
+SLVMLirMachineCodeWriter >> compilationTarget [
+	^ compilationTarget
+]
+
+{ #category : #accessing }
+SLVMLirMachineCodeWriter >> compilationTarget: anObject [
+	compilationTarget := anObject
+]
+
 { #category : #enumerating }
 SLVMLirMachineCodeWriter >> do: aBlock [
 	aBlock value: self.
 	^ SLVMLirMachineCode new sections: sections; symbols: (symbols select: #shouldBeKeep) ; yourself
+]
+
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> getOrCreateSectionNamed: sectionName [
+	| section |
+	^ sectionDictionary at: sectionName ifAbsentPut: [
+		section := SLVMLirMachineCodeSection new name: sectionName.
+		sections add: section.
+		section
+	]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirMachineCodeWriter >> hasBaseLoadingAddress [
+	^ false
 ]
 
 { #category : #initialization }
@@ -29,12 +57,13 @@ SLVMLirMachineCodeWriter >> initialize [
 	sections := OrderedCollection new.
 	symbols := OrderedCollection new.
 	symbolTable := Dictionary new.
+	sectionDictionary := Dictionary new.
 ]
 
 { #category : #'as yet unclassified' }
 SLVMLirMachineCodeWriter >> lastSectionEnding [
-	sections ifEmpty: [ ^ 0 ].
-	^ sections last base + sections code size
+	lastSection ifNil: [ ^ 0 ].
+	^ lastSection base + lastSection size
 ]
 
 { #category : #adding }
@@ -97,6 +126,7 @@ SLVMLirMachineCodeWriter >> putInt8: value [
 
 { #category : #adding }
 SLVMLirMachineCodeWriter >> putMaybeReloc32: value [
+	| targetSection |
 	(value isInteger or: [ value isImmediateConstant ]) ifTrue: [
 		^self putInt32: value value
 	].
@@ -106,8 +136,9 @@ SLVMLirMachineCodeWriter >> putMaybeReloc32: value [
 		^ self putInt32: 0
 	].
 
-	value isLabel ifTrue: [ 
+	value isLabel ifTrue: [
 		self recordReloc32Into: value.
+		targetSection := self getOrCreateSectionNamed: value section name.
 		^ self putInt32: value offset
 	].
 	
@@ -174,19 +205,27 @@ SLVMLirMachineCodeWriter >> recordLabel: label [
 		section: currentSection;
 		position: stream position;
 		size: label contentSize;
+		type: label type;
 		yourself.	
 ]
 
 { #category : #adding }
-SLVMLirMachineCodeWriter >> recordReloc32Into: destinationSymbol [
+SLVMLirMachineCodeWriter >> recordLabelEnd: label [
+	| symbol |
+	symbol := self symbolForLabel: label.
+	symbol size: self position - symbol position.
+]
+
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> recordReloc32Into: destinationLabel [
 	| symbol reloc |
-	symbol := self symbolForLabel: destinationSymbol.
-	symbol usedForReloc: true.
-	
+	symbol := self symbolForLabel: destinationLabel.
+	self assert: symbol isNotNil.
 	reloc := SLVMLirMachineCodeRelocation new
 		absoluteOffset32;
-		offset: stream position - 1;
-		symbol: (symbol shouldBeKeep ifTrue: [ symbol ] ifFalse: [ nil ]);
+		offset: stream position;
+		symbol: (symbol shouldBeKeep ifTrue: [ symbol ] ifFalse: [nil]);
+		section: (self getOrCreateSectionNamed: destinationLabel section name);
 		yourself.
 	currentSection addRelocation: reloc 
 ]
@@ -194,9 +233,14 @@ SLVMLirMachineCodeWriter >> recordReloc32Into: destinationSymbol [
 { #category : #adding }
 SLVMLirMachineCodeWriter >> section: section alignment: sectionAlignment do: aBlock [
 	currentSectionSource := section. 
-	currentSection := SLVMLirMachineCodeSection new name: section name.
-	currentSection base: (self lastSectionEnding alignedTo: sectionAlignment).
-	sections add: currentSection.
+	currentSection := self getOrCreateSectionNamed: section name.
+	self hasBaseLoadingAddress ifTrue: [ 
+		currentSection base: (self lastSectionEnding alignedTo: sectionAlignment).
+	] ifFalse: [
+		currentSection base: 0
+	].
+
+	lastSection := currentSection.
 	currentSection code: (ByteArray streamContents: [ :out |
 		stream := out.
 		aBlock value: self

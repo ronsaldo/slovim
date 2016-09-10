@@ -41,15 +41,21 @@ SLVMLirInstructionStream >> currentSection: anObject [
 
 { #category : #'as yet unclassified' }
 SLVMLirInstructionStream >> currentSectionNamed: sectionName [
-	^ self currentSection: (
-		sections at: sectionName ifAbsentPut: [
-			SLVMLirInstructionStreamSection new name: sectionName])
+	^ self currentSection: (self getOrCreateSectionNamed: sectionName)
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirInstructionStream >> getOrCreateSectionNamed: sectionName [
+	^ sections at: sectionName ifAbsentPut: [
+		SLVMLirInstructionStreamSection new
+			name: sectionName
+	]
 ]
 
 { #category : #'as yet unclassified' }
 SLVMLirInstructionStream >> initialize [
 	super initialize.
-	sections := Dictionary new.
+	sections := OrderedDictionary new.
 ]
 
 { #category : #'as yet unclassified' }
@@ -65,4 +71,12 @@ SLVMLirInstructionStream >> printOn: aStream [
 { #category : #accessing }
 SLVMLirInstructionStream >> sections [
 	^ sections
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirInstructionStream >> withSectionNamed: sectionName do: aBlock [
+	| oldSection |
+	oldSection := currentSection.
+	self currentSectionNamed: sectionName.
+	aBlock ensure: [ currentSection := oldSection ]
 ]

@@ -657,6 +657,7 @@ SLVMX86MachineCodeGenerator >> generateUntilConvergence [
 	oldResult := nil.
 	[
 		result := SLVMLirMachineCodeWriter do: [ :out |
+			out compilationTarget: instructionStream compilationTarget.
 			instructionStream sections do: [:section |
 				out section: section alignment: self sectionAlignment do: [:sectionWriter |
 					writer := sectionWriter.
@@ -664,6 +665,10 @@ SLVMX86MachineCodeGenerator >> generateUntilConvergence [
 						ins offset: out position.
 						ins isLabel ifTrue: [
 							writer recordLabel: ins.
+						].
+					
+						ins isLabelContentEnd ifTrue: [
+							writer recordLabelEnd: ins label
 						].
 					
 						ins isBlob ifTrue: [

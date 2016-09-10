@@ -200,7 +200,10 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 		lirFunction addBasicBlock: lirBlock.
 		basicBlockDictionary at: bb put: lirBlock.
 	].
-	constantBlock := SLVMLirBasicBlock new name: #constantZone.
+	constantBlock := SLVMLirBasicBlock new 
+		name: #constantZone;
+		sectionName: #'.rodata';
+		yourself.
 	lirFunction addBasicBlock: constantBlock.
 
 	registerAllocator translateBasicBlocks: function basicBlocks with: self.

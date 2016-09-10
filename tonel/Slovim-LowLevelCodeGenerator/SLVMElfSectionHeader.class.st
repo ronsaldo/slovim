@@ -29,16 +29,10 @@ SLVMElfSectionHeader >> index: anObject [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMElfSectionHeader >> prepareForWritingToFile: baseAddress [
-	content ifNil: [ ^ baseAddress ].
+SLVMElfSectionHeader >> prepareForWritingToFile [
+	content ifNil: [ ^ self ].
 	
 	self offset: content fileOffset.
 	self contentSize: content size.
-	self isAllocated ifFalse: [
-		^ baseAddress 
-	].
-
-	self address: (baseAddress alignedTo: content alignment).
-	^ self address + self size
 
 ]

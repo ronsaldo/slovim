@@ -23,9 +23,8 @@ SLVMLirBinaryFileComponent >> fileOffset: anObject [
 ]
 
 { #category : #writing }
-SLVMLirBinaryFileComponent >> prepareForWritingToFile: baseAddress [
+SLVMLirBinaryFileComponent >> prepareForWritingToFile [
 	"Do nothing for now"
-	^ baseAddress
 ]
 
 { #category : #accessing }

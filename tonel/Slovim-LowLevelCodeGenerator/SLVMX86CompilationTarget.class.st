@@ -1,6 +1,19 @@
 Class {
 	#name : #SLVMX86CompilationTarget,
 	#superclass : #SLVM32BitsPointerCompilationTarget,
+	#classVars : [
+		'R_386_32',
+		'R_386_COPY',
+		'R_386_GLOB_DAT',
+		'R_386_GOT32',
+		'R_386_GOTOFF',
+		'R_386_GOTPC',
+		'R_386_JMP_SLOT',
+		'R_386_NONE',
+		'R_386_PC32',
+		'R_386_PLT32',
+		'R_386_RELATIVE'
+	],
 	#pools : [
 		'SLVMLirX86Constants'
 	],
@@ -8,11 +21,50 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SLVMX86CompilationTarget class >> initialize [
+	super initialize.
+	
+	"A - addend"
+	"B - base"
+	"G - offset into the GOT"
+	"GOT - GOT address"
+	"L - linkage table offset"
+	"P - place of relocation"
+	"S - symbol value"
+	R_386_NONE := 0. 	"None"
+	R_386_32 := 1. 		"S + A"
+	R_386_PC32 := 2.	"S + A - P"
+	R_386_GOT32 := 3. 	"G + A - P"
+	R_386_PLT32 := 4. 	"L + A - P"
+	R_386_COPY := 5.	"None"
+	R_386_GLOB_DAT := 6. 	"S"
+	R_386_JMP_SLOT := 7. 	"S"
+	R_386_RELATIVE := 8.	"B + A"
+	R_386_GOTOFF := 9.	"S + A - GOT"
+	R_386_GOTPC := 10. "GOT + A - P"
+	
+]
+
+{ #category : #'as yet unclassified' }
 SLVMX86CompilationTarget >> allocatableRegisters [
 	^ {
 	EDX . EBX. ESI . EDI .
 	XMM0 . XMM1 . XMM2 . XMM3 . XMM4 . XMM5 . XMM6 . XMM7
 	}
+]
+
+{ #category : #'elf relocations' }
+SLVMX86CompilationTarget >> convertRelocation: relocation section: section elfBuilder: elfBuilder [
+	| table elfReloc symbolIndex |
+	table := elfBuilder relocationSectionFor: section.
+	elfReloc := table newEntry.
+	symbolIndex := elfBuilder indexOfRelocationSymbol: relocation symbol section: (elfBuilder sectionFromContent: relocation section).
+	elfReloc offset: relocation offset.
+	relocation isAbsoluteOffset32 ifTrue: [
+		^ elfReloc symbol: symbolIndex type: R_386_32
+	].
+
+	self error: 'Unsupported relocation type.'
 ]
 
 { #category : #'elf constants' }

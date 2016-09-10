@@ -2,6 +2,7 @@ Class {
 	#name : #SLVMLirMachineCodeRelocation,
 	#superclass : #Object,
 	#instVars : [
+		'section',
 		'offset',
 		'addend',
 		'symbol',
@@ -150,6 +151,16 @@ SLVMLirMachineCodeRelocation >> relativeSOffset64 [
 { #category : #testing }
 SLVMLirMachineCodeRelocation >> relativeSOffset8 [
 	type := RelativeSOffset8
+]
+
+{ #category : #accessing }
+SLVMLirMachineCodeRelocation >> section [
+	^ section
+]
+
+{ #category : #accessing }
+SLVMLirMachineCodeRelocation >> section: anObject [
+	section := anObject
 ]
 
 { #category : #accessing }

@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'name',
 		'function',
-		'instructions'
+		'instructions',
+		'sectionName'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -35,6 +36,7 @@ SLVMLirBasicBlock >> function: anObject [
 SLVMLirBasicBlock >> initialize [
 	super initialize.
 	instructions := OrderedCollection new.
+	sectionName := #'.text'
 ]
 
 { #category : #accessing }
@@ -42,7 +44,7 @@ SLVMLirBasicBlock >> instructions [
 	^ instructions
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
 SLVMLirBasicBlock >> isBasicBlock [
 	^ true
 ]
@@ -60,4 +62,14 @@ SLVMLirBasicBlock >> name: anObject [
 { #category : #printing }
 SLVMLirBasicBlock >> printOn: aStream [
 	aStream nextPutAll: '.L'; nextPutAll: name
+]
+
+{ #category : #accessing }
+SLVMLirBasicBlock >> sectionName [
+	^ sectionName
+]
+
+{ #category : #accessing }
+SLVMLirBasicBlock >> sectionName: anObject [
+	sectionName := anObject
 ]

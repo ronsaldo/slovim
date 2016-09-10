@@ -11,7 +11,11 @@ Class {
 		'dynSymbolStringTable',
 		'dynSymbolTable',
 		'firstComponents',
-		'sectionIndexDictionary'
+		'sectionIndexDictionary',
+		'sectionDictionary',
+		'relocationSectionDictionary',
+		'symbolDictionary',
+		'sectionContentDictionary'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Elf'
 }
@@ -46,8 +50,10 @@ SLVMElfBuilder >> addFirstComponent: component sectionNamed: sectionNamed [
 
 { #category : #adding }
 SLVMElfBuilder >> addNormalSymbol: symbol [
+	| elfSymbol |
 	symbolTable ifNil: [ ^ nil ].
-	symbolTable addSymbol: symbol stringTable: symbolStringTable sectionDictionary: sectionIndexDictionary
+	elfSymbol := symbolTable addSymbol: symbol stringTable: symbolStringTable sectionDictionary: sectionIndexDictionary.
+	symbolDictionary at: symbol put: elfSymbol index.
 ]
 
 { #category : #adding }
@@ -63,7 +69,10 @@ SLVMElfBuilder >> addSectionNamed: sectionName content: content [
 		content: content;
 		index: sections size.
 	sections add: section.
-	content ifNotNil: [ sectionIndexDictionary at: content put: section index ].
+	content ifNotNil: [
+		sectionContentDictionary at: content put: section.
+		sectionIndexDictionary at: content put: section index.
+	].
 	^ section
 ]
 
@@ -107,10 +116,11 @@ SLVMElfBuilder >> createDynSymbolTable [
 		stringTable.
 		
 	dynSymbolTable := self addComponent: self symbolTableClass new.
-	(self addSectionNamed: '.dyntab' content: dynSymbolTable)
+	symbolTable sectionHeader: ((self addSectionNamed: '.dyntab' content: dynSymbolTable)
 		link: stringTableSection index;
+		addressAlign: self pointerAlignment;
 		dynsym;
-		allocated
+		allocated)
 ]
 
 { #category : #adding }
@@ -121,10 +131,11 @@ SLVMElfBuilder >> createSymbolTable [
 		stringTable.
 		
 	symbolTable := self addComponent: self symbolTableClass new.
-	(self addSectionNamed: '.symtab' content: symbolTable)
+	symbolTable sectionHeader: ((self addSectionNamed: '.symtab' content: symbolTable)
 		link: stringTableSection index;
+		addressAlign: self pointerAlignment;
 		symbolTable;
-		allocated.
+		allocated).
 ]
 
 { #category : #accessing }
@@ -137,13 +148,33 @@ SLVMElfBuilder >> headerClass [
 	self subclassResponsibility
 ]
 
+{ #category : #accessing }
+SLVMElfBuilder >> indexOfRelocationSymbol: symbol section: section [
+	symbol ifNil: [ 
+		^ symbolDictionary at: section ifAbsentPut: [ 
+			(symbolTable addRelocationSectionSymbol: section)
+				index
+		]
+	].
+
+	^ self indexOfSymbol: symbol
+]
+
+{ #category : #accessing }
+SLVMElfBuilder >> indexOfSymbol: symbol [
+	^ symbolDictionary at: symbol
+]
+
 { #category : #initialization }
 SLVMElfBuilder >> initialize [
 	super initialize.
 	firstComponents := OrderedCollection new.
 	components := OrderedCollection new.
 	sections := OrderedCollection new.
+	sectionContentDictionary := IdentityDictionary new.
 	sectionIndexDictionary := IdentityDictionary new.
+	relocationSectionDictionary := IdentityDictionary new.
+	symbolDictionary := IdentityDictionary new.
 	sections add: self sectionHeaderClass new.	"Null section."
 		
 	header := self headerClass new.
@@ -152,15 +183,18 @@ SLVMElfBuilder >> initialize [
 		stringTable.
 ]
 
+{ #category : #accessing }
+SLVMElfBuilder >> pointerAlignment [
+	self subclassResponsibility
+]
+
 { #category : #writing }
 SLVMElfBuilder >> prepareForWriting [
-	| address |
 	self computeFileBinaryElementsOffsets.
-	address := 0.
 	self allComponentsDo: [:component |
-		address := component prepareForWritingToFile: address
+		component prepareForWritingToFile
 	].
-	
+
 	header
 		sectionHeaderOffset: sections first fileOffset;
 		sectionHeaderEntries: sections size;
@@ -170,6 +204,45 @@ SLVMElfBuilder >> prepareForWriting [
 { #category : #'format classes' }
 SLVMElfBuilder >> programHeaderClass [
 	self subclassResponsibility
+]
+
+{ #category : #adding }
+SLVMElfBuilder >> relocationSectionFor: section [
+	^ (relocationSectionDictionary at: section ifAbsentPut: [
+		(self addSectionNamed: ('.rel' , section name) asSymbol content: (self addComponent: self relocationTableClass new))
+			rel;
+			setInfoAndLinkFlags;
+			addressAlign: self pointerAlignment;
+			link: (sectionIndexDictionary at: symbolTable);
+			info: (sectionIndexDictionary at: section);
+			yourself
+	]) content
+]
+
+{ #category : #'format classes' }
+SLVMElfBuilder >> relocationTableClass [
+	self subclassResponsibility
+]
+
+{ #category : #adding }
+SLVMElfBuilder >> relocationWithAddendSectionFor: section [
+	^ relocationSectionDictionary at: section ifAbsentPut: [
+		(self addSectionNamed: ('.rela' , section name) asSymbol content: (self addComponent: self relocationWithAddendTableClass new))
+			rela;
+			link: (sectionIndexDictionary at: symbolTable);
+			info: (sectionIndexDictionary at: section);
+			yourself
+	]
+]
+
+{ #category : #'format classes' }
+SLVMElfBuilder >> relocationWithAddendTableClass [
+	self subclassResponsibility
+]
+
+{ #category : #accessing }
+SLVMElfBuilder >> sectionFromContent: content [
+	^ sectionContentDictionary at: content
 ]
 
 { #category : #'format classes' }

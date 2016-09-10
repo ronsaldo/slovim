@@ -24,19 +24,31 @@ SLVMLirMachineCode >> buildElfOn: builder [
 	builder header 
 		machine: compilationTarget elfMachine.
 	builder createSymbolTable.
-	builder createDynSymbolTable.
-	
+	self isObjectCode ifFalse: [
+		builder createDynSymbolTable.
+	].
+
 	sections do: [ :section |
 		elfSection := builder addFirstComponent: section sectionNamed: section name.
 		elfSection programBits; allocated.
 		elfSection address: section base.
+		"Ensure the local symbols come before the globals."
+		builder indexOfRelocationSymbol: nil section: elfSection.
+		
 		section name = #'.text' ifTrue: [ elfSection executableInstructions ].
 		(section name = #'.data' or: [ section name = #'.bss' ]) ifTrue: [ elfSection writeable ].
+		section name = #'.bss' ifTrue: [ elfSection nobits ].
 	].
 
 	symbols do: [ :symbol |
 		builder addSymbol: symbol.
 	].
+
+	sections do: [ :section |
+		section relocations do: [ :relocation |
+			compilationTarget convertRelocation: relocation section: section elfBuilder: builder
+		]
+	]
 ]
 
 { #category : #accessing }

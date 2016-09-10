@@ -9,9 +9,24 @@ SLVMElf32Builder >> headerClass [
 	^ SLVMElf32Header
 ]
 
+{ #category : #accessing }
+SLVMElf32Builder >> pointerAlignment [
+	^ 4
+]
+
 { #category : #'format classes' }
 SLVMElf32Builder >> programHeaderClass [
 	^ SLVMElf32ProgramHeader
+]
+
+{ #category : #'format classes' }
+SLVMElf32Builder >> relocationTableClass [
+	^ SLVMElf32RelocationTable
+]
+
+{ #category : #'format classes' }
+SLVMElf32Builder >> relocationWithAddendTableClass [
+	^ SLVMElf32RelocationTableWithAddend
 ]
 
 { #category : #'format classes' }

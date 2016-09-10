@@ -7,7 +7,8 @@ Class {
 		'size',
 		'info',
 		'other',
-		'sectionHeaderIndex'
+		'sectionHeaderIndex',
+		'index'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Elf'
 }
@@ -15,6 +16,16 @@ Class {
 { #category : #'as yet unclassified' }
 SLVMElf32SymbolTableEntry class >> entrySize [
 	^ 16
+]
+
+{ #category : #accessing }
+SLVMElf32SymbolTableEntry >> index [
+	^ index
+]
+
+{ #category : #accessing }
+SLVMElf32SymbolTableEntry >> index: anObject [
+	index := anObject
 ]
 
 { #category : #accessing }

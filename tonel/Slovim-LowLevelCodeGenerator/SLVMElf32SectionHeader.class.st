@@ -114,7 +114,7 @@ SLVMElf32SectionHeader >> link [
 
 { #category : #accessing }
 SLVMElf32SectionHeader >> link: anObject [
-	link := anObject
+	link := anObject.
 ]
 
 { #category : #accessing }
@@ -154,7 +154,8 @@ SLVMElf32SectionHeader >> programBits [
 
 { #category : #types }
 SLVMElf32SectionHeader >> rel [
-	type := 9
+	type := 9.
+	entrySize := 8.
 ]
 
 { #category : #types }
@@ -165,6 +166,11 @@ SLVMElf32SectionHeader >> rela [
 { #category : #accessing }
 SLVMElf32SectionHeader >> sectionSize [
 	^ size
+]
+
+{ #category : #flags }
+SLVMElf32SectionHeader >> setInfoAndLinkFlags [
+	flags := flags | 16r40
 ]
 
 { #category : #types }

@@ -7,7 +7,8 @@ Class {
 		'size',
 		'section',
 		'visibility',
-		'usedForReloc'
+		'usedForReloc',
+		'type'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -75,7 +76,7 @@ SLVMLirMachineCodeSymbol >> section: anObject [
 
 { #category : #initialization }
 SLVMLirMachineCodeSymbol >> shouldBeKeep [
-	^ self isPublic
+	^ self isPublic or: [ usedForReloc ]
 ]
 
 { #category : #accessing }
@@ -86,6 +87,16 @@ SLVMLirMachineCodeSymbol >> size [
 { #category : #accessing }
 SLVMLirMachineCodeSymbol >> size: anObject [
 	size := anObject
+]
+
+{ #category : #accessing }
+SLVMLirMachineCodeSymbol >> type [
+	^ type
+]
+
+{ #category : #accessing }
+SLVMLirMachineCodeSymbol >> type: anObject [
+	type := anObject
 ]
 
 { #category : #accessing }

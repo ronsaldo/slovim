@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'name',
 		'visibility',
-		'alignment'
+		'alignment',
+		'type'
 	],
 	#classVars : [
 		'VisibilityPrintingPrefix'
@@ -66,6 +67,11 @@ SLVMLirExternalLabel >> isExternalLabel [
 	^ true
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirExternalLabel >> isFunction [
+	^ type == #function
+]
+
 { #category : #testing }
 SLVMLirExternalLabel >> isImmediate [
 	^ true
@@ -104,6 +110,16 @@ SLVMLirExternalLabel >> private [
 { #category : #visibility }
 SLVMLirExternalLabel >> public [
 	visibility := #public
+]
+
+{ #category : #accessing }
+SLVMLirExternalLabel >> type [
+	^ type
+]
+
+{ #category : #accessing }
+SLVMLirExternalLabel >> type: anObject [
+	type := anObject
 ]
 
 { #category : #testing }

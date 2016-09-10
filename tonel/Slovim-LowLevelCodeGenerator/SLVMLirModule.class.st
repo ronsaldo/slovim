@@ -17,6 +17,11 @@ SLVMLirModule >> addElement: anElement [
 SLVMLirModule >> asInstructionStream [
 	| result |
 	result := SLVMLirInstructionStream new compilationTarget: compilationTarget.
+	result
+		getOrCreateSectionNamed: #'.text';
+		getOrCreateSectionNamed: #'.rodata';
+		getOrCreateSectionNamed: #'.data';
+		getOrCreateSectionNamed: #'.bss'.
 	self writeToInstructionStream: result.
 	^ result
 ]
@@ -58,15 +63,17 @@ SLVMLirModule >> writeToInstructionStream: instructionStream [
 	elementToLabelMap := Dictionary new.
 	elements do: [ :element |
 		label := SLVMLirLabel new name: element name; visibility: element visibility.
+		label type: element labelType.
 		elementToLabelMap at: element put: label
 	].
 
 	elements do: [ :element |
 		label := elementToLabelMap at: element.
-		instructionStream
-			currentSectionNamed: element section;
-			add: label.
-		element writeToInstructionStream: instructionStream moduleElementDictionary: elementToLabelMap
+		instructionStream withSectionNamed: element section do: [
+			instructionStream add: label.
+			element writeToInstructionStream: instructionStream moduleElementDictionary: elementToLabelMap.
+			instructionStream add: (SLVMLirLabelContentEnd new label: label)
+		]
 	].
 
 ]
