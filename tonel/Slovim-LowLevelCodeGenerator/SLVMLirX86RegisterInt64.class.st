@@ -11,7 +11,7 @@ Class {
 SLVMLirX86RegisterInt64 class >> canHoldValueOfType: type [
 	^ type size <= 8 and: [
 			(type isIntegerType or:
-			[ type isReferenceType or:
+			[ type isPointerType or:
 			[ type isBooleanType ] ])
 	]
 ]
