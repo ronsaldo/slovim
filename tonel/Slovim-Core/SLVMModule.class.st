@@ -2,6 +2,7 @@ Class {
 	#name : #SLVMModule,
 	#superclass : #SLVMObject,
 	#instVars : [
+		'compilationTarget',
 		'globalValues'
 	],
 	#category : #'Slovim-Core-SSA'
@@ -15,6 +16,16 @@ SLVMModule >> add: aGlobalValue [
 { #category : #'as yet unclassified' }
 SLVMModule >> applyFunctionOptimizationPasses: passes [
 	globalValues valuesDo: [ :val | val isFunction ifTrue: [ val applyFunctionOptimizationPasses: passes ] ]
+]
+
+{ #category : #accessing }
+SLVMModule >> compilationTarget [
+	^ compilationTarget
+]
+
+{ #category : #accessing }
+SLVMModule >> compilationTarget: anObject [
+	compilationTarget := anObject
 ]
 
 { #category : #'as yet unclassified' }
@@ -31,11 +42,22 @@ SLVMModule >> createFunctionOptimizationPassesForLevel: optimizationLevel [
 ]
 
 { #category : #building }
-SLVMModule >> functionName: name arguments: arguments returnType: returnType build: aBlock [
+SLVMModule >> functionName: name arguments: arguments returnType: returnType [
 	| function |
 	function := SLVMFunction name: name functionType: (SLVMFunctionType arguments: arguments returnType: returnType).
+	function compilationTarget: compilationTarget.
+	
 	self add: function.
-	aBlock value: function.
+	^ function
+]
+
+{ #category : #building }
+SLVMModule >> functionName: name fixedArguments: arguments returnType: returnType [
+	| function functionType |
+	functionType := (SLVMFunctionType arguments: arguments returnType: returnType) variadic: true.
+	function := SLVMFunction name: name functionType: functionType.
+	function compilationTarget: compilationTarget.
+	self add: function.
 	^ function
 ]
 
@@ -60,6 +82,16 @@ SLVMModule >> optimizeWithLevel: optimizationLevel [
 	optimizationLevel = 0 ifTrue: [ ^ self ].
 	functionOptimizationPasses := self createFunctionOptimizationPassesForLevel: optimizationLevel.
 	self applyFunctionOptimizationPasses: functionOptimizationPasses.
+]
+
+{ #category : #types }
+SLVMModule >> pointerTypeFor: baseType [
+	^ self pointerTypeFor: baseType  storage: SLVMType genericStorage
+]
+
+{ #category : #types }
+SLVMModule >> pointerTypeFor: baseType storage: storage [
+	^ SLVMPointerType size: compilationTarget pointerSize baseType: baseType storage: storage
 ]
 
 { #category : #printing }

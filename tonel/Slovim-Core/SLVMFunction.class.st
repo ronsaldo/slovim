@@ -11,7 +11,8 @@ Class {
 		'postOrder',
 		'preOrder',
 		'haveDominance',
-		'dynamicLiterals'
+		'dynamicLiterals',
+		'compilationTarget'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -61,6 +62,21 @@ SLVMFunction >> arguments [
 { #category : #accessing }
 SLVMFunction >> basicBlocks [
 	^ basicBlocks
+]
+
+{ #category : #'as yet unclassified' }
+SLVMFunction >> build: aBlock [
+	aBlock value: (SLVMBuilder on: self)
+]
+
+{ #category : #accessing }
+SLVMFunction >> compilationTarget [
+	^ compilationTarget
+]
+
+{ #category : #accessing }
+SLVMFunction >> compilationTarget: anObject [
+	compilationTarget := anObject
 ]
 
 { #category : #'control flow' }

@@ -29,6 +29,12 @@ SLVMDynamicObjectType >> isDynamicObjectType [
 	^ true
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMDynamicObjectType >> pointerTypeOfMemberAt: index depth: depth [
+	depth = 0 ifTrue: [ ^ self ].
+	^ SLVMPointerType baseType: (self typeOfMemberAt: index) storage: SLVMType genericStorage
+]
+
 { #category : #printing }
 SLVMDynamicObjectType >> printOn: aStream [
 	aStream nextPutAll: 'dynobject'

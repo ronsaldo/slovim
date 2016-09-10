@@ -333,11 +333,6 @@ SLVMType >> alignment [
 	self subclassResponsibility
 ]
 
-{ #category : #'as yet unclassified' }
-SLVMType >> alignmentForTarget: aTarget [
-	^ self alignment
-]
-
 { #category : #testing }
 SLVMType >> asSlovimType [
 	^ self
@@ -448,14 +443,9 @@ SLVMType >> size [
 	self subclassResponsibility
 ]
 
-{ #category : #'as yet unclassified' }
-SLVMType >> sizeAndAlignmentForTarget: aTarget [
-	^ { self sizeForTarget: aTarget . self alignmentForTarget: aTarget }
-]
-
-{ #category : #'as yet unclassified' }
-SLVMType >> sizeForTarget: aTarget [
-	^ self size
+{ #category : #accessing }
+SLVMType >> sizeAndAlignment [
+	^ { self size . self alignment }
 ]
 
 { #category : #accessing }

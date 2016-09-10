@@ -18,8 +18,13 @@ SLVMGetElementReference >> accept: aVisitor [
 ]
 
 { #category : #accessing }
-SLVMGetElementReference >> index [
-	^ parameters second
+SLVMGetElementReference >> indices [
+	^ parameters allButFirst
+]
+
+{ #category : #testing }
+SLVMGetElementReference >> isElementAccess [
+	^ parameters second isConstantValue and: [ parameters second value = 0 ]
 ]
 
 { #category : #printing }

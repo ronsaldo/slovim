@@ -10,6 +10,14 @@ SLVMConstant class >> bool: aBoolean [
 ]
 
 { #category : #constructor }
+SLVMConstant class >> cstring: value [
+	^ SLVMStringConstantValue new
+		type: (SLVMArrayType baseType: SLVMType charType elements: value size);
+		hasExtraNullCharacter: true;
+		value: value
+]
+
+{ #category : #constructor }
 SLVMConstant class >> double: anInteger [
 	^ self type: SLVMType doubleType value: anInteger
 ]
@@ -27,6 +35,11 @@ SLVMConstant class >> int: anInteger [
 { #category : #constructor }
 SLVMConstant class >> long: anInteger [
 	^ self type: SLVMType longType value: anInteger
+]
+
+{ #category : #constructor }
+SLVMConstant class >> pointerToConstant: constant pointerType: pointerType [
+	^ SLVMConstantPointer constant: constant pointerType: pointerType
 ]
 
 { #category : #constructor }

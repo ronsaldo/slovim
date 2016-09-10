@@ -35,6 +35,11 @@ SLVMValue >> isConstantBuiltInFunction [
 ]
 
 { #category : #testing }
+SLVMValue >> isConstantPointer [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isConstantValue [
 	^ false
 ]

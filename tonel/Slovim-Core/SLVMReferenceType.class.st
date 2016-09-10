@@ -13,26 +13,6 @@ SLVMReferenceType class >> baseType: aBaseType storage: storage [
 	^ self new baseType: aBaseType; storage: storage; yourself
 ]
 
-{ #category : #'class initialization' }
-SLVMReferenceType class >> initialize [
-	"
-	self initialize
-	"
-	super initialize.
-
-	UniformConstantStorage := #uniform.
-	UniformStorage := 	#uniform.
-	InputStorage := #input.
-	OutputStorage := #output.
-	GenericStorage := #generic.
-	WorkgroupStorage := #workgroup.
-	CrossWorkgroupStorage := #crossWorkgroup.
-	PrivateStorage := #private.
-	FunctionStorage := #function.
-	GenericStorage := #generic.
-	
-]
-
 { #category : #comparing }
 SLVMReferenceType >> = other [
 	^ self class == other class and: [ baseType = other baseType and: [ storage = other storage ] ] 
@@ -41,11 +21,6 @@ SLVMReferenceType >> = other [
 { #category : #visitor }
 SLVMReferenceType >> accept: aVisitor [
 	^ aVisitor visitReferenceType: self
-]
-
-{ #category : #accessing }
-SLVMReferenceType >> alignmentForTarget: compilationTarget [
-	^ compilationTarget referenceAlignment
 ]
 
 { #category : #accessing }
@@ -83,11 +58,6 @@ SLVMReferenceType >> printOn: aStream [
 { #category : #accessing }
 SLVMReferenceType >> referenceTypeOfMemberAt: index [
 	^ SLVMReferenceType baseType: (self typeOfMemberAt: index) storage: storage
-]
-
-{ #category : #accessing }
-SLVMReferenceType >> sizeForTarget: compilationTarget [
-	^ compilationTarget referenceSize
 ]
 
 { #category : #accessing }

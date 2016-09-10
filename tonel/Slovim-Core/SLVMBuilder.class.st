@@ -107,9 +107,19 @@ SLVMBuilder >> combineSampler: sampler with: texture name: resultName [
 	^ self addInstruction: (SLVMCombineSamplerWithTexture sampler: sampler texture: texture) name: resultName
 ]
 
+{ #category : #accessing }
+SLVMBuilder >> compilationTarget [
+	^ function compilationTarget
+]
+
 { #category : #constants }
 SLVMBuilder >> constBool: aValue [
 	^ SLVMConstant bool: aValue
+]
+
+{ #category : #constants }
+SLVMBuilder >> constCString: aValue [
+	^ SLVMConstant pointerToConstant: (SLVMConstant cstring: aValue) pointerType: (self pointerTypeFor: SLVMType charType)
 ]
 
 { #category : #constants }
@@ -263,6 +273,16 @@ SLVMBuilder >> function: anObject [
 ]
 
 { #category : #instructions }
+SLVMBuilder >> getPointer: pointer element: element [
+	^ self getPointer: pointer element: element resultName: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> getPointer: reference element: element resultName: resultName [
+	^ self addInstruction: (SLVMGetElementPointer pointer: reference indices: element) name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> getReference: reference element: element [
 	^ self getReference: reference element: element resultName: function generateSymbol
 ]
@@ -404,6 +424,11 @@ SLVMBuilder >> phi: type [
 { #category : #instructions }
 SLVMBuilder >> phi: type name: resultName [
 	^ self addInstruction: (SLVMPhi type: type) name: resultName
+]
+
+{ #category : #'as yet unclassified' }
+SLVMBuilder >> pointerTypeFor: baseType [
+	^ SLVMPointerType size: self compilationTarget pointerSize baseType: baseType storage: SLVMType genericStorage
 ]
 
 { #category : #instructions }

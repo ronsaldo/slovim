@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'callingConvention',
 		'arguments',
-		'returnType'
+		'returnType',
+		'variadic'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -76,6 +77,12 @@ SLVMFunctionType >> hash [
 	^ (self class hash bitXor: arguments hash) bitXor: returnType hash
 ]
 
+{ #category : #initialization }
+SLVMFunctionType >> initialize [
+	super initialize.
+	variadic := false.
+]
+
 { #category : #testing }
 SLVMFunctionType >> isFunctionType [
 	^ true
@@ -102,4 +109,14 @@ SLVMFunctionType >> returnType [
 SLVMFunctionType >> returnType: aType [
 	self assert: aType isSlovimType.
 	returnType := aType
+]
+
+{ #category : #accessing }
+SLVMFunctionType >> variadic [
+	^ variadic
+]
+
+{ #category : #accessing }
+SLVMFunctionType >> variadic: anObject [
+	variadic := anObject
 ]
