@@ -580,6 +580,29 @@ SLVMSpirVCodeGenerator >> visitFunctionType: functionType [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitGetElementPointer: getElementPointer [
+	| resultType pointer indices |
+	^ self instructionTranslation: getElementPointer do: [ :id |
+		pointer := self translateValue: getElementPointer reference.
+		indices := getElementPointer indices collect: [:index | self translateValue: index ].
+		resultType := self translateValue: getElementPointer type.
+		getElementPointer isElementAccess ifTrue: [ 
+			builder addFunctionInstruction: (SpirVInstruction
+				opcode: SpvOpAccessChain
+				type: resultType
+				result: id
+				operands: { pointer } , indices allButFirst)
+		] ifFalse: [ 
+			builder addFunctionInstruction: (SpirVInstruction
+				opcode: SpvOpPtrAccessChain
+				type: resultType
+				result: id
+				operands: { pointer } , indices)
+		]
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitGetElementReference: getElementRef [
 	| resultType pointer index |
 	^ self instructionTranslation: getElementRef do: [ :id |
