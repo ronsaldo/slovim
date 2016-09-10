@@ -23,8 +23,8 @@ SLVMFunctionTest >> testGenerateSymbol [
 SLVMFunctionTest >> testNew [
 	| functionType function |
 	functionType := SLVMFunctionType arguments: {SLVMType intType} returnType: SLVMType voidType.
-	function := SLVMFunction name: #testFunction functionType: functionType.
+	function := SLVMFunction pointerSize: 4 name: #testFunction functionType: functionType.
 	self assert: function functionType equals: functionType.
-	self assert: function type equals: (SLVMReferenceType baseType: functionType storage: SLVMType genericStorage).
+	self assert: function type equals: (SLVMPointerType size: 4 baseType: functionType storage: SLVMType genericStorage).
 	self assert: function arguments size equals: 1.
 ]
