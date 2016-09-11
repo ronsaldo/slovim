@@ -11,7 +11,7 @@ Class {
 	#classVars : [
 		'OptimizedMessages'
 	],
-	#category : #'Slovim-OpalCompiler'
+	#category : #'Slovim-OpalCompiler-Translator'
 }
 
 { #category : #'class initialization' }
@@ -66,7 +66,7 @@ SLVMOpalASTTranslator >> emitIfTrue: aMessageNode receiver: receiverValue [
 		irBuilder currentBlock: mergeBlock.
 	].
 
-	result := irBuilder phi: SLVMType dynamicObjectType name: #ifTrueResult.
+	result := irBuilder phi: compilationTarget dynamicObjectType name: #ifTrueResult.
 	result addValue: trueResult from: thenBlock.
 	result addValue: (irBuilder addDynamicLiteral: nil) from: branch block.
 	^ result
@@ -86,7 +86,7 @@ SLVMOpalASTTranslator >> emitMessageNode: aMessageNode receiver: receiverValue [
 		ifTrue: [ self halt. ]
 		ifFalse: [ irBuilder
 			send: (irBuilder addDynamicLiteral: aMessageNode selector) 
-			returnType: SLVMType dynamicObjectType
+			returnType: compilationTarget dynamicObjectType
 			receiver: receiverValue
 			arguments: arguments ]
 ]
@@ -116,7 +116,7 @@ SLVMOpalASTTranslator >> emitToDo: aMessageNode receiver: receiverValue step: st
 	limit := self visitNode: aMessageNode arguments first.
 	block := aMessageNode arguments last.
 
-	counterVar := allocaBuilder alloca: SLVMType dynamicObjectType name: #toDoCounter.
+	counterVar := allocaBuilder alloca: compilationTarget dynamicObjectType name: #toDoCounter.
 	irBuilder store: receiverValue in: counterVar.
 	
 	loopHeader := irBuilder newBasicBlock: #toDoHeader.
@@ -130,7 +130,7 @@ SLVMOpalASTTranslator >> emitToDo: aMessageNode receiver: receiverValue step: st
 		
 	condition := irBuilder
 		send: (irBuilder addDynamicLiteral: (step >= 0 ifTrue: [ #<= ] ifFalse: [ #>=]))
-		returnType: SLVMType dynamicObjectType
+		returnType: compilationTarget dynamicObjectType
 		receiver: (irBuilder load: counterVar)
 		arguments: { limit }.
 	condition := irBuilder dynObjectIdentityEquals: condition with: (irBuilder addDynamicLiteral: true).
@@ -191,7 +191,7 @@ SLVMOpalASTTranslator >> visitInlinedBlockNode: anOptimizedBlockNode arguments: 
 	innerScope := SLVMOpalLocalScope new
 		selfValue: currentScope selfValue;
 		parentScope: currentScope.
-	objectType := SLVMType dynamicObjectType.
+	objectType := compilationTarget dynamicObjectType.
 	tempVariables := tempNames collect: [ :tempName | allocaBuilder alloca: objectType name: tempName  ].
 	argumentNames doWithIndex: [:argName :index |
 		innerScope addValue: (argumentValues at: index) symbol: argName
@@ -237,12 +237,12 @@ SLVMOpalASTTranslator >> visitMessageNode: aMessageNode [
 { #category : #'visitor-double dispatching' }
 SLVMOpalASTTranslator >> visitMethodNode: aMethodNode [
 	| objectType argumentTypes functionType currentFunction arguments argValue allocaBlock local contentBlock |
-	objectType := SLVMType dynamicObjectType.
+	objectType := compilationTarget dynamicObjectType.
 	argumentTypes := {objectType} , aMethodNode arguments collect: [ :arg | objectType ].
 	functionType := SLVMFunctionType arguments: argumentTypes returnType: objectType.
 	
 	currentFunction := SLVMFunction pointerSize: compilationTarget pointerSize functionType: functionType.
-	currentFunction compilationTarget: compilationTarget.
+	currentFunction compilationTarget: aMethodNode compilationContext compilationTarget.
 	methodIR := SLVMOpalMethodIR new function: currentFunction.
 	
 	currentScope := SLVMOpalLocalScope new.

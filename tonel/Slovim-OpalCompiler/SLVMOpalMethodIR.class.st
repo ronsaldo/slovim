@@ -4,7 +4,7 @@ Class {
 	#instVars : [
 		'function'
 	],
-	#category : #'Slovim-OpalCompiler'
+	#category : #'Slovim-OpalCompiler-Translator'
 }
 
 { #category : #results }

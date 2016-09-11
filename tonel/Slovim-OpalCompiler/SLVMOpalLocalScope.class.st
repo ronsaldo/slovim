@@ -6,7 +6,7 @@ Class {
 		'selfValue',
 		'variables'
 	],
-	#category : #'Slovim-OpalCompiler'
+	#category : #'Slovim-OpalCompiler-Translator'
 }
 
 { #category : #adding }
