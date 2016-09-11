@@ -55,12 +55,12 @@ SLVMLirObjectSerializer >> addObject: anObject [
 	].
 
 	format := class instSpec.
-	extraBits := elementSize - (elementCount % elementSize).
-	format := extraBits + extraBits.
+	extraBits := (pointerSize - (elementCount % pointerSize)) % pointerSize.
+	format := format + extraBits.
 	
 	header := self classIndexFor: class.
 	header := header | (format << 24).
-	header := header | (anObject identityHash << 32).
+	header := header | (anObject identityHash << 32 bitAnd: 4194303).
 	header := header | ((slotCount min: 255) << 56).
 	self writeInt64: header.
 
@@ -192,6 +192,7 @@ SLVMLirObjectSerializer >> writeInt64: value [
 	stream nextPut: ((value >> 8) bitAnd: 16rff).
 	stream nextPut: ((value >> 16) bitAnd: 16rff).
 	stream nextPut: ((value >> 24) bitAnd: 16rff).
+	
 	stream nextPut: ((value >> 32) bitAnd: 16rff).
 	stream nextPut: ((value >> 40) bitAnd: 16rff).
 	stream nextPut: ((value >> 48) bitAnd: 16rff).

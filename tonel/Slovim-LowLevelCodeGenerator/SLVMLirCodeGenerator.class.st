@@ -47,6 +47,20 @@ SLVMLirCodeGenerator >> objectSerializer [
 	^ objectSectionData
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirCodeGenerator >> runtimeProvidedFunction: symbol [
+	| result |
+	translatedElements at: symbol ifPresent: [ :incomplete | ^ incomplete ].
+	result := SLVMLirFunction new
+		compilationTarget: compilationTarget;
+		name: symbol;
+		visibility: #public;
+		yourself.
+	translatedElements at: symbol put: result.
+	lirModule addElement: result.
+	^ result
+]
+
 { #category : #'code generation' }
 SLVMLirCodeGenerator >> translateModule: module exportList: exportList [
 	self applyOptimizationsIn: module functionList: exportList.

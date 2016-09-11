@@ -101,6 +101,47 @@ SLVMLirX86FunctionCodeGenerator >> canBeFrameLess [
 	^ true
 ]
 
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> emitCallResultToRegister: instruction [
+	| resultType tempAddress |
+	resultType := instruction type.
+	resultType isVectorType ifTrue: [
+		resultType size <= 16 ifTrue: [ 
+			self instruction: instruction resultInRegister: XMM0.
+		].
+		resultType size <= 32 ifTrue: [ 
+			self instruction: instruction resultInRegister: XMM0 secondRegister: XMM1.
+		].
+		resultType size > 32 ifTrue: [
+			self error: 'unsupported argument type.'
+		].
+		
+	] ifFalse: [
+		resultType isFloatType ifTrue: [
+			longMode ifFalse: [
+				tempAddress := (self stackPointerRegister asX86PtrOfSize: resultType size) - resultType size.
+				self addX86: FST with: tempAddress. 
+				self assert: (#(4 8) includes: resultType size).
+				resultType size = 4 ifTrue: [
+					self addX86: MOVSS with: XMM0 with: tempAddress. 
+				].
+				resultType size = 8 ifTrue: [
+					self addX86: MOVSD with: XMM0 with: tempAddress. 
+				].
+			].
+		
+			self instruction: instruction resultInRegister: XMM0.
+		] ifFalse: [ 
+			(resultType size <= 4 or: [ longMode and: [ resultType size <= 8] ])  ifTrue: [ 
+				self instruction: instruction resultInRegister: self intResultRegister
+			] ifFalse: [ 
+				self instruction: instruction resultInRegister: self intResultRegister secondRegister: self secondIntResultRegister.
+			].
+		]
+	]
+	
+]
+
 { #category : #'register allocation' }
 SLVMLirX86FunctionCodeGenerator >> ensureInstruction: instruction valueInRegisterOrImmediate: value [
 	value isConstant ifTrue: [ ^ self translateConstant: value ].
@@ -382,6 +423,16 @@ SLVMLirX86FunctionCodeGenerator >> postProcessCodeGeneration [
 SLVMLirX86FunctionCodeGenerator >> pushConstantValue: value variadicArgument: isVariadicArgument [
 	| valueType memoryLocation integerData bitMask |
 	valueType := value type.
+	valueType isDynamicObjectType ifTrue: [
+		value isConstantValue ifTrue: [ 
+			^ self addX86: PUSH with: (self encodeImmediateObject: value value)
+		].
+	
+		value isConstantDynamicLiteral ifTrue: [
+			^ self addX86: PUSH with: (self addressOfLiteral: value) asX86Ptr
+		]
+	].
+
 	value isConstantPointer ifTrue: [
 		value constant ifNil: [
 			^ self addX86: PUSH with: 0.
@@ -643,7 +694,7 @@ SLVMLirX86FunctionCodeGenerator >> visitBranch: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
-	| cleanUpSize calledFunction resultType tempAddress emittedCount variadicArgumentCount |
+	| cleanUpSize calledFunction emittedCount variadicArgumentCount |
 	cleanUpSize := 0.
 	usesStackPointer := true.
 	variadicArgumentCount := instruction arguments size - instruction functionType arguments size.
@@ -662,42 +713,7 @@ SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
 	].
 
 	instruction instructionReferences ifEmpty: [ ^ self ].
-	resultType := instruction type.
-	resultType isVectorType ifTrue: [
-		resultType size <= 16 ifTrue: [ 
-			self instruction: instruction resultInRegister: XMM0.
-		].
-		resultType size <= 32 ifTrue: [ 
-			self instruction: instruction resultInRegister: XMM0 secondRegister: XMM1.
-		].
-		resultType size > 32 ifTrue: [
-			self error: 'unsupported argument type.'
-		].
-		
-	] ifFalse: [
-		resultType isFloatType ifTrue: [
-			longMode ifFalse: [
-				tempAddress := (self stackPointerRegister asX86PtrOfSize: resultType size) - resultType size.
-				self addX86: FST with: tempAddress. 
-				self assert: (#(4 8) includes: resultType size).
-				resultType size = 4 ifTrue: [
-					self addX86: MOVSS with: XMM0 with: tempAddress. 
-				].
-				resultType size = 8 ifTrue: [
-					self addX86: MOVSD with: XMM0 with: tempAddress. 
-				].
-			].
-		
-			self instruction: instruction resultInRegister: XMM0.
-		] ifFalse: [ 
-			(resultType size <= 4 or: [ longMode and: [ resultType size <= 8] ])  ifTrue: [ 
-				self instruction: instruction resultInRegister: self intResultRegister
-			] ifFalse: [ 
-				self instruction: instruction resultInRegister: self intResultRegister secondRegister: self secondIntResultRegister.
-			].
-		]
-	]
-	
+	self emitCallResultToRegister: instruction.
 ]
 
 { #category : #visitor }
@@ -769,6 +785,60 @@ SLVMLirX86FunctionCodeGenerator >> visitJump: instruction [
 	| destination |
 	destination := basicBlockDictionary at: instruction destination.
 	self addX86: JMP with: destination
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitMessageSend: instruction [
+	| cleanUpSize calledFunction oopArguments nativeArguments selector receiver nativeArgumentsSize |
+	cleanUpSize := 0.
+	usesStackPointer := true.
+	
+	oopArguments := OrderedCollection new.
+	nativeArguments := OrderedCollection new.
+
+	instruction arguments reverseDo: [ :arg |
+		arg type isDynamicObjectType ifTrue: [
+			oopArguments add: arg
+		] ifFalse: [
+			nativeArguments add: arg
+		]
+	].
+
+	nativeArguments do: [ :arg |
+		self instruction: instruction pushValue: arg variadicArgument: false.
+		cleanUpSize := cleanUpSize + (arg type size alignedTo: self stackArgumentAlignment).
+	].
+	nativeArgumentsSize := cleanUpSize.
+
+	oopArguments do: [ :arg |
+		self instruction: instruction pushValue: arg variadicArgument: false.
+		cleanUpSize := cleanUpSize + (arg type size alignedTo: self stackArgumentAlignment).
+	].
+
+	"Push the receiver"
+	receiver := instruction receiver.
+	self instruction: instruction pushValue: receiver variadicArgument: false.
+	cleanUpSize := cleanUpSize + receiver type size.
+	
+	"Push the selector."
+	selector := instruction selector.
+	self instruction: instruction pushValue: selector variadicArgument: false.
+	cleanUpSize := cleanUpSize + selector type size.
+
+	"Push the Ns"
+	self
+		addX86: PUSH with: nativeArgumentsSize;
+		addX86: PUSH with: oopArguments size.
+
+	calledFunction := moduleTranslator runtimeProvidedFunction: #'_slvm_send'.
+	self addX86: CALL with: calledFunction.
+	cleanUpSize > 0 ifTrue: [
+		self addX86: ADD with: self stackPointerRegister with: cleanUpSize
+	].
+
+	instruction instructionReferences ifEmpty: [ ^ self ].
+	self emitCallResultToRegister: instruction.
+	
 ]
 
 { #category : #visitor }
