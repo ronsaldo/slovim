@@ -11,7 +11,9 @@ Class {
 		'codeGenerator',
 		'constantBlock',
 		'constantZoneDictionary',
-		'moduleTranslator'
+		'moduleTranslator',
+		'literalBlock',
+		'literals'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -19,6 +21,11 @@ Class {
 { #category : #adding }
 SLVMLirFunctionCodeGenerator >> addLabel: aLabel [
 	currentBlockTarget addInstruction: aLabel
+]
+
+{ #category : #'code generation' }
+SLVMLirFunctionCodeGenerator >> addressOfLiteral: aLiteral [
+	^ literals at: aLiteral index
 ]
 
 { #category : #'register allocation' }
@@ -46,6 +53,35 @@ SLVMLirFunctionCodeGenerator >> createArguments [
 		alignment := type alignment max: self stackElementGranularity.
 		argVariable := stackFrame createArgument: size alignment: alignment.
 		lirFunction mapSSA: arg toStackVariable: argVariable 
+	]
+]
+
+{ #category : #'object model' }
+SLVMLirFunctionCodeGenerator >> encodeImmediateObject32: object [
+	object isInteger ifTrue: [
+		^ object << 1 | 1
+	].
+
+	self error: 'Unsupported immediate object type.'
+]
+
+{ #category : #'object model' }
+SLVMLirFunctionCodeGenerator >> encodeImmediateObject64: object [
+	object isInteger ifTrue: [
+		^ object << 3 | 1
+	].
+
+	self error: 'Unsupported immediate object type.'
+]
+
+{ #category : #'object model' }
+SLVMLirFunctionCodeGenerator >> encodeImmediateObject: object [
+	| pointerSize |
+	pointerSize := compilationTarget pointerSize.
+	pointerSize = 4 ifTrue: [
+		^ self encodeImmediateObject32: object
+	] ifFalse: [ 
+		^ self encodeImmediateObject64: object
 	]
 ]
 
@@ -98,6 +134,7 @@ SLVMLirFunctionCodeGenerator >> initialize [
 	registerAllocator := SLVMGreedyRegisterAllocator new.
 	compilationTarget := SLVM32BitsPointerCompilationTarget new.
 	constantZoneDictionary := Dictionary new.
+	literals := #().
 ]
 
 { #category : #'register allocation' }
@@ -202,7 +239,7 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlockInstructions: basicBlock [
 { #category : #'code generation' }
 SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 	"Create the new basic blocks"
-	| lirBlock |
+	| lirBlock label |
 	basicBlockDictionary := Dictionary new.
 	function basicBlocks do: [ :bb |
 		lirBlock := SLVMLirBasicBlock new name: bb name asSymbol.
@@ -214,6 +251,21 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 		sectionName: #'.rodata';
 		yourself.
 	lirFunction addBasicBlock: constantBlock.
+	function dynamicLiterals ifNotEmpty: [
+		literalBlock := SLVMLirBasicBlock new 
+			name: #literalZone;
+			sectionName: #'.literal';
+			yourself.
+		lirFunction addBasicBlock: literalBlock.
+		literals := Array new: function dynamicLiterals size.
+		function dynamicLiterals doWithIndex: [ :literal :index |
+			label := SLVMLirLabel new.
+			literals at: index put: label.
+			literalBlock
+				addInstruction: label;
+				addInstruction: (moduleTranslator addDynamicObject: literal value)
+		]
+	].
 
 	registerAllocator translateBasicBlocks: function basicBlocks with: self.
 

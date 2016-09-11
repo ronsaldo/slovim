@@ -82,7 +82,7 @@ SLVMX86CompilationTarget >> generateMachineCodeFromInstructionStream: aStream [
 
 { #category : #accessing }
 SLVMX86CompilationTarget >> lowLevelCodeGeneratorClass [
-	^ SLVMLirX86FunctionCodeGenerator
+	^ SLVMLirX86CodeGenerator
 ]
 
 { #category : #'as yet unclassified' }

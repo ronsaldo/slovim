@@ -9,11 +9,7 @@ Class {
 
 { #category : #'as yet unclassified' }
 SLVMLirX86RegisterInt32 class >> canHoldValueOfType: type [
-	^ type size <= 4 and: [
-			(type isIntegerType or:
-			[ type isPointerType or:
-			[ type isBooleanType ] ])
-	]
+	^ type size <= 4 and: [ type isScalarIntegerType ]
 ]
 
 { #category : #'as yet unclassified' }

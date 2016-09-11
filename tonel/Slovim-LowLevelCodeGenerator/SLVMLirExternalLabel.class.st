@@ -99,7 +99,7 @@ SLVMLirExternalLabel >> name: anObject [
 
 { #category : #printing }
 SLVMLirExternalLabel >> printOn: aStream [
-	aStream nextPutAll: (VisibilityPrintingPrefix at: visibility); nextPutAll: name; nextPut: $:
+	aStream nextPutAll: (VisibilityPrintingPrefix at: visibility); nextPutAll: (name ifNil: [#unnamedLabel]); nextPut: $:
 ]
 
 { #category : #visibility }

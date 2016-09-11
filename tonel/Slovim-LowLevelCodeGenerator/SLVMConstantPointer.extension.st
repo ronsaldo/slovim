@@ -7,6 +7,7 @@ SLVMConstantPointer >> writeToLirBlock: constantBlock withLabel: label withGener
 		addInstruction: (SLVMLirLabelValue new
 			label: label;
 			size: type size;
+			labelOffset: 0;
 			yourself
 		).
 ]

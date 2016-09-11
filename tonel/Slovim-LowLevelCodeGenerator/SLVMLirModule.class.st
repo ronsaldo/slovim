@@ -3,7 +3,8 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'compilationTarget',
-		'elements'
+		'elements',
+		'objectSectionData'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -21,7 +22,10 @@ SLVMLirModule >> asInstructionStream [
 		getOrCreateSectionNamed: #'.text';
 		getOrCreateSectionNamed: #'.rodata';
 		getOrCreateSectionNamed: #'.data';
+		getOrCreateSectionNamed: #'.literal';
+		getOrCreateSectionNamed: #'.oop';
 		getOrCreateSectionNamed: #'.bss'.
+		
 	self writeToInstructionStream: result.
 	^ result
 ]
@@ -52,6 +56,16 @@ SLVMLirModule >> initialize [
 	elements := OrderedCollection new.
 ]
 
+{ #category : #accessing }
+SLVMLirModule >> objectSectionData [
+	^ objectSectionData
+]
+
+{ #category : #accessing }
+SLVMLirModule >> objectSectionData: anObject [
+	objectSectionData := anObject
+]
+
 { #category : #printing }
 SLVMLirModule >> printOn: aStream [
 	elements do: [ :element | element fullPrintOn: aStream. aStream cr ]
@@ -70,6 +84,16 @@ SLVMLirModule >> writeToInstructionStream: instructionStream [
 		].
 	
 		elementToLabelMap at: element put: label
+	].
+
+	objectSectionData ifNotNil: [
+		label := SLVMLirLabel new name: #'_SOopSection'.
+		elementToLabelMap at: objectSectionData put: label.
+		instructionStream withSectionNamed: #'.oop' do: [
+			instructionStream
+				add: label;
+				add: (SLVMLirBlob new content: objectSectionData contents)
+		]
 	].
 
 	elements do: [ :element |

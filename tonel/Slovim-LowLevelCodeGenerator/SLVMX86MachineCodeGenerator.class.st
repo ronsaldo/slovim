@@ -25,7 +25,9 @@ SLVMX86MachineCodeGenerator >> computeInitialSizeEstimate [
 			] ifFalse: [
 				instruction isBlob ifTrue: [ 
 					streamSize := streamSize + instruction size
-				] ifFalse: [ instruction size: 0 ]
+				] ifFalse: [
+					instruction size: (instruction size ifNil: [ 0 ])
+				]
 			]
 		].
 	]
@@ -372,6 +374,40 @@ SLVMX86MachineCodeGenerator >> generateFST: instruction [
 	self invalidInstruction.
 ]
 
+{ #category : #translating }
+SLVMX86MachineCodeGenerator >> generateInstruction: instruction output: output [
+	instruction offset: output position.
+	instruction isLabel ifTrue: [
+		writer recordLabel: instruction.
+	].
+					
+	instruction isLabelContentEnd ifTrue: [
+		writer recordLabelEnd: instruction label
+	].
+
+	instruction isLabelValue ifTrue: [
+		instruction size = 4 ifTrue: [
+			writer
+				recordReloc32Into: instruction label;
+				putInt32: instruction labelOffset
+		] ifFalse: [
+			writer
+				recordReloc64Into: instruction label;
+				putInt64: instruction labelOffset
+		]
+	].
+					
+	instruction isBlob ifTrue: [
+		writer nextPutAll: instruction content
+	].
+	
+	instruction isInstruction ifTrue: [
+		self generateMachineCodeInstruction: instruction output: output
+	].
+
+	instruction size: output position - instruction offset.	
+]
+
 { #category : #'instruction generation' }
 SLVMX86MachineCodeGenerator >> generateJCC: instruction opcode8: opcode8 opcode32: opcode32 [
 	| operand delta |
@@ -567,6 +603,13 @@ SLVMX86MachineCodeGenerator >> generateMOVSS: instruction [
 
 ]
 
+{ #category : #translating }
+SLVMX86MachineCodeGenerator >> generateMachineCodeInstruction: instruction output: output [
+	| selector |
+	selector := InstructionOpcodeGeneratorMap at: instruction opcode.
+	self perform: selector with: instruction. 	
+]
+
 { #category : #'instruction generation' }
 SLVMX86MachineCodeGenerator >> generatePOP: instruction [
 	| operand |
@@ -747,7 +790,7 @@ SLVMX86MachineCodeGenerator >> generateTEST: instruction [
 
 { #category : #translating }
 SLVMX86MachineCodeGenerator >> generateUntilConvergence [
-	| result oldResult selector |
+	| result oldResult |
 	oldResult := nil.
 	[
 		result := SLVMLirMachineCodeWriter do: [ :out |
@@ -756,25 +799,7 @@ SLVMX86MachineCodeGenerator >> generateUntilConvergence [
 				out section: section alignment: self sectionAlignment do: [:sectionWriter |
 					writer := sectionWriter.
 					section instructionsDo: [ :ins |
-						ins offset: out position.
-						ins isLabel ifTrue: [
-							writer recordLabel: ins.
-						].
-					
-						ins isLabelContentEnd ifTrue: [
-							writer recordLabelEnd: ins label
-						].
-					
-						ins isBlob ifTrue: [
-							writer nextPutAll: ins content
-						].
-				
-						ins isInstruction ifTrue: [ 
-							selector := InstructionOpcodeGeneratorMap at: ins opcode.
-							self perform: selector with: ins. 
-						].
-			
-						ins size: out position - ins offset.	
+						self generateInstruction: ins output: out
 					]
 				]
 			]

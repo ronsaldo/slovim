@@ -85,6 +85,7 @@ SLVMLirFunction >> name: anObject [
 
 { #category : #printing }
 SLVMLirFunction >> printOn: aStream [
+	name ifNil: [ ^ aStream nextPutAll: '<anonymous_function>' ].
 	aStream nextPutAll: name
 ]
 

@@ -278,6 +278,17 @@ SLVMLirX86FunctionCodeGenerator >> moveConstant: value toRegister: register [
 	| memoryLocation valueType constantValue |
 	valueType := value type.
 	constantValue := self translateConstant: value.
+	valueType isDynamicObjectType ifTrue: [
+		value isConstantValue ifTrue: [ 
+			^ self addX86: MOV with: register with: (self encodeImmediateObject: value value)
+		].
+	
+		value isConstantDynamicLiteral ifTrue: [
+			^ self addX86: MOV with: register with: (self addressOfLiteral: value) asX86Ptr
+		]
+	].
+
+	self assert: value isConstantValue.
 	register isVectorRegister ifTrue: [
 		memoryLocation := self putConstantInConstantZone: value.
 		valueType isVectorType ifTrue: [
@@ -294,7 +305,7 @@ SLVMLirX86FunctionCodeGenerator >> moveConstant: value toRegister: register [
 			]
 		]
 	] ifFalse: [
-		register size <= 8 ifTrue: [
+		valueType size <= 8 ifTrue: [
 			self addX86: MOV with: register with: constantValue
 		] ifFalse: [ 
 			self halt.
@@ -380,7 +391,7 @@ SLVMLirX86FunctionCodeGenerator >> pushConstantValue: value variadicArgument: is
 		]
 	].
 
-	(value isConstantValue and: [ valueType isIntegerType or: [ valueType isFloatType ] ]) ifTrue: [ 
+	(value isConstantValue and: [ valueType isScalarIntegerType or: [ valueType isFloatType ] ]) ifTrue: [ 
 		valueType isFloatType ifTrue: [ 
 			(valueType size <= 4 and: [ isVariadicArgument not ]) ifTrue: [
 				integerData := value value asIEEE32BitWord
@@ -499,7 +510,7 @@ SLVMLirX86FunctionCodeGenerator >> translateBasicBlockInstructions: basicBlock [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> translateCompare: comparison andBranch: branch [
-	| values branchInstruction trueDestination falseDestination negatedBranchInstruction valueType |
+	| values trueDestination falseDestination negatedBranchInstruction valueType |
 	values := self ensureInstructionValuesInRegistersOrImmediate: comparison.
 	"branchInstruction := ComparisonBranchMap at: comparison operation."
 	negatedBranchInstruction := ComparisonNegatedBranchMap at: comparison operation.
@@ -507,7 +518,7 @@ SLVMLirX86FunctionCodeGenerator >> translateCompare: comparison andBranch: branc
 	falseDestination := basicBlockDictionary at: branch falseBlock.
 	
 	valueType := comparison left type.
-	valueType isIntegerType ifTrue: [ 
+	valueType isScalarIntegerType ifTrue: [ 
 		self addX86: CMP with: values first with: values second.
 	] ifFalse: [ 
 		self halt.
@@ -531,7 +542,7 @@ SLVMLirX86FunctionCodeGenerator >> translateComparison: instruction [
 			addX86: MOV with: result with: 1.
 		
 		valueType := instruction left type.
-		valueType isIntegerType ifTrue: [ 
+		valueType isScalarIntegerType ifTrue: [ 
 			self addX86: CMP with: values first with: values second.
 		] ifFalse: [ 
 			self halt.
@@ -765,7 +776,8 @@ SLVMLirX86FunctionCodeGenerator >> visitReturn: instruction [
 	| returnValue returnValueType returnSize floatReg memoryLocation |
 	returnValue := instruction value.
 	returnValueType := returnValue type.
-	returnValueType isVectorType ifTrue: [ 
+	returnValueType isVectorType ifTrue: [
+		self halt.
 	] ifFalse: [
 		returnSize := returnValueType size.
 		returnSize <= 8 ifTrue: [ 
@@ -773,22 +785,23 @@ SLVMLirX86FunctionCodeGenerator >> visitReturn: instruction [
 				floatReg := self floatReturnRegister.
 				floatReg ifNil: [ 
 					memoryLocation := self ensureInstruction: instruction valueInMemory: returnValue.
-					self addX86: FLD with: (memoryLocation asX86PtrOfSize: returnSize)
+					^ self addX86: FLD with: (memoryLocation asX86PtrOfSize: returnSize)
 				] ifNotNil: [
-					self moveValue: returnValue toRegister: floatReg
+					^ self moveValue: returnValue toRegister: floatReg
 				] 
 			] ifFalse: [ 
-				returnValueType isIntegerType ifTrue: [
-					returnSize = 8 ifTrue: [
-						self moveValue: returnValue toRegisterLow: self intResultRegister high: self secondIntResultRegister
+				returnValueType isScalarIntegerType ifTrue: [
+					(returnSize = 8 and: [ longMode not ]) ifTrue: [
+						^ self moveValue: returnValue toRegisterLow: self intResultRegister high: self secondIntResultRegister
 					] ifFalse: [
-						self moveValue: returnValue toRegister: self intResultRegister
+						^ self moveValue: returnValue toRegister: self intResultRegister
 					]
 				].
 			]
 		]
 	].
 
+	self error: 'unsupported return type.'.
 ]
 
 { #category : #visitor }
@@ -866,7 +879,7 @@ SLVMLirX86FunctionCodeGenerator >> visitStore: instruction [
 			self halt.
 		].
 	
-		valueType isIntegerType ifTrue: [
+		valueType isScalarIntegerType ifTrue: [
 			values := self ensureInstructionValuesInRegistersOrImmediate: instruction.
 			value := values first.
 			pointer := values second.

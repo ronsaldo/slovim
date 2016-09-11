@@ -5,10 +5,21 @@ Class {
 		'functionCodeGeneratorClass',
 		'compilationTarget',
 		'translatedElements',
-		'lirModule'
+		'lirModule',
+		'objectSectionData'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
+
+{ #category : #'as yet unclassified' }
+SLVMLirCodeGenerator >> addDynamicObject: dynamicObject [
+	| objectSerializer |
+	objectSerializer := self objectSerializer.
+	^ SLVMLirLabelValue new label: objectSerializer;
+			size: compilationTarget pointerSize;
+			labelOffset:  (objectSerializer addObject: dynamicObject);
+			yourself
+]
 
 { #category : #initialization }
 SLVMLirCodeGenerator >> initialize [
@@ -25,6 +36,15 @@ SLVMLirCodeGenerator >> isInliningMandatory [
 { #category : #'code generation' }
 SLVMLirCodeGenerator >> needStructuredControlFlow [
 	^ false
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirCodeGenerator >> objectSerializer [
+	objectSectionData ifNotNil: [ ^ objectSectionData ].
+
+	objectSectionData := SLVMLirObjectSerializer new pointerSize: compilationTarget pointerSize.
+	lirModule objectSectionData: objectSectionData.
+	^ objectSectionData
 ]
 
 { #category : #'code generation' }
