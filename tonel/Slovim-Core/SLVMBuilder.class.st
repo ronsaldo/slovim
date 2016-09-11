@@ -25,7 +25,7 @@ SLVMBuilder >> add: left with: right name: resultName [
 
 { #category : #adding }
 SLVMBuilder >> addDynamicLiteral: literal [
-	literal isSLVMDynamicInlineLiteral ifTrue: [ ^ SLVMConstantValue type: SLVMType dynamicObjectType value: literal ].
+	literal isSLVMDynamicInlineLiteral ifTrue: [ ^ SLVMConstantValue type: self dynamicObjectType value: literal ].
 	^ function addDynamicLiteral: literal
 ]
 
@@ -190,6 +190,11 @@ SLVMBuilder >> dynObjectIdentityNotEquals: left with: right [
 { #category : #instructions }
 SLVMBuilder >> dynObjectIdentityNotEquals: left with: right name: resultName [
 	^ self addOperation: #dynObjectIdentityNotEquals left: left right: right name: resultName
+]
+
+{ #category : #accessing }
+SLVMBuilder >> dynamicObjectType [
+	^ self compilationTarget dynamicObjectType
 ]
 
 { #category : #instructions }

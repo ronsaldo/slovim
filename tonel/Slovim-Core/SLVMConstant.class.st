@@ -61,3 +61,8 @@ SLVMConstant class >> ulong: anInteger [
 SLVMConstant >> isConstant [
 	^ true
 ]
+
+{ #category : #testing }
+SLVMConstant >> isConstantDynamicLiteral [
+	^ false
+]

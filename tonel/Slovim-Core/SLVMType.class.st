@@ -8,7 +8,6 @@ Class {
 		'CharType',
 		'CrossWorkgroupStorage',
 		'DoubleType',
-		'DynamicObjectType',
 		'FloatType',
 		'FunctionStorage',
 		'GenericStorage',
@@ -70,11 +69,6 @@ SLVMType class >> crossWorkgroupStorage [
 { #category : #'built in types' }
 SLVMType class >> doubleType [
 	^ DoubleType
-]
-
-{ #category : #'built in types' }
-SLVMType class >> dynamicObjectType [
-	^ DynamicObjectType
 ]
 
 { #category : #'built in types' }
@@ -164,7 +158,6 @@ SLVMType class >> outputStorage [
 { #category : #'class initialization' }
 SLVMType class >> primitiveTypes [
 	VoidType := SLVMVoidType new name: #void.
-	DynamicObjectType := SLVMDynamicObjectType new name: #dynobject.
 	BoolType := SLVMBoolType name: #bool size: 1 alignment: 1.
 	
 	CharType := SLVMIntegerType name: #char size: 1 alignment: 1.
@@ -406,6 +399,11 @@ SLVMType >> isSampledTextureType [
 { #category : #testing }
 SLVMType >> isSamplerType [
 	^ false
+]
+
+{ #category : #testing }
+SLVMType >> isScalarIntegerType [
+	^ self isScalarType and: [ self isFloatType not ]
 ]
 
 { #category : #testing }

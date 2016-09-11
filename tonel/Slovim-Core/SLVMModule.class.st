@@ -3,19 +3,31 @@ Class {
 	#superclass : #SLVMObject,
 	#instVars : [
 		'compilationTarget',
-		'globalValues'
+		'globalValues',
+		'anonymousGlobals'
 	],
 	#category : #'Slovim-Core-SSA'
 }
 
 { #category : #adding }
 SLVMModule >> add: aGlobalValue [
+	aGlobalValue name ifNil: [ ^ anonymousGlobals add: aGlobalValue ].
 	globalValues at: aGlobalValue name put: aGlobalValue
+]
+
+{ #category : #accessing }
+SLVMModule >> allGlobalValues [
+	^ globalValues values , anonymousGlobals
 ]
 
 { #category : #'as yet unclassified' }
 SLVMModule >> applyFunctionOptimizationPasses: passes [
 	globalValues valuesDo: [ :val | val isFunction ifTrue: [ val applyFunctionOptimizationPasses: passes ] ]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMModule >> asLowLevelModule [
+	^ compilationTarget generateLowLevelModule: self
 ]
 
 { #category : #accessing }
@@ -73,6 +85,7 @@ SLVMModule >> globalValues [
 
 { #category : #initialization }
 SLVMModule >> initialize [
+	anonymousGlobals := OrderedCollection new.
 	globalValues := OrderedDictionary new.
 ]
 
@@ -96,6 +109,7 @@ SLVMModule >> pointerTypeFor: baseType storage: storage [
 
 { #category : #printing }
 SLVMModule >> printOn: aStream [
+	anonymousGlobals do: [ :val | val fullPrintOn: aStream ].
 	globalValues values do: [ :val | val fullPrintOn: aStream ].
 
 ]

@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMConstant,
 	#instVars : [
 		'index',
-		'value'
+		'value',
+		'type'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -23,6 +24,11 @@ SLVMConstantDynamicLiteral >> index: anObject [
 	index := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMConstantDynamicLiteral >> isConstantDynamicLiteral [
+	^ true
+]
+
 { #category : #printing }
 SLVMConstantDynamicLiteral >> printOn: aStream [
 	aStream nextPutAll: 'literal '; print: index; nextPutAll: ' '; print: value
@@ -30,7 +36,12 @@ SLVMConstantDynamicLiteral >> printOn: aStream [
 
 { #category : #accessing }
 SLVMConstantDynamicLiteral >> type [
-	^ SLVMType dynamicObjectType
+	^ type
+]
+
+{ #category : #accessing }
+SLVMConstantDynamicLiteral >> type: aType [
+	type := aType
 ]
 
 { #category : #accessing }

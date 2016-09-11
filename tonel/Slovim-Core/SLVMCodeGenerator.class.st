@@ -84,7 +84,7 @@ SLVMCodeGenerator >> optimizationLevel: anObject [
 
 { #category : #'code generation' }
 SLVMCodeGenerator >> translateModule: module [
-	^ self translateModule: module exportList: module globalValues
+	^ self translateModule: module exportList: module allGlobalValues
 ]
 
 { #category : #'code generation' }

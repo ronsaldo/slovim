@@ -1,8 +1,21 @@
 Class {
 	#name : #SLVMCompilationTarget,
 	#superclass : #SLVMObject,
+	#instVars : [
+		'dynamicObjectType'
+	],
 	#category : #'Slovim-Core-Type'
 }
+
+{ #category : #accessing }
+SLVMCompilationTarget >> dynamicObjectType [
+	^ dynamicObjectType ifNil: [ dynamicObjectType := SLVMDynamicObjectType new size: self pointerSize ]
+]
+
+{ #category : #convenience }
+SLVMCompilationTarget >> generateLowLevelModule: aModule [
+	^ self lowLevelCodeGeneratorClass translateModule: aModule
+]
 
 { #category : #accessing }
 SLVMCompilationTarget >> lowLevelCodeGeneratorClass [
