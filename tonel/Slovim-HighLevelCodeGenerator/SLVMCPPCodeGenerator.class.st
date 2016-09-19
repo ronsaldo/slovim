@@ -248,8 +248,6 @@ SLVMCPPCodeGenerator class >> initializeTypeMappings [
 		texture2D 'texture2D'
 		textureCube 'textureCube'
 		sampler sampler
-		
-		dynobject 'slvm::dynrun::object'
 	).
 	
 	SamplerTypeMapping := #(
@@ -264,6 +262,10 @@ SLVMCPPCodeGenerator class >> initializeTypeMappings [
 		TypeDictionary at: (builtInTypes at: myName) put: mappedName
 	].
 
+	TypeDictionary
+		at: (SLVMDynamicObjectType new size: 4) put: 'slvm::dynrun::object';
+		at: (SLVMDynamicObjectType new size: 8) put: 'slvm::dynrun::object'.
+	
 	SamplerTypeMapping pairsDo: [ :myName :mappedName |
 		TypeDictionary at: (SLVMSampledTextureType new texture: (builtInTypes at: myName)) put: mappedName
 		
