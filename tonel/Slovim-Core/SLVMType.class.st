@@ -175,7 +175,6 @@ SLVMType class >> primitiveTypes [
 	
 	^ {
 		VoidType.
-		DynamicObjectType.
 		BoolType.
 		
 		CharType.
