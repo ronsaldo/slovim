@@ -1,11 +1,11 @@
 Class {
-	#name : #SLVMGreedyRegisterAllocator,
+	#name : #SLVMGreedyGraphColoringRegisterAllocator,
 	#superclass : #SLVMGraphColoringRegisterAllocator,
 	#category : #'Slovim-LowLevelCodeGenerator-RegisterAllocation'
 }
 
 { #category : #'graph coloring' }
-SLVMGreedyRegisterAllocator >> graphColoringOrdering: interferenceGraph [
+SLVMGreedyGraphColoringRegisterAllocator >> graphColoringOrdering: interferenceGraph [
 	"Welsh-Powell algorithm"
 	| nodesByDegree order processedNodes nodes |
 	nodes := interferenceGraph nodes.

@@ -7,12 +7,12 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-X86'
 }
 
-{ #category : #'as yet unclassified' }
-SLVMX86_64CompilationTarget >> allocatableRegisters [
-	^ {
-	RDX . RBX. RSI . RDI . R8 . R9 . R10 . R11 . R12 . R13 . R14 . R15 .
-	XMM0 . XMM1 . XMM2 . XMM3 . XMM4 . XMM5 . XMM6 . XMM7
-	}
+{ #category : #accessing }
+SLVMX86_64CompilationTarget >> callingConventionDescriptionNamed: conventionName [
+	#cdecl == conventionName ifTrue: [ ^ SLVMX86_64CDeclCallingConvention new ].
+	#stdcall == conventionName ifTrue: [ ^ SLVMX86_64CDeclCallingConvention new ].
+	#smalltalk == conventionName ifTrue: [ ^ SLVMX86_64SmalltalkCallingConvention new ].
+	self error: 'Unsupported calling convention.'
 ]
 
 { #category : #'elf constants' }
@@ -46,7 +46,7 @@ SLVMX86_64CompilationTarget >> optimizeLirStream: stream [
 		removeExtraJmpFrom: stream
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #removing }
 SLVMX86_64CompilationTarget >> removeExtraJmpFrom: stream [
 	stream sections valuesDo: [ :section |
 		section instructionsDo: [ :instruction |

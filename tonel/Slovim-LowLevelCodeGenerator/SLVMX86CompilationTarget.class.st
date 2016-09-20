@@ -45,12 +45,12 @@ SLVMX86CompilationTarget class >> initialize [
 	
 ]
 
-{ #category : #'as yet unclassified' }
-SLVMX86CompilationTarget >> allocatableRegisters [
-	^ {
-	EDX . EBX. ESI . EDI .
-	XMM0 . XMM1 . XMM2 . XMM3 . XMM4 . XMM5 . XMM6 . XMM7
-	}
+{ #category : #accessing }
+SLVMX86CompilationTarget >> callingConventionDescriptionNamed: conventionName [
+	#cdecl == conventionName ifTrue: [ ^ SLVMX86CDeclCallingConvention new ].
+	#stdcall == conventionName ifTrue: [ ^ SLVMX86StdcallCallingConvention new ].
+	#smalltalk == conventionName ifTrue: [ ^ SLVMX86SmalltalkCallingConvention new ].
+	self error: 'Unsupported calling convention.'
 ]
 
 { #category : #'elf relocations' }
@@ -115,7 +115,7 @@ SLVMX86CompilationTarget >> optimizeLirStream: stream [
 		removeExtraJmpFrom: stream
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #removing }
 SLVMX86CompilationTarget >> removeExtraJmpFrom: stream [
 	stream sections valuesDo: [ :section |
 		section instructionsDo: [ :instruction |
@@ -127,7 +127,7 @@ SLVMX86CompilationTarget >> removeExtraJmpFrom: stream [
 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SLVMX86CompilationTarget >> usesElf64 [
 	^ false
 ]

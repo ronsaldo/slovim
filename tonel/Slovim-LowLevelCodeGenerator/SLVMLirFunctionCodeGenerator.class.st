@@ -1,3 +1,6 @@
+"
+I am an abstract class that translate a (mostly) platform independent SLVMFunction into a platform specif SLVMLirFunction.
+"
 Class {
 	#name : #SLVMLirFunctionCodeGenerator,
 	#superclass : #Object,
@@ -13,7 +16,8 @@ Class {
 		'constantZoneDictionary',
 		'moduleTranslator',
 		'literalBlock',
-		'literals'
+		'literals',
+		'callingConvention'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -91,8 +95,8 @@ SLVMLirFunctionCodeGenerator >> ensureInstruction: instruction valueInMemory: va
 ]
 
 { #category : #'register allocation' }
-SLVMLirFunctionCodeGenerator >> ensureInstruction: instruction valueInRegister: value [
-	^ registerAllocator moveInstruction: instruction value: value toRegisterWith: self
+SLVMLirFunctionCodeGenerator >> ensureInstruction: instruction valueInRegister: value scratchIndex: scratchIndex [
+	^ registerAllocator moveInstruction: instruction value: value toRegisterWith: self scratchIndex: scratchIndex
 ]
 
 { #category : #'register allocation' }
@@ -119,9 +123,14 @@ SLVMLirFunctionCodeGenerator >> generateFunction: aFunction into: aLirFunction [
 	function := aFunction.
 	function dominanceTopoSort.
 	lirFunction := aLirFunction.
-	registerAllocator function: aFunction; lirFunction: lirFunction; allocateRegisters.
+	callingConvention := compilationTarget callingConventionDescriptionNamed: aFunction callingConvention.
+	self createArguments.
+	registerAllocator
+		function: aFunction;
+		lirFunction: lirFunction;
+		callingConvention: callingConvention;
+		allocateRegisters.
 	self
-		createArguments;
 		translateBasicBlocks;
 		postProcessCodeGeneration.
 	^ lirFunction
@@ -131,7 +140,7 @@ SLVMLirFunctionCodeGenerator >> generateFunction: aFunction into: aLirFunction [
 { #category : #initialization }
 SLVMLirFunctionCodeGenerator >> initialize [
 	super initialize.
-	registerAllocator := SLVMGreedyRegisterAllocator new.
+	registerAllocator := SLVMRegisterAllocator default.
 	compilationTarget := SLVM32BitsPointerCompilationTarget new.
 	constantZoneDictionary := Dictionary new.
 	literals := #().

@@ -7,11 +7,6 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-X86'
 }
 
-{ #category : #'stack frame' }
-SLVMLirX86_64FunctionCodeGenerator >> floatReturnRegister [
-	^ XMM0
-]
-
 { #category : #accessing }
 SLVMLirX86_64FunctionCodeGenerator >> framePointerRegister [
 	^ RBP
@@ -41,6 +36,8 @@ SLVMLirX86_64FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: ent
 		self addX86: SUB with: RSP with: (stackFrame size alignedTo: self stackAlignment).
 	].
 
+	registerAllocator emitPrologueWith: self.
+	
 	self
 		addX86: JMP with: entryBlock
 ]
@@ -49,16 +46,6 @@ SLVMLirX86_64FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: ent
 SLVMLirX86_64FunctionCodeGenerator >> initialize [
 	super initialize.
 	longMode := true.
-]
-
-{ #category : #'stack frame' }
-SLVMLirX86_64FunctionCodeGenerator >> intResultRegister [
-	^ RAX
-]
-
-{ #category : #'stack frame' }
-SLVMLirX86_64FunctionCodeGenerator >> secondIntResultRegister [
-	^ RCX
 ]
 
 { #category : #accessing }

@@ -5,17 +5,10 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-SLVMGraphColoringRegisterAllocator >> allocateInstructionResultRegister: instruction [
-	| registerClass |
-	registerClass := self findRegisterClassForValue: instruction.
-	self flag: 'Ensure this register is available'.
-	^ registerClass last
-]
-
-{ #category : #'as yet unclassified' }
 SLVMGraphColoringRegisterAllocator >> allocateRegisters [
 	| liveness graph |
-	self buildAllocatableRegisterClasses: lirFunction compilationTarget allocatableRegisters.
+	self buildAllocatableRegisterClasses: callingConvention allocatableRegisters.
+	self buildScratchRegisterClasses: callingConvention scratchRegisters.
 	liveness := SLVMLivenessAnalyzer analyze: function.
 	
 	graph := SLVMInterferenceGraphBuilder buildForLiveness: liveness.
@@ -67,86 +60,4 @@ SLVMGraphColoringRegisterAllocator >> allocateSpillLocations: interferenceGraph 
 { #category : #'graph coloring' }
 SLVMGraphColoringRegisterAllocator >> graphColoringOrdering: interferenceGraph [
 	self subclassResponsibility
-]
-
-{ #category : #'as yet unclassified' }
-SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction resultInRegister: register with: codeGenerator [
-	codeGenerator moveRegister: register toLocal: (lirFunction variableMap at: instruction).
-]
-
-{ #category : #'as yet unclassified' }
-SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction toRegister: register with: codeGenerator [
-	codeGenerator moveLocal: (lirFunction variableMap at: instruction) type: instruction type toRegister: register
-]
-
-{ #category : #'as yet unclassified' }
-SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction toRegisterLow: registerLow high: registerHigh with: codeGenerator [
-	codeGenerator moveLocal: (lirFunction variableMap at: instruction) toRegisterLow: registerLow registerHigh: registerHigh
-]
-
-{ #category : #'as yet unclassified' }
-SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction value: value toMemoryWith: codeGenerator [
-	value isConstant ifTrue: [
-		^ codeGenerator putConstantInConstantZone: value
-	] ifFalse: [
-		^ lirFunction variableMap at: value
-	]
-]
-
-{ #category : #'as yet unclassified' }
-SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction value: value toRegisterForPushingWith: codeGenerator [
-	| register registerClass registerOrSpillParamCount constantParamCount |
-	registerClass := self findRegisterClassForValue: value.
-	registerOrSpillParamCount := 0.
-	constantParamCount := 0.
-
-	register := registerClass at: 1.
-	value isConstant ifTrue: [
-		codeGenerator moveConstant: value toRegister: register.
-	] ifFalse: [
-		codeGenerator moveLocal: (lirFunction variableMap at: value) type: value type toRegister: register.
-	].
-
-	^ register
-]
-
-{ #category : #'as yet unclassified' }
-SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction value: value toRegisterOrLocalForPushingWith: codeGenerator [
-	value isConstant ifFalse: [ 
-		^ lirFunction variableMap at: value
-	].
-	^ self moveInstruction: instruction value: value toRegisterForPushingWith: codeGenerator
-
-]
-
-{ #category : #'as yet unclassified' }
-SLVMGraphColoringRegisterAllocator >> moveInstruction: instruction value: value toRegisterWith: codeGenerator [
-	| register registerClass registerOrSpillParamCount constantParamCount valueIndex |
-	registerClass := self findRegisterClassForValue: value.
-	registerOrSpillParamCount := 0.
-	constantParamCount := 0.
-	valueIndex := nil.
-	
-	instruction parameters do: [ :param | 
-		(self findRegisterClassForValue: param) == registerClass ifTrue: [
-			param isConstant ifTrue: [
-				constantParamCount := constantParamCount + 1.
-				param == value ifTrue: [ valueIndex := constantParamCount ]
-			] ifFalse: [
-				registerOrSpillParamCount := registerOrSpillParamCount + 1.
-				param == value ifTrue: [ valueIndex := registerOrSpillParamCount ]
-			]
-		]
-	].
-
-	self assert: valueIndex isNotNil.
-	value isConstant ifTrue: [
-		register := registerClass at: valueIndex + registerOrSpillParamCount.
-		codeGenerator moveConstant: value toRegister: register.
-	] ifFalse: [
-		register := registerClass at: valueIndex.
-		codeGenerator moveLocal: (lirFunction variableMap at: value) type: value type toRegister: register.
-	].
-
-	^ register
 ]

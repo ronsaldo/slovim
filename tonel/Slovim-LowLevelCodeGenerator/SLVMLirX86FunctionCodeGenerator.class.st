@@ -98,7 +98,7 @@ SLVMLirX86FunctionCodeGenerator >> addX86: opcode with: op1 with: op2 [
 
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> canBeFrameLess [
-	^ true
+	^ callingConvention canBeFrameLess
 ]
 
 { #category : #visitor }
@@ -143,9 +143,9 @@ SLVMLirX86FunctionCodeGenerator >> emitCallResultToRegister: instruction [
 ]
 
 { #category : #'register allocation' }
-SLVMLirX86FunctionCodeGenerator >> ensureInstruction: instruction valueInRegisterOrImmediate: value [
+SLVMLirX86FunctionCodeGenerator >> ensureInstruction: instruction valueInRegisterOrImmediate: value scratchIndex: scratchIndex [
 	value isConstant ifTrue: [ ^ self translateConstant: value ].
-	^ self ensureInstruction: instruction valueInRegister: value
+	^ self ensureInstruction: instruction valueInRegister: value scratchIndex: scratchIndex
 ]
 
 { #category : #'register allocation' }
@@ -159,9 +159,9 @@ SLVMLirX86FunctionCodeGenerator >> ensureInstructionValuesInRegistersOrImmediate
 		self halt.
 	].
 
-	first isConstant ifTrue: [ ^ { first . self ensureInstruction: instruction valueInRegister: second } ].
-	second isConstant ifTrue: [ ^ { self ensureInstruction: instruction valueInRegister: first . second } ].
-	^ { self ensureInstruction: instruction valueInRegister: first . self ensureInstruction: instruction valueInRegister: second }
+	first isConstant ifTrue: [ ^ { first . self ensureInstruction: instruction valueInRegister: second scratchIndex: 1 } ].
+	second isConstant ifTrue: [ ^ { self ensureInstruction: instruction valueInRegister: first scratchIndex: 1 . second } ].
+	^ { self ensureInstruction: instruction valueInRegister: first scratchIndex: 1 . self ensureInstruction: instruction valueInRegister: second  scratchIndex: 2}
 ]
 
 { #category : #'register allocation' }
@@ -171,12 +171,12 @@ SLVMLirX86FunctionCodeGenerator >> ensureInstructionValuesInRegistersOrMemory: i
 	first := instruction parameters first.
 	second := instruction parameters second.
 	
-	^ {self ensureInstruction: instruction valueInRegister: first . self ensureInstruction: instruction valueInRegister: second }
+	^ {self ensureInstruction: instruction valueInRegister: first scratchIndex: 1. self ensureInstruction: instruction valueInRegister: second scratchIndex: 2 }
 ]
 
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> floatReturnRegister [
-	^ nil
+	^ callingConvention floatReturnRegister
 ]
 
 { #category : #accessing }
@@ -208,23 +208,24 @@ SLVMLirX86FunctionCodeGenerator >> generateActualReturns [
 
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> generatePrologue [
-	| prologueBlock stackFrame entryBlock |	
+	| prologueBlock stackFrame entryBlock framelessPrologue |	
 	self flag: 'Support multiples calling conventions'.
 	
 	"Allocate space for the variables"
 	stackFrame := lirFunction stackFrame.
 	stackFrame optimize.
 	(stackFrame localVariables size = 0 and: [ self canBeFrameLess and: [usesStackPointer not ]]) ifTrue: [ 
+		framelessPrologue := true.
 		stackFrame
 			argumentsBaseOffset: 4;
 			frameLessMethod: true;
 			buildLayout.
-		^ true
+	] ifFalse: [ 
+		framelessPrologue := false.
+		stackFrame
+			argumentsBaseOffset: 8;
+			buildLayout.
 	].
-
-	stackFrame
-		argumentsBaseOffset: 8;
-		buildLayout.
 
 	entryBlock := lirFunction basicBlocks first.
 	prologueBlock := SLVMLirBasicBlock new.
@@ -234,7 +235,11 @@ SLVMLirX86FunctionCodeGenerator >> generatePrologue [
 	currentBlockTarget := prologueBlock.
 
 	"Create the stack frame"
-	self generateStackFrameBuildingJumpingInto: entryBlock
+	framelessPrologue ifTrue: [
+		self generateStackFramelessBuildingJumpingInto: entryBlock		
+	] ifFalse: [
+		self generateStackFrameBuildingJumpingInto: entryBlock
+	]
 ]
 
 { #category : #'stack frame' }
@@ -248,6 +253,16 @@ SLVMLirX86FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryB
 	stackFrame size ~= 0 ifTrue: [
 		self addX86: SUB with: ESP with: (stackFrame size alignedTo: self stackAlignment).
 	].
+
+	registerAllocator emitPrologueWith: self.
+
+	self
+		addX86: JMP with: entryBlock
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirX86FunctionCodeGenerator >> generateStackFramelessBuildingJumpingInto: entryBlock [
+	registerAllocator emitPrologueWith: self.
 
 	self
 		addX86: JMP with: entryBlock
@@ -306,7 +321,7 @@ SLVMLirX86FunctionCodeGenerator >> instruction: instruction pushValue: value var
 
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> intResultRegister [
-	^ EAX
+	^ callingConvention intResultRegister
 ]
 
 { #category : #'code generation' }
@@ -410,6 +425,17 @@ SLVMLirX86FunctionCodeGenerator >> moveRegister: register toLocal: localVariable
 { #category : #'code generation' }
 SLVMLirX86FunctionCodeGenerator >> moveRegister: value toMemory: pointer [
 	self halt.
+]
+
+{ #category : #'code generation' }
+SLVMLirX86FunctionCodeGenerator >> moveRegister: oldRegister toRegister: newRegister [
+	oldRegister == newRegister ifTrue: [ ^ self ].
+	self assert: oldRegister isVectorRegister = newRegister isVectorRegister.
+	oldRegister isVectorRegister ifTrue: [
+		self addX86: MOVAPD with: newRegister with: oldRegister.
+	] ifFalse: [
+		self addX86: MOV with: newRegister with: oldRegister.
+	]
 ]
 
 { #category : #'code generation' }
@@ -519,7 +545,7 @@ SLVMLirX86FunctionCodeGenerator >> scalarIntegerBinaryInstruction: instruction x
 
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> secondIntResultRegister [
-	^ ECX
+	^ callingConvention secondIntResultRegister
 ]
 
 { #category : #visitor }
@@ -546,16 +572,21 @@ SLVMLirX86FunctionCodeGenerator >> translateBasicBlockInstructions: basicBlock [
 		(current type isScalarType and: [ current instructionReferences size = 1 and: [ current instructionReferences first = current nextInstruction ]]) ifTrue: [ 
 			current isBinaryComparison ifTrue: [
 				translated := true.
-				self translateCompare: current andBranch: current nextInstruction.
+				registerAllocator instruction: current translationDo: [
+					self translateCompare: current andBranch: current nextInstruction.
+				].
 				current := current nextInstruction nextInstruction
 			].
 		].
 	
 		translated ifFalse: [
-			current accept: self.
+			registerAllocator instruction: current translationDo: [
+				current accept: self.
+			].
 			current := current nextInstruction
 		]
 	].
+
 
 ]
 
@@ -683,7 +714,7 @@ SLVMLirX86FunctionCodeGenerator >> visitBitXor: instruction [
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitBranch: instruction [
 	| condition trueDestination falseDestination |
-	condition := self ensureInstruction: instruction valueInRegister: instruction condition. 
+	condition := self ensureInstruction: instruction valueInRegister: instruction condition scratchIndex: 1. 
 	trueDestination := basicBlockDictionary at: instruction trueBlock.
 	falseDestination := basicBlockDictionary at: instruction falseBlock.
 	self
@@ -694,11 +725,16 @@ SLVMLirX86FunctionCodeGenerator >> visitBranch: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
-	| cleanUpSize calledFunction emittedCount variadicArgumentCount |
+	| cleanUpSize calledFunction emittedCount variadicArgumentCount calledFunctionType |
 	cleanUpSize := 0.
 	usesStackPointer := true.
-	variadicArgumentCount := instruction arguments size - instruction functionType arguments size.
+	calledFunctionType := instruction functionType.
+	variadicArgumentCount := instruction arguments size - calledFunctionType arguments size.
 	
+	"Spill the registers that are owned by the called."
+	registerAllocator spillCalledRegisterForConvention: calledFunctionType callingConvention at: instruction with: self.
+
+	"Push the arguments in the stack."	
 	emittedCount := 0.
 	instruction arguments reverseDo: [ :arg |
 		self instruction: instruction pushValue: arg variadicArgument: emittedCount < variadicArgumentCount.
@@ -706,11 +742,16 @@ SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
 		cleanUpSize := cleanUpSize + (arg type size alignedTo: self stackArgumentAlignment).
 	].
 
-	calledFunction := self ensureInstruction: instruction valueInRegisterOrImmediate: instruction functionValue.
+	"ToDo: Move the arguments that are placed in registers."
+
+	calledFunction := self ensureInstruction: instruction valueInRegisterOrImmediate: instruction functionValue scratchIndex: 1.
 	self addX86: CALL with: calledFunction.
 	cleanUpSize > 0 ifTrue: [
 		self addX86: ADD with: self stackPointerRegister with: cleanUpSize
 	].
+
+	"Unspill the called registers."
+	registerAllocator unspillCalledRegisterForConvention: calledFunctionType callingConvention at: instruction with: self.
 
 	instruction instructionReferences ifEmpty: [ ^ self ].
 	self emitCallResultToRegister: instruction.
@@ -796,6 +837,9 @@ SLVMLirX86FunctionCodeGenerator >> visitMessageSend: instruction [
 	oopArguments := OrderedCollection new.
 	nativeArguments := OrderedCollection new.
 
+	"Spill the registers that are owned by the called."
+	registerAllocator spillCalledRegisterForConvention: #smalltalk at: instruction with: self.
+	
 	instruction arguments reverseDo: [ :arg |
 		arg type isDynamicObjectType ifTrue: [
 			oopArguments add: arg
@@ -824,6 +868,8 @@ SLVMLirX86FunctionCodeGenerator >> visitMessageSend: instruction [
 	selector := instruction selector.
 	self instruction: instruction pushValue: selector variadicArgument: false.
 	cleanUpSize := cleanUpSize + selector type size.
+	
+	"ToDo: Move the arguments that are placed in registers."
 
 	"Push the Ns"
 	self
@@ -835,6 +881,9 @@ SLVMLirX86FunctionCodeGenerator >> visitMessageSend: instruction [
 	cleanUpSize > 0 ifTrue: [
 		self addX86: ADD with: self stackPointerRegister with: cleanUpSize
 	].
+
+	"Unspill the called regsiters"
+	registerAllocator unspillCalledRegisterForConvention: #smalltalk at: instruction with: self.
 
 	instruction instructionReferences ifEmpty: [ ^ self ].
 	self emitCallResultToRegister: instruction.
@@ -943,8 +992,9 @@ SLVMLirX86FunctionCodeGenerator >> visitStore: instruction [
 		]
 	] ifFalse: [ 
 		valueType isFloatType ifTrue: [
-			pointer := self ensureInstruction: instruction valueInRegister: instruction variable.
-			value := self ensureInstruction: instruction valueInRegister: instruction value.
+			pointer := self ensureInstruction: instruction valueInRegister: instruction variable scratchIndex: 1.
+			value := self ensureInstruction: instruction valueInRegister: instruction value scratchIndex: 1.
+			self assert: pointer ~= value.
 			"Store the float in memory"
 			self halt.
 		].
