@@ -37,7 +37,7 @@ SLVMGlobalVariable >> initialValue: anObject [
 	initialValue := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #initialization }
 SLVMGlobalVariable >> initialize [
 	super initialize.
 	readOnly := false.

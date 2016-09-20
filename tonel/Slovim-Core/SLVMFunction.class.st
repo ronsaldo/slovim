@@ -64,9 +64,19 @@ SLVMFunction >> basicBlocks [
 	^ basicBlocks
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #building }
 SLVMFunction >> build: aBlock [
 	aBlock value: (SLVMBuilder on: self)
+]
+
+{ #category : #'as yet unclassified' }
+SLVMFunction >> buildWithArguments: aBlock [
+	aBlock valueWithArguments: { SLVMBuilder on: self } , arguments
+]
+
+{ #category : #accessing }
+SLVMFunction >> callingConvention [
+	^ functionType callingConvention
 ]
 
 { #category : #accessing }

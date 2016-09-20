@@ -77,6 +77,14 @@ SLVMBuilder >> basicBlock: aName do: aBlock [
 	^ basicBlock
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMBuilder >> basicBlockNamed: basicBlockName do: aBlock [
+	| bb |
+	bb := self newBasicBlock: basicBlockName.
+	self withBasicBlock: bb do: [ aBlock value: bb ].
+	^ bb
+]
+
 { #category : #instructions }
 SLVMBuilder >> branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock [
 	^ self branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock name: function generateSymbol
@@ -297,6 +305,66 @@ SLVMBuilder >> getReference: reference element: element resultName: resultName [
 	^ self getPointer: reference element: {self constInt: 0 . element } resultName: resultName
 ]
 
+{ #category : #instructions }
+SLVMBuilder >> ieq: left with: right [
+	^ self ieq: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ieq: left with: right name: resultName [
+	^ self addOperation: #ieq left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ige: left with: right [
+	^ self ige: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ige: left with: right name: resultName [
+	^ self addOperation: #ige left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> igt: left with: right [
+	^ self igt: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> igt: left with: right name: resultName [
+	^ self addOperation: #igt left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ile: left with: right [
+	^ self ile: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ile: left with: right name: resultName [
+	^ self addOperation: #ile left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ilt: left with: right [
+	^ self ilt: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ilt: left with: right name: resultName [
+	^ self addOperation: #ilt left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ine: left with: right [
+	^ self ine: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ine: left with: right name: resultName [
+	^ self addOperation: #ine left: left right: right name: resultName
+]
+
 { #category : #testing }
 SLVMBuilder >> isLastTerminator [
 	^ currentBlock isLastTerminator
@@ -422,6 +490,66 @@ SLVMBuilder >> not: operand name: resultName [
 ]
 
 { #category : #instructions }
+SLVMBuilder >> ofeq: left with: right [
+	^ self ofeq: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ofeq: left with: right name: resultName [
+	^ self addOperation: #ofeq left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ofge: left with: right [
+	^ self ofge: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ofge: left with: right name: resultName [
+	^ self addOperation: #ofge left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ofgt: left with: right [
+	^ self ofgt: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ofgt: left with: right name: resultName [
+	^ self addOperation: #ofgt left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ofle: left with: right [
+	^ self ofle: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ofle: left with: right name: resultName [
+	^ self addOperation: #ofle left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> oflt: left with: right [
+	^ self oflt: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> oflt: left with: right name: resultName [
+	^ self addOperation: #oflt left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ofne: left with: right [
+	^ self ofne: left with: right name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ofne: left with: right name: resultName [
+	^ self addOperation: #ofne left: left right: right name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> phi: type [
 	^ self phi: type name: function generateSymbol
 ]
@@ -514,6 +642,11 @@ SLVMBuilder >> sub: left with: right [
 { #category : #instructions }
 SLVMBuilder >> sub: left with: right name: resultName [
 	^ self addOperation: #sub left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> ufeq: left with: right name: resultName [
+	^ self addOperation: #ufeq left: left right: right name: resultName
 ]
 
 { #category : #instructions }

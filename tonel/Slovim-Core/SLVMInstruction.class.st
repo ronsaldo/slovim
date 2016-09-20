@@ -7,7 +7,8 @@ Class {
 		'parameters',
 		'instructionReferences',
 		'previousInstruction',
-		'nextInstruction'
+		'nextInstruction',
+		'livenessIndex'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -149,6 +150,16 @@ SLVMInstruction >> isTerminator [
 { #category : #testing }
 SLVMInstruction >> isUnreachable [
 	^ false
+]
+
+{ #category : #accessing }
+SLVMInstruction >> livenessIndex [
+	^ livenessIndex
+]
+
+{ #category : #accessing }
+SLVMInstruction >> livenessIndex: anObject [
+	livenessIndex := anObject
 ]
 
 { #category : #printing }

@@ -212,7 +212,7 @@ SLVMType class >> shortType [
 	^ ShortType
 ]
 
-{ #category : #'built in types' }
+{ #category : #'class initialization' }
 SLVMType class >> textureAndSamplerTypes [
 	SamplerType := SLVMSamplerType new name: #sampler.
 

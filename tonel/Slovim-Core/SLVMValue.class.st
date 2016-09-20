@@ -84,6 +84,11 @@ SLVMValue >> isUndefined [
 	^ false
 ]
 
+{ #category : #accessing }
+SLVMValue >> livenessIndex [
+	^ nil
+]
+
 { #category : #adding }
 SLVMValue >> removeInstructionReference: anInstruction [
 	"By default, do nothing"

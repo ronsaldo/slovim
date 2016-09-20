@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'type',
 		'index',
-		'name'
+		'name',
+		'livenessIndex'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -27,6 +28,16 @@ SLVMFunctionArgument >> index: anObject [
 { #category : #testing }
 SLVMFunctionArgument >> isFunctionArgument [
 	^ true
+]
+
+{ #category : #accessing }
+SLVMFunctionArgument >> livenessIndex [
+	^ livenessIndex
+]
+
+{ #category : #accessing }
+SLVMFunctionArgument >> livenessIndex: anObject [
+	livenessIndex := anObject
 ]
 
 { #category : #accessing }

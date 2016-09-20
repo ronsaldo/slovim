@@ -198,6 +198,11 @@ SLVMBasicBlock >> lastInstruction [
 ]
 
 { #category : #accessing }
+SLVMBasicBlock >> livenessIndex [
+	^ index
+]
+
+{ #category : #accessing }
 SLVMBasicBlock >> name [
 	^ name
 ]
