@@ -80,8 +80,3 @@ SLVMLirInstructionStreamElement >> size [
 SLVMLirInstructionStreamElement >> size: anObject [
 	size := anObject
 ]
-
-{ #category : #accessing }
-SLVMLirInstructionStreamElement >> stream [
-	^ stream
-]
