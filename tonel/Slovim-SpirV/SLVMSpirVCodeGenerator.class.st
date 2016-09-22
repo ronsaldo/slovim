@@ -254,7 +254,7 @@ SLVMSpirVCodeGenerator >> translateBasicBlock: basicBlock [
 
 { #category : #'as yet unclassified' }
 SLVMSpirVCodeGenerator >> translateModule: ssaModule [
-	^ self translateModule: ssaModule exportList: (ssaModule allGlobalValues values select: [:value | self isEntryPointFunction: value])
+	^ self translateModule: ssaModule exportList: (ssaModule allGlobalValues select: [:value | self isEntryPointFunction: value])
 ]
 
 { #category : #'as yet unclassified' }
