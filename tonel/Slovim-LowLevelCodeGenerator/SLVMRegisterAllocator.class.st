@@ -200,7 +200,7 @@ SLVMRegisterAllocator >> moveInstruction: instruction value: value toRegisterWit
 ]
 
 { #category : #'calling conventions' }
-SLVMRegisterAllocator >> spillCalledRegisterForConvention: conventionName at: instruction with: translator [
+SLVMRegisterAllocator >> spillCalledRegisterForConvention: conventionDescription at: instruction with: translator [
 ]
 
 { #category : #'public interface' }
@@ -216,7 +216,7 @@ SLVMRegisterAllocator >> translateBasicBlocks: basicBlocks with: translator [
 ]
 
 { #category : #'calling conventions' }
-SLVMRegisterAllocator >> unspillCalledRegisterForConvention: conventionName at: instruction with: translator [
+SLVMRegisterAllocator >> unspillCalledRegisterForConvention: convention at: instruction with: translator [
 ]
 
 { #category : #accessing }

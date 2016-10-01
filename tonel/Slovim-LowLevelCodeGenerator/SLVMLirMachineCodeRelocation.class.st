@@ -65,6 +65,14 @@ SLVMLirMachineCodeRelocation >> absoluteOffset8 [
 	type := AbsoluteOffset8
 ]
 
+{ #category : #testing }
+SLVMLirMachineCodeRelocation >> absoluteOffsetOfSize: offsetSize [
+	offsetSize = 8 ifTrue: [ self absoluteOffset64 ].
+	offsetSize = 4 ifTrue: [ self absoluteOffset32 ].
+	offsetSize = 2 ifTrue: [ self absoluteOffset16 ].	
+	offsetSize = 1 ifTrue: [ self absoluteOffset8 ].	
+]
+
 { #category : #accessing }
 SLVMLirMachineCodeRelocation >> addend [
 	^ addend
@@ -131,6 +139,15 @@ SLVMLirMachineCodeRelocation >> offset [
 { #category : #accessing }
 SLVMLirMachineCodeRelocation >> offset: anObject [
 	offset := anObject
+]
+
+{ #category : #testing }
+SLVMLirMachineCodeRelocation >> relativeOffsetOfSize: offsetSize [
+	offsetSize = 8 ifTrue: [ self relativeSOffset64 ].
+	offsetSize = 4 ifTrue: [ self relativeSOffset32 ].
+	offsetSize = 2 ifTrue: [ self relativeSOffset16 ].	
+	offsetSize = 1 ifTrue: [ self relativeSOffset8 ].	
+
 ]
 
 { #category : #testing }

@@ -75,6 +75,75 @@ SLVMX86CompilationTarget >> elfMachine [
 	^ 3
 ]
 
+{ #category : #constructors }
+SLVMX86CompilationTarget >> emitTo: instructionStream registrationOfObjectSection: sectionLabel size: sectionSize [
+	| registrationInformationLabel registerLabel unregisterLabel registrationSymbol unregistrationSymbol oopSectionMetaData |
+	instructionStream withSectionNamed: #'.data' do: [
+		registrationInformationLabel := SLVMLirLabel new name: #'_OopRegistrationInformation'.
+		oopSectionMetaData := ByteArray streamContents: [ :out |
+			self uint
+				encodeConstant: sectionSize bigEndian: false intoByteStream: out;
+				encodeConstant: 3 bigEndian: false intoByteStream: out;
+				encodeConstant: 0 bigEndian: false intoByteStream: out;
+				encodeConstant: 0 bigEndian: false intoByteStream: out.
+		].
+	
+		instructionStream
+			add: registrationInformationLabel;
+			add: (SLVMLirLabelValue new
+				label: sectionLabel;
+				size: 4;
+				labelOffset: 0;
+				yourself);
+			add: (SLVMLirBlob new content: oopSectionMetaData)
+	].
+
+	instructionStream withSectionNamed: #'.oopRegistration' do: [
+		registerLabel := SLVMLirLabel new name: #'registerOopSection'.
+		unregisterLabel := SLVMLirLabel new name: #'unregisterOopSection'.
+		registrationSymbol := SLVMLirExternalLabel new
+			name: #'slvm_dynrun_registerStaticHeap';
+			public;
+			yourself.
+		unregistrationSymbol := SLVMLirExternalLabel new
+			name: #'slvm_dynrun_unregisterStaticHeap';
+			public;
+			yourself.
+		instructionStream
+			add: registerLabel;
+			addX86: PUSH with: registrationInformationLabel;
+			addX86: CALL with: registrationSymbol;
+			addX86: ADD with: ESP with: 4;
+			addX86: RET;
+			
+			add: unregisterLabel;
+			addX86: PUSH with: registrationInformationLabel;
+			addX86: CALL with: unregistrationSymbol;
+			addX86: ADD with: ESP with: 4;
+			addX86: RET
+
+	].
+
+	instructionStream withSectionNamed: #'.ctors' do: [
+		instructionStream add: (SLVMLirLabelValue new
+			label: registerLabel;
+			size: 4;
+			labelOffset: 0;
+			yourself
+		)
+	].
+
+	instructionStream withSectionNamed: #'.dtors' do: [
+		instructionStream add: (SLVMLirLabelValue new
+			label: unregisterLabel;
+			size: 4;
+			labelOffset: 0;
+			yourself
+		)
+	].
+
+]
+
 { #category : #'as yet unclassified' }
 SLVMX86CompilationTarget >> generateMachineCodeFromInstructionStream: aStream [
 	^ SLVMX86MachineCodeGenerator new generate: aStream

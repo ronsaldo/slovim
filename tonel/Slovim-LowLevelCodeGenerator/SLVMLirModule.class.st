@@ -30,6 +30,14 @@ SLVMLirModule >> asInstructionStream [
 	^ result
 ]
 
+{ #category : #converting }
+SLVMLirModule >> asMachineCode [
+	| stream |
+	stream := self asInstructionStream.
+	compilationTarget optimizeLirStream: stream.
+	^ stream asMachineCode
+]
+
 { #category : #accessing }
 SLVMLirModule >> compilationTarget [
 	^ compilationTarget
@@ -73,7 +81,7 @@ SLVMLirModule >> printOn: aStream [
 
 { #category : #'as yet unclassified' }
 SLVMLirModule >> writeToInstructionStream: instructionStream [
-	| elementToLabelMap label |
+	| elementToLabelMap label objectSectionDataBlob |
 	elementToLabelMap := Dictionary new.
 	elements do: [ :element |
 		element isExternal ifTrue: [ 
@@ -90,10 +98,13 @@ SLVMLirModule >> writeToInstructionStream: instructionStream [
 		label := SLVMLirLabel new name: #'_SOopSection'.
 		elementToLabelMap at: objectSectionData put: label.
 		instructionStream withSectionNamed: #'.oop' do: [
+			objectSectionDataBlob := objectSectionData asBlob.
 			instructionStream
 				add: label;
-				add: (SLVMLirBlob new content: objectSectionData contents)
-		]
+				add: objectSectionDataBlob
+		].
+	
+		compilationTarget emitTo: instructionStream registrationOfObjectSection: label size: objectSectionDataBlob content size
 	].
 
 	elements do: [ :element |

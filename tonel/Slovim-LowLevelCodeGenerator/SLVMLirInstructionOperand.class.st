@@ -20,6 +20,11 @@ SLVMLirInstructionOperand >> isBlob [
 ]
 
 { #category : #testing }
+SLVMLirInstructionOperand >> isDynamicObjectSection [
+	^ false
+]
+
+{ #category : #testing }
 SLVMLirInstructionOperand >> isExternalLabel [
 	^ false
 ]

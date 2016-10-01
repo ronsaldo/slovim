@@ -2,7 +2,8 @@ Class {
 	#name : #SLVMLirBlob,
 	#superclass : #SLVMLirInstructionStreamElement,
 	#instVars : [
-		'content'
+		'content',
+		'relocations'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -28,7 +29,23 @@ SLVMLirBlob >> copyReplaceModuleElementsWith: moduleElementDictionary replaceBlo
 	^ self
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #initialization }
+SLVMLirBlob >> initialize [
+	super initialize.
+	relocations := #().
+]
+
+{ #category : #testing }
 SLVMLirBlob >> isBlob [
 	^ true
+]
+
+{ #category : #accessing }
+SLVMLirBlob >> relocations [
+	^ relocations
+]
+
+{ #category : #accessing }
+SLVMLirBlob >> relocations: anObject [
+	relocations := anObject
 ]

@@ -15,9 +15,9 @@ Class {
 		'constantBlock',
 		'constantZoneDictionary',
 		'moduleTranslator',
-		'literalBlock',
 		'literals',
-		'callingConvention'
+		'callingConvention',
+		'compiledMethodMetaData'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -248,7 +248,7 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlockInstructions: basicBlock [
 { #category : #'code generation' }
 SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 	"Create the new basic blocks"
-	| lirBlock label |
+	| lirBlock literalBlock metadataLabel |
 	basicBlockDictionary := Dictionary new.
 	function basicBlocks do: [ :bb |
 		lirBlock := SLVMLirBasicBlock new name: bb name asSymbol.
@@ -261,7 +261,20 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 		yourself.
 	lirFunction addBasicBlock: constantBlock.
 	function dynamicLiterals ifNotEmpty: [
-		literalBlock := SLVMLirBasicBlock new 
+		compiledMethodMetaData := SLVMLirCompiledMethod new: function dynamicLiterals size + 1.
+		function dynamicLiterals doWithIndex: [ :literal :index |
+			compiledMethodMetaData at: index put: literal value.
+		].
+	
+		"compiledMethodMetaData at: compiledMethodMetaData size put: compiledMethodLabel."
+		metadataLabel := moduleTranslator addDynamicObject: compiledMethodMetaData.
+		
+		literals := Array new: function dynamicLiterals size.
+		function dynamicLiterals doWithIndex: [ :literal :index |
+			literals at: index put: (metadataLabel + ((index - 1) * compilationTarget pointerSize) + 8).
+		].
+	
+"		literalBlock := SLVMLirBasicBlock new 
 			name: #literalZone;
 			sectionName: #'.literal';
 			yourself.
@@ -274,7 +287,7 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 				addInstruction: label;
 				addInstruction: (moduleTranslator addDynamicObject: literal value)
 		]
-	].
+"	].
 
 	registerAllocator translateBasicBlocks: function basicBlocks with: self.
 

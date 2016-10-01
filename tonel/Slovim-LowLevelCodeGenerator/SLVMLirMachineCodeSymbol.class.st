@@ -26,6 +26,7 @@ SLVMLirMachineCodeSymbol >> = other [
 SLVMLirMachineCodeSymbol >> initialize [
 	super initialize.
 	usedForReloc := false.
+	position := 0.
 	size := 0.
 ]
 
@@ -62,6 +63,11 @@ SLVMLirMachineCodeSymbol >> position [
 { #category : #accessing }
 SLVMLirMachineCodeSymbol >> position: anObject [
 	position := anObject
+]
+
+{ #category : #accessing }
+SLVMLirMachineCodeSymbol >> public [
+	self visibility: #public
 ]
 
 { #category : #accessing }

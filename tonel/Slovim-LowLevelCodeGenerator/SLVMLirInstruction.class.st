@@ -35,6 +35,14 @@ SLVMLirInstruction >> isInstruction [
 SLVMLirInstruction >> mapOperand: operand replaceModuleElementsWith: moduleElementDictionary replaceBlocksWith: blockLabelDictionary lowerVariablesWith: lirFunction [
 	operand isNumber ifTrue: [ ^ operand ].
 	
+	operand isDynamicObjectSection ifTrue: [
+		^ moduleElementDictionary at: operand
+	].
+
+	operand isLabelValue ifTrue: [ 
+		 ^ operand copy label: (self mapOperand: operand label replaceModuleElementsWith: moduleElementDictionary replaceBlocksWith: blockLabelDictionary lowerVariablesWith: lirFunction)
+	].
+
 	(operand isBasicBlock or: [ operand isLabel ]) ifTrue: [
 		^blockLabelDictionary at: operand
 	].

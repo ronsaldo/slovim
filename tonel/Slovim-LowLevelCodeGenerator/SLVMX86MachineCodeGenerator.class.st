@@ -389,16 +389,16 @@ SLVMX86MachineCodeGenerator >> generateInstruction: instruction output: output [
 		instruction size = 4 ifTrue: [
 			writer
 				recordReloc32Into: instruction label;
-				putInt32: instruction labelOffset
+				putInt32: instruction label offset + instruction labelOffset
 		] ifFalse: [
 			writer
 				recordReloc64Into: instruction label;
-				putInt64: instruction labelOffset
+				putInt64: instruction label offset + instruction labelOffset
 		]
 	].
 					
 	instruction isBlob ifTrue: [
-		writer nextPutAll: instruction content
+		self writeBlob: instruction.
 	].
 	
 	instruction isInstruction ifTrue: [
@@ -916,4 +916,26 @@ SLVMX86MachineCodeGenerator >> longMode: anObject [
 { #category : #translating }
 SLVMX86MachineCodeGenerator >> sectionAlignment [
 	^ 4096
+]
+
+{ #category : #translating }
+SLVMX86MachineCodeGenerator >> writeBlob: blob [
+	| mappedSymbols symbol mappedReloc |
+	writer nextPutAll: blob content.
+	blob relocations ifEmpty: [ ^ self ].
+	
+	mappedSymbols := IdentityDictionary new.
+	blob relocations do: [ :reloc |
+		symbol := nil.
+		reloc symbol ifNotNil: [ 
+			symbol := mappedSymbols at: reloc symbol ifAbsentPut: [
+				writer addSymbol: reloc symbol
+			]
+		].
+	
+		mappedReloc := reloc copy
+			symbol: symbol;
+			section: writer currentSection.
+		writer currentSection addRelocation: mappedReloc
+	]
 ]

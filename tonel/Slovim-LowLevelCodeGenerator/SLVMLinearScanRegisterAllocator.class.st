@@ -123,7 +123,7 @@ SLVMLinearScanRegisterAllocator >> emitPrologueWith: codeGenerator [
 
 { #category : #'as yet unclassified' }
 SLVMLinearScanRegisterAllocator >> freeRegister: register [
-	self halt
+	(freeRegisters at: register class) add: register
 ]
 
 { #category : #'as yet unclassified' }
@@ -142,6 +142,20 @@ SLVMLinearScanRegisterAllocator >> loadArgumentsIntoRegisterWith: codeGenerator 
 		]
 	].
 
+]
+
+{ #category : #'public interface' }
+SLVMLinearScanRegisterAllocator >> moveInstruction: instruction resultInRegister: register with: codeGenerator [
+	| livenessIndex range |
+	livenessIndex := instruction livenessIndex.
+	livenessIndex ifNotNil: [
+		range := liveRanges at: livenessIndex.
+		range register ifNotNil: [
+			^ codeGenerator moveRegister: register toRegister: range register
+		].
+	].
+
+	^ super moveInstruction: instruction resultInRegister: register with: codeGenerator
 ]
 
 { #category : #'public interface' }
@@ -224,9 +238,8 @@ SLVMLinearScanRegisterAllocator >> removeExpiredRangesUntil: date from: rangeLis
 ]
 
 { #category : #'calling conventions' }
-SLVMLinearScanRegisterAllocator >> spillCalledRegisterForConvention: conventionName at: instruction with: translator [
-	| convention range calledRegisters |
-	convention := self callingConventionDescriptionNamed: conventionName.
+SLVMLinearScanRegisterAllocator >> spillCalledRegisterForConvention: convention at: instruction with: translator [
+	| range calledRegisters |
 	calledRegisters := convention calledRegisters.
 	range := liveRanges at: instruction livenessIndex.
 	range activeRanges do: [ :activeRange |
@@ -234,6 +247,7 @@ SLVMLinearScanRegisterAllocator >> spillCalledRegisterForConvention: conventionN
 		[ activeRange end > range start and:
 		[ activeRange register isNotNil and:
 		[ calledRegisters includes: activeRange register ] ] ]) ifTrue: [
+			self halt.
 			translator moveRegister: activeRange register toLocal: activeRange spillLocation
 		]
 	].
@@ -241,9 +255,8 @@ SLVMLinearScanRegisterAllocator >> spillCalledRegisterForConvention: conventionN
 ]
 
 { #category : #'calling conventions' }
-SLVMLinearScanRegisterAllocator >> unspillCalledRegisterForConvention: conventionName at: instruction with: translator [
-	| convention range calledRegisters |
-	convention := self callingConventionDescriptionNamed: conventionName.
+SLVMLinearScanRegisterAllocator >> unspillCalledRegisterForConvention: convention at: instruction with: translator [
+	| range calledRegisters |
 	calledRegisters := convention calledRegisters.
 	range := liveRanges at: instruction livenessIndex.
 	range activeRanges do: [ :activeRange |
@@ -251,6 +264,7 @@ SLVMLinearScanRegisterAllocator >> unspillCalledRegisterForConvention: conventio
 		[ activeRange end > range start and:
 		[ activeRange register isNotNil and:
 		[ calledRegisters includes: activeRange register ] ] ]) ifTrue: [
+			self halt.
 			translator moveLocal: activeRange spillLocation type: activeRange element type toRegister: activeRange register
 		]
 	].

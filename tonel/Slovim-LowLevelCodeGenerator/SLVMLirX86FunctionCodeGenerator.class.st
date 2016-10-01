@@ -83,7 +83,10 @@ SLVMLirX86FunctionCodeGenerator >> addX86: opcode operands: operands [
 		op isStackFrameVariable ifTrue: [ op actuallyUsed: true ]
 	].
 
-	currentBlockTarget addInstruction: (SLVMLirX86Instruction new opcode: opcode; operands: operands); yourself
+	currentBlockTarget addInstruction: (SLVMLirX86Instruction new
+		opcode: opcode;
+		operands: operands;
+		yourself)
 ]
 
 { #category : #instructions }
@@ -102,8 +105,8 @@ SLVMLirX86FunctionCodeGenerator >> canBeFrameLess [
 ]
 
 { #category : #visitor }
-SLVMLirX86FunctionCodeGenerator >> emitCallResultToRegister: instruction [
-	| resultType tempAddress |
+SLVMLirX86FunctionCodeGenerator >> emitCallResultToRegister: instruction convention: calledConvention [
+	| resultType tempAddress resultRegister |
 	resultType := instruction type.
 	resultType isVectorType ifTrue: [
 		resultType size <= 16 ifTrue: [ 
@@ -118,24 +121,27 @@ SLVMLirX86FunctionCodeGenerator >> emitCallResultToRegister: instruction [
 		
 	] ifFalse: [
 		resultType isFloatType ifTrue: [
-			longMode ifFalse: [
+			calledConvention floatReturnRegister ifNotNil: [
+				resultRegister := calledConvention floatReturnRegister
+			] ifNil: [
+				resultRegister := self allocateInstructionResultRegister: instruction.
 				tempAddress := (self stackPointerRegister asX86PtrOfSize: resultType size) - resultType size.
 				self addX86: FST with: tempAddress. 
 				self assert: (#(4 8) includes: resultType size).
 				resultType size = 4 ifTrue: [
-					self addX86: MOVSS with: XMM0 with: tempAddress. 
+					self addX86: MOVSS with: resultRegister with: tempAddress. 
 				].
 				resultType size = 8 ifTrue: [
-					self addX86: MOVSD with: XMM0 with: tempAddress. 
+					self addX86: MOVSD with: resultRegister with: tempAddress. 
 				].
 			].
 		
-			self instruction: instruction resultInRegister: XMM0.
+			self instruction: instruction resultInRegister: resultRegister.
 		] ifFalse: [ 
 			(resultType size <= 4 or: [ longMode and: [ resultType size <= 8] ])  ifTrue: [ 
-				self instruction: instruction resultInRegister: self intResultRegister
+				self instruction: instruction resultInRegister: calledConvention intResultRegister
 			] ifFalse: [ 
-				self instruction: instruction resultInRegister: self intResultRegister secondRegister: self secondIntResultRegister.
+				self instruction: instruction resultInRegister: calledConvention intResultRegister secondRegister: calledConvention secondIntResultRegister.
 			].
 		]
 	]
@@ -725,14 +731,15 @@ SLVMLirX86FunctionCodeGenerator >> visitBranch: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
-	| cleanUpSize calledFunction emittedCount variadicArgumentCount calledFunctionType |
+	| cleanUpSize calledFunction emittedCount variadicArgumentCount calledFunctionType calledConvention |
 	cleanUpSize := 0.
 	usesStackPointer := true.
 	calledFunctionType := instruction functionType.
 	variadicArgumentCount := instruction arguments size - calledFunctionType arguments size.
 	
 	"Spill the registers that are owned by the called."
-	registerAllocator spillCalledRegisterForConvention: calledFunctionType callingConvention at: instruction with: self.
+	calledConvention := compilationTarget callingConventionDescriptionNamed: #smalltalk.
+	registerAllocator spillCalledRegisterForConvention: calledConvention at: instruction with: self.
 
 	"Push the arguments in the stack."	
 	emittedCount := 0.
@@ -746,15 +753,15 @@ SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
 
 	calledFunction := self ensureInstruction: instruction valueInRegisterOrImmediate: instruction functionValue scratchIndex: 1.
 	self addX86: CALL with: calledFunction.
-	cleanUpSize > 0 ifTrue: [
+	(calledConvention isStackCleanedByCaller and: [ cleanUpSize > 0 ]) ifTrue: [
 		self addX86: ADD with: self stackPointerRegister with: cleanUpSize
 	].
 
 	"Unspill the called registers."
-	registerAllocator unspillCalledRegisterForConvention: calledFunctionType callingConvention at: instruction with: self.
+	registerAllocator unspillCalledRegisterForConvention: calledConvention at: instruction with: self.
 
 	instruction instructionReferences ifEmpty: [ ^ self ].
-	self emitCallResultToRegister: instruction.
+	self emitCallResultToRegister: instruction convention: calledConvention.
 ]
 
 { #category : #visitor }
@@ -830,7 +837,7 @@ SLVMLirX86FunctionCodeGenerator >> visitJump: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitMessageSend: instruction [
-	| cleanUpSize calledFunction oopArguments nativeArguments selector receiver nativeArgumentsSize |
+	| cleanUpSize calledFunction oopArguments nativeArguments selector receiver nativeArgumentsSize argumentSizeDescription calledConvention |
 	cleanUpSize := 0.
 	usesStackPointer := true.
 	
@@ -838,7 +845,8 @@ SLVMLirX86FunctionCodeGenerator >> visitMessageSend: instruction [
 	nativeArguments := OrderedCollection new.
 
 	"Spill the registers that are owned by the called."
-	registerAllocator spillCalledRegisterForConvention: #smalltalk at: instruction with: self.
+	calledConvention := compilationTarget callingConventionDescriptionNamed: #smalltalk.
+	registerAllocator spillCalledRegisterForConvention: calledConvention at: instruction with: self.
 	
 	instruction arguments reverseDo: [ :arg |
 		arg type isDynamicObjectType ifTrue: [
@@ -872,21 +880,20 @@ SLVMLirX86FunctionCodeGenerator >> visitMessageSend: instruction [
 	"ToDo: Move the arguments that are placed in registers."
 
 	"Push the Ns"
-	self
-		addX86: PUSH with: nativeArgumentsSize;
-		addX86: PUSH with: oopArguments size.
+	argumentSizeDescription := (nativeArgumentsSize << 16 | oopArguments size).
+	self addX86: PUSH with: argumentSizeDescription.
 
-	calledFunction := moduleTranslator runtimeProvidedFunction: #'_slvm_send'.
+	calledFunction := moduleTranslator runtimeProvidedFunction: #'_slvm_dynrun_send_trap'.
 	self addX86: CALL with: calledFunction.
-	cleanUpSize > 0 ifTrue: [
+	(calledConvention isStackCleanedByCaller and: [ cleanUpSize > 0 ]) ifTrue: [
 		self addX86: ADD with: self stackPointerRegister with: cleanUpSize
 	].
 
 	"Unspill the called regsiters"
-	registerAllocator unspillCalledRegisterForConvention: #smalltalk at: instruction with: self.
+	registerAllocator unspillCalledRegisterForConvention: calledConvention at: instruction with: self.
 
 	instruction instructionReferences ifEmpty: [ ^ self ].
-	self emitCallResultToRegister: instruction.
+	self emitCallResultToRegister: instruction convention: calledConvention.
 	
 ]
 

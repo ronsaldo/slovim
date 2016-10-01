@@ -20,6 +20,12 @@ SLVMLirMachineCodeWriter class >> do: aBlock [
 	^ self new do: aBlock
 ]
 
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> addSymbol: symbol [
+	symbols add: symbol.
+	^ symbol
+]
+
 { #category : #accessing }
 SLVMLirMachineCodeWriter >> compilationTarget [
 	^ compilationTarget
@@ -28,6 +34,11 @@ SLVMLirMachineCodeWriter >> compilationTarget [
 { #category : #accessing }
 SLVMLirMachineCodeWriter >> compilationTarget: anObject [
 	compilationTarget := anObject
+]
+
+{ #category : #accessing }
+SLVMLirMachineCodeWriter >> currentSection [
+	^ currentSection
 ]
 
 { #category : #enumerating }
@@ -141,7 +152,13 @@ SLVMLirMachineCodeWriter >> putMaybeReloc32: value [
 		targetSection := self getOrCreateSectionNamed: value section name.
 		^ self putInt32: value offset
 	].
-	
+
+	value isLabelValue ifTrue: [
+		self recordReloc32Into: value label.
+		targetSection := self getOrCreateSectionNamed: value label section name.
+		^ self putInt32: value label offset + value labelOffset
+	].
+
 	self halt.
 ]
 

@@ -14,6 +14,30 @@ SLVMLirInstructionStream >> add: element [
 	currentSection addLast: element
 ]
 
+{ #category : #x86 }
+SLVMLirInstructionStream >> addX86: opcode [
+	^ self addX86: opcode operands: #()
+]
+
+{ #category : #x86 }
+SLVMLirInstructionStream >> addX86: opcode operands: operands [
+	self add: (SLVMLirX86Instruction new
+		opcode: opcode;
+		operands: operands;
+		yourself
+	)
+]
+
+{ #category : #x86 }
+SLVMLirInstructionStream >> addX86: opcode with: operand [
+	^ self addX86: opcode operands: {operand asLirInstructionOperand}
+]
+
+{ #category : #x86 }
+SLVMLirInstructionStream >> addX86: opcode with: op1 with: op2 [
+	^ self addX86: opcode operands: {op1 asLirInstructionOperand . op2 asLirInstructionOperand}
+]
+
 { #category : #'as yet unclassified' }
 SLVMLirInstructionStream >> asMachineCode [
 	^ compilationTarget generateMachineCodeFromInstructionStream: self

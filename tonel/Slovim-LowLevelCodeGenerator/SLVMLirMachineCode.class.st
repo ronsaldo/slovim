@@ -35,8 +35,8 @@ SLVMLirMachineCode >> buildElfOn: builder [
 		"Ensure the local symbols come before the globals."
 		builder indexOfRelocationSymbol: nil section: elfSection.
 		
-		section name = #'.text' ifTrue: [ elfSection executableInstructions ].
-		(#('.bss' '.data' '.oop' '.literal') includes: section name) ifTrue: [ elfSection writeable ].
+		(#('.text' '.oopRegistration') includes: section name) ifTrue: [ elfSection executableInstructions ].
+		(#('.bss' '.data' '.oop') includes: section name) ifTrue: [ elfSection writeable ].
 		section name = #'.bss' ifTrue: [ elfSection nobits ].
 	].
 

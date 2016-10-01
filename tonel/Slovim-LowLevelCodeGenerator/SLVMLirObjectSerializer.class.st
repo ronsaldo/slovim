@@ -7,8 +7,114 @@ Class {
 		'stream',
 		'pointerSize'
 	],
+	#classVars : [
+		'KernelClassMapping',
+		'SpecialObjectSymbols'
+	],
 	#category : #'Slovim-LowLevelCodeGenerator-Image'
 }
+
+{ #category : #'class initialization' }
+SLVMLirObjectSerializer class >> initialize [
+	super initialize.
+	
+	self initializeKernelClassMapping.
+	
+	SpecialObjectSymbols := IdentityDictionary newFromPairs: #(
+		nil slvm_nil
+		true slvm_true
+		false slvm_false
+	).
+]
+
+{ #category : #'class initialization' }
+SLVMLirObjectSerializer class >> initializeKernelClassMapping [
+	KernelClassMapping := IdentityDictionary new.
+	#(
+		" Immediate class indices "
+		SmallInteger 1
+		Character 2
+		SmallFloat64 4
+
+		" Compact class indices "
+		LargeNegativeInteger 32
+		LargePositiveInteger 33
+		Float 34
+		Message 35
+		MethodContext 36
+		BlockClosure 37
+
+		Semaphore 48
+		Mutex 49
+		ByteArray 50
+		Array 51
+		String 52
+		Bitmap 53
+		Point 54
+
+		" Squeak FFI classes "
+		ExternalAddress 128
+		ExternalData 129
+		ExternalFunction 130
+		ExternalLibrary 131
+		ExternalStructure 132
+		Alien 133
+		UnsafeAlien 134
+
+		" Extra classes for bootstraping "
+		ProtoObject 150
+		Object 151
+		Behavior 152
+		ClassDescription 153
+		Class 154
+		Metaclass 155
+
+		UndefinedObject 156
+		Boolean 157
+		True 158
+		False 159
+
+		Collection 160
+		HashedCollection 161
+		Dictionary 162
+		IdentityDictionary 163
+		MethodDictionary 164
+		SequenceableCollection 165
+		ArrayedCollection 166
+		FloatArray 167
+		IntegerArray 168
+		WordArray 169
+		ByteString 170
+		WideString 171
+		Symbol 172
+		ByteSymbol 173
+		WideSymbol 174
+		OrderedCollection 175
+
+		Magnitude 176
+		Number 177
+		Fraction 178
+		Integer 179
+		LargeInteger 180
+		LookupKey 181
+		Association 182
+		BoxedFloat64 183
+
+		ExternalObject 184
+
+		Set 185
+		IdentitySet 186
+		WeakSet 187
+		WeakArray 188
+
+		SystemDictionary 189
+		SLVMLirCompiledMethod 190
+	) pairsDo: [ :className :index |
+		Smalltalk globals at: className ifPresent: [ :class |
+			KernelClassMapping at: class put: index
+		]
+	]
+]
 
 { #category : #adding }
 SLVMLirObjectSerializer >> addInnerObject: anObject [
@@ -16,6 +122,7 @@ SLVMLirObjectSerializer >> addInnerObject: anObject [
 	oldPosition := stream position.
 	pointer := self addObject: anObject.
 	stream position: oldPosition.
+	self recordRelocationFor: anObject to: pointer.
 	pointerSize = 4 ifTrue: [
 		self writeInt32: pointer
 	] ifFalse: [ 
@@ -28,6 +135,9 @@ SLVMLirObjectSerializer >> addObject: anObject [
 	| startPosition elementCount class elementSize bodySize slotCount actualBodySize bodyPosition header format extraBits |
 	(self isImmediate: anObject) ifTrue: [
 		^ self encodeImmediate: anObject
+	].
+	(self isSpecialObject: anObject) ifTrue: [
+		^ self encodeSpecialObject: anObject
 	].
 	startPosition := dictionary at: anObject ifPresent: [ :pointer | ^ pointer ] ifAbsentPut: [ stream size alignedTo: 16 ].
 
@@ -98,9 +208,49 @@ SLVMLirObjectSerializer >> addObject: anObject [
 	^ startPosition + (slotCount >= 255 ifTrue: [ 24 ] ifFalse: [ 8 ])
 ]
 
+{ #category : #converting }
+SLVMLirObjectSerializer >> asBlob [
+	^ SLVMLirBlob new
+		content: self contents;
+		relocations: self blobRelocations;
+		yourself
+]
+
+{ #category : #converting }
+SLVMLirObjectSerializer >> blobRelocations [
+	| result extraSymbols symbol |
+	extraSymbols := IdentityDictionary new.
+	result := OrderedCollection new.
+	relocationList do: [ :reloc |
+		reloc isInternalRelocation ifTrue: [
+			result add: (SLVMLirMachineCodeRelocation new
+				absoluteOffsetOfSize: pointerSize;
+				offset: reloc offset;
+				yourself)
+		].
+		reloc isSpecialObjectRelocation ifTrue: [ 
+			symbol := extraSymbols at: reloc specialObject ifAbsentPut: [ 
+				SLVMLirMachineCodeSymbol new
+					name: (SpecialObjectSymbols at: reloc specialObject);
+					usedForReloc: true;
+					public;
+					yourself
+			].
+			result add: (SLVMLirMachineCodeRelocation new
+				absoluteOffsetOfSize: pointerSize;
+				offset: reloc offset;
+				symbol: symbol;
+				yourself)
+		]
+	].
+
+	^ result
+
+]
+
 { #category : #adding }
 SLVMLirObjectSerializer >> classIndexFor: aClass [
-	^ 0
+	^ KernelClassMapping at: aClass
 ]
 
 { #category : #accessing }
@@ -110,7 +260,10 @@ SLVMLirObjectSerializer >> contents [
 
 { #category : #adding }
 SLVMLirObjectSerializer >> encodeImmediate32: anObject [
-	anObject isInteger ifTrue: [ ^ anObject << 1 | 1].
+	anObject isInteger ifTrue: [
+		^ anObject << 1 | 1
+	].
+
 	self halt
 ]
 
@@ -129,12 +282,23 @@ SLVMLirObjectSerializer >> encodeImmediate: anObject [
 	]
 ]
 
+{ #category : #adding }
+SLVMLirObjectSerializer >> encodeSpecialObject: anObject [
+	^ 0
+]
+
 { #category : #initialization }
 SLVMLirObjectSerializer >> initialize [
 	super initialize.
 	stream := ReadWriteStream on: (ByteArray new: 100).
 	stream binary.
 	dictionary := IdentityDictionary new.
+	relocationList := OrderedCollection new.
+]
+
+{ #category : #testing }
+SLVMLirObjectSerializer >> isDynamicObjectSection [
+	^ true
 ]
 
 { #category : #adding }
@@ -142,6 +306,11 @@ SLVMLirObjectSerializer >> isImmediate: anObject [
 	anObject isInteger ifTrue: [ ^ true ].
 	anObject isCharacter ifTrue: [ ^ true ].
 	^ false
+]
+
+{ #category : #adding }
+SLVMLirObjectSerializer >> isSpecialObject: anObject [
+	^ #(nil true false) includes: anObject
 ]
 
 { #category : #adding }
@@ -170,6 +339,25 @@ SLVMLirObjectSerializer >> pointerSize [
 { #category : #accessing }
 SLVMLirObjectSerializer >> pointerSize: anObject [
 	pointerSize := anObject
+]
+
+{ #category : #adding }
+SLVMLirObjectSerializer >> recordRelocationFor: anObject to: pointer [
+	| offset |
+	offset := stream position.
+	(self isSpecialObject: anObject) ifTrue: [ 
+		^ relocationList add: (SLVMLirObjectSpecialRelocation new
+			offset: offset;
+			specialObject: anObject;
+			yourself
+		)
+	].
+
+	relocationList add: (SLVMLirObjectInternalRelocation new
+		offset: offset;
+		target: pointer;
+		yourself
+	)
 ]
 
 { #category : #adding }
