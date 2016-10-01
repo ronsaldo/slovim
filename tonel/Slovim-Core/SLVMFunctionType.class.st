@@ -90,7 +90,7 @@ SLVMFunctionType >> isFunctionType [
 
 { #category : #printing }
 SLVMFunctionType >> printOn: aStream [
-	aStream nextPutAll: 'function {('.
+	aStream nextPutAll: 'function '; print: callingConvention; nextPutAll:'{('.
 	arguments doWithIndex: [ :arg :index |
 		index > 1 ifTrue: [ aStream nextPutAll: ', ' ].
 		aStream print: arg.
