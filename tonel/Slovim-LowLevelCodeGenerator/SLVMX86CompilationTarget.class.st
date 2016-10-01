@@ -82,20 +82,20 @@ SLVMX86CompilationTarget >> emitTo: instructionStream registrationOfObjectSectio
 		registrationInformationLabel := SLVMLirLabel new name: #'_OopRegistrationInformation'.
 		oopSectionMetaData := ByteArray streamContents: [ :out |
 			self uint
-				encodeConstant: sectionSize bigEndian: false intoByteStream: out;
-				encodeConstant: 3 bigEndian: false intoByteStream: out;
 				encodeConstant: 0 bigEndian: false intoByteStream: out;
-				encodeConstant: 0 bigEndian: false intoByteStream: out.
+				encodeConstant: 0 bigEndian: false intoByteStream: out;
+				encodeConstant: sectionSize bigEndian: false intoByteStream: out;
+				encodeConstant: 3 bigEndian: false intoByteStream: out.
 		].
 	
 		instructionStream
 			add: registrationInformationLabel;
+			add: (SLVMLirBlob new content: oopSectionMetaData);
 			add: (SLVMLirLabelValue new
 				label: sectionLabel;
 				size: 4;
 				labelOffset: 0;
-				yourself);
-			add: (SLVMLirBlob new content: oopSectionMetaData)
+				yourself)
 	].
 
 	instructionStream withSectionNamed: #'.oopRegistration' do: [

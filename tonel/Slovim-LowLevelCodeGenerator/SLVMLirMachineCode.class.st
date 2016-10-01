@@ -36,7 +36,16 @@ SLVMLirMachineCode >> buildElfOn: builder [
 		builder indexOfRelocationSymbol: nil section: elfSection.
 		
 		(#('.text' '.oopRegistration') includes: section name) ifTrue: [ elfSection executableInstructions ].
-		(#('.bss' '.data' '.oop') includes: section name) ifTrue: [ elfSection writeable ].
+		(#('.bss' '.data' '.oop') includes: section name) ifTrue: [
+			elfSection
+				writeable;
+				addressAlign: 16
+		].
+		(#('.rodata') includes: section name) ifTrue: [
+			elfSection
+				addressAlign: 16
+		].
+
 		section name = #'.bss' ifTrue: [ elfSection nobits ].
 	].
 

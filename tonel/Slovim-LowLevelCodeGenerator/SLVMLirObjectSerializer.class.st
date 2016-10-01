@@ -117,6 +117,14 @@ SLVMLirObjectSerializer class >> initializeKernelClassMapping [
 ]
 
 { #category : #adding }
+SLVMLirObjectSerializer >> addAlignmentPadding [
+	| targetSize |
+	targetSize := stream size alignedTo: 16.
+	stream position: stream size.
+	[ stream size < targetSize ] whileTrue: [ stream nextPut: 0 ].
+]
+
+{ #category : #adding }
 SLVMLirObjectSerializer >> addInnerObject: anObject [
 	| oldPosition pointer |
 	oldPosition := stream position.
@@ -255,6 +263,7 @@ SLVMLirObjectSerializer >> classIndexFor: aClass [
 
 { #category : #accessing }
 SLVMLirObjectSerializer >> contents [
+	self addAlignmentPadding.
 	^ stream contents
 ]
 
