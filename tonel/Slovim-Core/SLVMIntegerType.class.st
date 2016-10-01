@@ -22,6 +22,21 @@ SLVMIntegerType >> accept: aVisitor [
 	^ aVisitor visitIntegerType: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMIntegerType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stream [
+	| integerData |
+	integerData := value.
+	bigEndian ifTrue: [
+		self halt.
+	] ifFalse: [
+		1 to: size do: [ :i |
+			stream nextPut: (integerData bitAnd: 16rff).
+			integerData := integerData >> 8
+		] 
+	]
+
+]
+
 { #category : #comparing }
 SLVMIntegerType >> hash [
 	^ super hash bitXor: signed hash
