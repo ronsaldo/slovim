@@ -938,9 +938,13 @@ SLVMX86MachineCodeGenerator >> writeBlob: blob [
 	mappedSymbols := IdentityDictionary new.
 	blob relocations do: [ :reloc |
 		symbol := nil.
-		reloc symbol ifNotNil: [ 
-			symbol := mappedSymbols at: reloc symbol ifAbsentPut: [
-				writer addSymbol: reloc symbol
+		reloc symbol ifNotNil: [
+			reloc symbol isLabel ifTrue: [ 
+				symbol := writer symbolForLabel: reloc symbol.
+			] ifFalse: [
+				symbol := mappedSymbols at: reloc symbol ifAbsentPut: [
+					writer addSymbol: reloc symbol
+				]
 			]
 		].
 	

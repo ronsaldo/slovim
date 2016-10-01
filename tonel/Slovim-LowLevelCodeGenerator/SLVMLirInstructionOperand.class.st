@@ -60,6 +60,11 @@ SLVMLirInstructionOperand >> isLabelValue [
 ]
 
 { #category : #testing }
+SLVMLirInstructionOperand >> isLirInstructionOperand [
+	^ true
+]
+
+{ #category : #testing }
 SLVMLirInstructionOperand >> isModuleElement [
 	^ false
 ]

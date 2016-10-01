@@ -79,7 +79,7 @@ SLVMLirModule >> printOn: aStream [
 	elements do: [ :element | element fullPrintOn: aStream. aStream cr ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #writing }
 SLVMLirModule >> writeToInstructionStream: instructionStream [
 	| elementToLabelMap label objectSectionDataBlob |
 	elementToLabelMap := Dictionary new.
@@ -98,7 +98,7 @@ SLVMLirModule >> writeToInstructionStream: instructionStream [
 		label := SLVMLirLabel new name: #'_SOopSection'.
 		elementToLabelMap at: objectSectionData put: label.
 		instructionStream withSectionNamed: #'.oop' do: [
-			objectSectionDataBlob := objectSectionData asBlob.
+			objectSectionDataBlob := objectSectionData asBlobWithModuleMapping: elementToLabelMap.
 			instructionStream
 				add: label;
 				add: objectSectionDataBlob

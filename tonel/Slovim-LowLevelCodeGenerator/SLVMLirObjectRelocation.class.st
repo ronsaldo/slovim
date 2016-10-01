@@ -13,6 +13,11 @@ SLVMLirObjectRelocation >> isInternalRelocation [
 ]
 
 { #category : #testing }
+SLVMLirObjectRelocation >> isModuleElementRelocation [
+	^ false
+]
+
+{ #category : #testing }
 SLVMLirObjectRelocation >> isSpecialObjectRelocation [
 	^ false
 ]

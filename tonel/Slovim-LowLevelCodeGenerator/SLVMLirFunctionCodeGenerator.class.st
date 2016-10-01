@@ -248,7 +248,7 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlockInstructions: basicBlock [
 { #category : #'code generation' }
 SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 	"Create the new basic blocks"
-	| lirBlock literalBlock metadataLabel |
+	| lirBlock |
 	basicBlockDictionary := Dictionary new.
 	function basicBlocks do: [ :bb |
 		lirBlock := SLVMLirBasicBlock new name: bb name asSymbol.
@@ -260,22 +260,27 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 		sectionName: #'.rodata';
 		yourself.
 	lirFunction addBasicBlock: constantBlock.
-	function dynamicLiterals ifNotEmpty: [
-		lirFunction alignment: 16.
-		compiledMethodMetaData := SLVMLirCompiledMethod new: function dynamicLiterals size + 1.
-		function dynamicLiterals doWithIndex: [ :literal :index |
-			compiledMethodMetaData at: index + 1 put: literal value.
-		].
-	
-		"compiledMethodMetaData at: compiledMethodMetaData size put: compiledMethodLabel."
-		metadataLabel := moduleTranslator addDynamicObject: compiledMethodMetaData.
-		
-		literals := Array new: function dynamicLiterals size.
-		function dynamicLiterals doWithIndex: [ :literal :index |
-			literals at: index put: (metadataLabel + ((index - 1 + "fixed size" 1) * compilationTarget pointerSize) + 8).
-		].
-	].
-
+	self translateCompiledMethodMetaData.
 	registerAllocator translateBasicBlocks: function basicBlocks with: self.
 
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirFunctionCodeGenerator >> translateCompiledMethodMetaData [
+	| metadataLabel |
+	function dynamicLiterals ifEmpty: [ ^ self ].
+
+	lirFunction alignment: 16.
+	compiledMethodMetaData := SLVMLirCompiledMethod new: function dynamicLiterals size + 1.
+	function dynamicLiterals doWithIndex: [ :literal :index |
+		compiledMethodMetaData at: index put: literal value.
+	].
+	
+	compiledMethodMetaData at: compiledMethodMetaData size put: lirFunction.
+	metadataLabel := moduleTranslator addDynamicObject: compiledMethodMetaData.
+		
+	literals := Array new: function dynamicLiterals size.
+	function dynamicLiterals doWithIndex: [ :literal :index |
+		literals at: index put: (metadataLabel + ((index - 1 + "fixed size" 1) * compilationTarget pointerSize) + 8).
+	].
 ]

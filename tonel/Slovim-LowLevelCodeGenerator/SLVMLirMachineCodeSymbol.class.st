@@ -31,6 +31,11 @@ SLVMLirMachineCodeSymbol >> initialize [
 ]
 
 { #category : #testing }
+SLVMLirMachineCodeSymbol >> isLabel [
+	^ false
+]
+
+{ #category : #testing }
 SLVMLirMachineCodeSymbol >> isPrivate [
 	^ visibility == #private
 ]

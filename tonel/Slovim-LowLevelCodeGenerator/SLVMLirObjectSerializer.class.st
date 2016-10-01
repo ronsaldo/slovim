@@ -147,6 +147,14 @@ SLVMLirObjectSerializer >> addObject: anObject [
 	(self isSpecialObject: anObject) ifTrue: [
 		^ self encodeSpecialObject: anObject
 	].
+	anObject isLirInstructionOperand ifTrue: [ 
+		anObject isModuleElement ifTrue: [ 
+			^ 1
+		].
+	
+		self halt.
+	].
+
 	startPosition := dictionary at: anObject ifPresent: [ :pointer | ^ pointer ] ifAbsentPut: [ stream size alignedTo: 16 ].
 
 	"Align the objects to 16 bytes boundaries."
@@ -217,15 +225,15 @@ SLVMLirObjectSerializer >> addObject: anObject [
 ]
 
 { #category : #converting }
-SLVMLirObjectSerializer >> asBlob [
+SLVMLirObjectSerializer >> asBlobWithModuleMapping: moduleMaping [
 	^ SLVMLirBlob new
 		content: self contents;
-		relocations: self blobRelocations;
+		relocations: (self blobRelocationsWithModuleMapping: moduleMaping);
 		yourself
 ]
 
 { #category : #converting }
-SLVMLirObjectSerializer >> blobRelocations [
+SLVMLirObjectSerializer >> blobRelocationsWithModuleMapping: moduleMaping [
 	| result extraSymbols symbol |
 	extraSymbols := IdentityDictionary new.
 	result := OrderedCollection new.
@@ -234,6 +242,13 @@ SLVMLirObjectSerializer >> blobRelocations [
 			result add: (SLVMLirMachineCodeRelocation new
 				absoluteOffsetOfSize: pointerSize;
 				offset: reloc offset;
+				yourself)
+		].
+		reloc isModuleElementRelocation  ifTrue: [
+			result add: (SLVMLirMachineCodeRelocation new
+				absoluteOffsetOfSize: pointerSize;
+				offset: reloc offset;
+				symbol: (moduleMaping at: reloc element);
 				yourself)
 		].
 		reloc isSpecialObjectRelocation ifTrue: [ 
@@ -360,6 +375,17 @@ SLVMLirObjectSerializer >> recordRelocationFor: anObject to: pointer [
 			specialObject: anObject;
 			yourself
 		)
+	].
+
+	anObject isLirInstructionOperand ifTrue: [ 
+		anObject isModuleElement ifTrue: [
+			^ relocationList add: (SLVMLirObjectModuleElementRelocation new
+				offset: offset;
+				element: anObject;
+				yourself
+			)
+		].
+		self halt.
 	].
 
 	relocationList add: (SLVMLirObjectInternalRelocation new
