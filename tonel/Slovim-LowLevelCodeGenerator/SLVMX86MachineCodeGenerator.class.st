@@ -378,6 +378,17 @@ SLVMX86MachineCodeGenerator >> generateFST: instruction [
 SLVMX86MachineCodeGenerator >> generateInstruction: instruction output: output [
 	instruction offset: output position.
 	instruction isLabel ifTrue: [
+		instruction alignment > 1 ifTrue: [
+			instruction offset: (output position alignedTo: instruction alignment).
+			[ output position < instruction offset ] whileTrue: [
+				instruction type = #function ifTrue: [
+					"NOP"
+					writer putInt8: 16r90
+				] ifFalse: [ 
+					writer putInt8: 0.
+				]
+			]
+		].
 		writer recordLabel: instruction.
 	].
 					

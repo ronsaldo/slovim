@@ -2,10 +2,27 @@ Class {
 	#name : #SLVMLirModuleElement,
 	#superclass : #SLVMLirInstructionOperand,
 	#instVars : [
-		'visibility'
+		'visibility',
+		'alignment'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
+
+{ #category : #accessing }
+SLVMLirModuleElement >> alignment [
+	^ alignment
+]
+
+{ #category : #accessing }
+SLVMLirModuleElement >> alignment: anObject [
+	alignment := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirModuleElement >> initialize [
+	super initialize.
+	alignment := 1.
+]
 
 { #category : #testing }
 SLVMLirModuleElement >> isExternal [

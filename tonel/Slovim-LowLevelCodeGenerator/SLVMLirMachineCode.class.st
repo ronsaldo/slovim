@@ -41,7 +41,7 @@ SLVMLirMachineCode >> buildElfOn: builder [
 				writeable;
 				addressAlign: 16
 		].
-		(#('.rodata') includes: section name) ifTrue: [
+		(#('.text' '.rodata') includes: section name) ifTrue: [
 			elfSection
 				addressAlign: 16
 		].

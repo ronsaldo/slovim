@@ -47,6 +47,7 @@ SLVMLirFunction >> fullPrintOn: aStream [
 
 { #category : #initialization }
 SLVMLirFunction >> initialize [
+	super initialize.
 	basicBlocks := OrderedCollection new.
 	compilationTarget := SLVM32BitsPointerCompilationTarget new.
 	stackFrame := SLVMLirStackFrame new.

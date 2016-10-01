@@ -112,6 +112,7 @@ SLVMLirModule >> writeToInstructionStream: instructionStream [
 		label isExternalLabel ifFalse: [ 
 			instructionStream withSectionNamed: element section do: [
 				instructionStream add: label.
+				label alignment: element alignment.
 				element writeToInstructionStream: instructionStream moduleElementDictionary: elementToLabelMap.
 				instructionStream add: (SLVMLirLabelContentEnd new label: label)
 			]

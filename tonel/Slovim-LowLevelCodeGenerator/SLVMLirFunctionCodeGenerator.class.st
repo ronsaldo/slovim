@@ -261,9 +261,10 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 		yourself.
 	lirFunction addBasicBlock: constantBlock.
 	function dynamicLiterals ifNotEmpty: [
+		lirFunction alignment: 16.
 		compiledMethodMetaData := SLVMLirCompiledMethod new: function dynamicLiterals size + 1.
 		function dynamicLiterals doWithIndex: [ :literal :index |
-			compiledMethodMetaData at: index put: literal value.
+			compiledMethodMetaData at: index + 1 put: literal value.
 		].
 	
 		"compiledMethodMetaData at: compiledMethodMetaData size put: compiledMethodLabel."
@@ -271,23 +272,9 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 		
 		literals := Array new: function dynamicLiterals size.
 		function dynamicLiterals doWithIndex: [ :literal :index |
-			literals at: index put: (metadataLabel + ((index - 1) * compilationTarget pointerSize) + 8).
+			literals at: index put: (metadataLabel + ((index - 1 + "fixed size" 1) * compilationTarget pointerSize) + 8).
 		].
-	
-"		literalBlock := SLVMLirBasicBlock new 
-			name: #literalZone;
-			sectionName: #'.literal';
-			yourself.
-		lirFunction addBasicBlock: literalBlock.
-		literals := Array new: function dynamicLiterals size.
-		function dynamicLiterals doWithIndex: [ :literal :index |
-			label := SLVMLirLabel new.
-			literals at: index put: label.
-			literalBlock
-				addInstruction: label;
-				addInstruction: (moduleTranslator addDynamicObject: literal value)
-		]
-"	].
+	].
 
 	registerAllocator translateBasicBlocks: function basicBlocks with: self.
 
