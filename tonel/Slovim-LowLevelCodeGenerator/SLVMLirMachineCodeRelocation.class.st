@@ -28,7 +28,7 @@ SLVMLirMachineCodeRelocation class >> initialize [
 	AbsoluteOffset8 := #'absolute-offset8'.
 	AbsoluteOffset16 := #'absolute-offset16'.
 	AbsoluteOffset32 := #'absolute-offset32'.
-	AbsoluteOffset64 := #'absolute-offset32'.
+	AbsoluteOffset64 := #'absolute-offset64'.
 	
 	RelativeSOffset8 := #'relative-soffset8'.
 	RelativeSOffset16 := #'relative-soffset16'.
@@ -81,6 +81,48 @@ SLVMLirMachineCodeRelocation >> addend [
 { #category : #accessing }
 SLVMLirMachineCodeRelocation >> addend: anObject [
 	addend := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirMachineCodeRelocation >> applyImplicitAddend [
+	| code |
+	self fixAddend = 0 ifTrue: [ ^ 0 ].
+
+	code := section code.
+	(self isAbsoluteOffset64 or: [ self isRelativeSOffset64 ]) ifTrue: [ 
+		code unsignedLongLongAt: offset + 1 put: (((code unsignedLongLongAt: offset + 1) + addend) bitAnd: 16rFFFFFFFFFFFFFFFF)
+	].
+
+	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 ]) ifTrue: [ 
+		code unsignedLongAt: offset + 1 put: (((code unsignedLongAt: offset + 1) + addend) bitAnd: 16rFFFFFFFF)
+	].
+
+	addend := 0.
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirMachineCodeRelocation >> applyImplicitAddendIn: targetSection [
+	| code |
+	self fixAddend = 0 ifTrue: [ ^ 0 ].
+
+	code := targetSection code.
+	(self isAbsoluteOffset64 or: [ self isRelativeSOffset64 ]) ifTrue: [ 
+		code unsignedLongLongAt: offset + 1 put: (((code unsignedLongLongAt: offset + 1) + addend) bitAnd: 16rFFFFFFFFFFFFFFFF)
+	].
+
+	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 ]) ifTrue: [ 
+		code unsignedLongAt: offset + 1 put: (((code unsignedLongAt: offset + 1) + addend) bitAnd: 16rFFFFFFFF)
+	].
+
+	addend := 0.
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirMachineCodeRelocation >> fixAddend [
+	addend isInteger ifFalse: [ 
+		addend := addend position
+	].
+	^ addend
 ]
 
 { #category : #initialization }

@@ -44,7 +44,9 @@ SLVMLirMachineCodeWriter >> currentSection [
 { #category : #enumerating }
 SLVMLirMachineCodeWriter >> do: aBlock [
 	aBlock value: self.
-	^ SLVMLirMachineCode new sections: sections; symbols: (symbols select: #shouldBeKeep) ; yourself
+	^ SLVMLirMachineCode new
+		sections: sections;
+		symbols: (symbols select: #shouldBeKeep)
 ]
 
 { #category : #adding }

@@ -8,7 +8,8 @@ Class {
 		'arguments',
 		'argumentsBaseOffset',
 		'localsBaseOffset',
-		'frameLessMethod'
+		'frameLessMethod',
+		'argumentsSize'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -28,9 +29,13 @@ SLVMLirStackFrame >> argumentsBaseOffset: anObject [
 	argumentsBaseOffset := anObject
 ]
 
+{ #category : #accessing }
+SLVMLirStackFrame >> argumentsSize [
+	^ argumentsSize
+]
+
 { #category : #'as yet unclassified' }
 SLVMLirStackFrame >> buildArgumentLayout [
-	| argumentsSize |
 	argumentsSize := 0.
 	arguments do: [ :var |
 		argumentsSize := argumentsSize alignedTo: var alignment.

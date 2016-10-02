@@ -20,8 +20,11 @@ SLVMLirX86_64FunctionCodeGenerator >> generateActualReturn: instruction [
 			addX86: POP with: RBP.
 	].
 
-	self
-		addX86: RET
+	callingConvention isStackCleanedByCaller ifTrue: [ 
+		self addX86: RET
+	] ifFalse: [
+		self addX86: RET with: lirFunction stackFrame argumentsSize
+	]
 ]
 
 { #category : #'stack frame' }

@@ -198,8 +198,12 @@ SLVMLirX86FunctionCodeGenerator >> generateActualReturn: instruction [
 			addX86: POP with: EBP.
 	].
 
-	self
-		addX86: RET
+	callingConvention isStackCleanedByCaller ifTrue: [ 
+		self addX86: RET
+	] ifFalse: [
+		self addX86: RET with: lirFunction stackFrame argumentsSize
+	]
+
 ]
 
 { #category : #'stack frame' }
@@ -286,11 +290,11 @@ SLVMLirX86FunctionCodeGenerator >> instruction: instruction pushValue: value var
 	| valueType register stackAddress stackArgumentSize |
 	value isConstant ifTrue: [ ^ self pushConstantValue: value variadicArgument: isVariadicArgument].
 	valueType := value type.
-	valueType isIntegerType ifTrue: [
-		((longMode not and: [ valueType size > 4 ]) or:
-		 [longMode and: [ valueType size > 8 ]]) ifTrue: [
+	valueType isScalarIntegerType ifTrue: [
+		((longMode not and: [ valueType size <= 4 ]) or:
+		 [longMode and: [ valueType size <= 8 ]]) ifTrue: [
 			register := self ensureInstruction: instruction valueInRegisterOrLocalForPushing: value.
-			self addX86: PUSH with: register.
+			^ self addX86: PUSH with: register.
 		] ifFalse: [
 			self halt.
 		]

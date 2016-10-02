@@ -56,6 +56,7 @@ SLVMX86CompilationTarget >> callingConventionDescriptionNamed: conventionName [
 { #category : #'elf relocations' }
 SLVMX86CompilationTarget >> convertRelocation: relocation section: section elfBuilder: elfBuilder [
 	| table elfReloc symbolIndex |
+	relocation applyImplicitAddendIn: section.
 	table := elfBuilder relocationSectionFor: section.
 	elfReloc := table newEntry.
 	symbolIndex := elfBuilder indexOfRelocationSymbol: relocation symbol section: (elfBuilder sectionFromContent: relocation section).

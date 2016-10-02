@@ -670,7 +670,8 @@ SLVMX86MachineCodeGenerator >> generateRET: instruction [
 	instruction operands ifEmpty: [ 
 		writer put: 16rC3
 	] ifNotEmpty: [
-		writer put: 16rC2; putInt16: instruction first
+		self assert: instruction first isImmediate.
+		writer put: 16rC2; putInt16: instruction first value
 	]
 ]
 
@@ -947,6 +948,12 @@ SLVMX86MachineCodeGenerator >> writeBlob: blob [
 		mappedReloc := reloc copy
 			symbol: ((symbol isNotNil and: [ symbol shouldBeKeep ]) ifTrue: [ symbol ] ifFalse: [nil]);
 			section: (symbol ifNotNil: [symbol section] ifNil: [writer currentSection]).
+			
+		"Use the unkept symbol as the addend."
+		(symbol isNotNil and: [mappedReloc symbol isNil and: [ mappedReloc section ~~ writer currentSection]]) ifTrue: [ 
+			mappedReloc addend: symbol.
+		].
+	
 		writer currentSection addRelocation: mappedReloc
 	]
 ]
