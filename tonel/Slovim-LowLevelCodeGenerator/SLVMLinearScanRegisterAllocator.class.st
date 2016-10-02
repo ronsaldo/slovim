@@ -104,7 +104,7 @@ SLVMLinearScanRegisterAllocator >> allocateRegisters [
 { #category : #'as yet unclassified' }
 SLVMLinearScanRegisterAllocator >> allocateSpillLocationFor: type [
 	| spillClass freeLocations spillLocation |
-	spillClass := type sizeAndAlignment.
+	spillClass := type spillingClass.
 	freeLocations := freeSpillLocations at: spillClass ifAbsentPut: [ OrderedCollection new ].
 	freeLocations ifNotEmpty: [
 		spillLocation := freeLocations last.
@@ -129,7 +129,7 @@ SLVMLinearScanRegisterAllocator >> freeRegister: register [
 { #category : #'as yet unclassified' }
 SLVMLinearScanRegisterAllocator >> freeSpillLocation: spillLocation [
 	spillLocation ifNil: [ ^ self ].
-	self halt.
+	(freeSpillLocations at: spillLocation spillClass) add: spillLocation.
 ]
 
 { #category : #'as yet unclassified' }

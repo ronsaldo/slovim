@@ -81,6 +81,10 @@ SLVMLirFunctionCodeGenerator >> encodeImmediateObject64: object [
 { #category : #'object model' }
 SLVMLirFunctionCodeGenerator >> encodeImmediateObject: object [
 	| pointerSize |
+	object == nil ifTrue: [ ^ moduleTranslator runtimeProvidedGlobal: #slvm_nil ].
+	object == false ifTrue: [ ^ moduleTranslator runtimeProvidedGlobal: #slvm_false ].
+	object == true ifTrue: [ ^ moduleTranslator runtimeProvidedGlobal: #slvm_true ].
+	
 	pointerSize := compilationTarget pointerSize.
 	pointerSize = 4 ifTrue: [
 		^ self encodeImmediateObject32: object
@@ -267,20 +271,30 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 
 { #category : #'as yet unclassified' }
 SLVMLirFunctionCodeGenerator >> translateCompiledMethodMetaData [
-	| metadataLabel |
-	function dynamicLiterals ifEmpty: [ ^ self ].
+	| metadataLabel flags callingConventionName methodMetaDataFixedSize |
+	(function dynamicLiterals isEmpty and: [ function needsCompiledMethodObject not ]) ifTrue: [ ^ self ].
 
 	lirFunction alignment: 16.
-	compiledMethodMetaData := SLVMLirCompiledMethod new: function dynamicLiterals size + 1.
+	compiledMethodMetaData := SLVMLirCompiledMethod new: function dynamicLiterals size.
 	function dynamicLiterals doWithIndex: [ :literal :index |
 		compiledMethodMetaData at: index put: literal value.
 	].
-	
-	compiledMethodMetaData at: compiledMethodMetaData size put: lirFunction.
+	methodMetaDataFixedSize := compiledMethodMetaData class instSize.
+
+	flags := 0.
+	callingConventionName := function functionType callingConvention.
+	callingConventionName == #cdecl ifTrue: [ flags := 1 ].
+	callingConventionName == #stdcall ifTrue: [ flags := 2 ].
+
+	compiledMethodMetaData 
+		entryPoint: lirFunction;
+		flags: flags.
+		
 	metadataLabel := moduleTranslator addDynamicObject: compiledMethodMetaData.
+	lirFunction compiledMethodMetaData: metadataLabel.
 		
 	literals := Array new: function dynamicLiterals size.
 	function dynamicLiterals doWithIndex: [ :literal :index |
-		literals at: index put: (metadataLabel + ((index - 1 + "fixed size" 1) * compilationTarget pointerSize) + 8).
+		literals at: index put: (metadataLabel + ((index - 1 + methodMetaDataFixedSize) * compilationTarget pointerSize) + 8).
 	].
 ]

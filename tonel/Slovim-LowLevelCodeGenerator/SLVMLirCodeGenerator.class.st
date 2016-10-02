@@ -61,13 +61,39 @@ SLVMLirCodeGenerator >> runtimeProvidedFunction: symbol [
 	^ result
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirCodeGenerator >> runtimeProvidedGlobal: symbol [
+	self flag: 'Implement myself properly.'.
+	^ self runtimeProvidedFunction: symbol
+]
+
+{ #category : #'code generation' }
+SLVMLirCodeGenerator >> translateModule: module [
+	| packageRegistration |
+	module packages ifNotEmpty: [
+		packageRegistration := module generatePackageRegistration.
+	].
+
+	^ self translateModule: module exportList: module allGlobalValues packageRegistration: packageRegistration
+]
+
 { #category : #'code generation' }
 SLVMLirCodeGenerator >> translateModule: module exportList: exportList [
+	^ self translateModule: module exportList: exportList packageRegistration: nil
+]
+
+{ #category : #'code generation' }
+SLVMLirCodeGenerator >> translateModule: module exportList: exportList packageRegistration: packageRegistration [
 	self applyOptimizationsIn: module functionList: exportList.
 	lirModule := SLVMLirModule new compilationTarget: compilationTarget.
 	translatedElements := Dictionary new.
+
 	exportList do: [ :element |
 		self translateModuleElement: element
+	].
+
+	packageRegistration ifNotNil: [
+		lirModule packageRegistration: (self translateModuleElement: packageRegistration)
 	].
 
 	^ lirModule

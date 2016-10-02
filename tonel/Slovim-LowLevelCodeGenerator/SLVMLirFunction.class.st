@@ -6,7 +6,8 @@ Class {
 		'compilationTarget',
 		'stackFrame',
 		'variableMap',
-		'basicBlocks'
+		'basicBlocks',
+		'compiledMethodMetaData'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -36,6 +37,16 @@ SLVMLirFunction >> compilationTarget [
 { #category : #accessing }
 SLVMLirFunction >> compilationTarget: anObject [
 	compilationTarget := anObject
+]
+
+{ #category : #accessing }
+SLVMLirFunction >> compiledMethodMetaData [
+	^ compiledMethodMetaData
+]
+
+{ #category : #accessing }
+SLVMLirFunction >> compiledMethodMetaData: anObject [
+	compiledMethodMetaData := anObject
 ]
 
 { #category : #printing }

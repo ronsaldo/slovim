@@ -29,8 +29,18 @@ SLVMLirLabelValue >> copyReplaceModuleElementsWith: moduleElementDictionary repl
 ]
 
 { #category : #testing }
+SLVMLirLabelValue >> isImmediate [
+	^ true
+]
+
+{ #category : #testing }
 SLVMLirLabelValue >> isLabelValue [
 	^ true
+]
+
+{ #category : #testing }
+SLVMLirLabelValue >> isSmallImmediate [
+	^ false
 ]
 
 { #category : #accessing }

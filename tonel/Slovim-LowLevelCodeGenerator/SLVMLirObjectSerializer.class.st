@@ -140,7 +140,7 @@ SLVMLirObjectSerializer >> addInnerObject: anObject [
 
 { #category : #adding }
 SLVMLirObjectSerializer >> addObject: anObject [
-	| startPosition elementCount class elementSize bodySize slotCount actualBodySize bodyPosition header format extraBits |
+	| startPosition elementCount class elementSize bodySize slotCount actualBodySize bodyPosition header format extraBits headerPosition |
 	(self isImmediate: anObject) ifTrue: [
 		^ self encodeImmediate: anObject
 	].
@@ -155,10 +155,11 @@ SLVMLirObjectSerializer >> addObject: anObject [
 		self halt.
 	].
 
-	startPosition := dictionary at: anObject ifPresent: [ :pointer | ^ pointer ] ifAbsentPut: [ stream size alignedTo: 16 ].
+	dictionary at: anObject ifPresent: [ :pointer | ^ pointer ].
 
 	"Align the objects to 16 bytes boundaries."
 	stream position: stream size.
+	startPosition := stream size alignedTo: 16.
 	[ stream size < startPosition ] whileTrue: [ stream nextPut: 0 ].
 
 	elementCount := self objectElementCount: anObject.
@@ -169,8 +170,8 @@ SLVMLirObjectSerializer >> addObject: anObject [
 	bodySize := elementCount * elementSize.
 	actualBodySize := bodySize alignedTo: pointerSize.
 	slotCount := actualBodySize // pointerSize.
-		
-	"ToDo: write the object header"	
+	
+	"Write the object header"	
 	slotCount >= 255 ifTrue: [
 		self
 			writeInt64: 1;
@@ -180,6 +181,11 @@ SLVMLirObjectSerializer >> addObject: anObject [
 		self writeInt64: 0.
 	].
 
+	"Record the actual object position."
+	headerPosition := stream position.
+	dictionary at: anObject put: headerPosition.
+
+	"Start writing the header"
 	format := class instSpec.
 	extraBits := (pointerSize - (elementCount % pointerSize)) % pointerSize.
 	format := format + extraBits.
@@ -221,7 +227,7 @@ SLVMLirObjectSerializer >> addObject: anObject [
 		].
 	].
 
-	^ startPosition + (slotCount >= 255 ifTrue: [ 24 ] ifFalse: [ 8 ])
+	^ headerPosition
 ]
 
 { #category : #converting }
@@ -368,6 +374,8 @@ SLVMLirObjectSerializer >> pointerSize: anObject [
 { #category : #adding }
 SLVMLirObjectSerializer >> recordRelocationFor: anObject to: pointer [
 	| offset |
+	(self isImmediate: anObject) ifTrue: [ ^ self ].
+	
 	offset := stream position.
 	(self isSpecialObject: anObject) ifTrue: [ 
 		^ relocationList add: (SLVMLirObjectSpecialRelocation new

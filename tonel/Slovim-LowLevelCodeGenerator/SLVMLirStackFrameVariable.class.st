@@ -6,7 +6,8 @@ Class {
 		'offset',
 		'size',
 		'alignment',
-		'actuallyUsed'
+		'actuallyUsed',
+		'dynamicRoot'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -31,10 +32,20 @@ SLVMLirStackFrameVariable >> alignment: anObject [
 	alignment := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #converting }
 SLVMLirStackFrameVariable >> asX86PtrOfSize: newSize [
 	size = newSize ifTrue: [ ^ self ].
 	self halt.
+]
+
+{ #category : #accessing }
+SLVMLirStackFrameVariable >> dynamicRoot [
+	^ dynamicRoot
+]
+
+{ #category : #accessing }
+SLVMLirStackFrameVariable >> dynamicRoot: anObject [
+	dynamicRoot := anObject
 ]
 
 { #category : #accessing }
@@ -47,7 +58,7 @@ SLVMLirStackFrameVariable >> id: anObject [
 	id := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #initialization }
 SLVMLirStackFrameVariable >> initialize [
 	super initialize.
 	actuallyUsed := false.
@@ -81,4 +92,9 @@ SLVMLirStackFrameVariable >> size [
 { #category : #accessing }
 SLVMLirStackFrameVariable >> size: anObject [
 	size := anObject
+]
+
+{ #category : #accessing }
+SLVMLirStackFrameVariable >> spillClass [
+	^ { size . alignment . dynamicRoot }
 ]

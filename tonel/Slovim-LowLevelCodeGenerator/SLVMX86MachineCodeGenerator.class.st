@@ -625,12 +625,6 @@ SLVMX86MachineCodeGenerator >> generateMachineCodeInstruction: instruction outpu
 SLVMX86MachineCodeGenerator >> generatePOP: instruction [
 	| operand |
 	operand := instruction first.
-	operand isImmediate ifTrue: [
-		operand isSmallImmediate ifTrue: [ 
-		] ifFalse: [ 
-		]
-	].
-
 	operand isRegister ifTrue: [
 		self encodeRexReg: operand.
 		^ writer put: 16r58 + operand valueLow.
@@ -642,6 +636,7 @@ SLVMX86MachineCodeGenerator >> generatePOP: instruction [
 		^ self encodeModRM: operand opcode: 0.
 	].
 
+	self invalidInstruction
 ]
 
 { #category : #'instruction generation' }
@@ -667,6 +662,7 @@ SLVMX86MachineCodeGenerator >> generatePUSH: instruction [
 		^ self encodeModRM: operand opcode: 6.
 	].
 
+	self invalidInstruction
 ]
 
 { #category : #'instruction generation' }
@@ -949,8 +945,8 @@ SLVMX86MachineCodeGenerator >> writeBlob: blob [
 		].
 	
 		mappedReloc := reloc copy
-			symbol: symbol;
-			section: writer currentSection.
+			symbol: ((symbol isNotNil and: [ symbol shouldBeKeep ]) ifTrue: [ symbol ] ifFalse: [nil]);
+			section: (symbol ifNotNil: [symbol section] ifNil: [writer currentSection]).
 		writer currentSection addRelocation: mappedReloc
 	]
 ]

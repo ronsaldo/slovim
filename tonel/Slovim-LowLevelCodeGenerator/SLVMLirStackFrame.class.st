@@ -74,17 +74,18 @@ SLVMLirStackFrame >> createArgument: argSize alignment: argAlignment [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMLirStackFrame >> createLocal: sizeAndAlignment [
-	^ self createLocalSize: sizeAndAlignment first alignment: sizeAndAlignment second
+SLVMLirStackFrame >> createLocal: spillingClass [
+	^ self createLocalSize: spillingClass first alignment: spillingClass second dynamicRoot: spillingClass third
 ]
 
 { #category : #'as yet unclassified' }
-SLVMLirStackFrame >> createLocalSize: localSize alignment: localAlignment [
+SLVMLirStackFrame >> createLocalSize: localSize alignment: localAlignment dynamicRoot: dynamicRoot [
 	| result |
 	result := SLVMLirStackFrameVariable new
 		id: localVariables size + 1;
 		size: localSize;
 		alignment: localAlignment;
+		dynamicRoot: dynamicRoot;
 		yourself.
 	localVariables add: result.
 	^ result

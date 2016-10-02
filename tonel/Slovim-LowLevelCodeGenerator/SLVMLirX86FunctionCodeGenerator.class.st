@@ -456,6 +456,10 @@ SLVMLirX86FunctionCodeGenerator >> pushConstantValue: value variadicArgument: is
 	| valueType memoryLocation integerData bitMask |
 	valueType := value type.
 	valueType isDynamicObjectType ifTrue: [
+		value isCompiledMethodMetaData ifTrue: [
+			^ self addX86: PUSH with: (self translateConstant: value sourceMethod) compiledMethodMetaData
+		].
+	
 		value isConstantValue ifTrue: [ 
 			^ self addX86: PUSH with: (self encodeImmediateObject: value value)
 		].
@@ -738,7 +742,7 @@ SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
 	variadicArgumentCount := instruction arguments size - calledFunctionType arguments size.
 	
 	"Spill the registers that are owned by the called."
-	calledConvention := compilationTarget callingConventionDescriptionNamed: #smalltalk.
+	calledConvention := compilationTarget callingConventionDescriptionNamed: calledFunctionType callingConvention.
 	registerAllocator spillCalledRegisterForConvention: calledConvention at: instruction with: self.
 
 	"Push the arguments in the stack."	

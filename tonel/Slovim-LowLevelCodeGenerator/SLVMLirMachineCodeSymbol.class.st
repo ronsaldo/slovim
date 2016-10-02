@@ -25,6 +25,7 @@ SLVMLirMachineCodeSymbol >> = other [
 { #category : #initialization }
 SLVMLirMachineCodeSymbol >> initialize [
 	super initialize.
+	visibility := #private.
 	usedForReloc := false.
 	position := 0.
 	size := 0.
@@ -87,7 +88,7 @@ SLVMLirMachineCodeSymbol >> section: anObject [
 
 { #category : #initialization }
 SLVMLirMachineCodeSymbol >> shouldBeKeep [
-	^ self isPublic or: [ usedForReloc ]
+	^ self isPrivate not or: [ usedForReloc ]
 ]
 
 { #category : #accessing }

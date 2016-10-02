@@ -268,7 +268,7 @@ SLVMLirMachineCodeWriter >> recordReloc32Into: destinationLabel [
 		absoluteOffset32;
 		offset: stream position;
 		symbol: (symbol shouldBeKeep ifTrue: [ symbol ] ifFalse: [nil]);
-		section: (self getOrCreateSectionNamed: destinationLabel section name);
+		section: (destinationLabel section ifNotNil: [self getOrCreateSectionNamed: destinationLabel section name]);
 		yourself.
 	currentSection addRelocation: reloc 
 ]

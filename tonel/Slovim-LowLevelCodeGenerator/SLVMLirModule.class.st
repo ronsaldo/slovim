@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'compilationTarget',
 		'elements',
-		'objectSectionData'
+		'objectSectionData',
+		'packageRegistration'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -74,6 +75,16 @@ SLVMLirModule >> objectSectionData: anObject [
 	objectSectionData := anObject
 ]
 
+{ #category : #accessing }
+SLVMLirModule >> packageRegistration [
+	^ packageRegistration
+]
+
+{ #category : #accessing }
+SLVMLirModule >> packageRegistration: anObject [
+	packageRegistration := anObject
+]
+
 { #category : #printing }
 SLVMLirModule >> printOn: aStream [
 	elements do: [ :element | element fullPrintOn: aStream. aStream cr ]
@@ -85,7 +96,7 @@ SLVMLirModule >> writeToInstructionStream: instructionStream [
 	elementToLabelMap := Dictionary new.
 	elements do: [ :element |
 		element isExternal ifTrue: [ 
-			label := SLVMLirExternalLabel new name: element name; visibility: element visibility.
+			label := SLVMLirExternalLabel new name: element name; public.
 		] ifFalse: [ 
 			label := SLVMLirLabel new name: element name; visibility: element visibility.
 			label type: element labelType.
@@ -104,7 +115,7 @@ SLVMLirModule >> writeToInstructionStream: instructionStream [
 				add: objectSectionDataBlob
 		].
 	
-		compilationTarget emitTo: instructionStream registrationOfObjectSection: label size: objectSectionDataBlob content size
+		compilationTarget emitTo: instructionStream registrationOfObjectSection: label size: objectSectionDataBlob content size package: (elementToLabelMap at: packageRegistration ifAbsent: [ nil])
 	].
 
 	elements do: [ :element |

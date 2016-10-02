@@ -76,16 +76,19 @@ SLVMX86CompilationTarget >> elfMachine [
 ]
 
 { #category : #constructors }
-SLVMX86CompilationTarget >> emitTo: instructionStream registrationOfObjectSection: sectionLabel size: sectionSize [
-	| registrationInformationLabel registerLabel unregisterLabel registrationSymbol unregistrationSymbol oopSectionMetaData |
+SLVMX86CompilationTarget >> emitTo: instructionStream registrationOfObjectSection: sectionLabel size: sectionSize package: packageRegistration [
+	| registrationInformationLabel registerLabel unregisterLabel registrationSymbol unregistrationSymbol oopSectionMetaData sectionFlags |
 	instructionStream withSectionNamed: #'.data' do: [
 		registrationInformationLabel := SLVMLirLabel new name: #'_OopRegistrationInformation'.
 		oopSectionMetaData := ByteArray streamContents: [ :out |
+			sectionFlags := 3.
+			packageRegistration ifNotNil: [ sectionFlags := sectionFlags + 4 ].
+			
 			self uint
 				encodeConstant: 0 bigEndian: false intoByteStream: out;
 				encodeConstant: 0 bigEndian: false intoByteStream: out;
 				encodeConstant: sectionSize bigEndian: false intoByteStream: out;
-				encodeConstant: 3 bigEndian: false intoByteStream: out.
+				encodeConstant: sectionFlags bigEndian: false intoByteStream: out.
 		].
 	
 		instructionStream
@@ -95,7 +98,16 @@ SLVMX86CompilationTarget >> emitTo: instructionStream registrationOfObjectSectio
 				label: sectionLabel;
 				size: 4;
 				labelOffset: 0;
-				yourself)
+				yourself).
+				
+		packageRegistration ifNotNil: [ 
+			"Emit the package registration function pointer."
+			instructionStream add: (SLVMLirLabelValue new
+				label: packageRegistration;
+				size: 4;
+				labelOffset: 0;
+				yourself).
+		].
 	].
 
 	instructionStream withSectionNamed: #'.oopRegistration' do: [

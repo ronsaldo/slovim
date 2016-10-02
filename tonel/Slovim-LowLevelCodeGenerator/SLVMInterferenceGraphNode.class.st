@@ -34,12 +34,12 @@ SLVMInterferenceGraphNode >> printOn: aStream [
 
 { #category : #'as yet unclassified' }
 SLVMInterferenceGraphNode >> spillClass [
-	^ variable type sizeAndAlignment
+	^ variable type spillingClass
 ]
 
 { #category : #'as yet unclassified' }
 SLVMInterferenceGraphNode >> spillClassForTarget: compilationTarget [
-	^ variable type sizeAndAlignment
+	^ variable type spillingClass
 ]
 
 { #category : #accessing }
