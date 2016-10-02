@@ -3,18 +3,28 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'module',
-		'convertedMethods'
+		'convertedMethods',
+		'convertedClasses'
 	],
 	#category : #'Slovim-OpalCompiler-Package'
 }
 
 { #category : #adding }
-SLVMOpalModuleBuilder >> addClass: aClass [
+SLVMOpalModuleBuilder >> addClass: aClass modulePackage: modulePackage [
+	| element |
+	convertedClasses at: aClass ifPresent: [ :oldElement | ^ oldElement ].
+	
+	element := SLVMModulePackageClass new
+		name: aClass name;
+		actualClass: aClass;
+		yourself.
+	modulePackage addElement: element.
+	convertedClasses at: aClass put: element.
 ]
 
 { #category : #adding }
-SLVMOpalModuleBuilder >> addMethod: aCompiledMethod [
-	| compiler crossCompiled |
+SLVMOpalModuleBuilder >> addMethod: aCompiledMethod modulePackage: modulePackage [
+	| compiler crossCompiled methodClass packageElement |
 	convertedMethods at: aCompiledMethod ifPresent: [ :existingMethod | ^ existingMethod ].
 
 	compiler := aCompiledMethod methodClass compiler.
@@ -24,7 +34,10 @@ SLVMOpalModuleBuilder >> addMethod: aCompiledMethod [
 		astTranslatorClass: SLVMOpalASTTranslator.
 		
 	crossCompiled := compiler source: aCompiledMethod sourceCode; compile.
-	crossCompiled makePrivate.
+	crossCompiled
+		needsCompiledMethodObject: true;
+		makePrivate.
+		
 	(aCompiledMethod pragmaAt: #csymbol:) ifNotNil: [ :pragma |
 		crossCompiled name: pragma arguments first asSymbol
 	].
@@ -35,21 +48,48 @@ SLVMOpalModuleBuilder >> addMethod: aCompiledMethod [
 	module add: crossCompiled.
 	convertedMethods at: aCompiledMethod put: crossCompiled.
 
+	methodClass := aCompiledMethod methodClass.
+	packageElement := SLVMModulePackageMethod new
+			name: aCompiledMethod selector;
+			compiledValue: crossCompiled;
+			className: methodClass baseClass name;
+			classSide: methodClass isMeta;
+			yourself.
+
+	modulePackage addElement: packageElement.
+	convertedClasses at: methodClass ifPresent: [ :classElement |
+		packageElement addDependency: classElement
+	].
+
 ]
 
 { #category : #adding }
-SLVMOpalModuleBuilder >> addMethods: methods [
-	methods do: [ :method | self addMethod: method ]
+SLVMOpalModuleBuilder >> addMethods: methods modulePackage: modulePackage [
+	methods do: [ :method | self addMethod: method modulePackage: modulePackage ]
+]
+
+{ #category : #private }
+SLVMOpalModuleBuilder >> addMissingSuperclassDependencies [
+	convertedClasses valuesDo: [ :class |
+		convertedClasses at: class actualClass superclass ifPresent: [ :existingSuper |
+			class addDependency: existingSuper
+		]
+	]
 ]
 
 { #category : #adding }
 SLVMOpalModuleBuilder >> addPackage: aPackage [
-	aPackage definedClasses do: [ :class |
-		self addClass: class.
-		self addMethods: (aPackage definedMethodsForClass: class)
-	].
+	| modulePackage |
+	modulePackage := SLVMModulePackage new name: aPackage name.
+	module addPackage: modulePackage.
 	
-	self addMethods: aPackage extensionMethods
+	aPackage definedClasses do: [ :class |
+		self addClass: class modulePackage: modulePackage.
+		self addMethods: (aPackage definedMethodsForClass: class) modulePackage: modulePackage.
+	].
+
+	self addMethods: aPackage extensionMethods modulePackage: modulePackage.
+	self addMissingSuperclassDependencies.
 
 ]
 
@@ -72,7 +112,9 @@ SLVMOpalModuleBuilder >> compilationTarget: aCompilationTarget [
 SLVMOpalModuleBuilder >> initialize [
 	super initialize.
 	module := SLVMModule new.
+	convertedClasses := IdentityDictionary new.
 	convertedMethods := IdentityDictionary new.
+
 ]
 
 { #category : #accessing }

@@ -236,10 +236,15 @@ SLVMOpalASTTranslator >> visitMessageNode: aMessageNode [
 
 { #category : #'visitor-double dispatching' }
 SLVMOpalASTTranslator >> visitMethodNode: aMethodNode [
-	| objectType argumentTypes functionType currentFunction arguments argValue allocaBlock local contentBlock |
+	| objectType argumentTypes functionType currentFunction arguments argValue allocaBlock local contentBlock callingConvention |
 	objectType := compilationTarget dynamicObjectType.
-	argumentTypes := {objectType} , aMethodNode arguments collect: [ :arg | objectType ].
-	functionType := SLVMFunctionType arguments: argumentTypes returnType: objectType.
+	callingConvention := #smalltalk.
+	aMethodNode pragmaNamed: #callingConvention: ifPresent: [ :callingConventionPragma |
+		callingConvention := callingConventionPragma arguments first value
+	].
+
+	argumentTypes := {"receiver" objectType} , aMethodNode arguments collect: [ :arg | objectType ].
+	functionType := SLVMFunctionType callingConvention: callingConvention arguments: argumentTypes returnType: objectType.
 	
 	currentFunction := SLVMFunction pointerSize: compilationTarget pointerSize functionType: functionType.
 	currentFunction compilationTarget: aMethodNode compilationContext compilationTarget.
