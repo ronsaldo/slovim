@@ -58,6 +58,11 @@ SLVMConstant class >> ulong: anInteger [
 ]
 
 { #category : #testing }
+SLVMConstant >> isCompiledMethodMetaData [
+	^ false
+]
+
+{ #category : #testing }
 SLVMConstant >> isConstant [
 	^ true
 ]

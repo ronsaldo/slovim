@@ -446,8 +446,8 @@ SLVMType >> size [
 ]
 
 { #category : #accessing }
-SLVMType >> sizeAndAlignment [
-	^ { self size . self alignment }
+SLVMType >> spillingClass [
+	^ { self size . self alignment . false }
 ]
 
 { #category : #accessing }

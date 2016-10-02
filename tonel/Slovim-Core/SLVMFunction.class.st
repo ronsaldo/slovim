@@ -12,7 +12,8 @@ Class {
 		'preOrder',
 		'haveDominance',
 		'dynamicLiterals',
-		'compilationTarget'
+		'compilationTarget',
+		'needsCompiledMethodObject'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -87,6 +88,13 @@ SLVMFunction >> compilationTarget [
 { #category : #accessing }
 SLVMFunction >> compilationTarget: anObject [
 	compilationTarget := anObject
+]
+
+{ #category : #accessing }
+SLVMFunction >> compiledMethodMetaDataValue [
+	^ SLVMConstantCompiledMethodMetaData new
+		type: compilationTarget dynamicObjectType;
+		sourceMethod: self
 ]
 
 { #category : #'control flow' }
@@ -260,6 +268,7 @@ SLVMFunction >> initialize [
 	arguments := #().
 	gensymCount := 0.
 	haveDominance := false.
+	needsCompiledMethodObject := false.
 ]
 
 { #category : #'control flow' }
@@ -288,6 +297,16 @@ SLVMFunction >> makeArguments [
 			name: (#arg , index printString) asSymbol;
 			yourself
 	]
+]
+
+{ #category : #accessing }
+SLVMFunction >> needsCompiledMethodObject [
+	^ needsCompiledMethodObject
+]
+
+{ #category : #accessing }
+SLVMFunction >> needsCompiledMethodObject: aBoolean [
+	needsCompiledMethodObject := aBoolean
 ]
 
 { #category : #accessing }

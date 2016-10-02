@@ -70,6 +70,11 @@ SLVMDynamicObjectType >> size: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMDynamicObjectType >> spillingClass [
+	^ { self size . self alignment . true }
+]
+
+{ #category : #'as yet unclassified' }
 SLVMDynamicObjectType >> typeOfMemberAt: index [
 	^ self
 ]

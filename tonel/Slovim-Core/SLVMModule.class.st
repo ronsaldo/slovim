@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'compilationTarget',
 		'globalValues',
-		'anonymousGlobals'
+		'anonymousGlobals',
+		'packages'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -15,17 +16,34 @@ SLVMModule >> add: aGlobalValue [
 	globalValues at: aGlobalValue name put: aGlobalValue
 ]
 
+{ #category : #adding }
+SLVMModule >> addPackage: modulePackage [
+	packages add: modulePackage
+]
+
+{ #category : #packages }
+SLVMModule >> addPackageElement: element topoSortResult: result topoSortAdded: addedElements [
+	(addedElements includes: element) ifTrue: [ ^ self ].
+	addedElements add: element.
+	
+	element dependencies do: [ :dep |
+		self addPackageElement: dep topoSortResult: result topoSortAdded: addedElements
+	].
+
+	result add: element.
+]
+
 { #category : #accessing }
 SLVMModule >> allGlobalValues [
 	^ globalValues values , anonymousGlobals
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #optimizations }
 SLVMModule >> applyFunctionOptimizationPasses: passes [
 	globalValues valuesDo: [ :val | val isFunction ifTrue: [ val applyFunctionOptimizationPasses: passes ] ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #converting }
 SLVMModule >> asLowLevelModule [
 	^ compilationTarget generateLowLevelModule: self
 ]
@@ -73,6 +91,41 @@ SLVMModule >> functionName: name fixedArguments: arguments returnType: returnTyp
 	^ function
 ]
 
+{ #category : #packages }
+SLVMModule >> generatePackageRegistration [
+	| registrationFunctionType packageRegistrationFunction allocaBuilder codeBuilder allocaBlock entryBlock |
+	registrationFunctionType := SLVMFunctionType arguments: #() returnType: SLVMType voidType.
+	packageRegistrationFunction := SLVMFunction pointerSize: compilationTarget pointerSize functionType: registrationFunctionType.
+	packageRegistrationFunction
+		compilationTarget: compilationTarget;
+		makePrivate.
+	
+	"Generate two basic blocks, one for the locals, and another for the code itself."
+	allocaBuilder := SLVMBuilder on: packageRegistrationFunction.
+	allocaBlock := allocaBuilder newBasicBlock: #locals.
+	allocaBuilder currentBlock: allocaBlock.
+	
+	codeBuilder := SLVMBuilder on: packageRegistrationFunction.
+	entryBlock := codeBuilder newBasicBlock: #entry.
+	codeBuilder currentBlock: entryBlock.
+	
+	"Generate the packages"
+	packages do: [ :package |
+		package emitFor: self registrationWithAllocaBuilder: allocaBuilder codeBuilder: codeBuilder
+	].
+
+	"Generate the package elements, with topological sorting."
+	self sortPackageElements do: [ :element |
+		element emitFor: self registrationWithAllocaBuilder: allocaBuilder codeBuilder: codeBuilder
+	].
+	
+	"Finish the alloc block, and return."
+	allocaBuilder jump: entryBlock.
+	codeBuilder returnVoid.
+	
+	^ packageRegistrationFunction
+]
+
 { #category : #adding }
 SLVMModule >> globalNamed: aSymbol [
 	^ globalValues at: aSymbol
@@ -87,6 +140,7 @@ SLVMModule >> globalValues [
 SLVMModule >> initialize [
 	anonymousGlobals := OrderedCollection new.
 	globalValues := OrderedDictionary new.
+	packages := OrderedCollection new.
 ]
 
 { #category : #'as yet unclassified' }
@@ -95,6 +149,11 @@ SLVMModule >> optimizeWithLevel: optimizationLevel [
 	optimizationLevel = 0 ifTrue: [ ^ self ].
 	functionOptimizationPasses := self createFunctionOptimizationPassesForLevel: optimizationLevel.
 	self applyFunctionOptimizationPasses: functionOptimizationPasses.
+]
+
+{ #category : #accessing }
+SLVMModule >> packages [
+	^ packages
 ]
 
 { #category : #types }
@@ -112,4 +171,19 @@ SLVMModule >> printOn: aStream [
 	anonymousGlobals do: [ :val | val fullPrintOn: aStream ].
 	globalValues values do: [ :val | val fullPrintOn: aStream ].
 
+]
+
+{ #category : #packages }
+SLVMModule >> sortPackageElements [
+	| addedElements result |
+	addedElements := Set new.
+	result := OrderedCollection new.
+	
+	packages do: [ :package |
+		package elements do: [ :element |
+			self addPackageElement: element topoSortResult: result topoSortAdded: addedElements
+		]
+	].
+	
+	^ result
 ]
