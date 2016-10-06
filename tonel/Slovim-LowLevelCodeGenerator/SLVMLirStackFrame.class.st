@@ -9,7 +9,8 @@ Class {
 		'argumentsBaseOffset',
 		'localsBaseOffset',
 		'frameLessMethod',
-		'argumentsSize'
+		'argumentsSize',
+		'dynamicRootCount'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -54,15 +55,32 @@ SLVMLirStackFrame >> buildLayout [
 
 { #category : #'as yet unclassified' }
 SLVMLirStackFrame >> buildLocalLayout [
-	localVariables sort: [ :a :b | a alignment < b alignment ].
+	localVariables sort: [ :a :b |
+		a dynamicRoot ~= b dynamicRoot ifTrue: [ 
+			a dynamicRoot asBit > b dynamicRoot asBit
+		] ifFalse: [ 
+			a alignment < b alignment
+		]
+	].
+
 	alignment := 1.
 	size := 0.
+	dynamicRootCount := 0.
 	localVariables do: [ :var |
+		var dynamicRoot ifTrue: [ 
+			dynamicRootCount := dynamicRootCount + 1.
+		].
+	
 		alignment := alignment max: var alignment.
 		size := size alignedTo: var alignment.
 		size := size + var size.
 		var offset: size negated + localsBaseOffset.
 	].
+
+	dynamicRootCount > 0 ifTrue: [
+		"TODO: Ensure the dynamic roots come first"
+		self halt.
+	]
 
 ]
 
@@ -94,6 +112,11 @@ SLVMLirStackFrame >> createLocalSize: localSize alignment: localAlignment dynami
 		yourself.
 	localVariables add: result.
 	^ result
+]
+
+{ #category : #accessing }
+SLVMLirStackFrame >> dynamicRootCount [
+	^ dynamicRootCount
 ]
 
 { #category : #accessing }

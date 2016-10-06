@@ -192,7 +192,13 @@ SLVMLirX86FunctionCodeGenerator >> framePointerRegister [
 
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> generateActualReturn: instruction [
+	| registersToPreserve |
 	lirFunction stackFrame frameLessMethod ifFalse: [
+		registersToPreserve := registerAllocator callerRegistersToPreserve.
+		registersToPreserve reverseDo: [ :register |
+			self addX86: POP with: register
+		].
+	
 		self
 			addX86: MOV with: ESP with: EBP;
 			addX86: POP with: EBP.
@@ -219,22 +225,14 @@ SLVMLirX86FunctionCodeGenerator >> generateActualReturns [
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> generatePrologue [
 	| prologueBlock stackFrame entryBlock framelessPrologue |	
-	self flag: 'Support multiples calling conventions'.
 	
-	"Allocate space for the variables"
+	"Removed the unused variables."
 	stackFrame := lirFunction stackFrame.
 	stackFrame optimize.
 	(stackFrame localVariables size = 0 and: [ self canBeFrameLess and: [usesStackPointer not ]]) ifTrue: [ 
 		framelessPrologue := true.
-		stackFrame
-			argumentsBaseOffset: 4;
-			frameLessMethod: true;
-			buildLayout.
 	] ifFalse: [ 
 		framelessPrologue := false.
-		stackFrame
-			argumentsBaseOffset: 8;
-			buildLayout.
 	].
 
 	entryBlock := lirFunction basicBlocks first.
@@ -254,14 +252,56 @@ SLVMLirX86FunctionCodeGenerator >> generatePrologue [
 
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryBlock [
-	| stackFrame |
+	| stackFrame allocateNativeSize registersToPreserve extraStackElements totalFrameSize argumentsConsideredForAlignment nilPointer |
+
+	stackFrame := lirFunction stackFrame.
+	stackFrame
+		argumentsBaseOffset: 8.
+		
+	registersToPreserve := registerAllocator callerRegistersToPreserve.
+	stackFrame localsBaseOffset: (registersToPreserve size * -4).
+	callingConvention hasContextMetadata ifTrue: [
+		stackFrame localsBaseOffset: stackFrame localsBaseOffset - 8.
+	].
+	
+	stackFrame buildLayout.
+	
+	argumentsConsideredForAlignment := "ReturnPointer" 4 "EBP" + 4.
+	extraStackElements := 0.
+	callingConvention hasContextMetadata ifTrue: [ 
+		extraStackElements := extraStackElements + 8
+	].
+
+	extraStackElements := extraStackElements + (registersToPreserve size * 4).
+	totalFrameSize := (stackFrame size + extraStackElements + argumentsConsideredForAlignment alignedTo: self stackAlignment) - argumentsConsideredForAlignment.
+	allocateNativeSize := totalFrameSize - (stackFrame dynamicRootCount*4) - extraStackElements.
+
 	self
 		addX86: PUSH with: EBP;
 		addX86: MOV with: EBP with: ESP.
 
-	stackFrame := lirFunction stackFrame. 
-	stackFrame size ~= 0 ifTrue: [
-		self addX86: SUB with: ESP with: (stackFrame size alignedTo: self stackAlignment).
+	callingConvention hasContextMetadata ifTrue: [
+		self assert: totalFrameSize <= 16rFFFF.
+		self assert: stackFrame dynamicRootCount <= 16rfff.
+		
+		self
+			addX86: PUSH with: (lirFunction compiledMethodMetaData);
+			addX86: PUSH with: ((totalFrameSize << 16) | (stackFrame dynamicRootCount) | (registersToPreserve size << 12)).
+	].
+
+	stackFrame dynamicRootCount ~= 0 ifTrue: [
+		nilPointer := moduleTranslator runtimeProvidedGlobal: #slvm_nil.
+		1 to: stackFrame dynamicRootCount do: [ :i |
+			self addX86: PUSH with: nilPointer
+		]
+	].
+	
+	allocateNativeSize ~= 0 ifTrue: [
+		self addX86: SUB with: ESP with: allocateNativeSize.
+	].
+
+	registersToPreserve do: [ :register |
+		self addX86: PUSH with: register
 	].
 
 	registerAllocator emitPrologueWith: self.
@@ -270,8 +310,15 @@ SLVMLirX86FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryB
 		addX86: JMP with: entryBlock
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> generateStackFramelessBuildingJumpingInto: entryBlock [
+	| stackFrame |
+	stackFrame := lirFunction stackFrame.
+	stackFrame
+		argumentsBaseOffset: 4;
+		frameLessMethod: true;
+		buildLayout.
+		
 	registerAllocator emitPrologueWith: self.
 
 	self

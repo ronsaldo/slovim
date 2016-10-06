@@ -12,15 +12,14 @@ Class {
 
 { #category : #accessing }
 SLVMX86CallingConvention >> calledRegisters [
-	^ { EAX }
+	^ { EAX . ECX . EDX .
+	XMM0 . XMM1 . XMM2 . XMM3 . XMM4 . XMM5 . XMM6 . XMM7
+	}
 ]
 
 { #category : #accessing }
 SLVMX86CallingConvention >> callerRegisters [
-	^ { 
-		.
-		XMM0 . XMM1 . XMM2 . XMM3 . XMM4 . XMM5 . XMM6 . XMM7
-	}
+	^ { EBX . EDI . ESI }
 ]
 
 { #category : #accessing }
@@ -31,6 +30,16 @@ SLVMX86CallingConvention >> canBeFrameLess [
 { #category : #accessing }
 SLVMX86CallingConvention >> floatReturnRegister [
 	^ nil
+]
+
+{ #category : #accessing }
+SLVMX86CallingConvention >> gotRegister [
+	^ EBX
+]
+
+{ #category : #accessing }
+SLVMX86CallingConvention >> hasContextMetadata [
+	^ false
 ]
 
 { #category : #accessing }

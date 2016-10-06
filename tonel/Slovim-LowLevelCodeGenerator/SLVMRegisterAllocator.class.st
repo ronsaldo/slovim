@@ -49,6 +49,11 @@ SLVMRegisterAllocator >> buildScratchRegisterClasses: scratchRegisters [
 ]
 
 { #category : #accessing }
+SLVMRegisterAllocator >> callerRegistersToPreserve [
+	^ callingConvention callerRegisters
+]
+
+{ #category : #accessing }
 SLVMRegisterAllocator >> callingConvention [
 	^ callingConvention
 ]

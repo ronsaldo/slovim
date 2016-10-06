@@ -26,6 +26,16 @@ SLVMCallingConvention >> floatReturnRegister [
 ]
 
 { #category : #'*Slovim-LowLevelCodeGenerator' }
+SLVMCallingConvention >> gotRegister [
+	self subclassResponsibility
+]
+
+{ #category : #'*Slovim-LowLevelCodeGenerator' }
+SLVMCallingConvention >> hasContextMetadata [
+	self subclassResponsibility
+]
+
+{ #category : #'*Slovim-LowLevelCodeGenerator' }
 SLVMCallingConvention >> intResultRegister [
 	self subclassResponsibility
 ]
