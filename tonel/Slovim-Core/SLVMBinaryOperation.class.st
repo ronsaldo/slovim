@@ -235,7 +235,7 @@ SLVMBinaryOperation >> foldConstant [
 SLVMBinaryOperation >> isBinaryComparison [
 	| operationType |
 	operationType := self operationType.
-	^ operationType == #integerComp or: [ operationType == #floatComp ]
+	^ #(integerComp floatComp dynObjectComp) includes: operationType
 ]
 
 { #category : #'as yet unclassified' }
