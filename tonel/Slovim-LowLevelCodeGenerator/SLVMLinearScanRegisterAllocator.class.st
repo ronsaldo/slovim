@@ -246,8 +246,8 @@ SLVMLinearScanRegisterAllocator >> spillCalledRegisterForConvention: convention 
 		(activeRange ~~ range and:
 		[ activeRange end > range start and:
 		[ activeRange register isNotNil and:
-		[ calledRegisters includes: activeRange register ] ] ]) ifTrue: [
-			self halt.
+		[ (calledRegisters includes: activeRange register) and:
+		[ activeRange element isFunctionArgument not ] ] ] ]) ifTrue: [
 			translator moveRegister: activeRange register toLocal: activeRange spillLocation
 		]
 	].
@@ -264,7 +264,6 @@ SLVMLinearScanRegisterAllocator >> unspillCalledRegisterForConvention: conventio
 		[ activeRange end > range start and:
 		[ activeRange register isNotNil and:
 		[ calledRegisters includes: activeRange register ] ] ]) ifTrue: [
-			self halt.
 			translator moveLocal: activeRange spillLocation type: activeRange element type toRegister: activeRange register
 		]
 	].

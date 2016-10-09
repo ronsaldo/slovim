@@ -54,6 +54,9 @@ SLVMLirX86FunctionCodeGenerator class >> initialize [
 		#ule . JBE .
 		#ugt . JA .
 		#uge . JAE .
+
+		#dynObjectIdentityEquals . JE .
+		#dynObjectIdentityNotEquals . JNE .
 	}.
 	
 	ComparisonNegatedBranchMap := IdentityDictionary newFromPairs: {
@@ -68,6 +71,9 @@ SLVMLirX86FunctionCodeGenerator class >> initialize [
 		#ule . JA .
 		#ugt . JBE .
 		#uge . JB .
+
+		#dynObjectIdentityEquals . JNE .
+		#dynObjectIdentityNotEquals . JE .
 	}.
 	
 ]
@@ -165,8 +171,8 @@ SLVMLirX86FunctionCodeGenerator >> ensureInstructionValuesInRegistersOrImmediate
 		self halt.
 	].
 
-	first isConstant ifTrue: [ ^ { first . self ensureInstruction: instruction valueInRegister: second scratchIndex: 1 } ].
-	second isConstant ifTrue: [ ^ { self ensureInstruction: instruction valueInRegister: first scratchIndex: 1 . second } ].
+	first isConstant ifTrue: [ ^ { self sanitizeConstant: first . self ensureInstruction: instruction valueInRegister: second scratchIndex: 1 } ].
+	second isConstant ifTrue: [ ^ { self ensureInstruction: instruction valueInRegister: first scratchIndex: 1 . self sanitizeConstant: second } ].
 	^ { self ensureInstruction: instruction valueInRegister: first scratchIndex: 1 . self ensureInstruction: instruction valueInRegister: second  scratchIndex: 2}
 ]
 
@@ -506,27 +512,8 @@ SLVMLirX86FunctionCodeGenerator >> postProcessCodeGeneration [
 SLVMLirX86FunctionCodeGenerator >> pushConstantValue: value variadicArgument: isVariadicArgument [
 	| valueType memoryLocation integerData bitMask |
 	valueType := value type.
-	valueType isDynamicObjectType ifTrue: [
-		value isCompiledMethodMetaData ifTrue: [
-			^ self addX86: PUSH with: (self translateConstant: value sourceMethod) compiledMethodMetaData
-		].
-	
-		value isConstantValue ifTrue: [ 
-			^ self addX86: PUSH with: (self encodeImmediateObject: value value)
-		].
-	
-		value isConstantDynamicLiteral ifTrue: [
-			^ self addX86: PUSH with: (self addressOfLiteral: value) asX86Ptr
-		]
-	].
-
-	value isConstantPointer ifTrue: [
-		value constant ifNil: [
-			^ self addX86: PUSH with: 0.
-		] ifNotNil: [ 
-			memoryLocation := self putConstantInConstantZone: value constant.
-			^ self addX86: PUSH with: memoryLocation.
-		]
+	(valueType isDynamicObjectType or: [ value isConstantPointer ]) ifTrue: [
+		^ self addX86: PUSH with: (self sanitizeConstant: value)
 	].
 
 	(value isConstantValue and: [ valueType isScalarIntegerType or: [ valueType isFloatType ] ]) ifTrue: [ 
@@ -563,6 +550,35 @@ SLVMLirX86FunctionCodeGenerator >> pushConstantValue: value variadicArgument: is
 		self halt
 	] 
 	
+]
+
+{ #category : #'register allocation' }
+SLVMLirX86FunctionCodeGenerator >> sanitizeConstant: value [
+	| type |
+	type := value type.
+	type isDynamicObjectType ifTrue: [
+		value isCompiledMethodMetaData ifTrue: [
+			^ (self translateConstant: value sourceMethod) compiledMethodMetaData
+		].
+	
+		value isConstantValue ifTrue: [ 
+			^ self encodeImmediateObject: value value
+		].
+	
+		value isConstantDynamicLiteral ifTrue: [
+			^ (self addressOfLiteral: value) asX86Ptr
+		]
+	].
+
+	value isConstantPointer ifTrue: [
+		value constant ifNil: [
+			^ 0
+		] ifNotNil: [ 
+			^ self putConstantInConstantZone: value constant.
+		]
+	].
+
+	^ value
 ]
 
 { #category : #visitor }

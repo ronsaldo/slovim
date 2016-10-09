@@ -33,10 +33,15 @@ SLVMLirModule >> asInstructionStream [
 
 { #category : #converting }
 SLVMLirModule >> asMachineCode [
+	^ self asOptimizedInstructionStream asMachineCode
+]
+
+{ #category : #converting }
+SLVMLirModule >> asOptimizedInstructionStream [
 	| stream |
 	stream := self asInstructionStream.
 	compilationTarget optimizeLirStream: stream.
-	^ stream asMachineCode
+	^ stream
 ]
 
 { #category : #accessing }

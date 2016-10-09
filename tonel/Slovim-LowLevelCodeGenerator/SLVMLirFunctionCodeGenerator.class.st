@@ -296,5 +296,6 @@ SLVMLirFunctionCodeGenerator >> translateCompiledMethodMetaData [
 	literals := Array new: function dynamicLiterals size.
 	function dynamicLiterals doWithIndex: [ :literal :index |
 		literals at: index put: (metadataLabel + ((index - 1 + methodMetaDataFixedSize) * compilationTarget pointerSize) + 8).
+		(literals at: index) comment: literal value printString.
 	].
 ]

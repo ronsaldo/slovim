@@ -163,7 +163,7 @@ SLVMX86MachineCodeGenerator >> generateADD: instruction [
 				first value = 0 ifTrue: [ ^ writer put: 16r05; putInt32: second value ].
 				writer put: 16r81.
 				self encodeModRM: first opcode: 0 immediate: 4.
-				^ writer putMaybeReloc32: second value.
+				^ writer putMaybeReloc32: second.
 			]
 		].
 
@@ -264,7 +264,7 @@ SLVMX86MachineCodeGenerator >> generateCMP: instruction [
 			first value = 0 ifTrue: [ ^ writer put: 16r3D; putInt32: second value ].
 			writer put: 16r81.
 			self encodeModRM: first opcode: 7 immediate: 4.
-			^ writer putInt32: second value.
+			^ writer putMaybeReloc32: second.
 		].
 	
 		second isRegister ifTrue: [
@@ -730,7 +730,7 @@ SLVMX86MachineCodeGenerator >> generateSUB: instruction [
 				first value = 0 ifTrue: [ ^ writer put: 16r2D; putInt32: second value ].
 				writer put: 16r81.
 				self encodeModRM: first opcode: 5 immediate: 4.
-				^ writer putMaybeReloc32: second value.
+				^ writer putMaybeReloc32: second.
 			]
 		].
 
@@ -874,7 +874,7 @@ SLVMX86MachineCodeGenerator >> generateXOR: instruction [
 				first value = 0 ifTrue: [ ^ writer put: 16r35; putInt32: second value ].
 				writer put: 16r81.
 				self encodeModRM: first opcode: 6 immediate: 4.
-				^ writer putMaybeReloc32: second value.
+				^ writer putMaybeReloc32: second.
 			]
 		].
 

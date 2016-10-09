@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMLirInstructionStreamElement,
 	#instVars : [
 		'label',
-		'labelOffset'
+		'labelOffset',
+		'comment'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -21,6 +22,16 @@ SLVMLirLabelValue >> asX86Ptr [
 { #category : #converting }
 SLVMLirLabelValue >> asX86PtrOfSize: accessSize [
 	^ SLVMLirX86RegisterAddress new size: accessSize; displacement: self
+]
+
+{ #category : #accessing }
+SLVMLirLabelValue >> comment [
+	^ comment
+]
+
+{ #category : #accessing }
+SLVMLirLabelValue >> comment: anObject [
+	comment := anObject
 ]
 
 { #category : #copying }
@@ -65,5 +76,6 @@ SLVMLirLabelValue >> labelOffset: anObject [
 
 { #category : #'as yet unclassified' }
 SLVMLirLabelValue >> printOn: aStream [
-	aStream print: label ; nextPutAll: ' + '; print: labelOffset
+	aStream print: label ; nextPutAll: ' + '; print: labelOffset.
+	comment ifNotNil: [ aStream space; nextPutAll: comment ]
 ]
