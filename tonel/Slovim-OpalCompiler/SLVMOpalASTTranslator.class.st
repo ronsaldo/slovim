@@ -45,12 +45,65 @@ SLVMOpalASTTranslator class >> initialize [
 ]
 
 { #category : #'inline messages' }
-SLVMOpalASTTranslator >> emitIfTrue: aMessageNode receiver: receiverValue [
-	| thenBlock mergeBlock condition branch trueResult result |
-	thenBlock := irBuilder newBasicBlock: #ifTrueThen.
-	mergeBlock := irBuilder newBasicBlock: #ifTrueMerge.
+SLVMOpalASTTranslator >> emitBranch: aMessageNode trueValue: trueValue falseValue: falseValue receiver: receiverValue [
+	| trueBlock mergeBlock condition branch trueResult result falseBlock falseResult trueBlockTerminated falseBlockTerminated |
+	trueBlock := irBuilder newBasicBlock: #branchTrueThen.
+	falseBlock := irBuilder newBasicBlock: #branchFalseThen.
+	mergeBlock := irBuilder newBasicBlock: #branchMerge.
 
-	condition := irBuilder dynObjectIdentityEquals: receiverValue with: (irBuilder addDynamicLiteral: true).
+	condition := irBuilder dynObjectIdentityEquals: receiverValue with: (irBuilder addDynamicLiteral: trueValue).
+	branch := irBuilder branch: condition ifTrue: trueBlock ifFalse: falseBlock.
+	branch mergeBlock: mergeBlock.
+
+	"True block"
+	irBuilder currentBlock: trueBlock.
+	trueResult := self visitInlinedBlockNode: aMessageNode arguments first arguments: #().
+	trueBlock := irBuilder currentBlock.
+
+	trueBlockTerminated := irBuilder isLastTerminator.
+	trueBlockTerminated ifFalse: [
+		irBuilder jump: mergeBlock.
+	].
+
+	"False block content"
+	irBuilder currentBlock: falseBlock.
+	falseResult := self visitInlinedBlockNode: aMessageNode arguments second arguments: #().
+	falseBlock := irBuilder currentBlock.
+
+	falseBlockTerminated := irBuilder isLastTerminator.
+	falseBlockTerminated ifFalse: [
+		irBuilder jump: mergeBlock.
+	].
+
+	"Merge block"
+	irBuilder currentBlock: mergeBlock.
+	branch addUnreachableSuccessors.
+	(trueBlockTerminated and: [ falseBlockTerminated ]) ifTrue: [ 
+		irBuilder unreachable.
+		^ irBuilder addDynamicLiteral: nil
+	].
+
+	falseBlockTerminated ifTrue: [
+		^ trueResult
+	].
+
+	trueBlockTerminated ifTrue: [
+		^ falseResult
+	].
+	
+	result := irBuilder phi: compilationTarget dynamicObjectType name: #branchOnceResult.
+	result addValue: trueResult from: trueBlock.
+	result addValue: falseResult from: falseBlock.
+	^ result
+]
+
+{ #category : #'inline messages' }
+SLVMOpalASTTranslator >> emitBranchOnce: aMessageNode trueValue: trueValue receiver: receiverValue [
+	| thenBlock mergeBlock condition branch trueResult result |
+	thenBlock := irBuilder newBasicBlock: #branchOnceThen.
+	mergeBlock := irBuilder newBasicBlock: #branchOnceMerge.
+
+	condition := irBuilder dynObjectIdentityEquals: receiverValue with: (irBuilder addDynamicLiteral: trueValue).
 	branch := irBuilder branch: condition ifTrue: thenBlock ifFalse: mergeBlock.
 	branch mergeBlock: mergeBlock.
 	irBuilder currentBlock: thenBlock.
@@ -66,10 +119,32 @@ SLVMOpalASTTranslator >> emitIfTrue: aMessageNode receiver: receiverValue [
 		irBuilder currentBlock: mergeBlock.
 	].
 
-	result := irBuilder phi: compilationTarget dynamicObjectType name: #ifTrueResult.
+	result := irBuilder phi: compilationTarget dynamicObjectType name: #branchOnceResult.
 	result addValue: trueResult from: thenBlock.
 	result addValue: (irBuilder addDynamicLiteral: nil) from: branch block.
 	^ result
+]
+
+{ #category : #'inline messages' }
+SLVMOpalASTTranslator >> emitIfFalse: aMessageNode receiver: receiverValue [
+	^ self emitBranchOnce: aMessageNode trueValue: false receiver: receiverValue
+]
+
+{ #category : #'inline messages' }
+SLVMOpalASTTranslator >> emitIfFalseIfTrue: aMessageNode receiver: receiverValue [
+	^ self emitBranch: aMessageNode trueValue: false falseValue: true receiver: receiverValue
+	
+]
+
+{ #category : #'inline messages' }
+SLVMOpalASTTranslator >> emitIfTrue: aMessageNode receiver: receiverValue [
+	^ self emitBranchOnce: aMessageNode trueValue: true receiver: receiverValue
+]
+
+{ #category : #'inline messages' }
+SLVMOpalASTTranslator >> emitIfTrueIfFalse: aMessageNode receiver: receiverValue [
+	^ self emitBranch: aMessageNode trueValue: true falseValue: false receiver: receiverValue
+	
 ]
 
 { #category : #'visitor-double dispatching' }
@@ -162,7 +237,7 @@ SLVMOpalASTTranslator >> ir [
 	^ methodIR
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #visiting }
 SLVMOpalASTTranslator >> visitAssignmentNode: anAssignmentNode [ 
 	| value |
 	value := self visitNode: anAssignmentNode value.
@@ -171,7 +246,7 @@ SLVMOpalASTTranslator >> visitAssignmentNode: anAssignmentNode [
 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #visiting }
 SLVMOpalASTTranslator >> visitBlockNode: aBlockNode [ 
 	self halt.
 ]
@@ -292,7 +367,7 @@ SLVMOpalASTTranslator >> visitReturnNode: aReturnNode [
 	^ nil
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #visiting }
 SLVMOpalASTTranslator >> visitSequenceNode: aSequenceNode [ 
 	| result |
 	self visitTemporaryNodes: aSequenceNode temporaries.
@@ -307,7 +382,7 @@ SLVMOpalASTTranslator >> visitVariableNode: aVariableNode [
 
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #scope }
 SLVMOpalASTTranslator >> withScope: scope do: aBlock [
 	| oldScope |
 	oldScope := currentScope.
