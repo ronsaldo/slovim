@@ -19,8 +19,22 @@ Class {
 		'callingConvention',
 		'compiledMethodMetaData'
 	],
+	#classVars : [
+		'ContextMetadataElementCount',
+		'StackPageSize',
+		'StackSwitchPointerRequired'
+	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
+
+{ #category : #'class initialization' }
+SLVMLirFunctionCodeGenerator class >> initialize [
+	super initialize.
+	
+	ContextMetadataElementCount := 4.
+	StackSwitchPointerRequired := 4. "Frame Pointer, link pointer(optional), selector, argument description".
+	StackPageSize := 4096.
+]
 
 { #category : #adding }
 SLVMLirFunctionCodeGenerator >> addLabel: aLabel [

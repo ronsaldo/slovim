@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMLirFunctionCodeGenerator,
 	#instVars : [
 		'longMode',
-		'usesStackPointer'
+		'usesStackPointer',
+		'maxCallStackSize'
 	],
 	#classVars : [
 		'ComparisonBranchMap',
@@ -79,6 +80,11 @@ SLVMLirX86FunctionCodeGenerator class >> initialize [
 ]
 
 { #category : #instructions }
+SLVMLirX86FunctionCodeGenerator >> addInstruction: anInstruction [
+	^ currentBlockTarget addInstruction: anInstruction
+]
+
+{ #category : #instructions }
 SLVMLirX86FunctionCodeGenerator >> addX86: opcode [
 	^ self addX86: opcode operands: #()
 ]
@@ -89,7 +95,7 @@ SLVMLirX86FunctionCodeGenerator >> addX86: opcode operands: operands [
 		op isStackFrameVariable ifTrue: [ op actuallyUsed: true ]
 	].
 
-	currentBlockTarget addInstruction: (SLVMLirX86Instruction new
+	^ self addInstruction: (SLVMLirX86Instruction new
 		opcode: opcode;
 		operands: operands;
 		yourself)
@@ -110,7 +116,29 @@ SLVMLirX86FunctionCodeGenerator >> canBeFrameLess [
 	^ callingConvention canBeFrameLess
 ]
 
-{ #category : #visitor }
+{ #category : #'stack frame' }
+SLVMLirX86FunctionCodeGenerator >> computeArgumentDescriptor [
+	| oopArgumentCount nativeArgumentsSize totalArgumentSize alignedArgumentSize alignmentPaddingSize |
+	oopArgumentCount := 0.
+	nativeArgumentsSize := 0.
+	function arguments doWithIndex: [ :arg :index |
+		arg type isDynamicObjectType ifTrue: [
+			oopArgumentCount := oopArgumentCount + 1
+		] ifFalse: [
+			nativeArgumentsSize := nativeArgumentsSize + (arg type size alignedTo: self stackArgumentAlignment)
+		]
+	].
+
+	"Align the arguments"
+	totalArgumentSize := nativeArgumentsSize + (oopArgumentCount * compilationTarget pointerSize).
+	alignedArgumentSize := totalArgumentSize alignedTo: callingConvention stackAlignment.
+	alignmentPaddingSize := alignedArgumentSize - totalArgumentSize.
+	nativeArgumentsSize := nativeArgumentsSize + alignmentPaddingSize.
+
+	^ nativeArgumentsSize << 16 | (oopArgumentCount - 1)
+]
+
+{ #category : #'code generation' }
 SLVMLirX86FunctionCodeGenerator >> emitCallResultToRegister: instruction convention: calledConvention [
 	| resultType tempAddress resultRegister |
 	resultType := instruction type.
@@ -213,7 +241,7 @@ SLVMLirX86FunctionCodeGenerator >> generateActualReturn: instruction [
 	callingConvention isStackCleanedByCaller ifTrue: [ 
 		self addX86: RET
 	] ifFalse: [
-		self addX86: RET with: lirFunction stackFrame argumentsSize
+		self addX86: RET with: (lirFunction stackFrame argumentsSize alignedTo: callingConvention stackAlignment)
 	]
 
 ]
@@ -258,56 +286,84 @@ SLVMLirX86FunctionCodeGenerator >> generatePrologue [
 
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryBlock [
-	| stackFrame allocateNativeSize registersToPreserve extraStackElements totalFrameSize argumentsConsideredForAlignment nilPointer |
+	| stackFrame registersToPreserve totalFrameSize nilPointer dynamicObjectSize nativeSizeToAllocate nilPointerRegister stackSizeRequirement stackCheckedEntry stackLimitTrap argumentDescriptor |
 
 	stackFrame := lirFunction stackFrame.
 	stackFrame
-		argumentsBaseOffset: 8.
+		argumentsBaseOffset: 8;
+		addLocalReservedSpace: 8 "Return pointer + frame pointer".
 		
 	registersToPreserve := registerAllocator callerRegistersToPreserve.
-	stackFrame localsBaseOffset: (registersToPreserve size * -4).
+	stackFrame addLocalReservedSpace: registersToPreserve size * 4.
 	callingConvention hasContextMetadata ifTrue: [
-		stackFrame localsBaseOffset: stackFrame localsBaseOffset - 8.
+		stackFrame addLocalReservedSpace: ContextMetadataElementCount * compilationTarget pointerSize.
 	].
 	
 	stackFrame buildLayout.
 	
-	argumentsConsideredForAlignment := "ReturnPointer" 4 "EBP" + 4.
-	extraStackElements := 0.
-	callingConvention hasContextMetadata ifTrue: [ 
-		extraStackElements := extraStackElements + 8
+	"Compute some sizes."
+	dynamicObjectSize := stackFrame dynamicRootCount * compilationTarget pointerSize.
+	totalFrameSize := stackFrame size + dynamicObjectSize alignedTo: callingConvention stackAlignment.
+	nativeSizeToAllocate := totalFrameSize - dynamicObjectSize - stackFrame reservedLocalsSpace.
+	argumentDescriptor := self computeArgumentDescriptor.
+	
+	"Compute the stack size requirements."
+	callingConvention hasSegmentedStack ifTrue: [
+		stackSizeRequirement := totalFrameSize + maxCallStackSize + (compilationTarget pointerSize * StackSwitchPointerRequired) - ( "Return pointer" compilationTarget pointerSize * 1).
+		stackCheckedEntry := self newLabel: #stackCheckedEntry.
+		stackLimitTrap := moduleTranslator runtimeProvidedFunction: #'_slvm_dynrun_stack_limit_trap'.
+		self
+			"Check if we have hitten the stack limit."
+			addX86: MOV with: EAX with: ESP;
+			addX86: AND with: EAX with: StackPageSize - 1;
+			addX86: CMP with: EAX with: stackSizeRequirement;
+			addX86: JA with: stackCheckedEntry;
+			
+			"We have hit the stack limit, mov the argument description to EAX"
+			addX86: MOV with: EAX with: argumentDescriptor;
+			addX86: CALL with: stackLimitTrap;
+			
+			addLabel: stackCheckedEntry.
 	].
 
-	extraStackElements := extraStackElements + (registersToPreserve size * 4).
-	totalFrameSize := (stackFrame size + extraStackElements + argumentsConsideredForAlignment alignedTo: self stackAlignment) - argumentsConsideredForAlignment.
-	allocateNativeSize := totalFrameSize - (stackFrame dynamicRootCount*4) - extraStackElements.
-
+	"Stack frame"
 	self
 		addX86: PUSH with: EBP;
 		addX86: MOV with: EBP with: ESP.
 
+	"Fetch the nil pointer"
+	nilPointerRegister := nil.
+	(stackFrame dynamicRootCount ~= 0 or: [callingConvention hasContextMetadata]) ifTrue: [
+		nilPointer := moduleTranslator runtimeProvidedGlobal: #slvm_nil.
+		nilPointerRegister := EAX.
+		self addX86: MOV with: nilPointerRegister with: nilPointer.
+	].
+
+	"Context meta data"
 	callingConvention hasContextMetadata ifTrue: [
 		self assert: totalFrameSize <= 16rFFFF.
 		self assert: stackFrame dynamicRootCount <= 16rfff.
 		
 		self
 			addX86: PUSH with: (lirFunction compiledMethodMetaData);
-			addX86: PUSH with: ((totalFrameSize << 16) | (stackFrame dynamicRootCount) | (registersToPreserve size << 12)).
+			addX86: PUSH with: nilPointerRegister;
+			addX86: PUSH with: argumentDescriptor;
+			addX86: PUSH with: ((totalFrameSize << 16) | (stackFrame dynamicRootCount) | (registersToPreserve size << 12))
 	].
 
-	stackFrame dynamicRootCount ~= 0 ifTrue: [
-		nilPointer := moduleTranslator runtimeProvidedGlobal: #slvm_nil.
-		1 to: stackFrame dynamicRootCount do: [ :i |
-			self addX86: PUSH with: nilPointer
-		]
-	].
-	
-	allocateNativeSize ~= 0 ifTrue: [
-		self addX86: SUB with: ESP with: allocateNativeSize.
+	"Initialize the object variables with nil."
+	1 to: stackFrame dynamicRootCount do: [ :i |
+		self addX86: PUSH with: nilPointerRegister
 	].
 
+	"Store the registers that have to be preserved."
 	registersToPreserve do: [ :register |
 		self addX86: PUSH with: register
+	].
+
+	"Allocate the native size."
+	nativeSizeToAllocate ~= 0 ifTrue: [
+		self addX86: SUB with: ESP with: nativeSizeToAllocate.
 	].
 
 	registerAllocator emitPrologueWith: self.
@@ -336,6 +392,7 @@ SLVMLirX86FunctionCodeGenerator >> initialize [
 	super initialize.
 	longMode := false.
 	usesStackPointer := false.
+	maxCallStackSize := 0.
 ]
 
 { #category : #'code generation' }
@@ -581,7 +638,7 @@ SLVMLirX86FunctionCodeGenerator >> sanitizeConstant: value [
 	^ value
 ]
 
-{ #category : #visitor }
+{ #category : #'code generation' }
 SLVMLirX86FunctionCodeGenerator >> scalarFloatBinaryInstruction: instruction x86Instruction: x86Instruction [
 	| values result |
 	values := self ensureInstructionValuesInRegistersOrMemory: instruction.
@@ -594,7 +651,7 @@ SLVMLirX86FunctionCodeGenerator >> scalarFloatBinaryInstruction: instruction x86
 
 ]
 
-{ #category : #visitor }
+{ #category : #'code generation' }
 SLVMLirX86FunctionCodeGenerator >> scalarIntegerBinaryInstruction: instruction x86Instruction: x86Instruction carryDo: carryBlock [
 	| values result |
 	values := self ensureInstructionValuesInRegistersOrImmediate: instruction.
@@ -607,7 +664,7 @@ SLVMLirX86FunctionCodeGenerator >> scalarIntegerBinaryInstruction: instruction x
 
 ]
 
-{ #category : #visitor }
+{ #category : #'code generation' }
 SLVMLirX86FunctionCodeGenerator >> scalarIntegerBinaryInstruction: instruction x86Instruction: x86Instruction carryInstruction: carryInstruction [
 	| values result |
 	values := self ensureInstructionValuesInRegistersOrImmediate: instruction.
@@ -625,7 +682,7 @@ SLVMLirX86FunctionCodeGenerator >> secondIntResultRegister [
 	^ callingConvention secondIntResultRegister
 ]
 
-{ #category : #visitor }
+{ #category : #'code generation' }
 SLVMLirX86FunctionCodeGenerator >> stackAlignment [
 	^ 16
 ]
@@ -667,7 +724,7 @@ SLVMLirX86FunctionCodeGenerator >> translateBasicBlockInstructions: basicBlock [
 
 ]
 
-{ #category : #visitor }
+{ #category : #'code generation' }
 SLVMLirX86FunctionCodeGenerator >> translateCompare: comparison andBranch: branch [
 	| values trueDestination falseDestination negatedBranchInstruction valueType |
 	values := self ensureInstructionValuesInRegistersOrImmediate: comparison.
@@ -688,7 +745,7 @@ SLVMLirX86FunctionCodeGenerator >> translateCompare: comparison andBranch: branc
 		addX86: JMP with: trueDestination
 ]
 
-{ #category : #visitor }
+{ #category : #'code generation' }
 SLVMLirX86FunctionCodeGenerator >> translateComparison: instruction [
 	| branchInstruction values result continueLabel valueType |
 	instruction type isScalarType ifTrue: [
@@ -802,8 +859,7 @@ SLVMLirX86FunctionCodeGenerator >> visitBranch: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
-	| cleanUpSize calledFunction emittedCount variadicArgumentCount calledFunctionType calledConvention |
-	cleanUpSize := 0.
+	| cleanUpSize calledFunction emittedCount variadicArgumentCount calledFunctionType calledConvention alignedCleanUpSize alignmentPaddingSize |
 	usesStackPointer := true.
 	calledFunctionType := instruction functionType.
 	variadicArgumentCount := instruction arguments size - calledFunctionType arguments size.
@@ -812,12 +868,25 @@ SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
 	calledConvention := compilationTarget callingConventionDescriptionNamed: calledFunctionType callingConvention.
 	registerAllocator spillCalledRegisterForConvention: calledConvention at: instruction with: self.
 
+	"Compute the total argument size."
+	cleanUpSize := 0.
+	instruction arguments reverseDo: [ :arg |
+		cleanUpSize := cleanUpSize + (arg type size alignedTo: self stackArgumentAlignment).
+	].
+
+	"Align the arguments."
+	alignedCleanUpSize := cleanUpSize alignedTo: calledConvention stackAlignment.
+	alignmentPaddingSize := alignedCleanUpSize - cleanUpSize.
+	alignmentPaddingSize > 0 ifTrue: [
+		self addX86: SUB with: self stackPointerRegister with: alignmentPaddingSize.
+		cleanUpSize := alignedCleanUpSize.
+	].
+	
 	"Push the arguments in the stack."	
 	emittedCount := 0.
 	instruction arguments reverseDo: [ :arg |
 		self instruction: instruction pushValue: arg variadicArgument: emittedCount < variadicArgumentCount.
 		emittedCount := emittedCount + 1.
-		cleanUpSize := cleanUpSize + (arg type size alignedTo: self stackArgumentAlignment).
 	].
 
 	"ToDo: Move the arguments that are placed in registers."
@@ -827,6 +896,7 @@ SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
 	(calledConvention isStackCleanedByCaller and: [ cleanUpSize > 0 ]) ifTrue: [
 		self addX86: ADD with: self stackPointerRegister with: cleanUpSize
 	].
+	maxCallStackSize := maxCallStackSize max: cleanUpSize.
 
 	"Unspill the called registers."
 	registerAllocator unspillCalledRegisterForConvention: calledConvention at: instruction with: self.
@@ -908,9 +978,12 @@ SLVMLirX86FunctionCodeGenerator >> visitJump: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitMessageSend: instruction [
-	| cleanUpSize calledFunction oopArguments nativeArguments selector receiver nativeArgumentsSize argumentSizeDescription calledConvention |
+	| cleanUpSize calledFunction oopArguments nativeArguments selector receiver nativeArgumentsSize argumentSizeDescription calledConvention alignedCleanUpSize alignmentPaddingSize |
 	cleanUpSize := 0.
 	usesStackPointer := true.
+
+	receiver := instruction receiver.
+	selector := instruction selector.
 	
 	oopArguments := OrderedCollection new.
 	nativeArguments := OrderedCollection new.
@@ -927,40 +1000,56 @@ SLVMLirX86FunctionCodeGenerator >> visitMessageSend: instruction [
 		]
 	].
 
+	"Compute the total cleanup size"
 	nativeArguments do: [ :arg |
-		self instruction: instruction pushValue: arg variadicArgument: false.
 		cleanUpSize := cleanUpSize + (arg type size alignedTo: self stackArgumentAlignment).
 	].
 	nativeArgumentsSize := cleanUpSize.
-
 	oopArguments do: [ :arg |
-		self instruction: instruction pushValue: arg variadicArgument: false.
 		cleanUpSize := cleanUpSize + (arg type size alignedTo: self stackArgumentAlignment).
 	].
 
+	"The receiver"
+	cleanUpSize := cleanUpSize + (compilationTarget pointerSize alignedTo: self stackArgumentAlignment).
+
+	"Align the arguments"
+	alignedCleanUpSize := cleanUpSize alignedTo: calledConvention stackAlignment.
+	alignmentPaddingSize := alignedCleanUpSize - cleanUpSize.
+	nativeArgumentsSize := nativeArgumentsSize + alignmentPaddingSize.
+
+	"Push the padding space as a hidden argument."
+	alignmentPaddingSize > 0 ifTrue: [
+		self addX86: SUB with: self stackPointerRegister with: alignmentPaddingSize.
+		cleanUpSize := alignedCleanUpSize.
+	].
+
+	"Push the arguments"
+	nativeArguments do: [ :arg |
+		self instruction: instruction pushValue: arg variadicArgument: false.
+	].
+	oopArguments do: [ :arg |
+		self instruction: instruction pushValue: arg variadicArgument: false.
+	].
+
 	"Push the receiver"
-	receiver := instruction receiver.
 	self instruction: instruction pushValue: receiver variadicArgument: false.
-	cleanUpSize := cleanUpSize + receiver type size.
 	
-	"Push the selector."
-	selector := instruction selector.
-	self instruction: instruction pushValue: selector variadicArgument: false.
-	cleanUpSize := cleanUpSize + selector type size.
-	
-	"ToDo: Move the arguments that are placed in registers."
+	"Move the selector to the selector register"
+	self moveValue: selector toRegister: calledConvention sendSelectorRegister.
 
-	"Push the Ns"
+	"Move the send description to a register"
 	argumentSizeDescription := (nativeArgumentsSize << 16 | oopArguments size).
-	self addX86: PUSH with: argumentSizeDescription.
+	self addX86: MOV with: calledConvention sendDescriptionRegister with: argumentSizeDescription.
 
-	calledFunction := moduleTranslator runtimeProvidedFunction: #'_slvm_dynrun_send_trap'.
+	"Call the send trap."
+	calledFunction := moduleTranslator runtimeProvidedFunction: #'_slvm_dynrun_send_trampoline'.
 	self addX86: CALL with: calledFunction.
 	(calledConvention isStackCleanedByCaller and: [ cleanUpSize > 0 ]) ifTrue: [
 		self addX86: ADD with: self stackPointerRegister with: cleanUpSize
 	].
+	maxCallStackSize := maxCallStackSize max: cleanUpSize.
 
-	"Unspill the called regsiters"
+	"Unspill the called registers"
 	registerAllocator unspillCalledRegisterForConvention: calledConvention at: instruction with: self.
 
 	instruction instructionReferences ifEmpty: [ ^ self ].

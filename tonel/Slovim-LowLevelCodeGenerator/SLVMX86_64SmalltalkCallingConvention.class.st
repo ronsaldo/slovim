@@ -7,8 +7,13 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-X86'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SLVMX86_64SmalltalkCallingConvention >> hasContextMetadata [
+	^ true
+]
+
+{ #category : #accessing }
+SLVMX86_64SmalltalkCallingConvention >> hasSegmentedStack [
 	^ true
 ]
 

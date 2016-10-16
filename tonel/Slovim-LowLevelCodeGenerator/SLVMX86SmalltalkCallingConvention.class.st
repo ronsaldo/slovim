@@ -30,6 +30,11 @@ SLVMX86SmalltalkCallingConvention >> hasContextMetadata [
 ]
 
 { #category : #accessing }
+SLVMX86SmalltalkCallingConvention >> hasSegmentedStack [
+	^ true
+]
+
+{ #category : #accessing }
 SLVMX86SmalltalkCallingConvention >> isStackCleanedByCaller [
 	^ false
 ]

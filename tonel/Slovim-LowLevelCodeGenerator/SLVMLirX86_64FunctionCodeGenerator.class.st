@@ -23,7 +23,7 @@ SLVMLirX86_64FunctionCodeGenerator >> generateActualReturn: instruction [
 	callingConvention isStackCleanedByCaller ifTrue: [ 
 		self addX86: RET
 	] ifFalse: [
-		self addX86: RET with: lirFunction stackFrame argumentsSize
+		self addX86: RET with: (lirFunction stackFrame argumentsSize alignedTo: callingConvention stackAlignment)
 	]
 ]
 

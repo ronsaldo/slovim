@@ -36,6 +36,11 @@ SLVMCallingConvention >> hasContextMetadata [
 ]
 
 { #category : #'*Slovim-LowLevelCodeGenerator' }
+SLVMCallingConvention >> hasSegmentedStack [
+	^ false
+]
+
+{ #category : #'*Slovim-LowLevelCodeGenerator' }
 SLVMCallingConvention >> intResultRegister [
 	self subclassResponsibility
 ]

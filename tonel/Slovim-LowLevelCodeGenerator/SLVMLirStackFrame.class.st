@@ -10,10 +10,16 @@ Class {
 		'localsBaseOffset',
 		'frameLessMethod',
 		'argumentsSize',
-		'dynamicRootCount'
+		'dynamicRootCount',
+		'reservedLocalsSpace'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
+
+{ #category : #adding }
+SLVMLirStackFrame >> addLocalReservedSpace: extraReservedSpace [
+	reservedLocalsSpace := reservedLocalsSpace + extraReservedSpace
+]
 
 { #category : #accessing }
 SLVMLirStackFrame >> alignment [
@@ -64,7 +70,7 @@ SLVMLirStackFrame >> buildLocalLayout [
 	].
 
 	alignment := 1.
-	size := 0.
+	size := reservedLocalsSpace.
 	dynamicRootCount := 0.
 	localVariables do: [ :var |
 		var dynamicRoot ifTrue: [ 
@@ -74,7 +80,7 @@ SLVMLirStackFrame >> buildLocalLayout [
 		alignment := alignment max: var alignment.
 		size := size alignedTo: var alignment.
 		size := size + var size.
-		var offset: size negated + localsBaseOffset.
+		var offset: (size + localsBaseOffset) negated.
 	].
 
 	dynamicRootCount > 0 ifTrue: [
@@ -134,6 +140,7 @@ SLVMLirStackFrame >> initialize [
 	localVariables := OrderedCollection new.
 	arguments := OrderedCollection new.
 	argumentsBaseOffset := 0.
+	reservedLocalsSpace := 0.
 	localsBaseOffset := 0.
 	frameLessMethod := false.
 ]
@@ -163,6 +170,16 @@ SLVMLirStackFrame >> optimizeAndBuildLayout [
 	self
 		optimize;
 		buildLayout
+]
+
+{ #category : #accessing }
+SLVMLirStackFrame >> reservedLocalsSpace [
+	^ reservedLocalsSpace
+]
+
+{ #category : #accessing }
+SLVMLirStackFrame >> reservedLocalsSpace: anObject [
+	reservedLocalsSpace := anObject
 ]
 
 { #category : #accessing }

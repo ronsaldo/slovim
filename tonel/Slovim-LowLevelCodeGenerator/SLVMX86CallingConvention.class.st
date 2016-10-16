@@ -70,6 +70,16 @@ SLVMX86CallingConvention >> secondIntResultRegister [
 	^ ECX
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMX86CallingConvention >> sendDescriptionRegister [
+	^ ECX
+]
+
+{ #category : #'as yet unclassified' }
+SLVMX86CallingConvention >> sendSelectorRegister [
+	^ EAX
+]
+
 { #category : #accessing }
 SLVMX86CallingConvention >> stackAlignment [
 	^ 16

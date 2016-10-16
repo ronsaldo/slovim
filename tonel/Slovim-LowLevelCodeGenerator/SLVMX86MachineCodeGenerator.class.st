@@ -203,6 +203,74 @@ SLVMX86MachineCodeGenerator >> generateADDSS: instruction [
 ]
 
 { #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateAND: instruction [
+	| first second operandSize |
+	first := instruction first.
+	second := instruction second.
+	operandSize := first size.
+	
+	operandSize = 1 ifTrue: [
+		self encodeRexSize: operandSize rm: first reg: second.
+		second isImmediate ifTrue: [
+			first == AL ifTrue: [ ^ writer put: 16r24; putInt8: second value ].
+			writer put: 16r80.
+			self encodeModRM: first opcode: 4 immediate: 1.
+			^ writer putInt8: second value.
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r20.
+			^ self encodeModRM: first reg: second
+		]
+	].
+
+	operandSize = 2 ifTrue: [
+		writer put: 16r66.
+		self encodeRexSize: operandSize rm: first reg: second.
+		second isImmediate ifTrue: [
+			(self isInShortRange: second) ifTrue: [ 
+				writer put: 16r83.
+				self encodeModRM: first opcode: 4 immediate: 1.
+				^ writer putInt8: second value
+			] ifFalse: [ 
+				first == AX ifTrue: [ ^ writer put: 16r25; putInt16: second value ].
+				writer put: 16r81.
+				self encodeModRM: first opcode: 4 immediate: 2.
+				^ writer putInt16: second value.
+			]
+		].
+	
+		second isRegister ifTrue: [
+			writer put: 16r21.
+			^ self encodeModRM: first reg: second.
+		]
+	].
+
+	operandSize <= 8 ifTrue: [
+		self encodeRexSize: operandSize rm: first reg: second.
+		second isImmediate ifTrue: [
+			(self isInShortRange: second) ifTrue: [ 
+				writer put: 16r83.
+				self encodeModRM: first opcode: 4 immediate: 1.
+				^ writer putInt8: second value
+			] ifFalse: [ 
+				first value = 0 ifTrue: [ ^ writer put: 16r25; putInt32: second value ].
+				writer put: 16r81.
+				self encodeModRM: first opcode: 4 immediate: 4.
+				^ writer putMaybeReloc32: second.
+			]
+		].
+
+		second isRegister ifTrue: [
+			writer put: 16r21.
+			^ self encodeModRM: first reg: second.
+		].
+	].
+
+	self invalidInstruction.
+]
+
+{ #category : #'instruction generation' }
 SLVMX86MachineCodeGenerator >> generateCALL: instruction [
 	| operand |
 	operand := instruction first.
@@ -417,6 +485,16 @@ SLVMX86MachineCodeGenerator >> generateInstruction: instruction output: output [
 	].
 
 	instruction size: output position - instruction offset.	
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateJA: instruction [
+	^ self generateJCC: instruction opcode8: 16r77 opcode32: 16r87
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateJBE: instruction [
+	^ self generateJCC: instruction opcode8: 16r76 opcode32: 16r86
 ]
 
 { #category : #'instruction generation' }
