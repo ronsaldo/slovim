@@ -227,11 +227,6 @@ SLVMOpalASTTranslator >> emitToDo: aMessageNode receiver: receiverValue step: st
 	^ receiverValue
 ]
 
-{ #category : #initialization }
-SLVMOpalASTTranslator >> initialize [
-	compilationTarget := SLVM32BitsPointerCompilationTarget new.
-]
-
 { #category : #accessing }
 SLVMOpalASTTranslator >> ir [
 	^ methodIR
@@ -312,6 +307,7 @@ SLVMOpalASTTranslator >> visitMessageNode: aMessageNode [
 { #category : #'visitor-double dispatching' }
 SLVMOpalASTTranslator >> visitMethodNode: aMethodNode [
 	| objectType argumentTypes functionType currentFunction arguments argValue allocaBlock local contentBlock callingConvention |
+	compilationTarget := aMethodNode compilationContext compilationTarget.
 	objectType := compilationTarget dynamicObjectType.
 	callingConvention := #smalltalk.
 	aMethodNode pragmaNamed: #callingConvention: ifPresent: [ :callingConventionPragma |
