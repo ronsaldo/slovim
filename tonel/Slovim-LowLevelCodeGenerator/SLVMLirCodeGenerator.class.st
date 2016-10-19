@@ -11,7 +11,7 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #adding }
 SLVMLirCodeGenerator >> addDynamicObject: dynamicObject [
 	| objectSerializer |
 	objectSerializer := self objectSerializer.
@@ -19,6 +19,16 @@ SLVMLirCodeGenerator >> addDynamicObject: dynamicObject [
 			size: compilationTarget pointerSize;
 			labelOffset:  (objectSerializer addObject: dynamicObject);
 			yourself
+]
+
+{ #category : #accessing }
+SLVMLirCodeGenerator >> compilationTarget [
+	^ compilationTarget
+]
+
+{ #category : #accessing }
+SLVMLirCodeGenerator >> compilationTarget: anObject [
+	compilationTarget := anObject
 ]
 
 { #category : #initialization }
@@ -107,7 +117,7 @@ SLVMLirCodeGenerator >> translateModuleElement: element [
 	
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #visiting }
 SLVMLirCodeGenerator >> visitFunction: aFunction [
 	| functionCodeGenerator result |
 	translatedElements at: aFunction ifPresent: [ :incomplete | ^ incomplete ].

@@ -221,7 +221,7 @@ SLVMLirX86FunctionCodeGenerator >> floatReturnRegister [
 
 { #category : #accessing }
 SLVMLirX86FunctionCodeGenerator >> framePointerRegister [
-	^ EBP
+	^ compilationTarget framePointer
 ]
 
 { #category : #'stack frame' }
@@ -234,8 +234,8 @@ SLVMLirX86FunctionCodeGenerator >> generateActualReturn: instruction [
 		].
 	
 		self
-			addX86: MOV with: ESP with: EBP;
-			addX86: POP with: EBP.
+			addX86: MOV with: self stackPointerRegister with: self framePointerRegister;
+			addX86: POP with: self framePointerRegister.
 	].
 
 	callingConvention isStackCleanedByCaller ifTrue: [ 
@@ -286,8 +286,10 @@ SLVMLirX86FunctionCodeGenerator >> generatePrologue [
 
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryBlock [
-	| stackFrame registersToPreserve totalFrameSize nilPointer dynamicObjectSize nativeSizeToAllocate nilPointerRegister stackSizeRequirement stackCheckedEntry stackLimitTrap argumentDescriptor |
+	| stackFrame registersToPreserve totalFrameSize nilPointer dynamicObjectSize nativeSizeToAllocate nilPointerRegister stackSizeRequirement stackCheckedEntry stackLimitTrap argumentDescriptor scratchRegister |
 
+	scratchRegister := callingConvention scratchRegisters first.
+	
 	stackFrame := lirFunction stackFrame.
 	stackFrame
 		argumentsBaseOffset: 8;
@@ -314,13 +316,13 @@ SLVMLirX86FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryB
 		stackLimitTrap := moduleTranslator runtimeProvidedFunction: #'_slvm_dynrun_stack_limit_trap'.
 		self
 			"Check if we have hitten the stack limit."
-			addX86: MOV with: EAX with: ESP;
-			addX86: AND with: EAX with: StackPageSize - 1;
-			addX86: CMP with: EAX with: stackSizeRequirement;
+			addX86: MOV with: scratchRegister with: self stackPointerRegister;
+			addX86: AND with: scratchRegister with: StackPageSize - 1;
+			addX86: CMP with: scratchRegister with: stackSizeRequirement;
 			addX86: JA with: stackCheckedEntry;
 			
 			"We have hit the stack limit, mov the argument description to EAX"
-			addX86: MOV with: EAX with: argumentDescriptor;
+			addX86: MOV with: scratchRegister with: argumentDescriptor;
 			addX86: CALL with: stackLimitTrap;
 			
 			addLabel: stackCheckedEntry.
@@ -328,14 +330,14 @@ SLVMLirX86FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryB
 
 	"Stack frame"
 	self
-		addX86: PUSH with: EBP;
-		addX86: MOV with: EBP with: ESP.
+		addX86: PUSH with: self framePointerRegister;
+		addX86: MOV with: self stackPointerRegister with: self stackPointerRegister .
 
 	"Fetch the nil pointer"
 	nilPointerRegister := nil.
 	(stackFrame dynamicRootCount ~= 0 or: [callingConvention hasContextMetadata]) ifTrue: [
 		nilPointer := moduleTranslator runtimeProvidedGlobal: #slvm_nil.
-		nilPointerRegister := EAX.
+		nilPointerRegister := scratchRegister.
 		self addX86: MOV with: nilPointerRegister with: nilPointer.
 	].
 
@@ -363,7 +365,7 @@ SLVMLirX86FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryB
 
 	"Allocate the native size."
 	nativeSizeToAllocate ~= 0 ifTrue: [
-		self addX86: SUB with: ESP with: nativeSizeToAllocate.
+		self addX86: SUB with: self stackPointerRegister with: nativeSizeToAllocate.
 	].
 
 	registerAllocator emitPrologueWith: self.
@@ -694,7 +696,7 @@ SLVMLirX86FunctionCodeGenerator >> stackArgumentAlignment [
 
 { #category : #accessing }
 SLVMLirX86FunctionCodeGenerator >> stackPointerRegister [
-	^ ESP
+	^ compilationTarget stackPointer
 ]
 
 { #category : #'code generation' }

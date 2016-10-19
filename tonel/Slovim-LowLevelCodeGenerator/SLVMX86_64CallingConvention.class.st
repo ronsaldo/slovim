@@ -7,6 +7,19 @@ Class {
 	#category : #'Slovim-LowLevelCodeGenerator-X86'
 }
 
+{ #category : #'as yet unclassified' }
+SLVMX86_64CallingConvention >> calledRegisters [
+	^ { RAX . RCX . RDX . RBX. RSI . RDI . R8 . R9 . R10 . R11 . R12 . R13 . R14 . R15 .
+	XMM0 . XMM1 . XMM2 . XMM3 . XMM4 . XMM5 . XMM6 . XMM7 .
+	XMM8 . XMM9 . XMM10 . XMM11 . XMM11 . XMM11 . XMM11 . XMM11
+	}
+]
+
+{ #category : #'as yet unclassified' }
+SLVMX86_64CallingConvention >> callerRegisters [
+	^ { }
+]
+
 { #category : #accessing }
 SLVMX86_64CallingConvention >> canBeFrameLess [
 	^ true
@@ -15,6 +28,11 @@ SLVMX86_64CallingConvention >> canBeFrameLess [
 { #category : #accessing }
 SLVMX86_64CallingConvention >> floatReturnRegister [
 	^ XMM0
+]
+
+{ #category : #accessing }
+SLVMX86_64CallingConvention >> hasContextMetadata [
+	^ false
 ]
 
 { #category : #accessing }
@@ -28,11 +46,6 @@ SLVMX86_64CallingConvention >> isStackCleanedByCaller [
 ]
 
 { #category : #accessing }
-SLVMX86_64CallingConvention >> receiverRegister [
-	^ nil
-]
-
-{ #category : #accessing }
 SLVMX86_64CallingConvention >> scratchRegisters [
 	^ {
 	RAX . RCX .
@@ -43,6 +56,16 @@ SLVMX86_64CallingConvention >> scratchRegisters [
 { #category : #accessing }
 SLVMX86_64CallingConvention >> secondIntResultRegister [
 	^ RCX
+]
+
+{ #category : #'as yet unclassified' }
+SLVMX86_64CallingConvention >> sendDescriptionRegister [
+	^ RCX
+]
+
+{ #category : #'as yet unclassified' }
+SLVMX86_64CallingConvention >> sendSelectorRegister [
+	^ RAX
 ]
 
 { #category : #accessing }

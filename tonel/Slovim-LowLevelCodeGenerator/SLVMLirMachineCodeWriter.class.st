@@ -166,7 +166,7 @@ SLVMLirMachineCodeWriter >> putMaybeReloc32: value [
 
 { #category : #adding }
 SLVMLirMachineCodeWriter >> putMaybeReloc32: value nextIPRelative: immediateSize [
-	| subtractionValue extraOffset |
+	| subtractionValue extraOffset targetSection |
 	extraOffset := 4 + immediateSize.
 	subtractionValue := self position + 4 + immediateSize.
 	(value isInteger or: [ value isImmediateConstant ]) ifTrue: [
@@ -185,6 +185,12 @@ SLVMLirMachineCodeWriter >> putMaybeReloc32: value nextIPRelative: immediateSize
 		]
 	].
 	
+	value isLabelValue ifTrue: [
+		"self recordReloc32Into: value label."
+		targetSection := self getOrCreateSectionNamed: value label section name.
+		^ self putInt32: value label offset + value labelOffset
+	].
+
 	self halt.
 ]
 
@@ -262,12 +268,43 @@ SLVMLirMachineCodeWriter >> recordRelativeRelocS32Into: destinationLabel [
 ]
 
 { #category : #adding }
+SLVMLirMachineCodeWriter >> recordRelativeRelocS64Into: destinationLabel [
+	| symbol reloc |
+	symbol := self symbolForLabel: destinationLabel.
+	self assert: symbol isNotNil.
+	reloc := SLVMLirMachineCodeRelocation new
+		relativeSOffset64;
+		offset: stream position;
+		symbol: (symbol shouldBeKeep ifTrue: [ symbol ] ifFalse: [nil]);
+		yourself.
+	destinationLabel section ifNotNil: [
+		reloc section: (self getOrCreateSectionNamed: destinationLabel section name).
+	].
+
+	currentSection addRelocation: reloc 
+]
+
+{ #category : #adding }
 SLVMLirMachineCodeWriter >> recordReloc32Into: destinationLabel [
 	| symbol reloc |
 	symbol := self symbolForLabel: destinationLabel.
 	self assert: symbol isNotNil.
 	reloc := SLVMLirMachineCodeRelocation new
 		absoluteOffset32;
+		offset: stream position;
+		symbol: (symbol shouldBeKeep ifTrue: [ symbol ] ifFalse: [nil]);
+		section: (destinationLabel section ifNotNil: [self getOrCreateSectionNamed: destinationLabel section name]);
+		yourself.
+	currentSection addRelocation: reloc 
+]
+
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> recordReloc64Into: destinationLabel [
+	| symbol reloc |
+	symbol := self symbolForLabel: destinationLabel.
+	self assert: symbol isNotNil.
+	reloc := SLVMLirMachineCodeRelocation new
+		absoluteOffset64;
 		offset: stream position;
 		symbol: (symbol shouldBeKeep ifTrue: [ symbol ] ifFalse: [nil]);
 		section: (destinationLabel section ifNotNil: [self getOrCreateSectionNamed: destinationLabel section name]);

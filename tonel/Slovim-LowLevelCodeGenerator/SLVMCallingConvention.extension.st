@@ -51,11 +51,6 @@ SLVMCallingConvention >> isStackCleanedByCaller [
 ]
 
 { #category : #'*Slovim-LowLevelCodeGenerator' }
-SLVMCallingConvention >> receiverRegister [
-	self subclassResponsibility
-]
-
-{ #category : #'*Slovim-LowLevelCodeGenerator' }
 SLVMCallingConvention >> scratchRegisters [
 	self subclassResponsibility
 ]

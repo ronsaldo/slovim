@@ -133,7 +133,7 @@ SLVMLirObjectSerializer >> addInnerObject: anObject [
 	self recordRelocationFor: anObject to: pointer.
 	pointerSize = 4 ifTrue: [
 		self writeInt32: pointer
-	] ifFalse: [ 
+	] ifFalse: [
 		self writeInt64: pointer
 	].
 ]

@@ -157,6 +157,11 @@ SLVMX86CompilationTarget >> emitTo: instructionStream registrationOfObjectSectio
 
 ]
 
+{ #category : #accessing }
+SLVMX86CompilationTarget >> framePointer [
+	^ EBP
+]
+
 { #category : #'as yet unclassified' }
 SLVMX86CompilationTarget >> generateMachineCodeFromInstructionStream: aStream [
 	^ SLVMX86MachineCodeGenerator new generate: aStream
@@ -207,6 +212,11 @@ SLVMX86CompilationTarget >> removeExtraJmpFrom: stream [
 		]
 	]
 
+]
+
+{ #category : #accessing }
+SLVMX86CompilationTarget >> stackPointer [
+	^ ESP
 ]
 
 { #category : #accessing }
