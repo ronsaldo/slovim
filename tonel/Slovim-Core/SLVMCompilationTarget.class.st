@@ -33,11 +33,6 @@ SLVMCompilationTarget >> dynamicObjectType [
 ]
 
 { #category : #types }
-SLVMCompilationTarget >> dynobject [
-	^ SLVMDynamicObjectType new size: self pointerSize
-]
-
-{ #category : #types }
 SLVMCompilationTarget >> float [
 	^ SLVMType floatType
 ]
