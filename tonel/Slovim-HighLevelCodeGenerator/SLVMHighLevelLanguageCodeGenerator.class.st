@@ -899,7 +899,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateModule: ssaModule exportList: exp
 	functionDefinitions := OrderedCollection new.
 	translatedValueDictionary := Dictionary new.
 	
-	self applyOptimizationsIn: ssaModule functionList: exportList.
+	self applyPassesIn: ssaModule functionList: exportList.
 	
 	exportList do: [ :global |
 		global accept: self
@@ -1146,7 +1146,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitExtractVectorElement: instruction [
 SLVMHighLevelLanguageCodeGenerator >> visitFunction: function [
 	| functionType name |
 	^ self functionTranslation: function do: [ :functionNode |
-		self applyOptimizationsIn: currentSSAModule functionList: { function }.
+		self applyPassesIn: currentSSAModule functionList: { function }.
 		functionType := self translateType: function functionType.
 		name := nil.
 		self hasFunctionOverloadingSupport ifTrue: [ name := function unmangledName ].
