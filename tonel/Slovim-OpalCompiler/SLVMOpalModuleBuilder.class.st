@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'module',
 		'convertedMethods',
-		'convertedClasses'
+		'convertedClasses',
+		'keepMethodSymbols'
 	],
 	#category : #'Slovim-OpalCompiler-Package'
 }
@@ -44,7 +45,18 @@ SLVMOpalModuleBuilder >> addMethod: aCompiledMethod modulePackage: modulePackage
 	(aCompiledMethod pragmaAt: #cvisibility:) ifNotNil: [ :pragma |
 		crossCompiled visibility: pragma arguments first asSymbol
 	].
+
+	"Set the penultimate literal more properly"
+	crossCompiled
+		addRequiredDynamicLiteral: aCompiledMethod selector;
+		addRequiredDynamicLiteral: aCompiledMethod classBinding.
 	 
+	(keepMethodSymbols and: [crossCompiled name isNil]) ifTrue: [
+		crossCompiled
+			name: (self mangleMethodName: aCompiledMethod);
+			makeExternal
+	].
+
 	module add: crossCompiled.
 	convertedMethods at: aCompiledMethod put: crossCompiled.
 
@@ -114,7 +126,41 @@ SLVMOpalModuleBuilder >> initialize [
 	module := SLVMModule new.
 	convertedClasses := IdentityDictionary new.
 	convertedMethods := IdentityDictionary new.
+	keepMethodSymbols := true.
+]
 
+{ #category : #adding }
+SLVMOpalModuleBuilder >> mangleMethodName: aCompilerMethod [
+	| selector className |
+	selector := self mangleString: aCompilerMethod selector.
+	className := self mangleString: aCompilerMethod methodClass name. 
+	^ ('_S_' , className , '_' , selector) asSymbol
+]
+
+{ #category : #adding }
+SLVMOpalModuleBuilder >> mangleString: aString [
+	| content |
+	content := ByteString streamContents: [ :out |
+		aString do: [ :char |
+			char = $_ ifTrue: [ 
+				out nextPutAll: '__'.
+			] ifFalse: [
+				(char isLetter or: [ char isDigit ]) ifTrue: [ 
+					out nextPut: char.
+				] ifFalse: [
+					char == $: ifTrue: [ 
+						out nextPutAll: '_c'.
+					] ifFalse: [
+						out nextPut: $_; print: char asInteger; nextPut: $_.
+					]
+				].
+				
+			]
+			
+		]
+	].
+
+	^ content size asString , '_' , content
 ]
 
 { #category : #accessing }
