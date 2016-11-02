@@ -9,7 +9,7 @@ Class {
 
 { #category : #'as yet unclassified' }
 SLVMX86_64CallingConvention >> calledRegisters [
-	^ { RAX . RCX . RDX . RBX. RSI . RDI . R8 . R9 . R10 . R11 . R12 . R13 . R14 . R15 .
+	^ { RAX . RCX . RDX . RSI . RDI . R8 . R9 . R10 . R11 .
 	XMM0 . XMM1 . XMM2 . XMM3 . XMM4 . XMM5 . XMM6 . XMM7 .
 	XMM8 . XMM9 . XMM10 . XMM11 . XMM11 . XMM11 . XMM11 . XMM11
 	}
@@ -17,7 +17,7 @@ SLVMX86_64CallingConvention >> calledRegisters [
 
 { #category : #'as yet unclassified' }
 SLVMX86_64CallingConvention >> callerRegisters [
-	^ { }
+	^ { RBX . R12 . R13 . R14 . R15 }
 ]
 
 { #category : #accessing }
