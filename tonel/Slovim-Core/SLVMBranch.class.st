@@ -100,7 +100,7 @@ SLVMBranch >> initialize [
 
 { #category : #testing }
 SLVMBranch >> isBranch [
-	^ false
+	^ true
 ]
 
 { #category : #testing }

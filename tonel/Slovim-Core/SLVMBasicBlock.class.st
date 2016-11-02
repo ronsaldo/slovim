@@ -31,6 +31,29 @@ SLVMBasicBlock >> add: anInstruction after: instructionPoint [
 ]
 
 { #category : #adding }
+SLVMBasicBlock >> add: anInstruction before: instructionPoint [
+	instructionPoint ifNil: [ ^ self addFirst: instructionPoint ].
+	
+	self assert: anInstruction previousInstruction isNil.
+	self assert: anInstruction nextInstruction isNil.
+	
+	"Link the previous"
+	anInstruction previousInstruction: instructionPoint previousInstruction.
+	anInstruction previousInstruction ifNotNil: [ 
+		anInstruction previousInstruction nextInstruction: anInstruction
+	] ifNil: [ 
+		firstInstruction := anInstruction.
+	].
+
+	"Link the next"
+	anInstruction nextInstruction: instructionPoint.
+	instructionPoint previousInstruction: anInstruction.
+	
+	numberOfInstructions := numberOfInstructions + 1.
+	self instructionAdded: anInstruction
+]
+
+{ #category : #adding }
 SLVMBasicBlock >> addFirst: anInstruction [
 	self assert: anInstruction previousInstruction isNil.
 	self assert: anInstruction nextInstruction isNil.
@@ -69,6 +92,14 @@ SLVMBasicBlock >> addQuiet: anInstruction [
 	].
 
 	anInstruction block: self
+]
+
+{ #category : #enumerating }
+SLVMBasicBlock >> allocaInstructionsDo: aBlock [
+	self instructionsDo: [:ins |
+		ins isAlloca ifFalse: [ ^ self ].
+		aBlock value: ins
+	]
 ]
 
 { #category : #adding }
@@ -134,6 +165,11 @@ SLVMBasicBlock >> function [
 { #category : #accessing }
 SLVMBasicBlock >> function: anObject [
 	function := anObject
+]
+
+{ #category : #testing }
+SLVMBasicBlock >> hasPhiInstructions [
+	^ self isEmpty not and: [ self firstInstruction isPhi ]
 ]
 
 { #category : #accessing }
@@ -218,7 +254,7 @@ SLVMBasicBlock >> numberOfInstructions [
 	^ numberOfInstructions
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #enumerating }
 SLVMBasicBlock >> phiInstructionsDo: aBlock [
 	self instructionsDo: [:ins |
 		ins isPhi ifFalse: [ ^ self ].

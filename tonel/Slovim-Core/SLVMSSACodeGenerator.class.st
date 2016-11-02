@@ -45,6 +45,6 @@ SLVMSSACodeGenerator >> needStructuredControlFlow: anObject [
 
 { #category : #'code generation' }
 SLVMSSACodeGenerator >> translateModule: ssaModule exportList: exportList [
-	self applyOptimizationsIn: ssaModule functionList: exportList.
+	self applyPassesIn: ssaModule functionList: exportList.
 	^ ssaModule
 ]

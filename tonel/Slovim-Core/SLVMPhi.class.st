@@ -66,6 +66,11 @@ SLVMPhi >> type: anObject [
 ]
 
 { #category : #adding }
+SLVMPhi >> valueFromIncomingBlock: aBlock [
+	^ parameters at: (incomingBlocks indexOf: aBlock ifAbsent: [ ^ nil ])
+]
+
+{ #category : #adding }
 SLVMPhi >> valuesAndParentsDo: aBlock [
 	1 to: parameters size do: [ :i |
 		aBlock value: (parameters at: i) value: (incomingBlocks at: i)

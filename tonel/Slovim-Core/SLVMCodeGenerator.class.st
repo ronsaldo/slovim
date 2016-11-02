@@ -56,6 +56,15 @@ SLVMCodeGenerator >> applyOptimizationsIn: ssaModule functionList: functionList 
 	globalOptimization passOnFunctions: functionList.
 ]
 
+{ #category : #'code generation' }
+SLVMCodeGenerator >> applyPassesIn: ssaModule functionList: functionList [
+	self applyOptimizationsIn: ssaModule functionList: functionList.
+	self needSSADestroyed ifTrue: [ 
+		SLVMOptDestroySSA passOnFunctions: functionList.
+	].
+	
+]
+
 { #category : #initialization }
 SLVMCodeGenerator >> initialize [
 	super initialize.
@@ -65,6 +74,11 @@ SLVMCodeGenerator >> initialize [
 { #category : #testing }
 SLVMCodeGenerator >> isInliningMandatory [
 	self subclassResponsibility
+]
+
+{ #category : #testing }
+SLVMCodeGenerator >> needSSADestroyed [
+	^ false
 ]
 
 { #category : #testing }
