@@ -43,9 +43,14 @@ SLVMFunction >> addBasicBlock: aBasicBlock [
 
 { #category : #adding }
 SLVMFunction >> addDynamicLiteral: literal [
-	| result |
 	dynamicLiterals do: [ :lit | lit value = literal ifTrue: [ ^ lit ] ].
-	result := SLVMConstantDynamicLiteral new value: literal; index: dynamicLiterals size + 1; type: compilationTarget dynamicObjectType.
+	^ self addRequiredDynamicLiteral: literal
+]
+
+{ #category : #adding }
+SLVMFunction >> addRequiredDynamicLiteral: literal [
+	| result |
+	result := SLVMConstantDynamicLiteral new value: literal; index: dynamicLiterals size + 1; type: 	compilationTarget dynamicObjectType.
 	dynamicLiterals add: result.
 	^ result
 ]

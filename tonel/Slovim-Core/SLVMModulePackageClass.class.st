@@ -22,15 +22,15 @@ SLVMModulePackageClass >> emitFor: module registrationWithAllocaBuilder: allocaB
 	| oopType registrationFunction |
 	oopType := module compilationTarget dynamicObjectType.
 	
-	registrationFunction := module globalValues at: #'slvm_dynrun_subclassWithNames' ifAbsent: [ 
-		(module functionName: #'slvm_dynrun_subclassWithNames' arguments: {
+	registrationFunction := module globalValues at: #'slvm_dynrun_subclassWithSomeNames' ifAbsent: [ 
+		(module functionName: #'slvm_dynrun_subclassWithSomeNames' arguments: {
 			"superclassName " oopType .
 			"name" oopType .
 			"instanceVariableName" oopType .
 			"format" oopType .
 			"metaInstanceVariableName" oopType .
 			"metaFormat" oopType .
-			"classVariableNames" oopType .
+			"classVariableAssociations" oopType .
 			"poolDictionaries" oopType .
 			"category" oopType .
 			} returnType: oopType) makeExternal
@@ -43,8 +43,8 @@ SLVMModulePackageClass >> emitFor: module registrationWithAllocaBuilder: allocaB
 		codeBuilder addDynamicLiteral: actualClass format.
 		codeBuilder addDynamicLiteral: actualClass class instanceVariables.
 		codeBuilder addDynamicLiteral: actualClass class format.
-		codeBuilder addDynamicLiteral: actualClass classPool keys.
-		codeBuilder addDynamicLiteral: (actualClass sharedPools collect: #name).
+		codeBuilder addDynamicLiteral: actualClass classPool associations.
+		codeBuilder addDynamicLiteral: (actualClass sharedPools collect: #binding).
 		codeBuilder addDynamicLiteral: actualClass category.
 	}.
 
