@@ -109,6 +109,11 @@ SLVMLirObjectSerializer class >> initializeKernelClassMapping [
 
 		SystemDictionary 189
 		SLVMLirCompiledMethod 190
+		
+		LiteralVariable 192
+		ClassVariable 193
+		GlobalVariable 194
+		WorkspaceVariable 195
 	) pairsDo: [ :className :index |
 		Smalltalk globals at: className ifPresent: [ :class |
 			KernelClassMapping at: class put: index
@@ -140,7 +145,7 @@ SLVMLirObjectSerializer >> addInnerObject: anObject [
 
 { #category : #adding }
 SLVMLirObjectSerializer >> addObject: anObject [
-	| startPosition elementCount class elementSize bodySize slotCount actualBodySize bodyPosition header format extraBits headerPosition |
+	| startPosition elementCount class elementSize bodySize slotCount actualBodySize bodyPosition header format extraBits headerPosition slotsToStore |
 	(self isImmediate: anObject) ifTrue: [
 		^ self encodeImmediate: anObject
 	].
@@ -203,8 +208,17 @@ SLVMLirObjectSerializer >> addObject: anObject [
 		].
 	
 		stream position: bodyPosition.
-		1 to: elementCount do: [ :slot |
+		slotsToStore := elementCount.
+		(anObject isKindOf: LiteralVariable) ifTrue: [
+			slotsToStore := 1. "Do not store recursively the value of the variables."
+		].
+		
+		1 to: slotsToStore do: [ :slot |
 			self addInnerObject: (anObject instVarAt: slot)
+		].
+	
+		slotsToStore + 1 to: elementCount do: [ :slot |
+			self addInnerObject: nil
 		].
 	] ifFalse: [
 		elementSize = 8 ifTrue: [

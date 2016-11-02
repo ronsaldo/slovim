@@ -331,7 +331,7 @@ SLVMLirX86FunctionCodeGenerator >> generateStackFrameBuildingJumpingInto: entryB
 	"Stack frame"
 	self
 		addX86: PUSH with: self framePointerRegister;
-		addX86: MOV with: self stackPointerRegister with: self stackPointerRegister .
+		addX86: MOV with: self framePointerRegister with: self stackPointerRegister .
 
 	"Fetch the nil pointer"
 	nilPointerRegister := nil.
