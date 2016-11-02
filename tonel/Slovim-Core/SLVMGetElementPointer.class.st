@@ -27,6 +27,11 @@ SLVMGetElementPointer >> isElementAccess [
 	^ parameters second isConstantValue and: [ parameters second value = 0 ]
 ]
 
+{ #category : #testing }
+SLVMGetElementPointer >> isGetElementPointer [
+	^ true
+]
+
 { #category : #printing }
 SLVMGetElementPointer >> mnemonic [
 	^ 'getElementPointer'

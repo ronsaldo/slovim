@@ -108,6 +108,11 @@ SLVMInstruction >> isCall [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isGetElementPointer [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isInstruction [
 	^ true
 ]
