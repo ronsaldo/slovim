@@ -54,7 +54,7 @@ SLVMOpalModuleBuilder >> addMethod: aCompiledMethod modulePackage: modulePackage
 	(keepMethodSymbols and: [crossCompiled name isNil]) ifTrue: [
 		crossCompiled
 			name: (self mangleMethodName: aCompiledMethod);
-			makeExternal
+			makePublic
 	].
 
 	module add: crossCompiled.
