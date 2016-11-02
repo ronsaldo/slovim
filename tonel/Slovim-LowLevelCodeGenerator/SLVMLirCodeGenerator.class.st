@@ -43,6 +43,11 @@ SLVMLirCodeGenerator >> isInliningMandatory [
 	^ false
 ]
 
+{ #category : #testing }
+SLVMLirCodeGenerator >> needSSADestroyed [
+	^ true
+]
+
 { #category : #'code generation' }
 SLVMLirCodeGenerator >> needStructuredControlFlow [
 	^ false
@@ -94,7 +99,7 @@ SLVMLirCodeGenerator >> translateModule: module exportList: exportList [
 
 { #category : #'code generation' }
 SLVMLirCodeGenerator >> translateModule: module exportList: exportList packageRegistration: packageRegistration [
-	self applyOptimizationsIn: module functionList: exportList.
+	self applyPassesIn: module functionList: exportList.
 	lirModule := SLVMLirModule new compilationTarget: compilationTarget.
 	translatedElements := Dictionary new.
 

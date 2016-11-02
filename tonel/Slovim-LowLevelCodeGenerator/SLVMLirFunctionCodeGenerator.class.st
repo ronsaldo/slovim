@@ -17,7 +17,8 @@ Class {
 		'moduleTranslator',
 		'literals',
 		'callingConvention',
-		'compiledMethodMetaData'
+		'compiledMethodMetaData',
+		'entryAllocaDictionary'
 	],
 	#classVars : [
 		'ContextMetadataElementCount',
@@ -161,12 +162,18 @@ SLVMLirFunctionCodeGenerator >> initialize [
 	registerAllocator := SLVMRegisterAllocator default.
 	compilationTarget := SLVM32BitsPointerCompilationTarget new.
 	constantZoneDictionary := Dictionary new.
+	entryAllocaDictionary := Dictionary new.
 	literals := #().
 ]
 
 { #category : #'register allocation' }
 SLVMLirFunctionCodeGenerator >> instruction: instruction resultInRegister: register [
 	registerAllocator moveInstruction: instruction resultInRegister: register with: self
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirFunctionCodeGenerator >> isEntryAlloca: allocaInstruction [
+	^ entryAllocaDictionary includesKey: allocaInstruction
 ]
 
 { #category : #accessing }
@@ -214,6 +221,17 @@ SLVMLirFunctionCodeGenerator >> newLabel: name [
 
 { #category : #'code generation' }
 SLVMLirFunctionCodeGenerator >> postProcessCodeGeneration [
+]
+
+{ #category : #'code generation' }
+SLVMLirFunctionCodeGenerator >> processEntryAllocas [
+	| valueType stackFrame local |
+	stackFrame := lirFunction stackFrame.
+	function basicBlocks first allocaInstructionsDo: [ :alloca |
+		valueType := alloca valueType.
+		local := stackFrame createLocal: valueType spillingClass.
+		entryAllocaDictionary at: alloca put: local.
+	]
 ]
 
 { #category : #'code generation' }
@@ -278,6 +296,7 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 		sectionName: #'.rodata';
 		yourself.
 	lirFunction addBasicBlock: constantBlock.
+	self processEntryAllocas.
 	self translateCompiledMethodMetaData.
 	registerAllocator translateBasicBlocks: function basicBlocks with: self.
 

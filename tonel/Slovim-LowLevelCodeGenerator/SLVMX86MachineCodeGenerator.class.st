@@ -574,6 +574,24 @@ SLVMX86MachineCodeGenerator >> generateJZ: instruction [
 ]
 
 { #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateLEA: instruction [
+	| first second operandSize |
+	first := instruction first.
+	second := instruction second.
+	operandSize := first size.
+	self assert: first isRegister.
+	self assert: second isRegisterAddress.
+
+	operandSize = 2 ifTrue: [
+		writer put: 16r66.
+	].
+	self encodeRexSize: operandSize rm: first reg: second.
+	writer put: 16r8D.
+	^ self encodeModRM: second reg: first
+
+]
+
+{ #category : #'instruction generation' }
 SLVMX86MachineCodeGenerator >> generateMOV: instruction [
 	| first second operandSize |
 	first := instruction first.

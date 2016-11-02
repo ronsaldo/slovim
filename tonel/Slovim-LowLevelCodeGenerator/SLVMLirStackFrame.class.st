@@ -83,7 +83,7 @@ SLVMLirStackFrame >> buildLocalLayout [
 		var offset: (size + localsBaseOffset) negated.
 	].
 
-	dynamicRootCount > 0 ifTrue: [
+	(dynamicRootCount > 0 and: [dynamicRootCount ~= localVariables size ]) ifTrue: [
 		"TODO: Ensure the dynamic roots come first"
 		self halt.
 	]

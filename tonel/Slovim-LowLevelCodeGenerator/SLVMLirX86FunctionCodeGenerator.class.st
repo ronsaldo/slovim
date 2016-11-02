@@ -183,8 +183,13 @@ SLVMLirX86FunctionCodeGenerator >> emitCallResultToRegister: instruction convent
 ]
 
 { #category : #'register allocation' }
+SLVMLirX86FunctionCodeGenerator >> ensureInstruction: instruction valueAsPointer: value scratchIndex: scratchIndex [
+	^ (self ensureInstruction: instruction valueInRegister: value scratchIndex: scratchIndex) asX86PtrOfSize: compilationTarget pointerSize
+]
+
+{ #category : #'register allocation' }
 SLVMLirX86FunctionCodeGenerator >> ensureInstruction: instruction valueInRegisterOrImmediate: value scratchIndex: scratchIndex [
-	value isConstant ifTrue: [ ^ self translateConstant: value ].
+	value isConstant ifTrue: [ ^ self sanitizeConstant: value ].
 	^ self ensureInstruction: instruction valueInRegister: value scratchIndex: scratchIndex
 ]
 
@@ -447,11 +452,6 @@ SLVMLirX86FunctionCodeGenerator >> intResultRegister [
 ]
 
 { #category : #'code generation' }
-SLVMLirX86FunctionCodeGenerator >> moveConstant: constant toMemoryInRegister: pointerRegister [
-	self addX86: MOV with: pointerRegister asX86Ptr with: constant
-]
-
-{ #category : #'code generation' }
 SLVMLirX86FunctionCodeGenerator >> moveConstant: value toRegister: register [
 	| memoryLocation valueType constantValue |
 	valueType := value type.
@@ -545,8 +545,12 @@ SLVMLirX86FunctionCodeGenerator >> moveRegister: register toLocal: localVariable
 ]
 
 { #category : #'code generation' }
-SLVMLirX86FunctionCodeGenerator >> moveRegister: value toMemory: pointer [
-	self halt.
+SLVMLirX86FunctionCodeGenerator >> moveRegister: register toMemory: pointer [
+	register isVectorRegister ifTrue: [
+		self halt.
+	] ifFalse: [
+		self addX86: MOV with: pointer with: register
+	]
 ]
 
 { #category : #'code generation' }
@@ -637,7 +641,7 @@ SLVMLirX86FunctionCodeGenerator >> sanitizeConstant: value [
 		]
 	].
 
-	^ value
+	^ self translateConstant: value
 ]
 
 { #category : #'code generation' }
@@ -801,7 +805,12 @@ SLVMLirX86FunctionCodeGenerator >> visitAdd: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitAlloca: instruction [
-	| valueType size |
+	| valueType size result |
+	entryAllocaDictionary at: instruction ifPresent: [ :localVariable |
+		result := self allocateInstructionResultRegister: instruction.
+		^ self addX86: LEA with: result with: localVariable
+	].
+
 	valueType := instruction valueType.
 	size := valueType size alignedTo: self stackAlignment.
 	self addX86: SUB with: ESP with: size.
@@ -979,6 +988,29 @@ SLVMLirX86FunctionCodeGenerator >> visitJump: instruction [
 ]
 
 { #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitLoad: instruction [
+	| pointer result valueType |
+	pointer := self ensureInstruction: instruction valueAsPointer: instruction variable scratchIndex: 1.
+	result := self allocateInstructionResultRegister: instruction.
+
+	valueType := instruction type.
+	valueType isVectorType ifTrue: [
+		self halt.
+	] ifFalse: [ 
+		valueType isFloatType ifTrue: [
+			self halt.
+		].
+
+		valueType isScalarIntegerType ifTrue: [
+			^ self addX86: MOV with: result with: pointer
+		]
+	].
+
+	"Large object. Memcpy"
+	self halt.
+]
+
+{ #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitMessageSend: instruction [
 	| cleanUpSize calledFunction oopArguments nativeArguments selector receiver nativeArgumentsSize argumentSizeDescription calledConvention alignedCleanUpSize alignmentPaddingSize |
 	cleanUpSize := 0.
@@ -1153,31 +1185,26 @@ SLVMLirX86FunctionCodeGenerator >> visitShiftRightArithmetic: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitStore: instruction [
-	| valueType pointer value values |
+	| valueType pointer value values valueValue |
 	valueType := instruction value type.
+	valueValue := instruction value.
 	valueType isVectorType ifTrue: [ 
 		valueType size = 16 ifTrue: [ 
 			self halt.
 		]
 	] ifFalse: [ 
 		valueType isFloatType ifTrue: [
-			pointer := self ensureInstruction: instruction valueInRegister: instruction variable scratchIndex: 1.
-			value := self ensureInstruction: instruction valueInRegister: instruction value scratchIndex: 1.
+			pointer := self ensureInstruction: instruction valueAsPointer: instruction variable scratchIndex: 1.
+			value := self ensureInstruction: instruction valueInRegister: instruction value scratchIndex: 2.
 			self assert: pointer ~= value.
 			"Store the float in memory"
 			self halt.
 		].
 	
 		valueType isScalarIntegerType ifTrue: [
-			values := self ensureInstructionValuesInRegistersOrImmediate: instruction.
-			value := values first.
-			pointer := values second.
-			"Move the integer"
-			value isConstant ifTrue: [
-				^ self moveConstant: value toMemoryInRegister: pointer
-			] ifFalse: [
-				^ self moveRegister: value toMemory: pointer
-			]
+			value := self ensureInstruction: instruction valueInRegisterOrImmediate: instruction value scratchIndex: 1.
+			pointer := self ensureInstruction: instruction valueAsPointer: instruction variable scratchIndex: 2.
+			^ self addX86: MOV with: pointer with: value
 		].
 	].
 
