@@ -48,10 +48,12 @@ SLVMLivenessRange >> end: anObject [
 
 { #category : #testing }
 SLVMLivenessRange >> isConsideredForRegisterAllocation [
-	^ element isSSAValue and:
-	[ element type size > 0 or:
+	element isSSAValue ifFalse: [ ^ false ].
+	(element isFunctionArgument and: [ start == end ]) ifTrue: [ ^ false ].
+	
+	^ element type size > 0 or:
 		[ element isInstruction and: [
-			element isCall or: [ element isMessageSend ] ] ] ]
+			element isCall or: [ element isMessageSend ] ] ]
 ]
 
 { #category : #testing }

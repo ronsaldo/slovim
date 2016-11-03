@@ -46,6 +46,24 @@ SLVMAlloca >> isOnlyUsedByLoadStore [
 	^ true
 ]
 
+{ #category : #accessing }
+SLVMAlloca >> isOnlyUsedByLoadStoreAndGetElementPtrBase [
+	self instructionReferences do: [ :ref |
+		ref isLoad ifFalse: [
+			ref isStore ifTrue: [
+				ref value == self ifTrue: [ ^ false ].
+				self assert: ref variable == self.
+			] ifFalse: [
+				ref isGetElementPointer ifFalse: [ ^ false ].
+				ref indices do: [ :index | index == self ifTrue: [ ^ false ] ].
+				self assert: ref pointer == self.
+			].
+		].
+	].
+
+	^ true
+]
+
 { #category : #printing }
 SLVMAlloca >> mnemonic [
 	^ 'alloca'
