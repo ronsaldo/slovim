@@ -39,7 +39,6 @@ SLVMLinearScanRegisterAllocator >> allocateRegisters [
 	
 	activeMemoryRanges := SortedCollection sortBlock: [ :a :b | a end < b end ].
 	activeRangeClasses := Dictionary new.
-	
 	liveRanges select: #isConsideredForRegisterAllocation thenDo: [ :range |
 		element := range element.
 
@@ -74,8 +73,8 @@ SLVMLinearScanRegisterAllocator >> allocateRegisters [
 				spilledRange := currentActiveRanges last.
 				spilledRange end > range end ifTrue: [ 
 					"range spillRange: spilledRange."
-					spilledRange register: nil.
 					range register: spilledRange register.
+					spilledRange register: nil.
 					currentActiveRanges removeLast.
 					currentActiveRanges add: range.
 				] ifFalse: [
@@ -123,6 +122,7 @@ SLVMLinearScanRegisterAllocator >> emitPrologueWith: codeGenerator [
 
 { #category : #'as yet unclassified' }
 SLVMLinearScanRegisterAllocator >> freeRegister: register [
+	register ifNil: [ ^ self ].
 	(freeRegisters at: register class) add: register
 ]
 

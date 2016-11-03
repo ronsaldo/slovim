@@ -78,8 +78,14 @@ SLVMRegisterAllocator >> findRegisterClassElementsForValue: value [
 
 { #category : #'public interface' }
 SLVMRegisterAllocator >> findRegisterClassForValue: value [
+	| valueType |
+	value isInstruction ifTrue: [ 
+		(value isAlloca and: [ value isOnlyUsedByLoadStoreAndGetElementPtrBase ]) ifTrue: [ ^ nil ]
+	].
+
+	valueType := value type.
 	allocatableRegisterClasses keysDo: [ :key |
-		(key canHoldValueOfType: value type) ifTrue: [ ^ key ]
+		(key canHoldValueOfType: valueType) ifTrue: [ ^ key ]
 	].
 	^ nil
 ]

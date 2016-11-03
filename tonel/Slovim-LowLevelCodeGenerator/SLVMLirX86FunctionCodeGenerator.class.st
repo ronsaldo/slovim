@@ -184,6 +184,7 @@ SLVMLirX86FunctionCodeGenerator >> emitCallResultToRegister: instruction convent
 
 { #category : #'register allocation' }
 SLVMLirX86FunctionCodeGenerator >> ensureInstruction: instruction valueAsPointer: value scratchIndex: scratchIndex [
+	entryAllocaDictionary at: value ifPresent: [ :allocaVariable | ^ allocaVariable ].
 	^ (self ensureInstruction: instruction valueInRegister: value scratchIndex: scratchIndex) asX86PtrOfSize: compilationTarget pointerSize
 ]
 
@@ -805,11 +806,8 @@ SLVMLirX86FunctionCodeGenerator >> visitAdd: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitAlloca: instruction [
-	| valueType size result |
-	entryAllocaDictionary at: instruction ifPresent: [ :localVariable |
-		result := self allocateInstructionResultRegister: instruction.
-		^ self addX86: LEA with: result with: localVariable
-	].
+	| valueType size |
+	(entryAllocaDictionary includesKey: instruction) ifTrue: [ ^ self ].
 
 	valueType := instruction valueType.
 	size := valueType size alignedTo: self stackAlignment.

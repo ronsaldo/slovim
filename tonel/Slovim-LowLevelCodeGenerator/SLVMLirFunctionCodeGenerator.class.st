@@ -18,7 +18,8 @@ Class {
 		'literals',
 		'callingConvention',
 		'compiledMethodMetaData',
-		'entryAllocaDictionary'
+		'entryAllocaDictionary',
+		'nonPointerAllocas'
 	],
 	#classVars : [
 		'ContextMetadataElementCount',
@@ -163,6 +164,7 @@ SLVMLirFunctionCodeGenerator >> initialize [
 	compilationTarget := SLVM32BitsPointerCompilationTarget new.
 	constantZoneDictionary := Dictionary new.
 	entryAllocaDictionary := Dictionary new.
+	nonPointerAllocas := Set new.
 	literals := #().
 ]
 
@@ -231,6 +233,9 @@ SLVMLirFunctionCodeGenerator >> processEntryAllocas [
 		valueType := alloca valueType.
 		local := stackFrame createLocal: valueType spillingClass.
 		entryAllocaDictionary at: alloca put: local.
+		alloca isOnlyUsedByLoadStore ifTrue: [
+			nonPointerAllocas add: alloca
+		]
 	]
 ]
 
