@@ -111,9 +111,21 @@ SLVMLirX86FunctionCodeGenerator >> addX86: opcode with: op1 with: op2 [
 	^ self addX86: opcode operands: {op1 asLirInstructionOperand . op2 asLirInstructionOperand}
 ]
 
+{ #category : #'stack frame metadata' }
+SLVMLirX86FunctionCodeGenerator >> argumentDescriptorStackOffset [
+	^ compilationTarget pointerSize * -3
+
+]
+
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> canBeFrameLess [
 	^ callingConvention canBeFrameLess
+]
+
+{ #category : #'stack frame metadata' }
+SLVMLirX86FunctionCodeGenerator >> compiledMethodStackOffset [
+	^ compilationTarget pointerSize * -1
+
 ]
 
 { #category : #'stack frame' }
@@ -136,6 +148,63 @@ SLVMLirX86FunctionCodeGenerator >> computeArgumentDescriptor [
 	nativeArgumentsSize := nativeArgumentsSize + alignmentPaddingSize.
 
 	^ nativeArgumentsSize << 16 | (oopArgumentCount - 1)
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> emitCallInstruction: instruction [
+	| cleanUpSize calledFunction emittedCount variadicArgumentCount calledFunctionType calledConvention alignedCleanUpSize alignmentPaddingSize |
+	usesStackPointer := true.
+	calledFunctionType := instruction functionType.
+	variadicArgumentCount := instruction arguments size - calledFunctionType arguments size.
+	
+	"Spill the registers that are owned by the called."
+	calledConvention := compilationTarget callingConventionDescriptionNamed: calledFunctionType callingConvention.
+	registerAllocator spillCalledRegisterForConvention: calledConvention at: instruction with: self.
+
+	"Compute the total argument size."
+	cleanUpSize := 0.
+	instruction arguments reverseDo: [ :arg |
+		cleanUpSize := cleanUpSize + (arg type size alignedTo: self stackArgumentAlignment).
+	].
+
+	"Align the arguments."
+	alignedCleanUpSize := cleanUpSize alignedTo: calledConvention stackAlignment.
+	alignmentPaddingSize := alignedCleanUpSize - cleanUpSize.
+	alignmentPaddingSize > 0 ifTrue: [
+		self addX86: SUB with: self stackPointerRegister with: alignmentPaddingSize.
+		cleanUpSize := alignedCleanUpSize.
+	].
+	
+	"Push the arguments in the stack."	
+	emittedCount := 0.
+	instruction arguments reverseDo: [ :arg |
+		self instruction: instruction pushValue: arg variadicArgument: emittedCount < variadicArgumentCount.
+		emittedCount := emittedCount + 1.
+	].
+
+	"ToDo: Move the arguments that are placed in registers."
+
+	calledFunction := self ensureInstruction: instruction valueInRegisterOrImmediate: instruction functionValue scratchIndex: 1.
+	instruction isPrimitiveCall ifTrue: [
+		self assert: function callingConvention == #smalltalk.
+		self assert: calledFunctionType callingConvention == #smalltalk.
+		self
+			addX86: MOV with: EAX with: calledFunction;
+			addX86: CALL with: (moduleTranslator runtimeProvidedFunction: #'slvm_dynrun_primitive_dispatch_trampoline')
+	] ifFalse: [ 
+		self addX86: CALL with: calledFunction.
+	].
+	
+	(calledConvention isStackCleanedByCaller and: [ cleanUpSize > 0 ]) ifTrue: [
+		self addX86: ADD with: self stackPointerRegister with: cleanUpSize
+	].
+	maxCallStackSize := maxCallStackSize max: cleanUpSize.
+
+	"Unspill the called registers."
+	registerAllocator unspillCalledRegisterForConvention: calledConvention at: instruction with: self.
+
+	instruction instructionReferences ifEmpty: [ ^ self ].
+	self emitCallResultToRegister: instruction convention: calledConvention.
 ]
 
 { #category : #'code generation' }
@@ -182,6 +251,25 @@ SLVMLirX86FunctionCodeGenerator >> emitCallResultToRegister: instruction convent
 	
 ]
 
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> emitGetThisContextCall: instruction [
+	| getThisContextEnd result |
+	result := self allocateInstructionResultRegister: instruction.
+	
+	"Assume the thisContext field is already valid."
+	self
+		addX86: MOV with: result with: self framePointerRegister asX86Ptr + self thisContextStackOffset.
+	self instruction: instruction resultInRegister: result.
+	
+	"If the thisContext is nil, we need to marry the frame."
+	getThisContextEnd := self newLabel: #getThisContextEnd.
+	self
+		addX86: CMP with: result with: (self encodeImmediateObject: nil);
+		addX86: JNZ with: getThisContextEnd.
+	self emitCallInstruction: instruction.
+	self addLabel: getThisContextEnd
+]
+
 { #category : #'register allocation' }
 SLVMLirX86FunctionCodeGenerator >> ensureInstruction: instruction valueAsPointer: value scratchIndex: scratchIndex [
 	entryAllocaDictionary at: value ifPresent: [ :allocaVariable | ^ allocaVariable ].
@@ -223,6 +311,12 @@ SLVMLirX86FunctionCodeGenerator >> ensureInstructionValuesInRegistersOrMemory: i
 { #category : #'stack frame' }
 SLVMLirX86FunctionCodeGenerator >> floatReturnRegister [
 	^ callingConvention floatReturnRegister
+]
+
+{ #category : #'stack frame metadata' }
+SLVMLirX86FunctionCodeGenerator >> frameLayoutDescriptorStackOffset [
+	^ compilationTarget pointerSize * -4
+
 ]
 
 { #category : #accessing }
@@ -704,6 +798,12 @@ SLVMLirX86FunctionCodeGenerator >> stackPointerRegister [
 	^ compilationTarget stackPointer
 ]
 
+{ #category : #'stack frame metadata' }
+SLVMLirX86FunctionCodeGenerator >> thisContextStackOffset [
+	^ compilationTarget pointerSize * -2
+
+]
+
 { #category : #'code generation' }
 SLVMLirX86FunctionCodeGenerator >> translateBasicBlockInstructions: basicBlock [
 	| current translated |
@@ -868,50 +968,8 @@ SLVMLirX86FunctionCodeGenerator >> visitBranch: instruction [
 
 { #category : #visitor }
 SLVMLirX86FunctionCodeGenerator >> visitCall: instruction [
-	| cleanUpSize calledFunction emittedCount variadicArgumentCount calledFunctionType calledConvention alignedCleanUpSize alignmentPaddingSize |
-	usesStackPointer := true.
-	calledFunctionType := instruction functionType.
-	variadicArgumentCount := instruction arguments size - calledFunctionType arguments size.
-	
-	"Spill the registers that are owned by the called."
-	calledConvention := compilationTarget callingConventionDescriptionNamed: calledFunctionType callingConvention.
-	registerAllocator spillCalledRegisterForConvention: calledConvention at: instruction with: self.
-
-	"Compute the total argument size."
-	cleanUpSize := 0.
-	instruction arguments reverseDo: [ :arg |
-		cleanUpSize := cleanUpSize + (arg type size alignedTo: self stackArgumentAlignment).
-	].
-
-	"Align the arguments."
-	alignedCleanUpSize := cleanUpSize alignedTo: calledConvention stackAlignment.
-	alignmentPaddingSize := alignedCleanUpSize - cleanUpSize.
-	alignmentPaddingSize > 0 ifTrue: [
-		self addX86: SUB with: self stackPointerRegister with: alignmentPaddingSize.
-		cleanUpSize := alignedCleanUpSize.
-	].
-	
-	"Push the arguments in the stack."	
-	emittedCount := 0.
-	instruction arguments reverseDo: [ :arg |
-		self instruction: instruction pushValue: arg variadicArgument: emittedCount < variadicArgumentCount.
-		emittedCount := emittedCount + 1.
-	].
-
-	"ToDo: Move the arguments that are placed in registers."
-
-	calledFunction := self ensureInstruction: instruction valueInRegisterOrImmediate: instruction functionValue scratchIndex: 1.
-	self addX86: CALL with: calledFunction.
-	(calledConvention isStackCleanedByCaller and: [ cleanUpSize > 0 ]) ifTrue: [
-		self addX86: ADD with: self stackPointerRegister with: cleanUpSize
-	].
-	maxCallStackSize := maxCallStackSize max: cleanUpSize.
-
-	"Unspill the called registers."
-	registerAllocator unspillCalledRegisterForConvention: calledConvention at: instruction with: self.
-
-	instruction instructionReferences ifEmpty: [ ^ self ].
-	self emitCallResultToRegister: instruction convention: calledConvention.
+	instruction isGetThisContext ifTrue: [ ^ self emitGetThisContextCall: instruction ].
+	self emitCallInstruction: instruction
 ]
 
 { #category : #visitor }
@@ -976,6 +1034,44 @@ SLVMLirX86FunctionCodeGenerator >> visitFloatSub: instruction [
 	].
 
 
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitGetElementPointer: instruction [
+	| strides indexedOffsets constantDisplacement stride pointer result |
+	indexedOffsets := OrderedCollection new.
+	strides := instruction strides.
+	constantDisplacement := 0.
+	instruction pointer type isDynamicObjectType ifTrue: [ 
+		constantDisplacement := compilationTarget objectHeaderSize
+	].
+
+	"Normalize the instruction offsets."
+	instruction indices doWithIndex: [ :pointerIndex :i |
+		stride := strides at: i.
+		pointerIndex isConstant ifTrue: [ 
+			self assert: pointerIndex type isIntegerType.
+			constantDisplacement := constantDisplacement + (pointerIndex value * stride)
+		] ifFalse: [
+			indexedOffsets add: pointerIndex -> stride
+		].
+	].
+
+	pointer := self ensureInstruction: instruction valueAsPointer: instruction pointer scratchIndex: 1.
+	result := self allocateInstructionResultRegister: instruction.
+	indexedOffsets ifEmpty: [
+		self addX86: LEA with: result with: pointer + constantDisplacement
+	] ifNotEmpty: [
+		self halt
+	].
+
+	self instruction: instruction resultInRegister: result
+]
+
+{ #category : #visitor }
+SLVMLirX86FunctionCodeGenerator >> visitGetFramePointer: instruction [
+	usesStackPointer := true.
+	self instruction: instruction resultInRegister: self framePointerRegister 
 ]
 
 { #category : #visitor }

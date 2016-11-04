@@ -5,6 +5,7 @@ Class {
 	#instVars : [
 		'entryPoint',
 		'flags',
+		'argumentDescriptor',
 		'annotations'
 	],
 	#classVars : [
@@ -21,6 +22,16 @@ SLVMLirCompiledMethod >> annotations [
 { #category : #accessing }
 SLVMLirCompiledMethod >> annotations: anObject [
 	annotations := anObject
+]
+
+{ #category : #accessing }
+SLVMLirCompiledMethod >> argumentDescriptor [
+	^ argumentDescriptor
+]
+
+{ #category : #accessing }
+SLVMLirCompiledMethod >> argumentDescriptor: anObject [
+	argumentDescriptor := anObject
 ]
 
 { #category : #accessing }

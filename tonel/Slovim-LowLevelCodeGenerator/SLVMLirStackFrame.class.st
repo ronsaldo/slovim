@@ -80,12 +80,12 @@ SLVMLirStackFrame >> buildLocalLayout [
 		alignment := alignment max: var alignment.
 		size := size alignedTo: var alignment.
 		size := size + var size.
-		var offset: (size + localsBaseOffset) negated.
+		var offset: (size + localsBaseOffset - argumentsBaseOffset) negated.
 	].
 
 	(dynamicRootCount > 0 and: [dynamicRootCount ~= localVariables size ]) ifTrue: [
 		"TODO: Ensure the dynamic roots come first"
-		"self halt."
+		self halt.
 	]
 
 ]

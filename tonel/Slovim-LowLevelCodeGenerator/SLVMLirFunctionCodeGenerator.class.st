@@ -263,7 +263,7 @@ SLVMLirFunctionCodeGenerator >> registerAllocator: anObject [
 
 { #category : #'code generation' }
 SLVMLirFunctionCodeGenerator >> stackElementGranularity [
-	^ 4
+	^ compilationTarget pointerSize
 ]
 
 { #category : #'code generation' }
@@ -311,7 +311,7 @@ SLVMLirFunctionCodeGenerator >> translateBasicBlocks [
 SLVMLirFunctionCodeGenerator >> translateCompiledMethodMetaData [
 	| metadataLabel flags callingConventionName methodMetaDataFixedSize |
 	(function dynamicLiterals isEmpty and: [ function needsCompiledMethodObject not ]) ifTrue: [ ^ self ].
-
+	
 	lirFunction alignment: 16.
 	compiledMethodMetaData := SLVMLirCompiledMethod new: function dynamicLiterals size.
 	function dynamicLiterals doWithIndex: [ :literal :index |
@@ -326,7 +326,8 @@ SLVMLirFunctionCodeGenerator >> translateCompiledMethodMetaData [
 
 	compiledMethodMetaData 
 		entryPoint: lirFunction;
-		flags: flags.
+		flags: flags;
+		argumentDescriptor: self computeArgumentDescriptor.
 		
 	metadataLabel := moduleTranslator addDynamicObject: compiledMethodMetaData.
 	lirFunction compiledMethodMetaData: metadataLabel.
