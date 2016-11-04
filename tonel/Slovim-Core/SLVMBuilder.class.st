@@ -286,6 +286,16 @@ SLVMBuilder >> function: anObject [
 ]
 
 { #category : #instructions }
+SLVMBuilder >> getFramePointer [
+	^ self getFramePointer: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> getFramePointer: resultName [
+	^ self addInstruction: (SLVMGetFramePointer type: function compilationTarget voidPointerType) name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> getPointer: pointer element: element [
 	^ self getPointer: pointer element: element resultName: function generateSymbol
 ]

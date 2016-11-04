@@ -53,6 +53,19 @@ SLVMGetElementPointer >> pointer: pointer indices: indices [
 
 ]
 
+{ #category : #construction }
+SLVMGetElementPointer >> strides [
+	| pointerType pointerSize |
+	pointerType := self pointer type.
+	pointerSize := pointerType size.
+	
+	^ self indices collectWithIndex: [ :index :depth |
+		pointerType := pointerType pointerSize: pointerSize typeOfMemberAt: index depth: depth - 1.
+		pointerType elementStrideDepth: depth - 1
+	].
+
+]
+
 { #category : #accessing }
 SLVMGetElementPointer >> type [
 	^ type

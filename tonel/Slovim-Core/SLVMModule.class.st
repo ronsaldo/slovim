@@ -81,6 +81,16 @@ SLVMModule >> functionName: name arguments: arguments returnType: returnType [
 	^ function
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMModule >> functionName: name callingConvention: callingConvention arguments: arguments returnType: returnType [
+	| function |
+	function := SLVMFunction pointerSize: compilationTarget pointerSize name: name functionType: (SLVMFunctionType callingConvention: callingConvention arguments: arguments returnType: returnType).
+	function compilationTarget: compilationTarget.
+	
+	self add: function.
+	^ function
+]
+
 { #category : #building }
 SLVMModule >> functionName: name fixedArguments: arguments returnType: returnType [
 	| function functionType |

@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMInstruction,
 	#instVars : [
 		'type',
-		'functionType'
+		'functionType',
+		'flags'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -16,6 +17,12 @@ SLVMCall class >> function: functionValue arguments: arguments [
 { #category : #visitor }
 SLVMCall >> accept: aVisitor [
 	^ aVisitor visitCall: self
+]
+
+{ #category : #adding }
+SLVMCall >> addFlag: flag [
+	flags := flags copyWith: flag
+	
 ]
 
 { #category : #accessing }
@@ -48,9 +55,21 @@ SLVMCall >> functionValue [
 	^ parameters first
 ]
 
+{ #category : #flags }
+SLVMCall >> hasFlag: flag [
+	^ flags includes: flag
+	
+]
+
 { #category : #testing }
 SLVMCall >> hasOutputs [
 	^ type isVoidType not
+]
+
+{ #category : #initialization }
+SLVMCall >> initialize [
+	super initialize.
+	flags := #()
 ]
 
 { #category : #testing }
@@ -58,9 +77,29 @@ SLVMCall >> isCall [
 	^ true
 ]
 
+{ #category : #flags }
+SLVMCall >> isGetThisContext [
+	^ self hasFlag: #getThisContext
+]
+
+{ #category : #flags }
+SLVMCall >> isPrimitiveCall [
+	^ self hasFlag: #primitiveCall
+]
+
 { #category : #printing }
 SLVMCall >> mnemonic [
 	^ 'call'
+]
+
+{ #category : #flags }
+SLVMCall >> setGetThisContext [
+	^ self addFlag: #getThisContext
+]
+
+{ #category : #flags }
+SLVMCall >> setPrimitiveCall [
+	^ self addFlag: #primitiveCall
 ]
 
 { #category : #accessing }

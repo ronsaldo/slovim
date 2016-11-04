@@ -2,7 +2,8 @@ Class {
 	#name : #SLVMCompilationTarget,
 	#superclass : #SLVMObject,
 	#instVars : [
-		'dynamicObjectType'
+		'dynamicObjectType',
+		'voidPointerType'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -55,6 +56,11 @@ SLVMCompilationTarget >> lowLevelCodeGeneratorClass [
 { #category : #convenience }
 SLVMCompilationTarget >> newModule [
 	^ SLVMModule new compilationTarget: self; yourself
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> objectHeaderSize [
+	^ 8
 ]
 
 { #category : #accessing }
@@ -115,4 +121,9 @@ SLVMCompilationTarget >> ushort [
 { #category : #types }
 SLVMCompilationTarget >> void [
 	^ SLVMType voidType
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> voidPointerType [
+	^ voidPointerType ifNil: [ voidPointerType := self pointerTo: self void ]
 ]

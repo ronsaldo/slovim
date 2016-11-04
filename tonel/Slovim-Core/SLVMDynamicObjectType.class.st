@@ -22,9 +22,14 @@ SLVMDynamicObjectType >> alignment [
 	^ size
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SLVMDynamicObjectType >> baseType [
 	^ self
+]
+
+{ #category : #'as yet unclassified' }
+SLVMDynamicObjectType >> elementStrideDepth: depth [
+	^ size
 ]
 
 { #category : #comparing }
@@ -32,7 +37,7 @@ SLVMDynamicObjectType >> hash [
 	^ self class hash bitXor: size hash
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #initialization }
 SLVMDynamicObjectType >> initialize [
 	super initialize.
 	name := #dynobject.
@@ -43,12 +48,12 @@ SLVMDynamicObjectType >> isDynamicObjectType [
 	^ true
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
 SLVMDynamicObjectType >> isScalarType [
 	^ true
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SLVMDynamicObjectType >> pointerSize: pointerSize typeOfMemberAt: index depth: depth [
 	depth = 0 ifTrue: [ ^ self ].
 	^ SLVMPointerType size: pointerSize baseType: (self typeOfMemberAt: index) storage: SLVMType genericStorage
@@ -69,12 +74,12 @@ SLVMDynamicObjectType >> size: anObject [
 	size := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SLVMDynamicObjectType >> spillingClass [
 	^ { self size . self alignment . true }
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SLVMDynamicObjectType >> typeOfMemberAt: index [
 	^ self
 ]

@@ -40,6 +40,12 @@ SLVMPointerType >> baseType: aType [
 	baseType := aType
 ]
 
+{ #category : #accessing }
+SLVMPointerType >> elementStrideDepth: depth [
+	depth = 0 ifTrue: [ ^ size ].
+	^ baseType size
+]
+
 { #category : #comparing }
 SLVMPointerType >> hash [
 	^ (self class hash bitXor: baseType hash) bitXor: storage hash
