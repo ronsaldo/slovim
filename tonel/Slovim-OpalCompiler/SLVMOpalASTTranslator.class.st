@@ -6,7 +6,8 @@ Class {
 		'methodIR',
 		'currentScope',
 		'irBuilder',
-		'allocaBuilder'
+		'allocaBuilder',
+		'module'
 	],
 	#classVars : [
 		'OptimizedMessages'
@@ -42,6 +43,57 @@ SLVMOpalASTTranslator class >> initialize [
 	#whileFalse -> #emitWhileFalse:receiver: .
 	#whileTrue -> #emitWhileTrue:
 	 } asDictionary
+]
+
+{ #category : #visiting }
+SLVMOpalASTTranslator >> closureCopiedValuesBase [
+	^ 4
+]
+
+{ #category : #'primitive functions' }
+SLVMOpalASTTranslator >> createFullBlockClosureFunction [
+	^ self getRuntimeSmalltalkFunction: #slvm_dynrun_primitive_createFullBlockClosure signature: [:ct |
+		{
+			"Outer context" ct dynamicObjectType .
+			"Receiver" ct dynamicObjectType .
+			"Compiled Method" ct dynamicObjectType .
+			"Copied parameters size" ct uint .
+		} -> ct dynamicObjectType
+	]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMOpalASTTranslator >> createTempVectorForScope: scope [
+	| tempVectorSize tempVectorName tempVectorValue |
+	self flag: 'Add support for mixed object/data vectors.'.
+	tempVectorSize := scope tempVector size.
+
+	"Allocate the temp vector"
+	tempVectorValue := irBuilder call: self tempVectorCreationFunction arguments: { irBuilder constUInt: tempVectorSize }.
+	tempVectorValue setPrimitiveCall.
+	
+	tempVectorName := scope tempVectorName.
+	currentScope addValue: tempVectorValue symbol: scope tempVectorName.
+	scope tempVector doWithIndex: [ :each :index|
+		currentScope addBlock: [ :builder :lookupScope |
+			| tempVectorPointer |
+			tempVectorPointer := lookupScope lookSymbolRecursively: tempVectorName withBuilder: builder.
+			builder getReference: tempVectorPointer element: (builder constInt: index - 1)
+		] symbol: each name
+	].
+
+]
+
+{ #category : #'visitor-double dispatching' }
+SLVMOpalASTTranslator >> createThisContextEmitter [
+	^ [ :builder |
+		| call |
+		call := builder call: self marryThisContextFunction arguments: { builder getFramePointer }.
+		call
+			setPrimitiveCall;
+			setGetThisContext.
+		call
+		]
 ]
 
 { #category : #'inline messages' }
@@ -227,9 +279,74 @@ SLVMOpalASTTranslator >> emitToDo: aMessageNode receiver: receiverValue step: st
 	^ receiverValue
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMOpalASTTranslator >> function: newFunction build: aBinaryBlock [
+	| oldAllocaBuilder oldIRBuilder allocaBlock contentBlock oldCurrentScope |
+	oldAllocaBuilder := allocaBuilder.
+	oldIRBuilder := irBuilder.
+	oldCurrentScope := currentScope.
+	
+	currentScope := SLVMOpalLocalScope new parentScope: oldCurrentScope.
+	
+	allocaBuilder := SLVMBuilder on: newFunction.
+	allocaBlock := allocaBuilder newBasicBlock: #temps.
+	allocaBuilder currentBlock: allocaBlock.
+	
+	irBuilder := SLVMBuilder on: newFunction.
+	contentBlock := irBuilder newBasicBlock: #content.
+	irBuilder currentBlock: contentBlock.
+	
+	[
+		aBinaryBlock value: allocaBlock value: contentBlock.
+	] ensure: [
+		allocaBuilder := oldAllocaBuilder.
+		irBuilder := oldIRBuilder.
+		currentScope := oldCurrentScope.
+	]
+
+]
+
+{ #category : #'as yet unclassified' }
+SLVMOpalASTTranslator >> getReceiverValue [
+	^ currentScope selfValue
+]
+
+{ #category : #'primitive functions' }
+SLVMOpalASTTranslator >> getRuntimeSmalltalkFunction: name signature: signatureBlock [
+	^ module globalValues at: name ifAbsent: [ 
+		| signature |
+		signature := signatureBlock value: compilationTarget.
+		(module functionName: name callingConvention: #smalltalk arguments: signature key returnType: signature value)
+			makeExternal
+	].
+]
+
+{ #category : #'as yet unclassified' }
+SLVMOpalASTTranslator >> getThisContextValue: scope [
+	| thisContextVar |
+	thisContextVar := scope lookupVar: #thisContext.
+	^ thisContextVar emitSLVMValue: irBuilder scope: currentScope.
+]
+
 { #category : #accessing }
 SLVMOpalASTTranslator >> ir [
 	^ methodIR
+]
+
+{ #category : #'primitive functions' }
+SLVMOpalASTTranslator >> marryThisContextFunction [
+	^ self getRuntimeSmalltalkFunction: #slvm_dynrun_primitive_marryThisContext signature: [:ct |
+		{
+			"Frame pointer" ct pointerTo: ct void .
+		} -> ct dynamicObjectType
+	]
+]
+
+{ #category : #'primitive functions' }
+SLVMOpalASTTranslator >> tempVectorCreationFunction [
+	^ self getRuntimeSmalltalkFunction: #slvm_dynrun_primitive_tempVectorCreate signature: [:ct |
+		{ ct uint } -> ct dynamicObjectType
+	]
 ]
 
 { #category : #visiting }
@@ -238,12 +355,85 @@ SLVMOpalASTTranslator >> visitAssignmentNode: anAssignmentNode [
 	value := self visitNode: anAssignmentNode value.
 	anAssignmentNode variable binding emitSLVM: irBuilder store: value scope: currentScope.
 	^ value
-
 ]
 
 { #category : #visiting }
-SLVMOpalASTTranslator >> visitBlockNode: aBlockNode [ 
-	self halt.
+SLVMOpalASTTranslator >> visitBlockNode: aBlockNode [
+	| objectType blockArgumentTypes blockFunctionType blockFunction nodeScope thisContextValue receiverValue closureValue copiedNames copiedValue copiedPointer receiverIndex arguments blockClosureSelf closureReceiver argValue blockLocalResult |
+	self assert: aBlockNode isInlined not.
+	
+	objectType := compilationTarget dynamicObjectType.
+	blockArgumentTypes := {"receiver" objectType} , aBlockNode arguments collect: [ :arg | objectType ].
+	blockFunctionType := SLVMFunctionType callingConvention: #smalltalk arguments: blockArgumentTypes returnType: objectType.
+	copiedNames := aBlockNode scope inComingCopiedVars asArray collect: #name.
+	
+	blockFunction := SLVMFunction pointerSize: compilationTarget pointerSize functionType: blockFunctionType.
+	blockFunction
+		compilationTarget: compilationTarget;
+		needsCompiledMethodObject: true;
+		makePrivate.
+	module add: blockFunction.
+	self flag: 'TODO: Try to add the closure indirectly to the module'.
+	
+	receiverIndex := (FullBlockClosure instVarIndexFor: #receiver) - 1.
+	
+	self function: blockFunction build: [ :allocaBlock :contentBlock |
+		arguments := blockFunction arguments.
+		
+		"Add the arguments to the scope"
+		aBlockNode arguments doWithIndex: [ :arg :index |
+			argValue := arguments at: index + 1.
+			argValue name: arg name.
+			currentScope addValue: argValue symbol: arg name.
+		].
+
+		"Fetch the receiver"
+		blockClosureSelf := arguments first name: #blockClosure.
+		closureReceiver := irBuilder load: (irBuilder getReference: blockClosureSelf element: (irBuilder constUInt: receiverIndex)) name: #self.
+		currentScope selfValue: closureReceiver.
+	
+		"Put the copied in the closure scope."
+		copiedNames doWithIndex: [ :name :index |
+			copiedPointer := irBuilder getReference: blockClosureSelf element: (irBuilder constInt: self closureCopiedValuesBase + index - 1).
+			copiedValue := irBuilder load: copiedPointer name: name.
+			currentScope addValue: copiedValue symbol: name
+		].
+	
+		"Translate the block body."
+		blockLocalResult := self visitNode: aBlockNode body.
+		
+		"Finsh the closure code."
+		allocaBuilder jump: contentBlock.
+		irBuilder isLastTerminator ifFalse: [
+			irBuilder return: blockLocalResult
+		]
+	].
+	
+	nodeScope := aBlockNode parent scope.
+	thisContextValue := self getThisContextValue: nodeScope.
+	receiverValue := self getReceiverValue.
+	closureValue := irBuilder call: (self createFullBlockClosureFunction) arguments: {
+		thisContextValue .
+		receiverValue .
+		blockFunction compiledMethodMetaDataValue.
+		irBuilder constUInt: copiedNames size.
+	}.
+	closureValue setPrimitiveCall.
+	
+	"Copy the values in the closure."
+	copiedNames doWithIndex: [ :name :index |
+		"Evaluate the copied variables."
+		copiedValue := currentScope lookSymbolRecursively: name withBuilder: irBuilder.
+		(copiedValue isInstruction and: [ copiedValue isAlloca ]) ifTrue: [ 
+			copiedValue := irBuilder load: copiedValue
+		].
+	
+		"Copy the value into the block closure."
+		copiedPointer := irBuilder getReference: closureValue element: (irBuilder constInt: self closureCopiedValuesBase + index - 1).
+		irBuilder store: copiedValue in: copiedPointer.
+	].
+
+	^ closureValue
 ]
 
 { #category : #'visitor-double dispatching' }
@@ -306,55 +496,49 @@ SLVMOpalASTTranslator >> visitMessageNode: aMessageNode [
 
 { #category : #'visitor-double dispatching' }
 SLVMOpalASTTranslator >> visitMethodNode: aMethodNode [
-	| objectType argumentTypes functionType currentFunction arguments argValue allocaBlock local contentBlock callingConvention |
+	| objectType argumentTypes functionType arguments argValue local callingConvention methodFunction |
 	compilationTarget := aMethodNode compilationContext compilationTarget.
+	module := aMethodNode compilationContext module.
 	objectType := compilationTarget dynamicObjectType.
 	callingConvention := #smalltalk.
 	aMethodNode pragmaNamed: #callingConvention: ifPresent: [ :callingConventionPragma |
 		callingConvention := callingConventionPragma arguments first value
 	].
 
-	argumentTypes := {"receiver" objectType} , aMethodNode arguments collect: [ :arg | objectType ].
+	argumentTypes := {"receiver" objectType} , (aMethodNode arguments collect: [ :arg | objectType ]).
 	functionType := SLVMFunctionType callingConvention: callingConvention arguments: argumentTypes returnType: objectType.
 	
-	currentFunction := SLVMFunction pointerSize: compilationTarget pointerSize functionType: functionType.
-	currentFunction compilationTarget: aMethodNode compilationContext compilationTarget.
-	methodIR := SLVMOpalMethodIR new function: currentFunction.
-	
-	currentScope := SLVMOpalLocalScope new.
-	arguments := currentFunction arguments.
-	currentScope selfValue: (arguments first name: #self; yourself).
-	aMethodNode arguments doWithIndex: [ :arg :index |
-		argValue := arguments at: index + 1.
-		argValue name: arg name.
-		currentScope addValue: argValue symbol: arg name.
-	].
+	methodFunction := SLVMFunction pointerSize: compilationTarget pointerSize functionType: functionType.
+	methodFunction compilationTarget: aMethodNode compilationContext compilationTarget.
+	methodIR := SLVMOpalMethodIR new function: methodFunction.
+	self function: methodFunction build: [ :allocaBlock :contentBlock |
+		arguments := methodFunction arguments.
+		currentScope selfValue: (arguments first name: #self; yourself).
+		currentScope thisContextEmitter: self createThisContextEmitter.
+		aMethodNode arguments doWithIndex: [ :arg :index |
+			argValue := arguments at: index + 1.
+			argValue name: arg name.
+			currentScope addValue: argValue symbol: arg name.
+		].
 
-	allocaBuilder := SLVMBuilder on: currentFunction.
-	allocaBlock := allocaBuilder newBasicBlock: #temps.
-	allocaBuilder currentBlock: allocaBlock.
+		aMethodNode scope tempVarNames do: [ :tempName |
+			(currentScope includesSymbol: tempName) ifFalse: [
+				local := allocaBuilder alloca: objectType name: tempName.
+				currentScope addValue: local symbol: tempName.
+			]
+		].
+
+		aMethodNode scope tempVector ifNotEmpty: [
+			self createTempVectorForScope: aMethodNode scope
+		].
 	
-	irBuilder := SLVMBuilder on: currentFunction.
-	contentBlock := irBuilder newBasicBlock: #content.
-	irBuilder currentBlock: contentBlock.
-	
-	aMethodNode scope tempVarNames do: [ :tempName |
-		(currentScope includesSymbol: tempName) ifFalse: [
-			local := allocaBuilder alloca: objectType name: tempName.
-			currentScope addValue: local symbol: tempName.
+		self visitNode: aMethodNode body.
+		allocaBuilder jump: contentBlock.
+		irBuilder isLastTerminator ifFalse: [
+			irBuilder return: currentScope selfValue
 		]
 	].
 
-	aMethodNode scope tempVector ifNotEmpty: [
-		self halt
-	].
-	
-	self visitNode: aMethodNode body.
-	
-	allocaBuilder jump: contentBlock.
-	irBuilder isLastTerminator ifFalse: [
-		irBuilder return: currentScope selfValue
-	]
 ]
 
 { #category : #'visitor-double dispatching' }
@@ -366,7 +550,6 @@ SLVMOpalASTTranslator >> visitReturnNode: aReturnNode [
 { #category : #visiting }
 SLVMOpalASTTranslator >> visitSequenceNode: aSequenceNode [ 
 	| result |
-	self visitTemporaryNodes: aSequenceNode temporaries.
 	result := irBuilder addDynamicLiteral: nil.
 	aSequenceNode statements do: [:each | result := self visitNode: each].
 	^ result

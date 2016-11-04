@@ -31,6 +31,7 @@ SLVMOpalModuleBuilder >> addMethod: aCompiledMethod modulePackage: modulePackage
 	compiler := aCompiledMethod methodClass compiler.
 	compiler compilationContext: (compiler compilationContext as: SLVMOpalCompilationContext).
 	compiler compilationContext
+		module: module;
 		compilationTarget: module compilationTarget;
 		astTranslatorClass: SLVMOpalASTTranslator.
 		

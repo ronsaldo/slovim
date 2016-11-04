@@ -2,10 +2,10 @@ Extension { #name : #OCTempVariable }
 
 { #category : #'*Slovim-OpalCompiler' }
 OCTempVariable >> emitSLVM: builder store: value scope: slvmScope [
-	^ builder store: value in: (slvmScope lookSymbol: name recursivelyWith: builder)
+	^ builder store: value in: (slvmScope lookSymbolRecursively: name withBuilder: builder)
 ]
 
 { #category : #'*Slovim-OpalCompiler' }
 OCTempVariable >> emitSLVMValue: builder scope: slvmScope [
-	^ builder load: (slvmScope lookSymbol: name recursivelyWith: builder)
+	^ builder load: (slvmScope lookSymbolRecursively: name withBuilder: builder)
 ]

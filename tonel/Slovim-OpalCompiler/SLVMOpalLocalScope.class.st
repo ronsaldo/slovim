@@ -4,14 +4,27 @@ Class {
 	#instVars : [
 		'parentScope',
 		'selfValue',
-		'variables'
+		'variables',
+		'thisContextEmitter'
 	],
 	#category : #'Slovim-OpalCompiler-Translator'
 }
 
 { #category : #adding }
+SLVMOpalLocalScope >> addBlock: block symbol: symbol [
+	variables at: symbol put: block
+]
+
+{ #category : #adding }
 SLVMOpalLocalScope >> addValue: value symbol: symbol [
-	variables at: symbol put: value
+	self addBlock: [ value ] symbol: symbol
+]
+
+{ #category : #accessing }
+SLVMOpalLocalScope >> emitThisContext: builder [
+	thisContextEmitter ifNotNil: [ ^ thisContextEmitter value: builder].
+	parentScope ifNil: [ self error: 'Cannot emit this context.' ].
+	^ parentScope emitThisContext: builder
 ]
 
 { #category : #'as yet unclassified' }
@@ -30,11 +43,15 @@ SLVMOpalLocalScope >> lookSymbol: symbol [
 ]
 
 { #category : #'symbol lookup' }
-SLVMOpalLocalScope >> lookSymbol: symbol recursivelyWith: builder [
+SLVMOpalLocalScope >> lookSymbolRecursively: symbol [
 	variables at: symbol ifPresent: [ :result | ^ result ].
 	parentScope ifNil: [ self error: 'failed to look variable.' ].
-	^ parentScope lookSymbol: symbol recursivelyWith: builder
+	^ parentScope lookSymbolRecursively: symbol
+]
 
+{ #category : #'symbol lookup' }
+SLVMOpalLocalScope >> lookSymbolRecursively: symbol withBuilder: builder [
+	^ (self lookSymbolRecursively: symbol) cull: builder cull: self
 ]
 
 { #category : #accessing }
@@ -55,6 +72,16 @@ SLVMOpalLocalScope >> selfValue [
 { #category : #accessing }
 SLVMOpalLocalScope >> selfValue: anObject [
 	selfValue := anObject
+]
+
+{ #category : #accessing }
+SLVMOpalLocalScope >> thisContextEmitter [
+	^ thisContextEmitter
+]
+
+{ #category : #accessing }
+SLVMOpalLocalScope >> thisContextEmitter: anObject [
+	thisContextEmitter := anObject
 ]
 
 { #category : #accessing }
