@@ -112,6 +112,11 @@ SLVMLirExternalLabel >> public [
 	visibility := #public
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirExternalLabel >> relocatableValue [
+	^ 0
+]
+
 { #category : #accessing }
 SLVMLirExternalLabel >> type [
 	^ type

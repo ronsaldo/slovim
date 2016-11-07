@@ -136,11 +136,7 @@ SLVMLirObjectSerializer >> addInnerObject: anObject [
 	pointer := self addObject: anObject.
 	stream position: oldPosition.
 	self recordRelocationFor: anObject to: pointer.
-	pointerSize = 4 ifTrue: [
-		self writeInt32: pointer
-	] ifFalse: [
-		self writeInt64: pointer
-	].
+	
 ]
 
 { #category : #adding }
@@ -257,17 +253,20 @@ SLVMLirObjectSerializer >> blobRelocationsWithModuleMapping: moduleMaping [
 	| result extraSymbols symbol |
 	extraSymbols := IdentityDictionary new.
 	result := OrderedCollection new.
+	self flag: 'Convert this to double dispatch.'.
 	relocationList do: [ :reloc |
 		reloc isInternalRelocation ifTrue: [
 			result add: (SLVMLirMachineCodeRelocation new
 				absoluteOffsetOfSize: pointerSize;
 				offset: reloc offset;
+				addend: reloc addend;
 				yourself)
 		].
 		reloc isModuleElementRelocation  ifTrue: [
 			result add: (SLVMLirMachineCodeRelocation new
 				absoluteOffsetOfSize: pointerSize;
 				offset: reloc offset;
+				addend: reloc addend;
 				symbol: (moduleMaping at: reloc element);
 				yourself)
 		].
@@ -282,6 +281,7 @@ SLVMLirObjectSerializer >> blobRelocationsWithModuleMapping: moduleMaping [
 			result add: (SLVMLirMachineCodeRelocation new
 				absoluteOffsetOfSize: pointerSize;
 				offset: reloc offset;
+				addend: reloc addend;
 				symbol: symbol;
 				yourself)
 		]
@@ -388,33 +388,41 @@ SLVMLirObjectSerializer >> pointerSize: anObject [
 { #category : #adding }
 SLVMLirObjectSerializer >> recordRelocationFor: anObject to: pointer [
 	| offset |
-	(self isImmediate: anObject) ifTrue: [ ^ self ].
+	(self isImmediate: anObject) ifTrue: [ ^ self writePointer: pointer ].
 	
 	offset := stream position.
 	(self isSpecialObject: anObject) ifTrue: [ 
-		^ relocationList add: (SLVMLirObjectSpecialRelocation new
+		relocationList add: (SLVMLirObjectSpecialRelocation new
 			offset: offset;
+			addend: pointer;
 			specialObject: anObject;
 			yourself
-		)
+		).
+		
+		^ self writePointer: pointer
 	].
 
 	anObject isLirInstructionOperand ifTrue: [ 
 		anObject isModuleElement ifTrue: [
-			^ relocationList add: (SLVMLirObjectModuleElementRelocation new
+			relocationList add: (SLVMLirObjectModuleElementRelocation new
 				offset: offset;
+				addend: pointer;
 				element: anObject;
 				yourself
-			)
+			).
+			
+			^ self writePointer: pointer
 		].
+	
 		self halt.
 	].
 
 	relocationList add: (SLVMLirObjectInternalRelocation new
 		offset: offset;
-		target: pointer;
+		addend: pointer;
 		yourself
-	)
+	).
+	^ self writePointer: pointer
 ]
 
 { #category : #adding }
@@ -442,4 +450,13 @@ SLVMLirObjectSerializer >> writeInt64: value [
 	stream nextPut: ((value >> 40) bitAnd: 16rff).
 	stream nextPut: ((value >> 48) bitAnd: 16rff).
 	stream nextPut: ((value >> 56) bitAnd: 16rff).
+]
+
+{ #category : #adding }
+SLVMLirObjectSerializer >> writePointer: pointer [
+	pointerSize = 4 ifTrue: [
+		self writeInt32: pointer
+	] ifFalse: [
+		self writeInt64: pointer
+	].
 ]

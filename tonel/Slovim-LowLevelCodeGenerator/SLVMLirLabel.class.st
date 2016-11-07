@@ -34,6 +34,11 @@ SLVMLirLabel >> isExternalLabel [
 	^ false
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirLabel >> relocatableValue [
+	^ self offset
+]
+
 { #category : #testing }
 SLVMLirLabel >> value [
 	^ offset

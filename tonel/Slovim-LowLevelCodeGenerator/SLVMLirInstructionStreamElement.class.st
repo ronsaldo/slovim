@@ -56,6 +56,11 @@ SLVMLirInstructionStreamElement >> printOnInstructionStream: aStream [
 	self printOn: aStream
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirInstructionStreamElement >> relocatableValue [
+	^ self offset
+]
+
 { #category : #removing }
 SLVMLirInstructionStreamElement >> removeFromStream [
 	section removeElement: self

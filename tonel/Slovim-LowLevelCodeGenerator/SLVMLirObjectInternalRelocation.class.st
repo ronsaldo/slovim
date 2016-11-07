@@ -11,13 +11,3 @@ Class {
 SLVMLirObjectInternalRelocation >> isInternalRelocation [
 	^ true
 ]
-
-{ #category : #accessing }
-SLVMLirObjectInternalRelocation >> target [
-	^ target
-]
-
-{ #category : #accessing }
-SLVMLirObjectInternalRelocation >> target: anObject [
-	target := anObject
-]

@@ -2,10 +2,27 @@ Class {
 	#name : #SLVMLirObjectRelocation,
 	#superclass : #Object,
 	#instVars : [
-		'offset'
+		'offset',
+		'addend'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Image'
 }
+
+{ #category : #accessing }
+SLVMLirObjectRelocation >> addend [
+	^ addend
+]
+
+{ #category : #accessing }
+SLVMLirObjectRelocation >> addend: anObject [
+	addend := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLirObjectRelocation >> initialize [
+	super initialize.
+	addend := 0.
+]
 
 { #category : #testing }
 SLVMLirObjectRelocation >> isInternalRelocation [

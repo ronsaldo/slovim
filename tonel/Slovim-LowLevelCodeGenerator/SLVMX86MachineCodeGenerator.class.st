@@ -466,13 +466,9 @@ SLVMX86MachineCodeGenerator >> generateInstruction: instruction output: output [
 
 	instruction isLabelValue ifTrue: [
 		instruction size = 4 ifTrue: [
-			writer
-				recordReloc32Into: instruction label;
-				putInt32: instruction label offset + instruction labelOffset
+			writer putMaybeReloc32: instruction.
 		] ifFalse: [
-			writer
-				recordReloc64Into: instruction label;
-				putInt64: instruction label offset + instruction labelOffset
+			writer putMaybeReloc64: instruction.
 		]
 	].
 					
@@ -1045,9 +1041,9 @@ SLVMX86MachineCodeGenerator >> writeBlob: blob [
 			symbol: ((symbol isNotNil and: [ symbol shouldBeKeep ]) ifTrue: [ symbol ] ifFalse: [nil]);
 			section: (symbol ifNotNil: [symbol section] ifNil: [writer currentSection]).
 			
-		"Use the unkept symbol as the addend."
+		"Apply the unkept symbol to the addend."
 		(symbol isNotNil and: [mappedReloc symbol isNil and: [ mappedReloc section ~~ writer currentSection]]) ifTrue: [ 
-			mappedReloc addend: symbol.
+			mappedReloc addend: mappedReloc addend + symbol position.
 		].
 	
 		writer currentSection addRelocation: mappedReloc
