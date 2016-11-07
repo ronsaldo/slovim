@@ -160,7 +160,8 @@ SLVMElf32SectionHeader >> rel [
 
 { #category : #types }
 SLVMElf32SectionHeader >> rela [
-	type := 4
+	type := 4.
+	entrySize := 12.
 ]
 
 { #category : #accessing }

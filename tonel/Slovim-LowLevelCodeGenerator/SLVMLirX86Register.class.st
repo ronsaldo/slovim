@@ -28,6 +28,11 @@ SLVMLirX86Register >> isHighRegister [
 	^ value > 7
 ]
 
+{ #category : #accessing }
+SLVMLirX86Register >> isLowRegister [
+	^ value <= 7
+]
+
 { #category : #testing }
 SLVMLirX86Register >> isRegister [
 	^ true
@@ -70,5 +75,5 @@ SLVMLirX86Register >> value: anObject [
 
 { #category : #accessing }
 SLVMLirX86Register >> valueLow [
-	^ value bitAnd: 15
+	^ value bitAnd: 7
 ]

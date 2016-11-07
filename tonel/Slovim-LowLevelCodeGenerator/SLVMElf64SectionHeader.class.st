@@ -10,6 +10,18 @@ SLVMElf64SectionHeader >> dynsym [
 	entrySize := 24.
 ]
 
+{ #category : #types }
+SLVMElf64SectionHeader >> rel [
+	type := 9.
+	entrySize := 16.
+]
+
+{ #category : #types }
+SLVMElf64SectionHeader >> rela [
+	type := 4.
+	entrySize := 24.
+]
+
 { #category : #accessing }
 SLVMElf64SectionHeader >> size [
 	^ 64

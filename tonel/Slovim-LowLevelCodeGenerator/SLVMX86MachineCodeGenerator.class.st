@@ -56,8 +56,13 @@ SLVMX86MachineCodeGenerator >> encodeModRM: registerOrAddress reg: reg immediate
 { #category : #'instruction generation' }
 SLVMX86MachineCodeGenerator >> encodeRexRM: rm [
 	| bbit xbit lowBits |
-	bbit := (rm base isNotNil and: [ rm base isHighRegister ]) asBit.
-	xbit := (rm index isNotNil and: [ rm index isHighRegister ]) asBit.
+	rm isRegister ifTrue: [ 
+		bbit := rm isHighRegister asBit.
+		xbit := 0.
+	] ifFalse: [ 
+		bbit := (rm base isNotNil and: [ rm base isHighRegister ]) asBit.
+		xbit := (rm index isNotNil and: [ rm index isHighRegister ]) asBit.
+	].
 	lowBits := (xbit << 1) | (bbit).
 	
 	lowBits ~= 0 ifTrue: [ 
@@ -71,6 +76,29 @@ SLVMX86MachineCodeGenerator >> encodeRexReg: reg [
 	reg isHighRegister ifTrue: [ 
 		self assert: longMode.
 		writer putInt8: 16r44
+	]
+]
+
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> encodeRexSize: size rm: first [
+	| wbit rbit xbit bbit lowBits |
+	wbit := (size = 8) asBit.
+	rbit := 0.
+	xbit := 0.
+	bbit := 0.
+	first isRegisterOrRegisterAddress  ifTrue: [ 
+		first isRegister ifTrue: [
+			bbit := first isHighRegister asBit
+		] ifFalse: [
+			bbit := (first base isNotNil and: [ first base isHighRegister ]) asBit.
+			xbit := (first index isNotNil and: [ first index isHighRegister ]) asBit.
+		]
+	].
+
+	lowBits := (wbit << 3) | (rbit << 2) | (xbit << 1) | (bbit).
+	lowBits ~= 0 ifTrue: [ 
+		self assert: longMode.
+		writer putInt8: 16r40 | lowBits
 	]
 ]
 
@@ -717,13 +745,14 @@ SLVMX86MachineCodeGenerator >> generateMachineCodeInstruction: instruction outpu
 SLVMX86MachineCodeGenerator >> generatePOP: instruction [
 	| operand |
 	operand := instruction first.
-	operand isRegister ifTrue: [
-		self encodeRexReg: operand.
+	(operand isRegister) ifTrue: [
+		self encodeRexRM: operand.
 		^ writer put: 16r58 + operand valueLow.
 	].
 
 	operand isRegisterOrRegisterAddress ifTrue: [
-		self encodeRexRM: operand.
+		self encodeRexSize: operand size rm: operand.
+		"self encodeRexRM: operand."
 		writer put: 16r8F.
 		^ self encodeModRM: operand opcode: 0.
 	].
@@ -744,7 +773,7 @@ SLVMX86MachineCodeGenerator >> generatePUSH: instruction [
 	].
 
 	operand isRegister ifTrue: [
-		self encodeRexReg: operand.
+		self encodeRexRM: operand.
 		^ writer put: 16r50 + operand valueLow.
 	].
 

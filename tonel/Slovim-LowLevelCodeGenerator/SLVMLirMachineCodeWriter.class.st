@@ -167,32 +167,7 @@ SLVMLirMachineCodeWriter >> putMaybeReloc32: value [
 
 { #category : #adding }
 SLVMLirMachineCodeWriter >> putMaybeReloc32: value nextIPRelative: immediateSize [
-	| subtractionValue extraOffset targetSection |
-	extraOffset := 4 + immediateSize.
-	subtractionValue := self position + 4 + immediateSize.
-	(value isInteger or: [ value isImmediateConstant ]) ifTrue: [
-		^self putInt32: value value - subtractionValue
-	].
-
-	value isExternalLabel ifTrue: [
-		self halt.
-	].
-
-	value isLabel ifTrue: [ 
-		value section == currentSectionSource ifTrue: [ 
-			^ self putInt32: value offset - subtractionValue
-		] ifFalse: [
-			self halt
-		]
-	].
-	
-	value isLabelValue ifTrue: [
-		"self recordReloc32Into: value label."
-		targetSection := self getOrCreateSectionNamed: value label section name.
-		^ self putInt32: value label offset + value labelOffset
-	].
-
-	self halt.
+	^ self putMaybeRelocRelative32: value addend: -4 - immediateSize 
 ]
 
 { #category : #adding }
@@ -217,17 +192,34 @@ SLVMLirMachineCodeWriter >> putMaybeReloc64: value [
 ]
 
 { #category : #adding }
-SLVMLirMachineCodeWriter >> putNextIPRelativeLabel32: label [
-	self flag: 'Support different target section.'.
-	label isExternalLabel ifTrue: [
-		self recordRelativeRelocS32Into: label addend: -4.
-		^ self putInt32: -4.
+SLVMLirMachineCodeWriter >> putMaybeRelocRelative32: value addend: addend [
+	(value isInteger or: [ value isImmediateConstant ]) ifTrue: [
+		^ self putInt32: value value
 	].
-	self putInt32: label offset - (self position + 4)
+
+	value isExternalLabel ifTrue: [
+		^ self recordRelativeReloc32AndWriteValue: value addend: addend
+	].
+
+	value isLabel ifTrue: [
+		^ self recordRelativeReloc32AndWriteValue: value addend: addend
+	].
+
+	value isLabelValue ifTrue: [
+		^ self recordRelativeReloc32AndWriteValue: value label addend: value labelOffset + addend
+	].
+
+	self halt.
+]
+
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> putNextIPRelativeLabel32: label [
+	^ self putMaybeRelocRelative32: label addend: -4
 ]
 
 { #category : #adding }
 SLVMLirMachineCodeWriter >> putNextIPRelativeLabel8: label [
+	self assert: label isExternalLabel not.
 	self putInt8: label offset - (self position + 1)
 ]
 
@@ -251,6 +243,12 @@ SLVMLirMachineCodeWriter >> recordLabelEnd: label [
 	| symbol |
 	symbol := self symbolForLabel: label.
 	symbol size: self position - symbol position.
+]
+
+{ #category : #adding }
+SLVMLirMachineCodeWriter >> recordRelativeReloc32AndWriteValue: value addend: addend [
+	self recordRelativeRelocS32Into: value addend: addend.
+	^ self putInt32: value relocatableValue + addend - self position
 ]
 
 { #category : #adding }
@@ -310,8 +308,8 @@ SLVMLirMachineCodeWriter >> recordReloc32Into: destinationLabel addend: addend [
 		section: (destinationLabel section ifNotNil: [self getOrCreateSectionNamed: destinationLabel section name]);
 		yourself.
 	self addSymbol: symbol withDestination: destinationLabel addendToReloc: reloc.
-	currentSection addRelocation: reloc .
-
+	currentSection addRelocation: reloc.
+	^ reloc
 ]
 
 { #category : #adding }

@@ -226,13 +226,15 @@ SLVMElfBuilder >> relocationTableClass [
 
 { #category : #adding }
 SLVMElfBuilder >> relocationWithAddendSectionFor: section [
-	^ relocationSectionDictionary at: section ifAbsentPut: [
+	^ (relocationSectionDictionary at: section ifAbsentPut: [
 		(self addSectionNamed: ('.rela' , section name) asSymbol content: (self addComponent: self relocationWithAddendTableClass new))
 			rela;
+			setInfoAndLinkFlags;
+			addressAlign: self pointerAlignment;
 			link: (sectionIndexDictionary at: symbolTable);
 			info: (sectionIndexDictionary at: section);
 			yourself
-	]
+	]) content
 ]
 
 { #category : #'format classes' }
