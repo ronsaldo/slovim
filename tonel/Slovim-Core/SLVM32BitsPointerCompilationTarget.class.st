@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #accessing }
+SLVM32BitsPointerCompilationTarget >> canonicalName [
+	^ #'generic-32'
+]
+
+{ #category : #accessing }
 SLVM32BitsPointerCompilationTarget >> pointerAlignment [
 	^ 4
 ]

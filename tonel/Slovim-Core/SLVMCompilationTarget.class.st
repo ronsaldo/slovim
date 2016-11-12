@@ -18,6 +18,11 @@ SLVMCompilationTarget >> callingConventionDescriptionNamed: callingConventionNam
 	self subclassResponsibility
 ]
 
+{ #category : #accessing }
+SLVMCompilationTarget >> canonicalName [
+	self subclassResponsibility
+]
+
 { #category : #types }
 SLVMCompilationTarget >> char [
 	^ SLVMType charType

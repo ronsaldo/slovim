@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #accessing }
+SLVM64BitsPointerCompilationTarget >> canonicalName [
+	^ #'generic-64'
+]
+
+{ #category : #accessing }
 SLVM64BitsPointerCompilationTarget >> pointerAlignment [
 	^ 8
 ]
