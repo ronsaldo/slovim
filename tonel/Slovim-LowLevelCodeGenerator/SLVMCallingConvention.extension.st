@@ -21,6 +21,11 @@ SLVMCallingConvention >> canBeFrameLess [
 ]
 
 { #category : #'*Slovim-LowLevelCodeGenerator' }
+SLVMCallingConvention >> floatArgumentRegisters [
+	^ #()
+]
+
+{ #category : #'*Slovim-LowLevelCodeGenerator' }
 SLVMCallingConvention >> floatReturnRegister [
 	self subclassResponsibility
 ]
@@ -43,6 +48,11 @@ SLVMCallingConvention >> hasSegmentedStack [
 { #category : #'*Slovim-LowLevelCodeGenerator' }
 SLVMCallingConvention >> intResultRegister [
 	self subclassResponsibility
+]
+
+{ #category : #'*Slovim-LowLevelCodeGenerator' }
+SLVMCallingConvention >> integerArgumentRegisters [
+	^ #()
 ]
 
 { #category : #'*Slovim-LowLevelCodeGenerator' }

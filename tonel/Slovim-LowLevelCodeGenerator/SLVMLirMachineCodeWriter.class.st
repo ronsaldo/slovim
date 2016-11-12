@@ -248,7 +248,7 @@ SLVMLirMachineCodeWriter >> recordLabelEnd: label [
 { #category : #adding }
 SLVMLirMachineCodeWriter >> recordRelativeReloc32AndWriteValue: value addend: addend [
 	self recordRelativeRelocS32Into: value addend: addend.
-	^ self putInt32: value relocatableValue + addend - self position
+	^ self putInt32: (value relocatableValueRelativeTo: self position) + addend
 ]
 
 { #category : #adding }

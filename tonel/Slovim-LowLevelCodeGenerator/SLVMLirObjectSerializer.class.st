@@ -188,7 +188,7 @@ SLVMLirObjectSerializer >> addObject: anObject [
 
 	"Start writing the header"
 	format := class instSpec.
-	extraBits := (pointerSize - (elementCount % pointerSize)) % pointerSize.
+	extraBits := (pointerSize - (bodySize % pointerSize)) % pointerSize.
 	format := format + extraBits.
 	
 	header := self classIndexFor: class.

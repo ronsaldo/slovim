@@ -53,6 +53,11 @@ SLVMX86CompilationTarget >> callingConventionDescriptionNamed: conventionName [
 	self error: 'Unsupported calling convention.'
 ]
 
+{ #category : #accessing }
+SLVMX86CompilationTarget >> canonicalName [
+	^ #i386
+]
+
 { #category : #'elf relocations' }
 SLVMX86CompilationTarget >> convertRelocation: relocation section: section elfBuilder: elfBuilder [
 	| table elfReloc symbolIndex |
@@ -124,17 +129,28 @@ SLVMX86CompilationTarget >> emitTo: instructionStream registrationOfObjectSectio
 			yourself.
 		instructionStream
 			add: registerLabel;
+			addX86: PUSH with: EBP;
+			addX86: MOV with: EBP with: ESP;
+			
 			addX86: PUSH with: registrationInformationLabel;
 			addX86: CALL with: registrationSymbol;
 			addX86: ADD with: ESP with: 4;
+			
+			addX86: MOV with: ESP with: EBP;
+			addX86: POP with: EBP;
 			addX86: RET;
 			
 			add: unregisterLabel;
+			addX86: PUSH with: EBP;
+			addX86: MOV with: EBP with: ESP;
+			
 			addX86: PUSH with: registrationInformationLabel;
 			addX86: CALL with: unregistrationSymbol;
 			addX86: ADD with: ESP with: 4;
+			
+			addX86: MOV with: ESP with: EBP;
+			addX86: POP with: EBP;
 			addX86: RET
-
 	].
 
 	instructionStream withSectionNamed: #'.ctors' do: [

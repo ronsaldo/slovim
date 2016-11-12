@@ -79,12 +79,12 @@ SLVMLirX86RegisterAddress >> encodeModRMWithOpcode: opcode immediate: immediateS
 	].
 
 	hasDisplacement := false.
-	(sibByte isNotNil and: [ base value == EBP value ]) ifTrue: [
+	(sibByte isNotNil and: [ base valueLow == EBP valueLow ]) ifTrue: [
 		hasDisplacement := true.
 		hasSmallDisplacement := self hasSmallDisplacement.
 		mod := hasSmallDisplacement ifTrue: [ 1 ] ifFalse: [ 2 ].
 	] ifFalse: [
-		(displacement = 0 and: [ base value ~~ EBP value ]) ifTrue: [
+		(displacement = 0 and: [ base valueLow ~~ EBP valueLow ]) ifTrue: [
 			mod := 0
 		] ifFalse: [
 			hasDisplacement := true.
@@ -151,7 +151,7 @@ SLVMLirX86RegisterAddress >> isRegisterAddress [
 
 { #category : #'as yet unclassified' }
 SLVMLirX86RegisterAddress >> needsSibByte [
-	^ base value == ESP value or: [ scale ~= 1 or: [ index isNotNil ] ]
+	^ (base isNotNil and: [ base valueLow == ESP value ]) or: [ scale ~= 1 or: [ index isNotNil ] ]
 ]
 
 { #category : #printing }

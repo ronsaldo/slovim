@@ -97,6 +97,20 @@ SLVMLirMachineCodeRelocation >> applyImplicitAddendIn: targetSection [
 
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirMachineCodeRelocation >> clearImplicitAddendIn: targetSection [
+	| code |	
+	code := targetSection code.
+	(self isAbsoluteOffset64 or: [ self isRelativeSOffset64 ]) ifTrue: [ 
+		code unsignedLongLongAt: offset + 1 put: 0
+	].
+
+	(self isAbsoluteOffset32 or: [ self isRelativeSOffset32 ]) ifTrue: [
+		code unsignedLongAt: offset + 1 put: 0
+	].
+
+]
+
 { #category : #initialization }
 SLVMLirMachineCodeRelocation >> initialize [
 	super initialize.

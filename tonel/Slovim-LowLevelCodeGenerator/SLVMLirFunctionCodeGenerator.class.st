@@ -199,6 +199,15 @@ SLVMLirFunctionCodeGenerator >> moveRegister: register toLocal: localVariable [
 ]
 
 { #category : #'code generation' }
+SLVMLirFunctionCodeGenerator >> moveSpilledValue: value toRegister: register [
+	value isConstant ifTrue: [
+		self moveConstant: value toRegister: register
+	] ifFalse: [
+		registerAllocator moveInstructionSpilledValue: value toRegister: register with: self
+	]
+]
+
+{ #category : #'code generation' }
 SLVMLirFunctionCodeGenerator >> moveValue: value toRegister: register [
 	value isConstant ifTrue: [
 		self moveConstant: value toRegister: register

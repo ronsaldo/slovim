@@ -470,6 +470,11 @@ SLVMX86MachineCodeGenerator >> generateFST: instruction [
 	self invalidInstruction.
 ]
 
+{ #category : #'instruction generation' }
+SLVMX86MachineCodeGenerator >> generateHLT: instruction [
+	^ writer put: 16rF4
+]
+
 { #category : #translating }
 SLVMX86MachineCodeGenerator >> generateInstruction: instruction output: output [
 	instruction offset: output position.
@@ -609,7 +614,7 @@ SLVMX86MachineCodeGenerator >> generateLEA: instruction [
 	operandSize = 2 ifTrue: [
 		writer put: 16r66.
 	].
-	self encodeRexSize: operandSize rm: first reg: second.
+	self encodeRexSize: operandSize rm: second reg: first.
 	writer put: 16r8D.
 	^ self encodeModRM: second reg: first
 

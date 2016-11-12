@@ -95,10 +95,16 @@ SLVMX86_64CompilationTarget >> callingConventionDescriptionNamed: conventionName
 	self error: 'Unsupported calling convention.'
 ]
 
+{ #category : #accessing }
+SLVMX86_64CompilationTarget >> canonicalName [
+	^ #amd64
+]
+
 { #category : #'as yet unclassified' }
 SLVMX86_64CompilationTarget >> convertRelocation: relocation section: section elfBuilder: elfBuilder [
 	| table elfReloc symbolIndex |
 	table := elfBuilder relocationWithAddendSectionFor: section.
+	relocation clearImplicitAddendIn: section.
 	
 	elfReloc := table newEntry.
 	symbolIndex := elfBuilder indexOfRelocationSymbol: relocation symbol section: (elfBuilder sectionFromContent: relocation section).
@@ -129,7 +135,10 @@ SLVMX86_64CompilationTarget >> elfMachine [
 
 { #category : #constructors }
 SLVMX86_64CompilationTarget >> emitTo: instructionStream registrationOfObjectSection: sectionLabel size: sectionSize package: packageRegistration [
-	| registrationInformationLabel registerLabel unregisterLabel registrationSymbol unregistrationSymbol oopSectionMetaData sectionFlags |
+	| registrationInformationLabel registerLabel unregisterLabel registrationSymbol unregistrationSymbol oopSectionMetaData sectionFlags cdeclConvention argumentRegisters |
+	cdeclConvention := self callingConventionDescriptionNamed: #cdecl.
+	argumentRegisters := cdeclConvention integerArgumentRegisters.
+	
 	instructionStream withSectionNamed: #'.data' do: [
 		registrationInformationLabel := SLVMLirLabel new name: #'_OopRegistrationInformation'.
 		oopSectionMetaData := ByteArray streamContents: [ :out |
@@ -175,15 +184,25 @@ SLVMX86_64CompilationTarget >> emitTo: instructionStream registrationOfObjectSec
 			yourself.
 		instructionStream
 			add: registerLabel;
-			addX86: PUSH with: registrationInformationLabel;
+			addX86: PUSH with: RBP;
+			addX86: MOV with: RBP with: RSP;
+			
+			addX86: MOV with: argumentRegisters first with: registrationInformationLabel;
 			addX86: CALL with: registrationSymbol;
-			addX86: ADD with: RSP with: 8;
+			
+			addX86: MOV with: RSP with: RBP;
+			addX86: POP with: RBP;
 			addX86: RET;
 			
 			add: unregisterLabel;
-			addX86: PUSH with: registrationInformationLabel;
+			addX86: PUSH with: RBP;
+			addX86: MOV with: RBP with: RSP;
+			
+			addX86: MOV with: argumentRegisters first with: registrationInformationLabel;
 			addX86: CALL with: unregistrationSymbol;
-			addX86: ADD with: RSP with: 8;
+			
+			addX86: MOV with: RSP with: RBP;
+			addX86: POP with: RBP;
 			addX86: RET
 	].
 

@@ -117,6 +117,11 @@ SLVMLirExternalLabel >> relocatableValue [
 	^ 0
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirExternalLabel >> relocatableValueRelativeTo: relativeValue [
+	^ 0
+]
+
 { #category : #accessing }
 SLVMLirExternalLabel >> type [
 	^ type

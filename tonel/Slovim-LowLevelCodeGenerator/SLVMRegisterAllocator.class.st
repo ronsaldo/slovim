@@ -152,7 +152,7 @@ SLVMRegisterAllocator >> moveInstruction: instruction resultInRegister: register
 
 { #category : #'public interface' }
 SLVMRegisterAllocator >> moveInstruction: instruction toRegister: register with: codeGenerator [
-	codeGenerator moveLocal: (lirFunction variableMap at: instruction) type: instruction type toRegister: register
+	self moveInstructionSpilledValue: instruction toRegister: register with: codeGenerator
 ]
 
 { #category : #'public interface' }
@@ -208,6 +208,11 @@ SLVMRegisterAllocator >> moveInstruction: instruction value: value toRegisterWit
 	].
 
 	^ register
+]
+
+{ #category : #'public interface' }
+SLVMRegisterAllocator >> moveInstructionSpilledValue: instruction toRegister: register with: codeGenerator [
+	codeGenerator moveLocal: (lirFunction variableMap at: instruction) type: instruction type toRegister: register
 ]
 
 { #category : #'calling conventions' }

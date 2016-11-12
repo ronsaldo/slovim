@@ -61,6 +61,11 @@ SLVMLirInstructionStreamElement >> relocatableValue [
 	^ self offset
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirInstructionStreamElement >> relocatableValueRelativeTo: relativeValue [
+	^ self relocatableValue - relativeValue
+]
+
 { #category : #removing }
 SLVMLirInstructionStreamElement >> removeFromStream [
 	section removeElement: self

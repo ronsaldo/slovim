@@ -39,6 +39,11 @@ SLVMLirLabel >> relocatableValue [
 	^ self offset
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLirLabel >> relocatableValueRelativeTo: relativeValue [
+	^ self relocatableValue - relativeValue
+]
+
 { #category : #testing }
 SLVMLirLabel >> value [
 	^ offset
