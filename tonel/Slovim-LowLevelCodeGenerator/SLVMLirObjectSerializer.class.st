@@ -141,7 +141,7 @@ SLVMLirObjectSerializer >> addInnerObject: anObject [
 
 { #category : #adding }
 SLVMLirObjectSerializer >> addObject: anObject [
-	| startPosition elementCount class elementSize bodySize slotCount actualBodySize bodyPosition header format extraBits headerPosition slotsToStore |
+	| startPosition elementCount class elementSize bodySize slotCount actualBodySize bodyPosition header format extraBits headerPosition writtenObject |
 	(self isImmediate: anObject) ifTrue: [
 		^ self encodeImmediate: anObject
 	].
@@ -157,16 +157,17 @@ SLVMLirObjectSerializer >> addObject: anObject [
 	].
 
 	dictionary at: anObject ifPresent: [ :pointer | ^ pointer ].
+	writtenObject := self filterObject: anObject.
 
 	"Align the objects to 16 bytes boundaries."
 	stream position: stream size.
 	startPosition := stream size alignedTo: 16.
 	[ stream size < startPosition ] whileTrue: [ stream nextPut: 0 ].
 
-	elementCount := self objectElementCount: anObject.
+	elementCount := self objectElementCount: writtenObject.
 	
 	"Compute the size of the body"
-	class := anObject class.
+	class := writtenObject class.
 	elementSize := self objectElementSizeFor: class instSpec.
 	bodySize := elementCount * elementSize.
 	actualBodySize := bodySize alignedTo: pointerSize.
@@ -184,7 +185,7 @@ SLVMLirObjectSerializer >> addObject: anObject [
 
 	"Record the actual object position."
 	headerPosition := stream position.
-	dictionary at: anObject put: headerPosition.
+	dictionary at: writtenObject put: headerPosition.
 
 	"Start writing the header"
 	format := class instSpec.
@@ -193,7 +194,7 @@ SLVMLirObjectSerializer >> addObject: anObject [
 	
 	header := self classIndexFor: class.
 	header := header | (format << 24).
-	header := header | (anObject identityHash << 32 bitAnd: 4194303).
+	header := header | (writtenObject identityHash << 32 bitAnd: 4194303).
 	header := header | ((slotCount min: 255) << 56).
 	self writeInt64: header.
 
@@ -204,17 +205,9 @@ SLVMLirObjectSerializer >> addObject: anObject [
 		].
 	
 		stream position: bodyPosition.
-		slotsToStore := elementCount.
-		(anObject isKindOf: LiteralVariable) ifTrue: [
-			slotsToStore := 1. "Do not store recursively the value of the variables."
-		].
 		
-		1 to: slotsToStore do: [ :slot |
-			self addInnerObject: (anObject instVarAt: slot)
-		].
-	
-		slotsToStore + 1 to: elementCount do: [ :slot |
-			self addInnerObject: nil
+		1 to: elementCount do: [ :slot |
+			self addInnerObject: (writtenObject instVarAt: slot)
 		].
 	] ifFalse: [
 		elementSize = 8 ifTrue: [
@@ -228,7 +221,7 @@ SLVMLirObjectSerializer >> addObject: anObject [
 		].
 		elementSize = 1 ifTrue: [
 			1 to: bodySize do: [ :i |
-				stream nextPut: (anObject byteAt: i)
+				stream nextPut: (writtenObject byteAt: i)
 			].
 		
 			bodySize + 1 to: actualBodySize do: [ :i |
@@ -331,6 +324,21 @@ SLVMLirObjectSerializer >> encodeSpecialObject: anObject [
 	^ 0
 ]
 
+{ #category : #adding }
+SLVMLirObjectSerializer >> filterLiteralVariable: anObject [
+	^ anObject copy
+		value: nil
+]
+
+{ #category : #adding }
+SLVMLirObjectSerializer >> filterObject: anObject [
+	(anObject isKindOf: LiteralVariable) ifTrue: [
+		^ self filterLiteralVariable: anObject
+	].
+
+	^ anObject
+]
+
 { #category : #initialization }
 SLVMLirObjectSerializer >> initialize [
 	super initialize.
@@ -360,9 +368,9 @@ SLVMLirObjectSerializer >> isSpecialObject: anObject [
 { #category : #adding }
 SLVMLirObjectSerializer >> objectElementCount: anObject [
 	anObject class isPointers ifTrue: [ 
-		^ anObject class instVarNames size + (anObject class isVariable ifTrue: [ anObject size ] ifFalse: [ 0 ])
+		^ anObject class instSize + anObject basicSize
 	] ifFalse: [
-		^ anObject size
+		^ anObject basicSize
 	]
 ]
 
