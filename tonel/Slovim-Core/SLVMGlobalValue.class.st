@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'name',
 		'properties',
-		'visibility'
+		'visibility',
+		'module'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -84,6 +85,16 @@ SLVMGlobalValue >> makePublic [
 { #category : #visibility }
 SLVMGlobalValue >> makeWeak [
 	visibility := #weak
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> module [
+	^ module
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> module: anObject [
+	module := anObject
 ]
 
 { #category : #accessing }

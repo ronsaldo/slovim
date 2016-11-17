@@ -574,6 +574,11 @@ SLVMBuilder >> pointerTypeFor: baseType [
 	^ SLVMPointerType size: self compilationTarget pointerSize baseType: baseType storage: SLVMType genericStorage
 ]
 
+{ #category : #adding }
+SLVMBuilder >> registerClassVariable: classVariable class: classVariableClass [
+	function module registerClassVariable: classVariable class: classVariableClass
+]
+
 { #category : #instructions }
 SLVMBuilder >> rem: left with: right [
 	^ self rem: left with: right name: function generateSymbol

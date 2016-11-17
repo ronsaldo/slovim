@@ -5,13 +5,15 @@ Class {
 		'compilationTarget',
 		'globalValues',
 		'anonymousGlobals',
-		'packages'
+		'packages',
+		'classVariableClassMap'
 	],
 	#category : #'Slovim-Core-SSA'
 }
 
 { #category : #adding }
 SLVMModule >> add: aGlobalValue [
+	aGlobalValue module: self.
 	aGlobalValue name ifNil: [ ^ anonymousGlobals add: aGlobalValue ].
 	globalValues at: aGlobalValue name put: aGlobalValue
 ]
@@ -46,6 +48,11 @@ SLVMModule >> applyFunctionOptimizationPasses: passes [
 { #category : #converting }
 SLVMModule >> asLowLevelModule [
 	^ compilationTarget generateLowLevelModule: self
+]
+
+{ #category : #accessing }
+SLVMModule >> classVariableClassMap [
+	^ classVariableClassMap ifNil: [ classVariableClassMap := IdentityDictionary new ]
 ]
 
 { #category : #accessing }
@@ -181,6 +188,11 @@ SLVMModule >> printOn: aStream [
 	anonymousGlobals do: [ :val | val fullPrintOn: aStream ].
 	globalValues values do: [ :val | val fullPrintOn: aStream ].
 
+]
+
+{ #category : #'as yet unclassified' }
+SLVMModule >> registerClassVariable: classVariable class: classVariableClass [
+	self classVariableClassMap at: classVariable put: classVariableClass
 ]
 
 { #category : #packages }
