@@ -6,7 +6,8 @@ Class {
 		'compilationTarget',
 		'translatedElements',
 		'lirModule',
-		'objectSectionData'
+		'objectSectionData',
+		'classVariableClassMap'
 	],
 	#category : #'Slovim-LowLevelCodeGenerator-Lir'
 }
@@ -57,7 +58,9 @@ SLVMLirCodeGenerator >> needStructuredControlFlow [
 SLVMLirCodeGenerator >> objectSerializer [
 	objectSectionData ifNotNil: [ ^ objectSectionData ].
 
-	objectSectionData := SLVMLirObjectSerializer new pointerSize: compilationTarget pointerSize.
+	objectSectionData := SLVMLirObjectSerializer new
+		pointerSize: compilationTarget pointerSize;
+		classVariableClassMap: classVariableClassMap.
 	lirModule objectSectionData: objectSectionData.
 	^ objectSectionData
 ]
@@ -99,6 +102,7 @@ SLVMLirCodeGenerator >> translateModule: module exportList: exportList [
 
 { #category : #'code generation' }
 SLVMLirCodeGenerator >> translateModule: module exportList: exportList packageRegistration: packageRegistration [
+	classVariableClassMap := module classVariableClassMap.
 	self applyPassesIn: module functionList: exportList.
 	lirModule := SLVMLirModule new compilationTarget: compilationTarget.
 	translatedElements := Dictionary new.

@@ -5,7 +5,8 @@ Class {
 		'dictionary',
 		'relocationList',
 		'stream',
-		'pointerSize'
+		'pointerSize',
+		'classVariableClassMap'
 	],
 	#classVars : [
 		'KernelClassMapping',
@@ -185,7 +186,7 @@ SLVMLirObjectSerializer >> addObject: anObject [
 
 	"Record the actual object position."
 	headerPosition := stream position.
-	dictionary at: writtenObject put: headerPosition.
+	dictionary at: anObject put: headerPosition.
 
 	"Start writing the header"
 	format := class instSpec.
@@ -290,6 +291,16 @@ SLVMLirObjectSerializer >> classIndexFor: aClass [
 ]
 
 { #category : #accessing }
+SLVMLirObjectSerializer >> classVariableClassMap [
+	^ classVariableClassMap
+]
+
+{ #category : #accessing }
+SLVMLirObjectSerializer >> classVariableClassMap: anObject [
+	classVariableClassMap := anObject
+]
+
+{ #category : #accessing }
 SLVMLirObjectSerializer >> contents [
 	self addAlignmentPadding.
 	^ stream contents
@@ -326,6 +337,11 @@ SLVMLirObjectSerializer >> encodeSpecialObject: anObject [
 
 { #category : #adding }
 SLVMLirObjectSerializer >> filterLiteralVariable: anObject [
+	anObject isClassVariable ifTrue: [
+		^ anObject copy
+			value: (classVariableClassMap at: anObject)
+	].
+
 	^ anObject copy
 		value: nil
 ]
