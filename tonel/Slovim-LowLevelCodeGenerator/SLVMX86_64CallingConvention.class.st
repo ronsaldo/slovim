@@ -64,6 +64,11 @@ SLVMX86_64CallingConvention >> sendDescriptionRegister [
 ]
 
 { #category : #accessing }
+SLVMX86_64CallingConvention >> sendLookupBehindRegister [
+	^ RDX
+]
+
+{ #category : #accessing }
 SLVMX86_64CallingConvention >> sendSelectorRegister [
 	^ RAX
 ]

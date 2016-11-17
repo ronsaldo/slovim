@@ -1195,7 +1195,15 @@ SLVMLirX86FunctionCodeGenerator >> visitMessageSend: instruction [
 	self addX86: MOV with: calledConvention sendDescriptionRegister with: argumentSizeDescription.
 
 	"Call the send trap."
-	calledFunction := moduleTranslator runtimeProvidedFunction: #'_slvm_dynrun_send_trampoline'.
+	instruction isSuperSend ifTrue: [ 
+		calledFunction := moduleTranslator runtimeProvidedFunction: #'_slvm_dynrun_supersend_trampoline'.
+		self
+			addX86: MOV with: calledConvention sendLookupBehindRegister with: literals last asX86Ptr;
+			addX86: MOV with: calledConvention sendLookupBehindRegister with: (calledConvention sendLookupBehindRegister asX86Ptr + (compilationTarget objectHeaderSize + compilationTarget pointerSize)).
+	] ifFalse: [ 
+		calledFunction := moduleTranslator runtimeProvidedFunction: #'_slvm_dynrun_send_trampoline'.
+	].
+	
 	self addX86: CALL with: calledFunction.
 	(calledConvention isStackCleanedByCaller and: [ cleanUpSize > 0 ]) ifTrue: [
 		self addX86: ADD with: self stackPointerRegister with: cleanUpSize

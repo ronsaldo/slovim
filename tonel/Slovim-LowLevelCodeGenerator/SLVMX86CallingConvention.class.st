@@ -76,6 +76,11 @@ SLVMX86CallingConvention >> sendDescriptionRegister [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMX86CallingConvention >> sendLookupBehindRegister [
+	^ EDX
+]
+
+{ #category : #'as yet unclassified' }
 SLVMX86CallingConvention >> sendSelectorRegister [
 	^ EAX
 ]
