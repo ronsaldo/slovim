@@ -20,5 +20,10 @@ OCLiteralVariable >> literalVariableForSlovimBuilder: builder [
 		^ builder addDynamicLiteral: assoc
 	].
 
-	self halt.
+	self isClassVariable ifTrue: [
+		builder registerClassVariable: assoc class: self definingScope class binding.
+		^ builder addDynamicLiteral: assoc
+	].
+
+	self error: 'Unsupported literal variable type.'.
 ]

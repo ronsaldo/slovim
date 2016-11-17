@@ -509,7 +509,9 @@ SLVMOpalASTTranslator >> visitMethodNode: aMethodNode [
 	functionType := SLVMFunctionType callingConvention: callingConvention arguments: argumentTypes returnType: objectType.
 	
 	methodFunction := SLVMFunction pointerSize: compilationTarget pointerSize functionType: functionType.
-	methodFunction compilationTarget: aMethodNode compilationContext compilationTarget.
+	methodFunction
+		compilationTarget: aMethodNode compilationContext compilationTarget;
+		module: module.
 	methodIR := SLVMOpalMethodIR new function: methodFunction.
 	self function: methodFunction build: [ :allocaBlock :contentBlock |
 		arguments := methodFunction arguments.
