@@ -207,15 +207,16 @@ SLVMOpalASTTranslator >> emitMessageNode: aMessageNode [
 
 { #category : #'visitor-double dispatching' }
 SLVMOpalASTTranslator >> emitMessageNode: aMessageNode receiver: receiverValue [
-	| arguments |
+	| arguments sendInstruction |
 	arguments := aMessageNode arguments collect: [ :arg | self visitNode: arg ].
-	^ aMessageNode isSuperSend
-		ifTrue: [ self halt. ]
-		ifFalse: [ irBuilder
+	
+	sendInstruction := irBuilder
 			send: (irBuilder addDynamicLiteral: aMessageNode selector) 
 			returnType: compilationTarget dynamicObjectType
 			receiver: receiverValue
-			arguments: arguments ]
+			arguments: arguments.
+	aMessageNode isSuperSend ifTrue: [ sendInstruction setSuperSend ].
+	^ sendInstruction
 ]
 
 { #category : #'inline messages' }
