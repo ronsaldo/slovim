@@ -2,7 +2,8 @@ Class {
 	#name : #SLVMSendMessage,
 	#superclass : #SLVMInstruction,
 	#instVars : [
-		'type'
+		'type',
+		'flags'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -12,9 +13,15 @@ SLVMSendMessage class >> returnType: returnType receiver: receiver selector: sel
 	^ self new returnType: returnType receiver: receiver selector: selector arguments: arguments
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #visitor }
 SLVMSendMessage >> accept: aVisitor [
 	^ aVisitor visitMessageSend: self
+]
+
+{ #category : #adding }
+SLVMSendMessage >> addFlag: flag [
+	flags := flags copyWith: flag
+	
 ]
 
 { #category : #accessing }
@@ -23,8 +30,26 @@ SLVMSendMessage >> arguments [
 ]
 
 { #category : #testing }
+SLVMSendMessage >> hasFlag: flag [
+	^ flags includes: flag
+	
+]
+
+{ #category : #initialization }
+SLVMSendMessage >> initialize [
+	super initialize.
+	flags := #().
+	
+]
+
+{ #category : #testing }
 SLVMSendMessage >> isMessageSend [
 	^ true
+]
+
+{ #category : #testing }
+SLVMSendMessage >> isSuperSend [
+	^ self hasFlag: #superSend
 ]
 
 { #category : #printing }
@@ -48,6 +73,11 @@ SLVMSendMessage >> returnType: returnType receiver: receiver selector: selector 
 { #category : #accessing }
 SLVMSendMessage >> selector [
 	^ parameters second
+]
+
+{ #category : #initialization }
+SLVMSendMessage >> setSuperSend [
+	self addFlag: #superSend
 ]
 
 { #category : #accessing }
