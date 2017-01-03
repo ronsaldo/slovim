@@ -270,6 +270,12 @@ SLVMSAsmFunctionCodeGenerator >> visitBinaryOperation: instruction [
 
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitBranch: instruction [
+	| condition trueDestination falseDestination |
+	condition := self translateValue: instruction condition.
+	self assert: condition size = 1.
+	trueDestination := basicBlockMap at: instruction trueBlock.
+	falseDestination := basicBlockMap at: instruction falseBlock.
+	blockBuilder tacBranch: condition first true: trueDestination false: falseDestination.
 ]
 
 { #category : #visiting }
@@ -300,6 +306,13 @@ SLVMSAsmFunctionCodeGenerator >> visitIntegerLessThan: instruction [
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitIntegerNotEqual: instruction [
 	self binaryInteger: instruction comparison: TacNotEqual
+]
+
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitJump: instruction [
+	| destination |
+	destination := basicBlockMap at: instruction destination.
+	blockBuilder tacJump: destination.
 ]
 
 { #category : #visiting }
