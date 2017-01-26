@@ -18,6 +18,12 @@ SLVMHLFunctionTypeNode >> arguments: anObject [
 	arguments := anObject
 ]
 
+{ #category : #initialization }
+SLVMHLFunctionTypeNode >> initialize [
+	super initialize.
+	internedGlobals := #().
+]
+
 { #category : #accessing }
 SLVMHLFunctionTypeNode >> returnType [
 	^ returnType

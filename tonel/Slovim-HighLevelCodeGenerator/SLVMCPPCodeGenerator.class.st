@@ -284,7 +284,7 @@ SLVMCPPCodeGenerator >> emitPrelude [
 			emitNewline
 	].
 
-	dynamicRuntimeRequried ifTrue: [
+	dynamicRuntimeRequired ifTrue: [
 		self
 			emitLine: '#include <SLVM/DynamicRuntime.hpp>';
 			emitNewline
@@ -301,6 +301,11 @@ SLVMCPPCodeGenerator >> isBlackListedSymbol: aSymbol [
 SLVMCPPCodeGenerator >> mapBuiltInFunction: aFunctionName [
 	TargetBuiltInMappings at: aFunctionName ifPresent: [ :mapping | ^ mapping ].
 	^ super mapBuiltInFunction: aFunctionName
+]
+
+{ #category : #testing }
+SLVMCPPCodeGenerator >> passGlobalsAsParameters [
+	^ true
 ]
 
 { #category : #'code generation' }

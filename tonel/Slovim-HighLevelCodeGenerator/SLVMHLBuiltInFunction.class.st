@@ -19,6 +19,11 @@ SLVMHLBuiltInFunction >> builtin: anObject [
 ]
 
 { #category : #accessing }
+SLVMHLBuiltInFunction >> internedGlobals [
+	^ #()
+]
+
+{ #category : #accessing }
 SLVMHLBuiltInFunction >> name [
 	^ name
 ]

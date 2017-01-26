@@ -18,6 +18,11 @@ SLVMHLStructureTypeFieldNode >> name: anObject [
 	name := anObject
 ]
 
+{ #category : #testing }
+SLVMHLStructureTypeFieldNode >> needsInternation [
+	^ false
+]
+
 { #category : #'as yet unclassified' }
 SLVMHLStructureTypeFieldNode >> printOn: aStream [
 	aStream nextPutAll: '(field '; print: name; space; print: type name; nextPut: $).

@@ -22,7 +22,7 @@ Class {
 		'phiVariableDictionary',
 		'currentSSAModule',
 		'linearAlgebraRequired',
-		'dynamicRuntimeRequried'
+		'dynamicRuntimeRequired'
 	],
 	#classVars : [
 		'BuiltInFunctionMap',
@@ -178,6 +178,29 @@ SLVMHighLevelLanguageCodeGenerator class >> initialize [
 		#'vector.refract'	(#'refract' call)
 
 	)
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> addGlobalsToFunction: function node: functionNode [
+	| extractor |
+	extractor := SLVMHLLGlobalReferenceExtractor new
+		codeGenerator: self;
+		yourself.
+	function basicBlocks do: [ :basicBlock |
+		basicBlock instructionsDo: [ :instruction |
+			extractor process: instruction
+		]
+	].
+
+	extractor globals ifEmpty: [ ^ self ].
+	functionNode internedGlobals: (extractor globals select: [ :global | self isGlobalThatNeedsInternation: global ] thenCollect: [ :global |
+		SLVMHLInternedGlobal new
+			type: (self translateGlobalVariableType: global);
+			variable: (self translateValue: global);
+			value: global;
+			yourself
+	])
+
 ]
 
 { #category : #adding }
@@ -356,7 +379,7 @@ SLVMHighLevelLanguageCodeGenerator >> initialize [
 	indentationLevel := 0.
 	gensymCount := 0.
 	linearAlgebraRequired := true.
-	dynamicRuntimeRequried := true.
+	dynamicRuntimeRequired := true.
 ]
 
 { #category : #'code generation' }
@@ -404,8 +427,19 @@ SLVMHighLevelLanguageCodeGenerator >> isBlackListedSymbol: aSymbol [
 	^ false
 ]
 
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> isGlobalThatNeedsInternation: global [
+	self passGlobalsAsParameters ifFalse: [ ^ false ].
+	^ global isGlobalVariable
+]
+
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> isInliningMandatory [
+	^ false
+]
+
+{ #category : #protocol }
+SLVMHighLevelLanguageCodeGenerator >> isRenamedSymbol: aSymbol [
 	^ false
 ]
 
@@ -427,17 +461,24 @@ SLVMHighLevelLanguageCodeGenerator >> isValidSymbolCharacter: char [
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> makeFunctionPrototypeString: function [
-	| functionType |
+	| functionType argumentCount |
 	^ ByteString streamContents: [:out |
 		functionType := function type.
 		out
 			nextPutAll: functionType returnType name; space;
 			nextPutAll: function name; space; nextPut: $(.
-		function arguments doWithIndex: [ :arg :index |
-			index > 1 ifTrue: [ out nextPutAll: ', ' ].
-			out nextPutAll: arg type name; space; nextPutAll: arg name
+		argumentCount := 0.
+		function arguments do: [ :arg |
+			argumentCount > 0 ifTrue: [ out nextPutAll: ', ' ].
+			out nextPutAll: arg type name; space; nextPutAll: arg name.
+			argumentCount := argumentCount + 1.
 		].
 	
+		function internedGlobals do: [ :global |
+			argumentCount > 0 ifTrue: [ out nextPutAll: ', ' ].
+			out nextPutAll: global type name; space; nextPutAll: (global variable name).
+			argumentCount := argumentCount + 1.
+		].
 		out nextPut: $)
 	]
 ]
@@ -452,6 +493,11 @@ SLVMHighLevelLanguageCodeGenerator >> needStructuredControlFlow [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMHighLevelLanguageCodeGenerator >> passGlobalsAsParameters [
+	^ false
+]
+
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> pureInstructionTranslation: instruction allocate: allocateBlock do: aBlock [
 	instruction instructionReferences size <= 1 ifTrue: [
@@ -460,6 +506,11 @@ SLVMHighLevelLanguageCodeGenerator >> pureInstructionTranslation: instruction al
 
 	^ self instructionWithResultTranslation: instruction allocate: allocateBlock do: aBlock
 
+]
+
+{ #category : #protocol }
+SLVMHighLevelLanguageCodeGenerator >> renameSymbol: originalSymbol [
+	self subclassResponsibility
 ]
 
 { #category : #'code generation' }
@@ -489,7 +540,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateBasicBlock: aBasicBlock [
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateBasicType: aType [
 	(aType isVectorType or: [aType isMatrixType]) ifTrue: [ linearAlgebraRequired := true ].
-	aType isDynamicObjectType ifTrue: [ dynamicRuntimeRequried := true ].
+	aType isDynamicObjectType ifTrue: [ dynamicRuntimeRequired := true ].
 	^ SLVMHLBasicTypeNode new name: (self translateBasicTypeName: aType); type: aType
 ]
 
@@ -556,6 +607,11 @@ SLVMHighLevelLanguageCodeGenerator >> translateFunctionType: functionType [
 ]
 
 { #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateGlobalVariableType: globalVariable [
+	^ self translateType: globalVariable type
+]
+
+{ #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLBreakStatement: statement [
 	self
 		emitLine: 'break;'
@@ -563,7 +619,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLBreakStatement: statement [
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLBuiltInCallStatementValue: statement [
-	| mappedFunction functionName functionType |
+	| mappedFunction functionName functionType patternString replacements |
 	mappedFunction := self mapBuiltInFunction: statement function.
 	functionName := mappedFunction first.
 	functionType := mappedFunction second.
@@ -589,6 +645,22 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLBuiltInCallStatementValue: stat
 				nextPutAll: functionName;
 				nextPutAll: (statement arguments first translateValueWith: self).
 		]
+	].
+
+	functionType == #patternCall ifTrue: [
+		^ ByteString streamContents: [ :out |
+			patternString := statement arguments first translateValueWith: self.
+			replacements := mappedFunction third.
+			replacements do: [ :replacement |
+				patternString := patternString copyReplaceAll: replacement first with: replacement second
+			].
+			out nextPutAll: patternString.
+			statement arguments allButFirstDo: [ :arg |
+				out nextPutAll: ', '; nextPutAll: (arg translateValueWith: self)
+			].
+			out nextPut: $)
+		]
+		
 	].
 
 	functionType == #member ifTrue: [ 
@@ -632,12 +704,21 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLCallStatement: statement [
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLCallStatementValue: statement [
+	| argumentCount |
 	^ ByteString streamContents: [ :out |
 		out nextPutAll: (statement function translateValueWith: self).
 		out nextPut: $(.
-		statement arguments doWithIndex: [ :arg :index |
-			index > 1 ifTrue: [ out nextPutAll: ', ' ].
-			out nextPutAll: (arg translateValueWith: self)
+		argumentCount := 0.
+		statement arguments do: [ :arg |
+			argumentCount > 0 ifTrue: [ out nextPutAll: ', ' ].
+			out nextPutAll: (arg translateValueWith: self).
+			argumentCount := argumentCount + 1
+		].
+	
+		statement function internedGlobals do: [ :interned |
+			argumentCount > 0 ifTrue: [ out nextPutAll: ', ' ].
+			out nextPutAll: (interned variable name).
+			argumentCount := argumentCount + 1
 		].
 	
 		out nextPut: $).
@@ -831,6 +912,9 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLVariableAssignmentStatementValu
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLVariableDecl: variableDecl [
 	| variableType arrayBounds variableTypeString |
+	"Do not emit variables that have been interned."
+	variableDecl needsInternation ifTrue: [ ^ self ].
+	
 	variableType := variableDecl type.
 	arrayBounds := variableType arrayBounds.
 	variableTypeString := variableType name.
@@ -952,6 +1036,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateStructureType: type [
 
 { #category : #protocol }
 SLVMHighLevelLanguageCodeGenerator >> translateSymbol: aSymbol [
+	(self isRenamedSymbol: aSymbol) ifTrue: [ ^ self renameSymbol: aSymbol ].
 	(self isBlackListedSymbol: aSymbol) ifTrue: [ ^ self generateSymbol ].
 	^ (self isValidSymbol: aSymbol) ifTrue: [ aSymbol ] ifFalse: [ self generateSymbol ]
 	
@@ -1157,6 +1242,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitFunction: function [
 		functionNode arguments: (function arguments collect: [ :arg | self translateFunctionArgument: arg ] ).
 		functionNode dynamicLiterals: (function dynamicLiterals collect: [ :arg | self translateFunctionDynamicLiteral: arg ] ).
 		
+		self passGlobalsAsParameters ifTrue: [ self addGlobalsToFunction: function node: functionNode  ].
 		self translateFunction: function contentInto: functionNode
 	]
 ]
@@ -1211,6 +1297,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitGlobalVariable: globalVariable [
 			type: valueType;
 			storage: globalVariable type storage;
 			definition: globalVariable;
+			needsInternation: (self isGlobalThatNeedsInternation: globalVariable)
 			yourself
 	]
 	

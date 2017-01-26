@@ -23,6 +23,11 @@ SLVMHLCodeNode >> isContinue [
 ]
 
 { #category : #testing }
+SLVMHLCodeNode >> isGlobalVariable [
+	^ false
+]
+
+{ #category : #testing }
 SLVMHLCodeNode >> isIfStatement [
 	^ false
 ]

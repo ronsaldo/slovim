@@ -7,7 +7,8 @@ Class {
 		'value',
 		'type',
 		'storage',
-		'definition'
+		'definition',
+		'needsInternation'
 	],
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
@@ -26,6 +27,7 @@ SLVMHLVariableDeclNode >> definition: anObject [
 SLVMHLVariableDeclNode >> initialize [
 	super initialize.
 	isConstant := false.
+	needsInternation := false.
 ]
 
 { #category : #accessing }
@@ -38,6 +40,11 @@ SLVMHLVariableDeclNode >> isConstant: anObject [
 	isConstant := anObject
 ]
 
+{ #category : #testing }
+SLVMHLVariableDeclNode >> isGlobalVariable [
+	^ definition isNotNil and: [ definition isGlobalValue and: [ definition isGlobalVariable ] ]
+]
+
 { #category : #accessing }
 SLVMHLVariableDeclNode >> name [
 	^ name
@@ -48,7 +55,17 @@ SLVMHLVariableDeclNode >> name: anObject [
 	name := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
+SLVMHLVariableDeclNode >> needsInternation [
+	^ needsInternation
+]
+
+{ #category : #accessing }
+SLVMHLVariableDeclNode >> needsInternation: anObject [
+	needsInternation := anObject
+]
+
+{ #category : #printing }
 SLVMHLVariableDeclNode >> printOn: aStream [
 	aStream nextPutAll: '(global '; print: name; space; print: type name; space; print: value; nextPut: $)
 ]
@@ -63,12 +80,12 @@ SLVMHLVariableDeclNode >> storage: anObject [
 	storage := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #converting }
 SLVMHLVariableDeclNode >> translateValueWith: translator [
 	^ translator translateHLVariableDeclValue: self
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #converting }
 SLVMHLVariableDeclNode >> translateWith: translator [
 	^ translator translateHLVariableDecl: self
 ]

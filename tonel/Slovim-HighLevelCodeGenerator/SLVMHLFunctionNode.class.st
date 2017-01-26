@@ -7,7 +7,8 @@ Class {
 		'arguments',
 		'dynamicLiterals',
 		'locals',
-		'body'
+		'body',
+		'internedGlobals'
 	],
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
@@ -46,7 +47,18 @@ SLVMHLFunctionNode >> dynamicLiterals: anObject [
 SLVMHLFunctionNode >> initialize [
 	super initialize.
 	arguments := #().
+	internedGlobals := #().
 	locals := OrderedCollection new.
+]
+
+{ #category : #accessing }
+SLVMHLFunctionNode >> internedGlobals [
+	^ internedGlobals
+]
+
+{ #category : #accessing }
+SLVMHLFunctionNode >> internedGlobals: anObject [
+	internedGlobals := anObject
 ]
 
 { #category : #initialization }
