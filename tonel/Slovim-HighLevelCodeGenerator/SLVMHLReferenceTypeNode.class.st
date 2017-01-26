@@ -18,6 +18,11 @@ SLVMHLReferenceTypeNode >> baseType: anObject [
 	baseType := anObject
 ]
 
+{ #category : #testing }
+SLVMHLReferenceTypeNode >> isReferenceType [
+	^ true
+]
+
 { #category : #accessing }
 SLVMHLReferenceTypeNode >> name [
 	^ name

@@ -7,6 +7,7 @@ Class {
 		'SamplerTypeDictionary',
 		'SamplerTypeMapping',
 		'SpecialSemanticVariableMap',
+		'StorageToAddressSpaceMap',
 		'TargetBuiltInMappings',
 		'TypeDictionary',
 		'TypeMapping'
@@ -26,6 +27,7 @@ SLVMMetalCodeGenerator class >> initialize [
 	self initializeTypeMappings.
 	self initializeTargetBuiltInMappings.
 	self initializeRenamedSymbols.
+	self initializeStorageMap.
 ]
 
 { #category : #name }
@@ -128,6 +130,20 @@ SLVMMetalCodeGenerator class >> initializeRenamedSymbols [
 ]
 
 { #category : #name }
+SLVMMetalCodeGenerator class >> initializeStorageMap [
+	StorageToAddressSpaceMap := Dictionary newFromPairs: #(
+		uniform device
+		uniformConstant constant
+		pushConstant constant
+		input thread
+		output thread
+		function thread
+		workgroup threadgroup
+		crossWorkgroup threadgroup
+	)
+]
+
+{ #category : #name }
 SLVMMetalCodeGenerator class >> initializeTargetBuiltInMappings [
 	TargetBuiltInMappings := Dictionary newFromPairs: #(
 		'binop.dynObjectIdentityEquals' ('slvm::dynrun::identityEquals' call)
@@ -172,51 +188,51 @@ SLVMMetalCodeGenerator class >> initializeTargetBuiltInMappings [
 		'sample.implicit_lod' (sample patternCall
 			(('${sampleFunction}' sample) ))
 		
-		#'math.acos'	(#'simd::acos' call)
-		#'math.acosh'	(#'simd::acosh' call)
-		#'math.asin'	(#'simd::asin' call)
-		#'math.asinh'	(#'simd::asinh' call)
-		#'math.atan2'	(#'simd::atan2' call)
-		#'math.atan'	(#'simd::atan' call)
-		#'math.atanh'	(#'simd::atanh' function)
-		#'math.ceil'	(#'simd::ceil' function)
-		#'math.cos'     (#'simd::cos' function)
-		#'math.cosh'	(#'simd::cosh' call)
-		#'math.degrees'	(#'simd::degrees' call)
-		#'math.exp2'	(#'simd::exp2' call)
-		#'math.exp'     (#'simd::exp' call)
-		#'math.fabs'	(#'simd::abs' call)
-		#'math.floor'	(#'simd::floor' call)
-		#'math.fmax'	(#'simd::max' call)
-		#'math.fmin'	(#'simd::min' call)
-		#'math.fmix'	(#'simd::mix' call)
-		#'math.fract'	(#'simd::fract' call)
-		#'math.fsign'	(#'simd::fsign' call)
-		#'math.inverseSqrt'	(#'simd::inverseSqrt' call)
-		#'math.log2'	(#'simd::log2' call)
-		#'math.log'	    (#'simd::log' call)
-		#'math.pow'     (#'simd::pow' call)
-		#'math.radians'	(#'simd::radians' call)
-		#'math.roundEven'	(#'simd::roundEven' call)
-		#'math.round'	(#'simd::round' call)
-		#'math.sinh'	(#'simd::sinh' call)
-		#'math.sin'     (#'simd::sin' call)
-		#'math.smax'	(#'simd::max' call)
-		#'math.smin'	(#'simd::min' call)
-		#'math.smoothstep'	(#'simd::smoothstep' call)
-		#'math.sqrt'	(#'simd::sqrt' call)
-		#'math.step'	(#'simd::step' call)
-		#'math.tan'	(#'simd::tan' call)
-		#'math.trunc'	(#'simd::trunc' call)
-		#'math.umax'	(#'simd::max' call)
-		#'math.umin'	(#'simd::min' call)
-		#'matrix.transpose'	(#'simd::transpose' call)
-		#'vector.cross'     (#'simd::cross' call)
-		#'vector.dot'	    (#'simd::dot' call)
-		#'vector.length'	(#'simd::length' call)
-		#'vector.normalize'	(#'simd::normalize' call)
-		#'vector.reflect'	(#'simd::reflect' call)
-		#'vector.refract'	(#'simd::refract' call)
+		#'math.acos'	(#'metal::acos' call)
+		#'math.acosh'	(#'metal::acosh' call)
+		#'math.asin'	(#'metal::asin' call)
+		#'math.asinh'	(#'metal::asinh' call)
+		#'math.atan2'	(#'metal::atan2' call)
+		#'math.atan'	(#'metal::atan' call)
+		#'math.atanh'	(#'metal::atanh' function)
+		#'math.ceil'	(#'metal::ceil' function)
+		#'math.cos'     (#'metal::cos' function)
+		#'math.cosh'	(#'metal::cosh' call)
+		#'math.degrees'	(#'metal::degrees' call)
+		#'math.exp2'	(#'metal::exp2' call)
+		#'math.exp'     (#'metal::exp' call)
+		#'math.fabs'	(#'metal::abs' call)
+		#'math.floor'	(#'metal::floor' call)
+		#'math.fmax'	(#'metal::max' call)
+		#'math.fmin'	(#'metal::min' call)
+		#'math.fmix'	(#'metal::mix' call)
+		#'math.fract'	(#'metal::fract' call)
+		#'math.fsign'	(#'metal::fsign' call)
+		#'math.inverseSqrt'	(#'metal::inverseSqrt' call)
+		#'math.log2'	(#'metal::log2' call)
+		#'math.log'	    (#'metal::log' call)
+		#'math.pow'     (#'metal::pow' call)
+		#'math.radians'	(#'metal::radians' call)
+		#'math.roundEven'	(#'metal::roundEven' call)
+		#'math.round'	(#'metal::round' call)
+		#'math.sinh'	(#'metal::sinh' call)
+		#'math.sin'     (#'metal::sin' call)
+		#'math.smax'	(#'metal::max' call)
+		#'math.smin'	(#'metal::min' call)
+		#'math.smoothstep'	(#'metal::smoothstep' call)
+		#'math.sqrt'	(#'metal::sqrt' call)
+		#'math.step'	(#'metal::step' call)
+		#'math.tan'	(#'metal::tan' call)
+		#'math.trunc'	(#'metal::trunc' call)
+		#'math.umax'	(#'metal::max' call)
+		#'math.umin'	(#'metal::min' call)
+		#'matrix.transpose'	(#'metal::transpose' call)
+		#'vector.cross'     (#'metal::cross' call)
+		#'vector.dot'	    (#'metal::dot' call)
+		#'vector.length'	(#'metal::length' call)
+		#'vector.normalize'	(#'metal::normalize' call)
+		#'vector.reflect'	(#'metal::reflect' call)
+		#'vector.refract'	(#'metal::refract' call)
 	)
 ]
 
@@ -234,26 +250,26 @@ SLVMMetalCodeGenerator class >> initializeTypeMappings [
 		ulong ulong
 		float float
 		double double
-		float2 'simd::float2'
-		float3 'simd::float3'
-		float4 'simd::float4'
-		float2x2 'simd::float2x2'
-		float3x3 'simd::float3x3'
-		float4x4 'simd::float4x4'
+		float2 'metal::float2'
+		float3 'metal::float3'
+		float4 'metal::float4'
+		float2x2 'metal::float2x2'
+		float3x3 'metal::float3x3'
+		float4x4 'metal::float4x4'
 		
-		int2 'simd::int2'
-		int3 'simd::int3'
-		int4 'simd::int4'
-		uint2 'simd::uint2'
-		uint3 'simd::uint3'
-		uint4 'simd::uint4'
+		int2 'metal::int2'
+		int3 'metal::int3'
+		int4 'metal::int4'
+		uint2 'metal::uint2'
+		uint3 'metal::uint3'
+		uint4 'metal::uint4'
 
-		short2 'simd::short2'
-		short3 'simd::short3'
-		short4 'simd::short4'
-		ushort2 'simd::ushort2'
-		ushort3 'simd::ushort3'
-		ushort4 'simd::ushort4'
+		short2 'metal::short2'
+		short3 'metal::short3'
+		short4 'metal::short4'
+		ushort2 'metal::ushort2'
+		ushort3 'metal::ushort3'
+		ushort4 'metal::ushort4'
 		
 		texture2D 'texture2d<float>'
 		textureCube 'textureCube<float>'
@@ -286,11 +302,18 @@ SLVMMetalCodeGenerator class >> initializeTypeMappings [
 	)
 ]
 
-{ #category : #testing }
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> dereferenceVariable: variable [
+	| result |
+	result := variable translateValueWith: self.
+	(variable isGlobalVariable or: [ variable isReferenceAsPointer ]) ifTrue: [ ^ '(*' , result , ')' ].
+	^ result
+]
+
+{ #category : #'code generation' }
 SLVMMetalCodeGenerator >> emitPrelude [
 	self
 		emitLine: '#include <metal_stdlib>';
-		emitLine: '#include <simd/simd.h>';
 		emitNewline
 ]
 
@@ -315,12 +338,17 @@ SLVMMetalCodeGenerator >> passGlobalsAsParameters [
 	^ true
 ]
 
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> pointerAddressSpaceFor: storage [
+	^ StorageToAddressSpaceMap at: storage
+]
+
 { #category : #testing }
 SLVMMetalCodeGenerator >> renameSymbol: aSymbol [
 	^ RenamedSymbols at: aSymbol
 ]
 
-{ #category : #testing }
+{ #category : #'code generation' }
 SLVMMetalCodeGenerator >> translateBasicTypeName: aType [
 	^ TypeDictionary at: aType
 ]
@@ -335,7 +363,7 @@ SLVMMetalCodeGenerator >> translateHLCombineSamplerWithTexture: combine [
 	]	
 ]
 
-{ #category : #visitor }
+{ #category : #'code generation' }
 SLVMMetalCodeGenerator >> translateHLElementReferenceValue: statement [
 	statement reference isGlobalVariable ifFalse: [
 		^ super translateHLElementReferenceValue: statement
@@ -348,4 +376,28 @@ SLVMMetalCodeGenerator >> translateHLElementReferenceValue: statement [
 	].
 
 
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> translateHLVariableDeclReference: variable [
+	variable type isReferenceType ifFalse: [ ^ '&' , variable name ].
+	^ variable name
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> translateHLVariableDeclValue: variable [
+	^ variable name
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> translatePointerType: type [
+	| baseType name |
+	baseType := self translateType: type baseType.
+	name := (self pointerAddressSpaceFor: type storage), ' ' , baseType name , '*'.
+	^ SLVMHLReferenceTypeNode new baseType: baseType; name: name asSymbol; yourself
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> unboundedArrayNotation [
+	^ '[1]'
 ]

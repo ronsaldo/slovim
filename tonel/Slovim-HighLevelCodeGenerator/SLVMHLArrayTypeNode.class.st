@@ -10,11 +10,11 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-SLVMHLArrayTypeNode >> arrayBounds [
+SLVMHLArrayTypeNode >> arrayBounds: unboundedCase [
 	| myBounds |
-	myBounds := '[]'.
+	myBounds := unboundedCase.
 	elements ifNotNil: [ myBounds := '[', elements asString, ']'].
-	^ baseType arrayBounds , myBounds
+	^ (baseType arrayBounds: unboundedCase) , myBounds
 ]
 
 { #category : #accessing }

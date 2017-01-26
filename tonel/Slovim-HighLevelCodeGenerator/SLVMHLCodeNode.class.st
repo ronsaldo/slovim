@@ -33,6 +33,11 @@ SLVMHLCodeNode >> isIfStatement [
 ]
 
 { #category : #testing }
+SLVMHLCodeNode >> isReferenceAsPointer [
+	^ false
+]
+
+{ #category : #testing }
 SLVMHLCodeNode >> isReturnVoid [
 	^ false
 ]
@@ -50,6 +55,11 @@ SLVMHLCodeNode >> isStructureType [
 { #category : #converting }
 SLVMHLCodeNode >> translateInlineWith: translator [
 	self subclassResponsibility
+]
+
+{ #category : #converting }
+SLVMHLCodeNode >> translateLiteralValueWith: translator [
+	^ self translateValueWith: translator
 ]
 
 { #category : #converting }

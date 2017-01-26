@@ -272,6 +272,11 @@ SLVMHighLevelLanguageCodeGenerator >> deferBlockTranslation: aBasicBlock [
 ]
 
 { #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> dereferenceVariable: variable [
+	^ variable translateValueWith: self
+]
+
+{ #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> emitBlockStatementList: statementList [
 	statementList statements ifEmpty: [
 		^ self withExtraIndentationLevel: [ self emitLine: ';' ].
@@ -508,6 +513,12 @@ SLVMHighLevelLanguageCodeGenerator >> pureInstructionTranslation: instruction al
 
 ]
 
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> removeSurroundingParentheses: aString [
+	(aString isEmpty or: [ aString first ~= $( or: [ aString last ~= $) ]]) ifTrue: [ ^ aString ].
+	^ aString copyFrom: 2 to: aString size - 1
+]
+
 { #category : #protocol }
 SLVMHighLevelLanguageCodeGenerator >> renameSymbol: originalSymbol [
 	self subclassResponsibility
@@ -711,7 +722,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLCallStatementValue: statement [
 		argumentCount := 0.
 		statement arguments do: [ :arg |
 			argumentCount > 0 ifTrue: [ out nextPutAll: ', ' ].
-			out nextPutAll: (arg translateValueWith: self).
+			out nextPutAll: (arg translateLiteralValueWith: self).
 			argumentCount := argumentCount + 1
 		].
 	
@@ -787,6 +798,12 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLFunctionArgumentNodeValue: argu
 ]
 
 { #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateHLFunctionPrototypeDeclaration: functionPrototypeDeclaration [
+	self
+		emitLine: (self makeFunctionPrototypeString: functionPrototypeDeclaration function) , ';'
+]
+
+{ #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLFunctionValue: function [
 	^ function name
 ]
@@ -801,7 +818,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLIfStatement: statement [
 	].
 
 	self
-		emitLine: ('if ({1})' format: {statement condition translateValueWith: self });
+		emitLine: ('if ({1})' format: {self removeSurroundingParentheses: (statement condition translateValueWith: self) });
 		emitBlockStatementList: statement trueBody.
 		
 	statement falseBody isEmpty ifFalse: [
@@ -818,7 +835,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLLiteralValue: literalValue [
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLLoadStatementValue: statement [
-	^ statement variable translateValueWith: self
+	^ self dereferenceVariable: statement variable
 ]
 
 { #category : #'code generation' }
@@ -892,7 +909,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLUntilLoopStatement: statement [
 SLVMHighLevelLanguageCodeGenerator >> translateHLVariableAssignmentStatement: assignment [
 	| value variable |
 	value := assignment value translateValueWith: self.
-	variable := assignment variable translateValueWith: self.
+	variable := self dereferenceVariable: assignment variable.
 	self emitLine: ('{1} = {2};' format: {variable . value})
 ]
 
@@ -916,11 +933,16 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLVariableDecl: variableDecl [
 	variableDecl needsInternation ifTrue: [ ^ self ].
 	
 	variableType := variableDecl type.
-	arrayBounds := variableType arrayBounds.
+	arrayBounds := variableType arrayBounds: self unboundedArrayNotation.
 	variableTypeString := variableType name.
 
 	self emitLine: ('{1} {2}{3};' format: { variableTypeString . variableDecl name . arrayBounds})
 
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateHLVariableDeclReference: variable [
+	^ variable name
 ]
 
 { #category : #'code generation' }
@@ -977,6 +999,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateLocalSymbol: aSymbol [
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateModule: ssaModule exportList: exportList [
+	| prototypes |
 	currentSSAModule := ssaModule.
 	typeDeclarations := OrderedCollection new.
 	globalVariableDeclarations := OrderedCollection new.
@@ -988,7 +1011,9 @@ SLVMHighLevelLanguageCodeGenerator >> translateModule: ssaModule exportList: exp
 	exportList do: [ :global |
 		global accept: self
 	].
-	^ self emitTranslatedCode: typeDeclarations , globalVariableDeclarations , functionDefinitions
+
+	prototypes := functionDefinitions collect: [ :function |SLVMHLFunctionPrototypeDeclarationNode new function: function ] as: Array.
+	^ self emitTranslatedCode: typeDeclarations , globalVariableDeclarations , prototypes, functionDefinitions
 ]
 
 { #category : #'code generation' }
@@ -996,14 +1021,6 @@ SLVMHighLevelLanguageCodeGenerator >> translatePointerType: type [
 	| baseType name |
 	baseType := self translateType: type baseType.
 	name := baseType name , '*'.
-	^ SLVMHLReferenceTypeNode new baseType: baseType; name: name asSymbol; yourself
-]
-
-{ #category : #'code generation' }
-SLVMHighLevelLanguageCodeGenerator >> translateReferenceType: type [
-	| baseType name |
-	baseType := self translateType: type baseType.
-	name := baseType name , '&'.
 	^ SLVMHLReferenceTypeNode new baseType: baseType; name: name asSymbol; yourself
 ]
 
@@ -1065,6 +1082,11 @@ SLVMHighLevelLanguageCodeGenerator >> typeTranslation: value do: aBlock [
 		typeDeclarations add: hlNode.
 		hlNode
 	]
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> unboundedArrayNotation [
+	^ '[]'
 ]
 
 { #category : #visitor }

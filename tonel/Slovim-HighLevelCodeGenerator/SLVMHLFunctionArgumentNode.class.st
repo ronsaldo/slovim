@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
 
+{ #category : #testing }
+SLVMHLFunctionArgumentNode >> isReferenceAsPointer [
+	^ type isReferenceType
+]
+
 { #category : #accessing }
 SLVMHLFunctionArgumentNode >> name [
 	^ name

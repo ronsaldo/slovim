@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-SLVMHLTypeNode >> arrayBounds [
+SLVMHLTypeNode >> arrayBounds: unboundedCase [
 	^ ''
+]
+
+{ #category : #testing }
+SLVMHLTypeNode >> isReferenceType [
+	^ false
 ]

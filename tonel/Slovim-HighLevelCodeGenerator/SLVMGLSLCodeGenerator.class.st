@@ -399,7 +399,7 @@ SLVMGLSLCodeGenerator >> translateHLVariableDecl: variableDecl [
 	].
 
 	variableType := variableDecl type.
-	arrayBounds := variableType arrayBounds.
+	arrayBounds := variableType arrayBounds: '[]'.
 	variableTypeString := variableType name.
 
 	self emitLine: ('{1}{2}{3} {4}{5};' format: { layout . storage . variableTypeString . variableDecl name . arrayBounds})

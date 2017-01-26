@@ -45,6 +45,11 @@ SLVMHLVariableDeclNode >> isGlobalVariable [
 	^ definition isNotNil and: [ definition isGlobalValue and: [ definition isGlobalVariable ] ]
 ]
 
+{ #category : #testing }
+SLVMHLVariableDeclNode >> isReferenceAsPointer [
+	^ type isReferenceType
+]
+
 { #category : #accessing }
 SLVMHLVariableDeclNode >> name [
 	^ name
@@ -78,6 +83,11 @@ SLVMHLVariableDeclNode >> storage [
 { #category : #accessing }
 SLVMHLVariableDeclNode >> storage: anObject [
 	storage := anObject
+]
+
+{ #category : #converting }
+SLVMHLVariableDeclNode >> translateLiteralValueWith: translator [
+	^ translator translateHLVariableDeclReference: self
 ]
 
 { #category : #converting }
