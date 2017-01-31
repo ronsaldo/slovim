@@ -8,7 +8,8 @@ Class {
 		'dynamicLiterals',
 		'locals',
 		'body',
-		'internedGlobals'
+		'internedGlobals',
+		'shaderType'
 	],
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
@@ -79,6 +80,16 @@ SLVMHLFunctionNode >> name: anObject [
 { #category : #printing }
 SLVMHLFunctionNode >> printOn: aStream [
 	aStream nextPutAll: '(function '; print: name; space; print: type; nextPut: $)
+]
+
+{ #category : #accessing }
+SLVMHLFunctionNode >> shaderType [
+	^ shaderType
+]
+
+{ #category : #accessing }
+SLVMHLFunctionNode >> shaderType: anObject [
+	shaderType := anObject
 ]
 
 { #category : #'as yet unclassified' }

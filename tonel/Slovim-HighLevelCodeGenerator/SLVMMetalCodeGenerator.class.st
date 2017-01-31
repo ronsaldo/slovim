@@ -1,12 +1,17 @@
 Class {
 	#name : #SLVMMetalCodeGenerator,
 	#superclass : #SLVMHighLevelLanguageCodeGenerator,
+	#instVars : [
+		'ioVariableMapping',
+		'forcedReturnValue'
+	],
 	#classVars : [
 		'Keywords',
 		'RenamedSymbols',
 		'SamplerTypeDictionary',
 		'SamplerTypeMapping',
 		'SpecialSemanticVariableMap',
+		'SpecialVariableLocationMapping',
 		'StorageToAddressSpaceMap',
 		'TargetBuiltInMappings',
 		'TypeDictionary',
@@ -28,6 +33,7 @@ SLVMMetalCodeGenerator class >> initialize [
 	self initializeTargetBuiltInMappings.
 	self initializeRenamedSymbols.
 	self initializeStorageMap.
+	self initializeSpecialVariableMapping.
 ]
 
 { #category : #name }
@@ -130,11 +136,20 @@ SLVMMetalCodeGenerator class >> initializeRenamedSymbols [
 ]
 
 { #category : #name }
+SLVMMetalCodeGenerator class >> initializeSpecialVariableMapping [
+	SpecialVariableLocationMapping := Dictionary newFromPairs: #(
+		-1 (position '[[position]]' false)
+		-6 (_slvm_vertexID '[[vertex_id]]' true)
+		-7 (_slvm_instanceID '[[instance_id]]' true)
+	)
+]
+
+{ #category : #name }
 SLVMMetalCodeGenerator class >> initializeStorageMap [
 	StorageToAddressSpaceMap := Dictionary newFromPairs: #(
-		uniform device
-		uniformConstant constant
-		pushConstant constant
+		uniform 'device const'
+		uniformConstant 'constant const'
+		pushConstant 'constant const'
 		input thread
 		output thread
 		function thread
@@ -207,7 +222,7 @@ SLVMMetalCodeGenerator class >> initializeTargetBuiltInMappings [
 		#'math.fmin'	(#'metal::min' call)
 		#'math.fmix'	(#'metal::mix' call)
 		#'math.fract'	(#'metal::fract' call)
-		#'math.fsign'	(#'metal::fsign' call)
+		#'math.fsign'	(#'metal::sign' call)
 		#'math.inverseSqrt'	(#'metal::inverseSqrt' call)
 		#'math.log2'	(#'metal::log2' call)
 		#'math.log'	    (#'metal::log' call)
@@ -244,10 +259,11 @@ SLVMMetalCodeGenerator class >> initializeTypeMappings [
 		bool bool
 		char char
 		short short
+		ushort 'unsigned short'
 		int int
-		uint uint
+		uint 'unsigned int'
 		long long
-		ulong ulong
+		ulong 'unsigned long'
 		float float
 		double double
 		float2 'metal::float2'
@@ -271,9 +287,9 @@ SLVMMetalCodeGenerator class >> initializeTypeMappings [
 		ushort3 'metal::ushort3'
 		ushort4 'metal::ushort4'
 		
-		texture2D 'texture2d<float>'
-		textureCube 'textureCube<float>'
-		sampler sampler
+		texture2D 'metal::texture2d<float>'
+		textureCube 'metal::texturecube<float>'
+		sampler 'metal::sampler'
 	).
 	
 	SamplerTypeMapping := #(
@@ -302,11 +318,26 @@ SLVMMetalCodeGenerator class >> initializeTypeMappings [
 	)
 ]
 
+{ #category : #visitor }
+SLVMMetalCodeGenerator >> applyFunctionMetadata: function to: functionNode [
+	function propertyAt: #fragment ifPresent: [
+		functionNode shaderType: #fragment
+	].
+
+	function propertyAt: #vertex ifPresent: [
+		functionNode shaderType: #vertex
+	].
+
+	function propertyAt: #compute ifPresent: [
+		functionNode shaderType: #compute
+	]	
+]
+
 { #category : #'code generation' }
 SLVMMetalCodeGenerator >> dereferenceVariable: variable [
 	| result |
 	result := variable translateValueWith: self.
-	(variable isGlobalVariable or: [ variable isReferenceAsPointer ]) ifTrue: [ ^ '(*' , result , ')' ].
+	variable isReferenceAsPointer ifTrue: [ ^ '(*' , result , ')' ].
 	^ result
 ]
 
@@ -318,8 +349,30 @@ SLVMMetalCodeGenerator >> emitPrelude [
 ]
 
 { #category : #testing }
+SLVMMetalCodeGenerator >> hasToCombineIOInStructure [
+	^ true
+]
+
+{ #category : #initialization }
+SLVMMetalCodeGenerator >> initialize [
+	super initialize.
+	ioVariableMapping := Dictionary new.
+]
+
+{ #category : #testing }
 SLVMMetalCodeGenerator >> isBlackListedSymbol: aSymbol [
 	^ Keywords includes: aSymbol
+]
+
+{ #category : #testing }
+SLVMMetalCodeGenerator >> isGlobalInputPassedAsParameter: global [
+	global type storage == #input ifTrue: [ 
+		global propertyAt: #location ifPresent: [ :location |
+			^ location < 0 and: [ (SpecialVariableLocationMapping at: location) third ]
+		] 
+	].
+	^ false
+
 ]
 
 { #category : #testing }
@@ -327,10 +380,87 @@ SLVMMetalCodeGenerator >> isRenamedSymbol: aSymbol [
 	^ RenamedSymbols includesKey: aSymbol
 ]
 
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> makeFunctionPrototypeString: function [
+	| functionType argumentCount |
+	^ ByteString streamContents: [:out |
+		functionType := function type.
+		function shaderType ifNotNil: [
+			out
+				nextPutAll: function shaderType; space;
+				nextPutAll: self outputStructureName; space.		
+		] ifNil: [ 
+			out
+				nextPutAll: functionType returnType name; space.
+		].
+			
+		out
+			nextPutAll: function name; space; nextPut: $(.
+		argumentCount := 0.
+		function arguments do: [ :arg |
+			argumentCount > 0 ifTrue: [ out nextPutAll: ', ' ].
+			out nextPutAll: arg type name; space; nextPutAll: arg name.
+			argumentCount := argumentCount + 1.
+		].
+	
+		function shaderType ifNotNil: [
+			argumentCount > 0 ifTrue: [ out nextPutAll: ', ' ].
+			out nextPutAll: self inputStructureName; space; nextPutAll: self stageInVariableName;
+				nextPutAll: ' [[stage_in]]'.
+			argumentCount := argumentCount + 1.
+			
+			function
+				internedGlobals reject: [:global |
+					(#(input output) includes: global variable storage)
+					and: [ (self isGlobalInputPassedAsParameter: global value) not ]
+				]
+				thenDo: [ :global |
+				argumentCount > 0 ifTrue: [ out nextPutAll: ', ' ].
+				out nextPutAll: global type name; space; nextPutAll: (global variable name).
+				out space; nextPutAll: (self shaderBindingForGlobal: global).
+				argumentCount := argumentCount + 1.
+			].
+		] ifNil: [
+			function internedGlobals do: [ :global |
+				argumentCount > 0 ifTrue: [ out nextPutAll: ', ' ].
+				out nextPutAll: global type name; space; nextPutAll: (global variable name).
+				argumentCount := argumentCount + 1.
+			].
+		].
+	
+		out nextPut: $)
+	]
+]
+
 { #category : #testing }
 SLVMMetalCodeGenerator >> mapBuiltInFunction: aFunctionName [
 	TargetBuiltInMappings at: aFunctionName ifPresent: [ :mapping | ^ mapping ].
 	^ super mapBuiltInFunction: aFunctionName
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> mapIOVar: var toField: field [
+	| localStructureInstance |
+	localStructureInstance := var type storage = #input ifTrue: [ self stageInVariableName ] ifFalse: [ self stageOutVariableName ]. 
+	ioVariableMapping at: var put: ('&' , localStructureInstance , '.' , field name)
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> mapLocationBinding: location stage: stageKind variable: variable [
+	(stageKind == #vertex and: [variable type storage = #input ]) ifTrue: [
+		^'[[attribute(' , location asString , ')]]'
+	].
+
+	(stageKind == #fragment and: [variable type storage = #output ]) ifTrue: [
+		^'[[color(' , location asString , ')]]'
+	].
+
+	^ nil
+]
+
+{ #category : #testing }
+SLVMMetalCodeGenerator >> mapSpecialVariableLocation: location [
+	^ SpecialVariableLocationMapping at: location
 ]
 
 { #category : #testing }
@@ -349,8 +479,50 @@ SLVMMetalCodeGenerator >> renameSymbol: aSymbol [
 ]
 
 { #category : #'code generation' }
+SLVMMetalCodeGenerator >> shaderBindingForGlobal: global [
+	| storage value location |
+	value := global value.
+	storage := value value type storage.
+	storage = #input ifTrue: [
+		location := value propertyAt: #location ifAbsent: [ 
+			self error: 'Input variable without location'.
+		].
+	
+		^ (SpecialVariableLocationMapping at: location) second
+	].
+
+	^ ''
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> stageInVariableName [
+	^ '_slvm_stagein'
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> stageOutVariableName [
+	^ '_slvm_stageout'
+]
+
+{ #category : #'code generation' }
 SLVMMetalCodeGenerator >> translateBasicTypeName: aType [
 	^ TypeDictionary at: aType
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> translateGlobalLocation: global [
+	^ ''
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> translateGlobalVariableType: globalVariable [
+	| valueType |
+	valueType := globalVariable valueType.
+	(valueType isSampledTextureType or: [ valueType isSamplerType or: [ valueType isTextureType or: [ self isGlobalInputPassedAsParameter: globalVariable ]]]) ifTrue: [
+		^ self translateType: valueType
+	].
+
+	^ super translateGlobalVariableType: globalVariable
 ]
 
 { #category : #visitor }
@@ -375,6 +547,47 @@ SLVMMetalCodeGenerator >> translateHLElementReferenceValue: statement [
 		^ '(*{1})[{2}]' format: { statement reference translateValueWith: self . statement member translateValueWith: self }
 	].
 
+
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> translateHLFunctionPrologue: function [
+	forcedReturnValue := nil.
+	function shaderType ifNil: [ ^ self ].
+	
+	forcedReturnValue := self stageOutVariableName. 
+	self
+		emitLine: self outputStructureName , ' ' , self stageOutVariableName, ';'.
+	
+	function internedGlobals
+		select: [ :global | (#(input output) includes: global variable storage) and: [(self isGlobalInputPassedAsParameter: global value) not] ]
+		thenDo: [ :global |
+			self emitLine: ('{1} {2}{3} = {4};' format: { global type name . global variable name . global type arrayBounds: self unboundedArrayNotation . ioVariableMapping at: global value})
+	]
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> translateHLReturnVoid: statement [
+	forcedReturnValue ifNotNil: [
+		self emitLine: 'return ' , forcedReturnValue , ';'.
+	] ifNil: [ 
+		self emitLine: 'return;'
+	]
+
+]
+
+{ #category : #'code generation' }
+SLVMMetalCodeGenerator >> translateHLVariableDecl: variableDecl [
+	| variableType arrayBounds variableTypeString binding |
+	"Do not emit variables that have been interned."
+	variableDecl needsInternation ifTrue: [ ^ self ].
+	
+	variableType := variableDecl type.
+	arrayBounds := variableType arrayBounds: self unboundedArrayNotation.
+	variableTypeString := variableType name.
+	binding := variableDecl binding ifNil: [ '' ].
+
+	self emitLine: ('{1} {2}{3}{4};' format: { variableTypeString . variableDecl name . arrayBounds . binding})
 
 ]
 

@@ -3,10 +3,21 @@ Class {
 	#superclass : #SLVMHLCodeNode,
 	#instVars : [
 		'name',
-		'type'
+		'type',
+		'binding'
 	],
 	#category : #'Slovim-HighLevelCodeGenerator'
 }
+
+{ #category : #accessing }
+SLVMHLStructureTypeFieldNode >> binding [
+	^ binding
+]
+
+{ #category : #accessing }
+SLVMHLStructureTypeFieldNode >> binding: anObject [
+	binding := anObject
+]
 
 { #category : #accessing }
 SLVMHLStructureTypeFieldNode >> name [

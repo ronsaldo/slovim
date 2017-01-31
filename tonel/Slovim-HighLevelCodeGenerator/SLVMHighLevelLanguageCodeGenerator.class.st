@@ -22,7 +22,9 @@ Class {
 		'phiVariableDictionary',
 		'currentSSAModule',
 		'linearAlgebraRequired',
-		'dynamicRuntimeRequired'
+		'dynamicRuntimeRequired',
+		'inputVariablesUsed',
+		'outputVariablesUsed'
 	],
 	#classVars : [
 		'BuiltInFunctionMap',
@@ -180,7 +182,7 @@ SLVMHighLevelLanguageCodeGenerator class >> initialize [
 	)
 ]
 
-{ #category : #'code generation' }
+{ #category : #adding }
 SLVMHighLevelLanguageCodeGenerator >> addGlobalsToFunction: function node: functionNode [
 	| extractor |
 	extractor := SLVMHLLGlobalReferenceExtractor new
@@ -250,6 +252,10 @@ SLVMHighLevelLanguageCodeGenerator >> addSuccessorsPhi: instruction [
 			value: copyValue.
 		self addStatement: copyStatement
 	]
+]
+
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> applyFunctionMetadata: function to: functionNode [
 ]
 
 { #category : #'code generation' }
@@ -343,6 +349,57 @@ SLVMHighLevelLanguageCodeGenerator >> functionTranslation: value do: aBlock [
 	]
 ]
 
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> generateIOFieldFor: variable stage: stageKind [
+	| location fieldName fieldType binding nameAndBinding |
+	location := variable propertyAt: #location ifAbsent: [ self error: 'unsupported IO variable without location' ].
+	binding := nil.
+	fieldName := location < 0 ifTrue: [
+		nameAndBinding := self mapSpecialVariableLocation: location.
+		binding := nameAndBinding second.
+		nameAndBinding first
+	] ifFalse: [
+		binding := self mapLocationBinding: location stage: stageKind variable: variable.
+		'location' , location asString
+	].
+
+	fieldType := self translateType: variable valueType.
+
+	^ SLVMHLStructureTypeFieldNode new
+		name: (self translateSymbol: fieldName);
+		type: fieldType;
+		binding: binding;
+		yourself.
+
+
+	
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> generateIOStructure: name variables: variables [
+	| type stageKind field |
+	stageKind := functionDefinitions detect: [ :def | def shaderType isNotNil ] ifFound: [ 
+	:def | def shaderType ] ifNone: [ nil ].
+
+	type := SLVMHLStructureTypeNode new
+		name: name;
+		kind: SLVMStructureType genericKind;
+		fields: (variables reject: [:var | self isGlobalInputPassedAsParameter: var ] thenCollect: [ :var |
+			field := self generateIOFieldFor: var stage: stageKind.
+			self mapIOVar: var toField: field.
+			field
+		]);
+		yourself.
+
+	typeDeclarations add: type.
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> generateIOStructures [
+	inputVariablesUsed ifNotEmpty: [ self generateIOStructure: self inputStructureName variables: inputVariablesUsed ].
+	outputVariablesUsed ifNotEmpty: [ self generateIOStructure: self outputStructureName variables: outputVariablesUsed ].
+]
+
 { #category : #private }
 SLVMHighLevelLanguageCodeGenerator >> generateSymbol [
 	gensymCount := gensymCount + 1.
@@ -373,6 +430,11 @@ SLVMHighLevelLanguageCodeGenerator >> hasFunctionOverloadingSupport [
 	^ true
 ]
 
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> hasToCombineIOInStructure [
+	^ false
+]
+
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> increaseIndentationLevel [
 	indentationLevel := indentationLevel + 1.
@@ -385,6 +447,13 @@ SLVMHighLevelLanguageCodeGenerator >> initialize [
 	gensymCount := 0.
 	linearAlgebraRequired := true.
 	dynamicRuntimeRequired := true.
+	inputVariablesUsed := OrderedCollection new.
+	outputVariablesUsed := OrderedCollection new.
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> inputStructureName [
+	^ #_SLVM_ShaderStageInput
 ]
 
 { #category : #'code generation' }
@@ -430,6 +499,12 @@ SLVMHighLevelLanguageCodeGenerator >> isAddingStructureKindName [
 { #category : #testing }
 SLVMHighLevelLanguageCodeGenerator >> isBlackListedSymbol: aSymbol [
 	^ false
+]
+
+{ #category : #testing }
+SLVMHighLevelLanguageCodeGenerator >> isGlobalInputPassedAsParameter: global [
+	^ false
+
 ]
 
 { #category : #visitor }
@@ -493,14 +568,43 @@ SLVMHighLevelLanguageCodeGenerator >> mapBuiltInFunction: aFunctionName [
 	^ BuiltInFunctionMap at: aFunctionName
 ]
 
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> mapIOVar: var toField: field [
+	self subclassResponsibility
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> mapLocationBinding: location stage: stageKind variable: variable [
+	^ nil
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> mapSpecialVariableLocation: location [
+	self subclassResponsibility
+]
+
 { #category : #testing }
 SLVMHighLevelLanguageCodeGenerator >> needStructuredControlFlow [
 	^ true
 ]
 
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> outputStructureName [
+	^ #_SLVM_ShaderStageOutput
+]
+
 { #category : #testing }
 SLVMHighLevelLanguageCodeGenerator >> passGlobalsAsParameters [
 	^ false
+]
+
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> processIOVar: ioVar [
+	ioVar type storage == #input ifTrue: [
+		inputVariablesUsed add: ioVar.
+	] ifFalse: [ 
+		outputVariablesUsed add: ioVar
+	].
 ]
 
 { #category : #'code generation' }
@@ -579,7 +683,9 @@ SLVMHighLevelLanguageCodeGenerator >> translateFunction: function contentInto: f
 			self translateBasicBlock: function basicBlocks first.
 		].
 	
-		functionNode body removeFinalReturnVoids.
+		(self hasToCombineIOInStructure and: [ self passGlobalsAsParameters and: [functionNode shaderType isNotNil ]]) ifFalse: [
+			functionNode body removeFinalReturnVoids 
+		]
 	] ensure: [
 		deferredBlocks := oldDeferredBlocks.
 		currentFunctionNode := oldFunctionNode.
@@ -619,6 +725,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateFunctionType: functionType [
 
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateGlobalVariableType: globalVariable [
+	(self isGlobalInputPassedAsParameter: globalVariable) ifTrue: [ self translateType: globalVariable valueType ].
 	^ self translateType: globalVariable type
 ]
 
@@ -785,6 +892,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLFunction: function [
 		emitLine: '{';
 		withExtraIndentationLevel: [
 			function locals do: [ :local | local translateWith: self ].
+			self translateHLFunctionPrologue: function.
 			function body translateWith: self.
 		];
 		emitLine: '}';
@@ -795,6 +903,10 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLFunction: function [
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateHLFunctionArgumentNodeValue: argument [
 	^ argument name
+]
+
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateHLFunctionPrologue: function [
 ]
 
 { #category : #'code generation' }
@@ -1013,6 +1125,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateModule: ssaModule exportList: exp
 	].
 
 	prototypes := functionDefinitions collect: [ :function |SLVMHLFunctionPrototypeDeclarationNode new function: function ] as: Array.
+	self hasToCombineIOInStructure ifTrue: [ self generateIOStructures ].
 	^ self emitTranslatedCode: typeDeclarations , globalVariableDeclarations , prototypes, functionDefinitions
 ]
 
@@ -1264,6 +1377,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitFunction: function [
 		functionNode arguments: (function arguments collect: [ :arg | self translateFunctionArgument: arg ] ).
 		functionNode dynamicLiterals: (function dynamicLiterals collect: [ :arg | self translateFunctionDynamicLiteral: arg ] ).
 		
+		self applyFunctionMetadata: function to: functionNode.
 		self passGlobalsAsParameters ifTrue: [ self addGlobalsToFunction: function node: functionNode  ].
 		self translateFunction: function contentInto: functionNode
 	]
@@ -1313,7 +1427,13 @@ SLVMHighLevelLanguageCodeGenerator >> visitGetElementReference: instruction [
 SLVMHighLevelLanguageCodeGenerator >> visitGlobalVariable: globalVariable [
 	| valueType |
 	^ self globalValueTranslation: globalVariable do: [
-		valueType := self translateType: globalVariable valueType.
+		valueType := (self isGlobalThatNeedsInternation: globalVariable)
+			ifTrue: [ self translateGlobalVariableType: globalVariable ]
+			ifFalse: [ self translateType: globalVariable valueType ].
+		(self hasToCombineIOInStructure and: [ #(input output) includes: globalVariable type storage ]) ifTrue: [ 
+			self processIOVar: globalVariable.
+		].
+	
 		SLVMHLVariableDeclNode new
 			name: (self translateSymbol: globalVariable name);
 			type: valueType;

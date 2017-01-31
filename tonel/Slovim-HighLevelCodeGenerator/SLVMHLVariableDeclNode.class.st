@@ -14,6 +14,11 @@ Class {
 }
 
 { #category : #accessing }
+SLVMHLVariableDeclNode >> binding [
+	^ nil
+]
+
+{ #category : #accessing }
 SLVMHLVariableDeclNode >> definition [
 	^ definition
 ]
