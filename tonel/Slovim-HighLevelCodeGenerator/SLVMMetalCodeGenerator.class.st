@@ -382,13 +382,15 @@ SLVMMetalCodeGenerator >> isRenamedSymbol: aSymbol [
 
 { #category : #'code generation' }
 SLVMMetalCodeGenerator >> makeFunctionPrototypeString: function [
-	| functionType argumentCount |
+	| functionType argumentCount bufferBindingOffset |
 	^ ByteString streamContents: [:out |
 		functionType := function type.
+		bufferBindingOffset := 0.
 		function shaderType ifNotNil: [
 			out
 				nextPutAll: function shaderType; space;
-				nextPutAll: self outputStructureName; space.		
+				nextPutAll: self outputStructureName; space.
+			function shaderType = #vertex ifTrue: [ bufferBindingOffset := 1 ].
 		] ifNil: [ 
 			out
 				nextPutAll: functionType returnType name; space.
@@ -417,7 +419,7 @@ SLVMMetalCodeGenerator >> makeFunctionPrototypeString: function [
 				thenDo: [ :global |
 				argumentCount > 0 ifTrue: [ out nextPutAll: ', ' ].
 				out nextPutAll: global type name; space; nextPutAll: (global variable name).
-				out space; nextPutAll: (self shaderBindingForGlobal: global).
+				out space; nextPutAll: (self shaderBindingForGlobal: global bufferBindingOffset: bufferBindingOffset).
 				argumentCount := argumentCount + 1.
 			].
 		] ifNil: [
@@ -487,7 +489,7 @@ SLVMMetalCodeGenerator >> renameSymbol: aSymbol [
 ]
 
 { #category : #'code generation' }
-SLVMMetalCodeGenerator >> shaderBindingForGlobal: global [
+SLVMMetalCodeGenerator >> shaderBindingForGlobal: global bufferBindingOffset: bufferBindingOffset [
 	| storage value location metalBinding |
 	value := global value.
 	storage := value value type storage.
@@ -503,6 +505,8 @@ SLVMMetalCodeGenerator >> shaderBindingForGlobal: global [
 		metalBinding := value propertyAt: #metalBinding ifAbsent: [
 			self error: '#metalType metadata without matching #metalBinding.'.
 		].
+	
+		bindingType = #buffer ifTrue: [ metalBinding := metalBinding + bufferBindingOffset ].
 		^ '[[{1}({2})]]' format: { bindingType . metalBinding }
 	]. 
 
