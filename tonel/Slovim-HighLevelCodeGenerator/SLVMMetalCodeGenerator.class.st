@@ -455,6 +455,14 @@ SLVMMetalCodeGenerator >> mapLocationBinding: location stage: stageKind variable
 		^'[[color(' , location asString , ')]]'
 	].
 
+	(stageKind == #vertex and: [variable type storage = #input ]) ifTrue: [
+		^'[[attribute(' , location asString , ')]]'
+	].
+
+	(location >= 0 and: [#(input output) includes: variable type storage ]) ifTrue: [
+		^'[[user(L' , location asString , ')]]'
+	].
+
 	^ nil
 ]
 
@@ -480,7 +488,7 @@ SLVMMetalCodeGenerator >> renameSymbol: aSymbol [
 
 { #category : #'code generation' }
 SLVMMetalCodeGenerator >> shaderBindingForGlobal: global [
-	| storage value location |
+	| storage value location metalBinding |
 	value := global value.
 	storage := value value type storage.
 	storage = #input ifTrue: [
@@ -490,6 +498,13 @@ SLVMMetalCodeGenerator >> shaderBindingForGlobal: global [
 	
 		^ (SpecialVariableLocationMapping at: location) second
 	].
+
+	value propertyAt: #metalType ifPresent: [ :bindingType |
+		metalBinding := value propertyAt: #metalBinding ifAbsent: [
+			self error: '#metalType metadata without matching #metalBinding.'.
+		].
+		^ '[[{1}({2})]]' format: { bindingType . metalBinding }
+	]. 
 
 	^ ''
 ]
