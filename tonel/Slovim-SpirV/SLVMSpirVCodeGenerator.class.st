@@ -497,7 +497,7 @@ SLVMSpirVCodeGenerator >> visitExtractVectorElement: extractElement [
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitFloatType: floatType [
 	^ self valueTranslation: floatType do: [ :id |
-		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypeFloat result: id operands: {floatType size})
+		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypeFloat result: id operands: {floatType size*8})
 	]
 ]
 
@@ -671,7 +671,7 @@ SLVMSpirVCodeGenerator >> visitGlobalVariable: globalVariable [
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitIntegerType: integerType [
 	^ self valueTranslation: integerType do: [ :id |
-		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypeInt result: id operands: {integerType size . integerType isSigned asBit})
+		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypeInt result: id operands: {integerType size * 8. integerType isSigned asBit})
 	]
 ]
 
