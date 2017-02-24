@@ -24,6 +24,11 @@ SLVMStructureType class >> bufferBlockKind [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMStructureType class >> builtInBlockKind [
+	^ #builtInBlock
+]
+
+{ #category : #'as yet unclassified' }
 SLVMStructureType class >> genericKind [
 	^ #generic
 ]
