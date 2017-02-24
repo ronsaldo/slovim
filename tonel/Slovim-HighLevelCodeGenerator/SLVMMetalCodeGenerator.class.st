@@ -139,6 +139,7 @@ SLVMMetalCodeGenerator class >> initializeRenamedSymbols [
 SLVMMetalCodeGenerator class >> initializeSpecialVariableMapping [
 	SpecialVariableLocationMapping := Dictionary newFromPairs: #(
 		-1 (position '[[position]]' false)
+		-2 (pointSize '[[point_size]]' false)
 		-6 (_slvm_vertexID '[[vertex_id]]' true)
 		-7 (_slvm_instanceID '[[instance_id]]' true)
 	)

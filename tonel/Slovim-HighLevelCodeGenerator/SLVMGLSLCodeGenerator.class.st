@@ -35,6 +35,7 @@ SLVMGLSLCodeGenerator class >> initialize [
 SLVMGLSLCodeGenerator class >> initializeBuiltInVariableMappings [
 	BuiltInVariableMappings := Dictionary newFromPairs: #(
 		-1 gl_Position
+		-2 gl_PointSize
 		-6 gl_VertexID
 		-7 gl_InstanceID
 	)
