@@ -38,6 +38,9 @@ SLVMGLSLCodeGenerator class >> initializeBuiltInVariableMappings [
 		-2 gl_PointSize
 		-6 gl_VertexID
 		-7 gl_InstanceID
+
+		-43 gl_VertexIndex
+		-44 gl_InstanceIndex
 	)
 ]
 
