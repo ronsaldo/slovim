@@ -19,6 +19,14 @@ Class {
 }
 
 { #category : #construction }
+SLVMFunction class >> module: module name: varName functionType: functionType [
+	| var |
+	var := self pointerSize: module compilationTarget pointerSize name: varName functionType: functionType.
+	module add: var.
+	^ var
+]
+
+{ #category : #construction }
 SLVMFunction class >> pointerSize: pointerSize functionType: aFunctionType [
 	^ self new pointerSize: pointerSize functionType: aFunctionType; yourself
 ]

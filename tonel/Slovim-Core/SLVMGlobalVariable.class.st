@@ -11,6 +11,14 @@ Class {
 }
 
 { #category : #construction }
+SLVMGlobalVariable class >> module: module name: varName valueType: valueType storage: storage [
+	| var |
+	var := self pointerSize: module compilationTarget pointerSize name: varName valueType: valueType  storage: storage.
+	module add: var.
+	^ var
+]
+
+{ #category : #construction }
 SLVMGlobalVariable class >> pointerSize: pointerSize name: aString valueType: aFunctionType storage: storageClass [
 	^ self new name: aString; pointerSize: pointerSize valueType: aFunctionType storage: storageClass; yourself
 ]
