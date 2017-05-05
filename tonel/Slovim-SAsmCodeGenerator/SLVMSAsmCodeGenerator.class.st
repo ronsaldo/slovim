@@ -53,7 +53,7 @@ SLVMSAsmCodeGenerator >> translateModule: module exportList: exportList [
 { #category : #'as yet unclassified' }
 SLVMSAsmCodeGenerator >> translateModule: module exportList: exportList packageRegistration: packageRegistration [
 	classVariableClassMap := module classVariableClassMap.
-	self applyPassesIn: module functionList: exportList.
+	self applyPassesIn: module functionList: (exportList select: #isFunction).
 	sasmModule := SAsmModule new target: target target.
 	translatedElements := Dictionary new.
 
@@ -92,6 +92,25 @@ SLVMSAsmCodeGenerator >> visitFunction: aFunction [
 		moduleTranslator: self;
 		generateFunction: aFunction into: result.
 		
+	^ result
+		
+]
+
+{ #category : #visiting }
+SLVMSAsmCodeGenerator >> visitGlobalVariable: aFunction [
+	| result |
+	translatedElements at: aFunction ifPresent: [ :incomplete | ^ incomplete ].
+	
+	result := SAsmGlobalVariable new
+		name: aFunction name;
+		target: sasmModule target;
+		visibility: (self convertVisibility: aFunction visibility);
+		yourself.
+	translatedElements at: aFunction put: result.
+	sasmModule addElement: result.
+	
+	self flag: 'Generate the global variable content'.
+	
 	^ result
 		
 ]
