@@ -112,7 +112,7 @@ SLVMSAsmConstantCodeGenerator >> translateIntegerImmediate: integerImmediate siz
 SLVMSAsmConstantCodeGenerator >> visitConstantPointer: aConstant [
 	| constantData |
 	constantData := self dataGenerator translate: aConstant constant.
-	^ self addToConstantZone: (SAsmConstantExpressionValue new size: constantData size; value: constantData)
+	^ {self addToConstantZone: (SAsmConstantExpressionValue new size: constantData size; value: constantData)}
 ]
 
 { #category : #visiting }
@@ -127,5 +127,5 @@ SLVMSAsmConstantCodeGenerator >> visitConstantValue: value [
 
 { #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> visitFunction: aFunction [
-	^ (aFunction accept: moduleTranslator) asSAsmInstructionOperand
+	^ {(moduleTranslator translateModuleElement: aFunction) asSAsmInstructionOperand}
 ]

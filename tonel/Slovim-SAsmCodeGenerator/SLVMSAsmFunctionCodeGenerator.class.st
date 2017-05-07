@@ -296,9 +296,11 @@ SLVMSAsmFunctionCodeGenerator >> visitCall: instruction [
 	| calledFunction arguments result calledConvention |
 	result := self translateValue: instruction.
 	calledFunction := self translateValue: instruction functionValue.
-	arguments := instruction arguments collect: [ :arg | self translateValue: arg ].
+	arguments := OrderedCollection new.
+	instruction arguments do: [ :arg | arguments addAll: (self translateValue: arg) ].
 	calledConvention := sasmTarget callingConventionNamed: instruction callingConvention.
-	blockBuilder tacCall: calledFunction arguments: arguments into: result convention: calledConvention.
+	self assert: calledFunction size = 1.
+	blockBuilder tacCall: calledFunction first arguments: arguments into: result convention: calledConvention.
 ]
 
 { #category : #visiting }
