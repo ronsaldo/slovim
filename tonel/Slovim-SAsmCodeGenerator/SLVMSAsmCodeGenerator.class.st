@@ -12,6 +12,7 @@ Class {
 
 { #category : #'as yet unclassified' }
 SLVMSAsmCodeGenerator >> convertVisibility: visibility [
+	visibility == #public ifTrue: [ ^ #external ].
 	^ visibility
 ]
 
