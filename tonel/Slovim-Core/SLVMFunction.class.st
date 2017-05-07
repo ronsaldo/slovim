@@ -22,6 +22,7 @@ Class {
 SLVMFunction class >> module: module name: varName functionType: functionType [
 	| var |
 	var := self pointerSize: module compilationTarget pointerSize name: varName functionType: functionType.
+	var compilationTarget: module compilationTarget.
 	module add: var.
 	^ var
 ]
