@@ -126,6 +126,7 @@ SLVMOptPromoteAllocas >> lastDefinitionValueAtLoad: loadInstruction for: definit
 { #category : #'as yet unclassified' }
 SLVMOptPromoteAllocas >> passOnFunction: aFunction [
 	| toBePromoted |
+	aFunction isEmpty ifTrue: [ ^ self ].
 	toBePromoted := OrderedCollection new.
 	aFunction basicBlocks first instructionsDo: [ :ins |
 		(ins isAlloca and: [self canBePromoted: ins]) ifTrue: [ 

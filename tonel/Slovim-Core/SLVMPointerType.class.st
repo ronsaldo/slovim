@@ -69,7 +69,7 @@ SLVMPointerType >> pointerSize: pointerSize typeOfMemberAt: index depth: depth [
 
 { #category : #printing }
 SLVMPointerType >> printOn: aStream [
-	aStream print: baseType;
+	aStream nextPutAll: baseType shortName;
 		nextPutAll: '* '; print: storage
 ]
 

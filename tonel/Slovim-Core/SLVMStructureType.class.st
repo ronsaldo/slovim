@@ -136,6 +136,11 @@ SLVMStructureType >> printOn: aStream [
 ]
 
 { #category : #accessing }
+SLVMStructureType >> shortName [
+	^ 'struct ' , name
+]
+
+{ #category : #accessing }
 SLVMStructureType >> size [
 	^ size
 ]

@@ -440,6 +440,11 @@ SLVMType >> isVoidType [
 	^ false
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMType >> shortName [
+	^ self asString
+]
+
 { #category : #accessing }
 SLVMType >> size [
 	self subclassResponsibility
