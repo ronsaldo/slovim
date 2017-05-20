@@ -7,7 +7,7 @@ Class {
 	#category : #'Slovim-Core-Optimizations'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #adding }
 SLVMOptDestroySSA >> addAllocaInstructionsTo: aFunction [
 	| firstBlock pointerSize alloca |
 	firstBlock := aFunction basicBlocks first.
@@ -16,11 +16,15 @@ SLVMOptDestroySSA >> addAllocaInstructionsTo: aFunction [
 	aFunction basicBlocks do: [ :basicBlock |
 		basicBlock instructionsDo: [ :instruction |
 			instruction isPhi ifTrue: [
-				alloca := SLVMAlloca pointerSize: pointerSize valueType: instruction type.
-				alloca name: instruction name.
+				instruction instructionReferences ifEmpty: [
+					instruction removeFromBlock
+				] ifNotEmpty: [ 
+					alloca := SLVMAlloca pointerSize: pointerSize valueType: instruction type.
+					alloca name: instruction name.
 				
-				firstBlock addFirst: alloca.
-				phiAllocaDictionary at: instruction put: alloca.
+					firstBlock addFirst: alloca.
+					phiAllocaDictionary at: instruction put: alloca.
+				]
 			]
 		]
 	]

@@ -86,6 +86,16 @@ SLVMBuilder >> basicBlockNamed: basicBlockName do: aBlock [
 ]
 
 { #category : #instructions }
+SLVMBuilder >> bitCast: source target: targetType [
+	^ self bitCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> bitCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMBitCast source: source targetType: targetType) name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock [
 	^ self branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock name: function generateSymbol
 ]
@@ -236,6 +246,26 @@ SLVMBuilder >> fdiv: left with: right name: resultName [
 ]
 
 { #category : #instructions }
+SLVMBuilder >> floatToIntCast: source target: targetType [
+	^ self floatToIntCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> floatToIntCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMFloatToIntCast source: source targetType: targetType) name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> floatingPointCast: source target: targetType [
+	^ self floatingPointCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> floatingPointCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMFloatingPointCast source: source targetType: targetType) name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> fmul: left with: right [
 	^ self fmul: left with: right name: function generateSymbol
 ]
@@ -373,6 +403,43 @@ SLVMBuilder >> ine: left with: right [
 { #category : #instructions }
 SLVMBuilder >> ine: left with: right name: resultName [
 	^ self addOperation: #ine left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> intCast: source target: targetType [
+	^ self intCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> intCast: source target: targetType name: resultName [
+	| sourceType |
+	sourceType := source type.
+	self assert: (sourceType isIntegerType and: [targetType isIntegerType]).
+	self flag: 'Handle vectorial types.'.
+	sourceType size = targetType size ifTrue: [
+		^ self bitCast: source target: targetType name: resultName
+	] ifFalse: [ 
+		targetType size < sourceType ifTrue: [
+			^ self truncate: source target: targetType name: resultName
+		] ifFalse: [ 
+			sourceType isSigned ifTrue: [ 
+				self flag: 'Check whether this is the correct case for performing sign extension'.
+				^ self signExtend: source target: targetType name: resultName
+			] ifFalse: [
+				^ self zeroExtend: source target: targetType name: resultName
+			]
+		]
+	]
+]
+
+{ #category : #instructions }
+SLVMBuilder >> intToFloatCast: source target: targetType [
+	^ self intToFloatCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> intToFloatCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMIntToFloatCast source: source targetType: targetType) name: resultName
 ]
 
 { #category : #testing }
@@ -640,6 +707,11 @@ SLVMBuilder >> shuffleVector: firstVector with: secondVector components: compone
 ]
 
 { #category : #instructions }
+SLVMBuilder >> signExtend: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMSignExtend source: source targetType: targetType) name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> store: value in: variable [
 	^ self store: value in: variable name: function generateSymbol
 ]
@@ -657,6 +729,11 @@ SLVMBuilder >> sub: left with: right [
 { #category : #instructions }
 SLVMBuilder >> sub: left with: right name: resultName [
 	^ self addOperation: #sub left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> truncate: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMTruncate source: source targetType: targetType) name: resultName
 ]
 
 { #category : #instructions }
@@ -680,4 +757,14 @@ SLVMBuilder >> withBasicBlock: aBasicBlock do: aBlock [
 	oldCurrentBlock := currentBlock.
 	currentBlock := aBasicBlock.
 	aBlock ensure: [ currentBlock := oldCurrentBlock ]
+]
+
+{ #category : #instructions }
+SLVMBuilder >> zeroExtend: source target: targetType [
+	^ self zeroExtend: source target: targetType name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> zeroExtend: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMZeroExtend source: source targetType: targetType) name: resultName
 ]
