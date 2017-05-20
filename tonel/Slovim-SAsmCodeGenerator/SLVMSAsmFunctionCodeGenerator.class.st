@@ -99,6 +99,24 @@ SLVMSAsmFunctionCodeGenerator >> binaryInteger: instruction arithmetic: operatio
 	^ blockBuilder tacOperation: operation result: resultValue first left: leftValue first right: rightValue first
 ]
 
+{ #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> binaryInteger: instruction bitwise: operation [
+	| left leftValue right rightValue resultValue |
+	left := instruction left.
+	leftValue := self translateValue: left.
+	
+	right := instruction right.
+	rightValue := self translateValue: right.
+	
+	resultValue := self translateValue: instruction.
+	self assert: instruction left type = instruction right type.
+	self elementWise: leftValue with: rightValue with: resultValue do: [ :leftElement :rightElement :resultElement |
+		^ blockBuilder tacOperation: operation result: resultElement left: leftElement right: rightElement
+	]
+	
+	
+]
+
 { #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> binaryInteger: instruction comparison: comparison [
 	| left right result type |
@@ -230,6 +248,23 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegistersForVariable: variable typ
 			variableOffset: (index - 1) * reg size
 	].
 	^ registers
+]
+
+{ #category : #'code generation' }
+SLVMSAsmFunctionCodeGenerator >> elementWise: source with: result do: aBlock [
+	self assert: source size = result size.
+	1 to: source size do: [ :i |
+		aBlock value: (source at: i) value: (result at: i)
+	]
+]
+
+{ #category : #'code generation' }
+SLVMSAsmFunctionCodeGenerator >> elementWise: source with: source2 with: result  do: aBlock [
+	self assert: source size = result size.
+	self assert: source2 size = result size.
+	1 to: source size do: [ :i |
+		aBlock value: (source at: i) value: (source2 at: i) value: (result at: i)
+	]
 ]
 
 { #category : #'code generation' }
@@ -466,6 +501,33 @@ SLVMSAsmFunctionCodeGenerator >> visitBinaryOperation: instruction [
 
 ]
 
+{ #category : #'bitwise operations' }
+SLVMSAsmFunctionCodeGenerator >> visitBitAnd: instruction [
+	self binaryInteger: instruction bitwise: TacBitAnd
+]
+
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitBitCast: instruction [
+	| source sourceValue result |
+	source := instruction source.
+	sourceValue := self translateValue: source.
+	result := self translateValue: instruction.
+	self elementWise: sourceValue with: result do: [ :sourceEl :resultEl | 
+		blockBuilder tacMove: sourceEl into: resultEl.
+	].
+
+]
+
+{ #category : #'bitwise operations' }
+SLVMSAsmFunctionCodeGenerator >> visitBitOr: instruction [
+	self binaryInteger: instruction bitwise: TacBitOr
+]
+
+{ #category : #'bitwise operations' }
+SLVMSAsmFunctionCodeGenerator >> visitBitXor: instruction [
+	self binaryInteger: instruction bitwise: TacBitXor
+]
+
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitBranch: instruction [
 	| condition trueDestination falseDestination |
@@ -622,6 +684,21 @@ SLVMSAsmFunctionCodeGenerator >> visitReturn: instruction [
 SLVMSAsmFunctionCodeGenerator >> visitReturnVoid: instruction [
 	blockBuilder tacReturnVoid
 	
+]
+
+{ #category : #'bitwise operations' }
+SLVMSAsmFunctionCodeGenerator >> visitShiftLeft: instruction [
+	self binaryInteger: instruction bitwise: TacLogicalShiftLeft
+]
+
+{ #category : #'bitwise operations' }
+SLVMSAsmFunctionCodeGenerator >> visitShiftRight: instruction [
+	self binaryInteger: instruction bitwise: TacLogicalShiftRight
+]
+
+{ #category : #'bitwise operations' }
+SLVMSAsmFunctionCodeGenerator >> visitShiftRightArithmetic: instruction [
+	self binaryInteger: instruction bitwise: TacArithmeticShiftRight
 ]
 
 { #category : #memory }

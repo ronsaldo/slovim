@@ -129,3 +129,8 @@ SLVMSAsmConstantCodeGenerator >> visitConstantValue: value [
 SLVMSAsmConstantCodeGenerator >> visitFunction: aFunction [
 	^ {(moduleTranslator translateModuleElement: aFunction) asSAsmInstructionOperand}
 ]
+
+{ #category : #visiting }
+SLVMSAsmConstantCodeGenerator >> visitGlobalVariable: aGlobalVariable [
+	^ {(moduleTranslator translateModuleElement: aGlobalVariable) asSAsmInstructionOperand}
+]
