@@ -12,7 +12,6 @@ Class {
 
 { #category : #'as yet unclassified' }
 SLVMSAsmCodeGenerator >> convertVisibility: visibility [
-	visibility == #public ifTrue: [ ^ #external ].
 	^ visibility
 ]
 
@@ -98,16 +97,19 @@ SLVMSAsmCodeGenerator >> visitFunction: aFunction [
 ]
 
 { #category : #visiting }
-SLVMSAsmCodeGenerator >> visitGlobalVariable: aFunction [
-	| result |
-	translatedElements at: aFunction ifPresent: [ :incomplete | ^ incomplete ].
+SLVMSAsmCodeGenerator >> visitGlobalVariable: aGlobalVariable [
+	| result type |
+	translatedElements at: aGlobalVariable ifPresent: [ :incomplete | ^ incomplete ].
+	type := aGlobalVariable type.
 	
 	result := SAsmGlobalVariable new
-		name: aFunction name;
+		name: aGlobalVariable name;
 		target: sasmModule target;
-		visibility: (self convertVisibility: aFunction visibility);
+		visibility: (self convertVisibility: aGlobalVariable visibility);
+		size: type size;
+		alignment: type alignment;
 		yourself.
-	translatedElements at: aFunction put: result.
+	translatedElements at: aGlobalVariable put: result.
 	sasmModule addElement: result.
 	
 	self flag: 'Generate the global variable content'.

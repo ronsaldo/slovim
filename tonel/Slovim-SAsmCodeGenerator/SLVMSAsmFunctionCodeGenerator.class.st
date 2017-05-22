@@ -12,9 +12,13 @@ Class {
 		'basicBlockMap',
 		'blockBuilder',
 		'constantTranslator',
-		'allocaToVariableMap'
+		'allocaToVariableMap',
+		'returnArgumentType',
+		'returnArgument',
+		'returnArgumentRegister'
 	],
 	#classVars : [
+		'BuiltInFunctionSelectorMapping',
 		'OperationCodeGeneratorMap'
 	],
 	#pools : [
@@ -25,7 +29,14 @@ Class {
 
 { #category : #'class initialization' }
 SLVMSAsmFunctionCodeGenerator class >> initialize [
-	OperationCodeGeneratorMap := IdentityDictionary newFromPairs: #(
+	BuiltInFunctionSelectorMapping := Dictionary newFromPairs: #(
+		'atomic.fetch_and_add' generateFetchAndAdd:
+		'atomic.fetch_and_subtract' generateFetchAndSubtract:
+		'atomic.swap_value' generateSwapValue:
+		'atomic.compare_and_swap' generateCompareAndSwap:
+	).
+	
+	OperationCodeGeneratorMap := Dictionary newFromPairs: #(
 		add visitAdd:
 		sub visitSub:
 		mul visitMul:
@@ -96,7 +107,7 @@ SLVMSAsmFunctionCodeGenerator >> binaryInteger: instruction arithmetic: operatio
 		self halt.
 	].
 	
-	^ blockBuilder tacOperation: operation result: resultValue first left: leftValue first right: rightValue first
+	^ blockBuilder tacOperation: operation result: resultValue left: leftValue right: rightValue
 ]
 
 { #category : #arithmetic }
@@ -124,13 +135,13 @@ SLVMSAsmFunctionCodeGenerator >> binaryInteger: instruction comparison: comparis
 	right := self translateValue: instruction right.
 	result := self translateValue: instruction.
 	type := instruction type.
-	self assert: left isArray.
-	self assert: right isArray.
-	self assert: result isArray.
+	self assert: left isOperandSet.
+	self assert: right isOperandSet.
+	self assert: result isOperandSet.
 	self assert: left size = right size.
 	type isBooleanType ifTrue: [ 
 		self assert: result size = 1.
-		self compare: comparison integer: left with: right into: result first.
+		self compare: comparison integer: left with: right into: result.
 	] ifFalse: [
 		self assert: result size >= left size.
 		result size > left size ifTrue: [ 
@@ -146,7 +157,7 @@ SLVMSAsmFunctionCodeGenerator >> binaryInteger: instruction comparison: comparis
 { #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> compare: comparison integer: left with: right into: result [
 	left size == 1 ifTrue: [ 
-		blockBuilder tacOperation: comparison result: result left: left first right: right first
+		blockBuilder tacOperation: comparison result: result left: left right: right
 	] ifFalse: [ 
 		"Big integer"
 		self halt.
@@ -183,10 +194,16 @@ SLVMSAsmFunctionCodeGenerator >> createAllocaVariables [
 
 { #category : #'code generation' }
 SLVMSAsmFunctionCodeGenerator >> createArguments [
-	| stackFrameLayout |
+	| stackFrameLayout returnType |
 	stackFrameLayout := sasmFunction stackFrameLayout.
 	argumentVariableMap := Dictionary new.
 	
+	returnType := function functionType returnType.
+	returnType isStructureType ifTrue: [
+		returnArgumentType := SLVMPointerType size: target pointerSize baseType: returnType storage: SLVMPointerType genericStorage.
+		returnArgument := stackFrameLayout createArgument: returnArgumentType spillingClass.
+		returnArgumentRegister := self createVirtualRegistersForVariable: returnArgument type: returnArgumentType.
+	].
 	function arguments do: [ :arg |
 		argumentVariableMap at: arg put: (stackFrameLayout createArgument: arg type spillingClass).
 	]
@@ -221,10 +238,10 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegisters [
 SLVMSAsmFunctionCodeGenerator >> createVirtualRegistersForType: type [
 	type isScalarType ifTrue: [ 
 		type isScalarIntegerType ifTrue: [
-			^ sasmFunction addVirtualRegisters: (sasmTarget newIntegerVirtualRegistersForSize: type size)
+			^ SLVMSAsmValue registers: (sasmFunction addVirtualRegisters: (sasmTarget newIntegerVirtualRegistersForSize: type size))
 		].
 		type isFloatType ifTrue: [
-			^ sasmFunction addVirtualRegisters: (sasmTarget newFloatVirtualRegistersForSize: type size)
+			^ SLVMSAsmValue registers: (sasmFunction addVirtualRegisters: (sasmTarget newFloatVirtualRegistersForSize: type size))
 		].
 	].
 
@@ -232,7 +249,7 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegistersForType: type [
 		self halt.
 	].
 
-	^ sasmFunction stackFrameLayout createLocal: type spillingClass
+	^ SLVMSAsmValue variable: (sasmFunction stackFrameLayout createLocal: type spillingClass)
 
 ]
 
@@ -240,7 +257,7 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegistersForType: type [
 SLVMSAsmFunctionCodeGenerator >> createVirtualRegistersForVariable: variable type: type [
 	| registers |
 	registers := self createVirtualRegistersForType: type.
-	registers isArray ifFalse: [ ^ registers ].
+	registers isAggregate ifTrue: [ ^ registers ].
 	
 	registers doWithIndex: [ :reg :index |
 		reg
@@ -267,6 +284,47 @@ SLVMSAsmFunctionCodeGenerator >> elementWise: source with: source2 with: result 
 	]
 ]
 
+{ #category : #'atomic operations' }
+SLVMSAsmFunctionCodeGenerator >> generateCompareAndSwap: instruction [
+	| result variable value |
+	result := self translateValue: instruction.
+	variable := self translateValue: instruction arguments first.
+	value := self translateValue: instruction arguments second.
+	self assert: variable size = 1.
+	self assert: value size = 1.
+	self assert: result size = 1.
+
+	blockBuilder tacAtomicCompareAndSwap: variable first with: value first into: result first
+]
+
+{ #category : #'atomic operations' }
+SLVMSAsmFunctionCodeGenerator >> generateFetchAndAdd: instruction [
+	| result variable value |
+	result := self translateValue: instruction.
+	variable := self translateValue: instruction arguments first.
+	value := self translateValue: instruction arguments second.
+	self assert: variable size = 1.
+	self assert: value size = 1.
+	self assert: result size = 1.
+
+	blockBuilder tacAtomicFetchAndAdd: variable with: value into: result
+]
+
+{ #category : #'atomic operations' }
+SLVMSAsmFunctionCodeGenerator >> generateFetchAndSubtract: instruction [
+	| result variable value tempValue |
+	result := self translateValue: instruction.
+	variable := self translateValue: instruction arguments first.
+	value := self translateValue: instruction arguments second.
+	self assert: variable size = 1.
+	self assert: value size = 1.
+	self assert: result size = 1.
+
+	tempValue := blockBuilder tacIntRegister.
+	blockBuilder tacNegate: value first into: tempValue.
+	blockBuilder tacAtomicFetchAndAdd: variable first with: tempValue into: result first
+]
+
 { #category : #'code generation' }
 SLVMSAsmFunctionCodeGenerator >> generateFunction: slvmFunction into: newSasmFunction [
 	slvmFunction isEmpty ifTrue: [ ^ newSasmFunction ].
@@ -283,41 +341,54 @@ SLVMSAsmFunctionCodeGenerator >> generateFunction: slvmFunction into: newSasmFun
 	
 ]
 
+{ #category : #'atomic operations' }
+SLVMSAsmFunctionCodeGenerator >> generateSwapValue: instruction [
+	| result variable value |
+	result := self translateValue: instruction.
+	variable := self translateValue: instruction arguments first.
+	value := self translateValue: instruction arguments second.
+	self assert: variable size = 1.
+	self assert: value size = 1.
+	self assert: result size = 1.
+
+	blockBuilder tacAtomicSwap: variable with: value into: result
+]
+
 { #category : #memory }
 SLVMSAsmFunctionCodeGenerator >> loadFrom: pointer scalarType: type into: result [
 	| temp |
 	self assert: type isScalarType.
 	
 	(type isPointerType or: [ type isDynamicObjectType ]) ifTrue: [
-		self assert: result size = 1.
-		^ blockBuilder tacLoad: pointer into: result first
+		self assert: result isRegisterScalarValue.
+		^ blockBuilder tacLoad: pointer into: result
 	].
 	type isFloatType ifTrue: [
-		self assert: result size = 1.
+		self assert: result isRegisterScalarValue.
 		type size = 4 ifTrue: [ 
-			^ blockBuilder tacLoadFloat: pointer into: result first
+			^ blockBuilder tacLoadFloat: pointer into: result
 		].
 		type size = 8 ifTrue: [ 
-			^ blockBuilder tacLoadDouble: pointer into: result first
+			^ blockBuilder tacLoadDouble: pointer into: result
 		].
 		self halt
 	].
 
 	type isBooleanType ifTrue: [
-		^ blockBuilder tacLoadZeroExtend8: pointer into: result first
+		^ blockBuilder tacLoadZeroExtend8: pointer into: result
 	].
 
 	type isIntegerType ifTrue: [
 		type size <= 4 ifTrue: [ 
-			self assert: result size = 1.
+			self assert: result isRegisterScalarValue.
 			type isSigned ifTrue: [
-				type size = 1 ifTrue: [ ^ blockBuilder tacLoadSignExtend8: pointer into: result first ].
-				type size = 2 ifTrue: [ ^ blockBuilder tacLoadSignExtend16: pointer into: result first ].
-				type size = 4 ifTrue: [ ^ blockBuilder tacLoadSignExtend32: pointer into: result first ].
+				type size = 1 ifTrue: [ ^ blockBuilder tacLoadSignExtend8: pointer into: result ].
+				type size = 2 ifTrue: [ ^ blockBuilder tacLoadSignExtend16: pointer into: result ].
+				type size = 4 ifTrue: [ ^ blockBuilder tacLoadSignExtend32: pointer into: result ].
 			] ifFalse: [ 
-				type size = 1 ifTrue: [ ^ blockBuilder tacLoadZeroExtend8: pointer into: result first ].
-				type size = 2 ifTrue: [ ^ blockBuilder tacLoadZeroExtend16: pointer into: result first ].
-				type size = 4 ifTrue: [ ^ blockBuilder tacLoadZeroExtend32: pointer into: result first ].
+				type size = 1 ifTrue: [ ^ blockBuilder tacLoadZeroExtend8: pointer into: result ].
+				type size = 2 ifTrue: [ ^ blockBuilder tacLoadZeroExtend16: pointer into: result ].
+				type size = 4 ifTrue: [ ^ blockBuilder tacLoadZeroExtend32: pointer into: result ].
 			].
 		
 			self error: 'Unsupported integer type.'
@@ -325,20 +396,20 @@ SLVMSAsmFunctionCodeGenerator >> loadFrom: pointer scalarType: type into: result
 	
 		self assert: type size = 8.
 		result size = 1 ifTrue: [ 
-			^ blockBuilder tacLoad: pointer into: result first.
+			^ blockBuilder tacLoad: pointer into: result.
 		] ifFalse: [ 
 			self assert: result size = 2.
 			temp := blockBuilder tacIntRegister.
 			sasmTarget isLittleEndian ifTrue: [ 
 				^ blockBuilder
-					tacLoad: pointer into: result first;
+					tacLoad: pointer into: (result at: 1);
 					tacAdd: pointer with: 4 into: temp;
-					tacLoad: temp into: result second
+					tacLoad: temp into: (result at: 2)
 			] ifFalse: [ 
 				^ blockBuilder
-					tacLoad: pointer into: result second;
+					tacLoad: pointer into: (result at: 2);
 					tacAdd: pointer with: 4 into: temp;
-					tacLoad: temp into: result first
+					tacLoad: temp into: (result at: 1)
 			]
 		]
 	].
@@ -358,8 +429,8 @@ SLVMSAsmFunctionCodeGenerator >> moduleTranslator: anObject [
 
 { #category : #memory }
 SLVMSAsmFunctionCodeGenerator >> move: sourceValue into: targetValue [
-	self assert: sourceValue isArray = targetValue isArray.
-	sourceValue isArray ifTrue: [ 
+	self assert: sourceValue isOperandSet = targetValue isOperandSet.
+	sourceValue isOperandSet ifTrue: [ 
 		self assert: sourceValue size = targetValue size.
 		1 to: sourceValue size do: [ :index |
 			blockBuilder tacMove: (sourceValue at: index) into: (targetValue at: index)
@@ -379,30 +450,30 @@ SLVMSAsmFunctionCodeGenerator >> store: value scalarType: type into: pointer [
 	| temp |
 	self assert: type isScalarType.
 	(type isPointerType or: [ type isDynamicObjectType ]) ifTrue: [
-		self assert: value size = 1.
-		^ blockBuilder tacStore: value first into: pointer.
+		self assert: value isRegisterScalarValue.
+		^ blockBuilder tacStore: value into: pointer.
 	].
 	type isFloatType ifTrue: [
-		self assert: value size = 1.
+		self assert: value isRegisterScalarValue.
 		type size = 4 ifTrue: [
-			^ blockBuilder tacStoreFloat: value first into: pointer
+			^ blockBuilder tacStoreFloat: value into: pointer
 		].
 		type size = 8 ifTrue: [
-			^ blockBuilder tacStoreDouble: value first into: pointer
+			^ blockBuilder tacStoreDouble: value into: pointer
 		].
 		self halt
 	].
 
 	type isBooleanType ifTrue: [
-		^ blockBuilder tacStoreTruncate8: value first into: pointer
+		^ blockBuilder tacStoreTruncate8: value into: pointer
 	].
 
 	type isIntegerType ifTrue: [
 		type size <= 4 ifTrue: [ 
-			self assert: value size = 1.
-			type size = 1 ifTrue: [ ^ blockBuilder tacStoreTruncate8: value first into: pointer ].
-			type size = 2 ifTrue: [ ^ blockBuilder tacStoreTruncate16: value first into: pointer ].
-			type size = 4 ifTrue: [ ^ blockBuilder tacStoreTruncate32: value first into: pointer ].
+			self assert: value isRegisterScalarValue.
+			type size = 1 ifTrue: [ ^ blockBuilder tacStoreTruncate8: value into: pointer ].
+			type size = 2 ifTrue: [ ^ blockBuilder tacStoreTruncate16: value into: pointer ].
+			type size = 4 ifTrue: [ ^ blockBuilder tacStoreTruncate32: value into: pointer ].
 		
 			self error: 'Unsupported integer type.'
 		].
@@ -411,18 +482,18 @@ SLVMSAsmFunctionCodeGenerator >> store: value scalarType: type into: pointer [
 		value size = 1 ifTrue: [ 
 			^ blockBuilder tacStore: value into: pointer
 		] ifFalse: [ 
-			self assert: value size = 2.
+			self assert: (value isOperandSet and: [value size = 2]).
 			temp := blockBuilder tacIntRegister.
 			sasmTarget isLittleEndian ifTrue: [
 				^ blockBuilder
-					tacStore: value first into: pointer;
+					tacStore: (value at: 1) into: pointer;
 					tacAdd: pointer with: 4 into: temp;
-					tacStore: value second into: pointer
+					tacStore: (value at: 2) into: pointer
 			] ifFalse: [
 				^ blockBuilder
-					tacStore: value second into: pointer;
+					tacStore: (value at: 2) into: pointer;
 					tacAdd: pointer with: 4 into: temp;
-					tacStore: value first into: pointer
+					tacStore: (value at: 1) into: pointer
 			]
 		]
 	].
@@ -489,8 +560,15 @@ SLVMSAsmFunctionCodeGenerator >> visitAdd: instruction [
 
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitAlloca: instruction [
+	| valueType |
 	(allocaToVariableMap includesKey: instruction) ifTrue: [ ^ self ].
-	self halt.
+	valueType := instruction valueType.
+	instruction block == function basicBlocks first ifTrue: [ 
+		^ sasmFunction newLocal: valueType size alignment: valueType alignment dynamicRoot: valueType isDynamicObjectType
+	] ifFalse: [ 
+		self halt.
+	]
+	
 ]
 
 { #category : #visiting }
@@ -506,7 +584,7 @@ SLVMSAsmFunctionCodeGenerator >> visitBitAnd: instruction [
 	self binaryInteger: instruction bitwise: TacBitAnd
 ]
 
-{ #category : #visiting }
+{ #category : #casting }
 SLVMSAsmFunctionCodeGenerator >> visitBitCast: instruction [
 	| source sourceValue result |
 	source := instruction source.
@@ -535,23 +613,31 @@ SLVMSAsmFunctionCodeGenerator >> visitBranch: instruction [
 	self assert: condition size = 1.
 	trueDestination := basicBlockMap at: instruction trueBlock.
 	falseDestination := basicBlockMap at: instruction falseBlock.
-	blockBuilder tacBranch: condition first true: trueDestination false: falseDestination.
+	blockBuilder tacBranch: condition true: trueDestination false: falseDestination.
 ]
 
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitCall: instruction [
 	| calledFunction arguments result calledConvention |
+	instruction functionValue isConstantBuiltInFunction ifTrue: [
+		BuiltInFunctionSelectorMapping at: instruction functionValue name ifPresent: [ :selector |
+			^ self perform: selector with: instruction
+		].
+		self halt
+	].
+
 	instruction type isVoidType ifTrue: [
 		result := #()
 	] ifFalse: [ 
 		result := self translateValue: instruction
 	].
-	calledFunction := self translateValue: instruction functionValue.
 	arguments := OrderedCollection new.
 	instruction arguments do: [ :arg | arguments addAll: (self translateValue: arg) ].
+	
+	calledFunction := self translateValue: instruction functionValue.
 	calledConvention := sasmTarget callingConventionNamed: instruction callingConvention.
 	self assert: calledFunction size = 1.
-	blockBuilder tacCall: calledFunction first arguments: arguments into: result convention: calledConvention.
+	blockBuilder tacCall: calledFunction arguments: arguments into: result convention: calledConvention.
 ]
 
 { #category : #arithmetic }
@@ -580,11 +666,10 @@ SLVMSAsmFunctionCodeGenerator >> visitGetElementPointer: instruction [
 	"Get the pointer. It should always fit in a single register."
 	pointer := self translateValue: instruction pointer.
 	self assert: pointer size = 1.
-	pointer := pointer first.
 	
 	result := self translateValue: instruction.
 	self assert: result size = 1.
-	result := result first.
+
 	constantDisplacement ~= 0 ifTrue: [ 
 		blockBuilder tacAdd: pointer with: constantDisplacement into: result
 	] ifFalse: [
@@ -594,7 +679,7 @@ SLVMSAsmFunctionCodeGenerator >> visitGetElementPointer: instruction [
 	temp := nil.
 	indicesWithStrides do: [ :pair |
 		temp ifNil: [ temp := blockBuilder tacIntRegister ].
-		indexValue := (self translateValue: pair first) first.
+		indexValue := (self translateValue: pair first).
 		blockBuilder
 			tacMultiply: indexValue with: pair second into: temp;
 			tacAdd: result with: temp into: result
@@ -644,8 +729,7 @@ SLVMSAsmFunctionCodeGenerator >> visitLoad: instruction [
 	| result variable type |
 	(allocaToVariableMap includesKey: instruction variable) ifTrue: [ ^ self ].
 	variable := self translateValue: instruction variable.
-	self assert: variable size = 1.
-	variable := variable first.
+	self assert: variable isRegisterScalarValue.
 
 	result := self translateValue: instruction.
 	type := instruction type.
@@ -654,8 +738,8 @@ SLVMSAsmFunctionCodeGenerator >> visitLoad: instruction [
 	].
 
 	"Aggregate type. We have to copy."
-
-	self halt.
+	self assert: result isAggregate.
+	blockBuilder tacCopy: variable to: result size: type size alignment: type alignment.
 ]
 
 { #category : #arithmetic }
@@ -670,12 +754,19 @@ SLVMSAsmFunctionCodeGenerator >> visitRem: instruction [
 
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitReturn: instruction [
-	| value |
+	| value valueType |
 	value := self translateValue: instruction value.
-	value size > 1 ifTrue: [ 
-		self halt.
-	] ifFalse: [
-		blockBuilder tacReturn: value first
+	valueType := instruction value type.
+	value isAggregate ifTrue: [
+		blockBuilder
+			tacCopy: value to: returnArgumentRegister size: valueType size alignment: valueType alignment;
+			tacReturn: returnArgumentRegister
+	] ifFalse: [ 
+		value size > 1 ifTrue: [ 
+			self halt.
+		] ifFalse: [
+			blockBuilder tacReturn: value
+		]
 	]
 	
 ]
@@ -701,6 +792,23 @@ SLVMSAsmFunctionCodeGenerator >> visitShiftRightArithmetic: instruction [
 	self binaryInteger: instruction bitwise: TacArithmeticShiftRight
 ]
 
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitSignExtend: instruction [
+	| source sourceValue result elementSize |
+	source := instruction source.
+	sourceValue := self translateValue: source.
+	result := self translateValue: instruction.
+	self assert: source type isIntegerType.
+	elementSize := source type size.
+	elementSize = 1 ifTrue: [ blockBuilder tacSignExtend8: source first into: result first ].
+	elementSize = 2 ifTrue: [ blockBuilder tacSignExtend16: source first into: result first ].
+	elementSize = 4 ifTrue: [ blockBuilder tacSignExtend32: source first into: result first ].
+	result size > 1 ifTrue: [ 
+		self assert: result size = 2.
+		self halt
+	]
+]
+
 { #category : #memory }
 SLVMSAsmFunctionCodeGenerator >> visitStore: instruction [
 	| variable value type |
@@ -709,8 +817,7 @@ SLVMSAsmFunctionCodeGenerator >> visitStore: instruction [
 	].
 
 	variable := self translateValue: instruction variable.
-	self assert: variable size = 1.
-	variable := variable first.
+	self assert: variable isRegisterScalarValue.
 	
 	value := self translateValue: instruction value.
 	type := instruction value type.
@@ -729,6 +836,20 @@ SLVMSAsmFunctionCodeGenerator >> visitSub: instruction [
 	self binaryInteger: instruction arithmetic: TacSubtract
 ]
 
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitTruncate: instruction [
+	| source sourceValue result elementSize |
+	source := instruction source.
+	sourceValue := self translateValue: source.
+	result := self translateValue: instruction.
+	self assert: source type isIntegerType.
+	elementSize := instruction type size.
+	elementSize = 1 ifTrue: [ blockBuilder tacSignExtend8: sourceValue into: result ].
+	elementSize = 2 ifTrue: [ blockBuilder tacSignExtend16: sourceValue into: result ].
+	elementSize = 4 ifTrue: [ blockBuilder tacSignExtend32: sourceValue into: result ].
+
+]
+
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitUDiv: instruction [
 	self binaryInteger: instruction arithmetic: TacUDivide
@@ -737,4 +858,21 @@ SLVMSAsmFunctionCodeGenerator >> visitUDiv: instruction [
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitURem: instruction [
 	self binaryInteger: instruction arithmetic: TacURemainder
+]
+
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitZeroExtend: instruction [
+	| source sourceValue result elementSize |
+	source := instruction source.
+	sourceValue := self translateValue: source.
+	result := self translateValue: instruction.
+	self assert: source type isIntegerType.
+	elementSize := source type size.
+	elementSize = 1 ifTrue: [ blockBuilder tacZeroExtend8: sourceValue into: result ].
+	elementSize = 2 ifTrue: [ blockBuilder tacZeroExtend16: sourceValue into: result ].
+	elementSize = 4 ifTrue: [ blockBuilder tacZeroExtend32: sourceValue into: result ].
+	result size > 1 ifTrue: [ 
+		self assert: result size = 2.
+		blockBuilder tacMove: 0 into: result second.
+	]
 ]

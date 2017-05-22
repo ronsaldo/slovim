@@ -102,10 +102,11 @@ SLVMSAsmConstantCodeGenerator >> translateImmediateConstantValue: value [
 SLVMSAsmConstantCodeGenerator >> translateIntegerImmediate: integerImmediate size: size [
 	target pointerSize < size ifTrue: [ 
 		self assert: (size = 8 and: [target pointerSize = 4]).
-		^ { "Lower" (integerImmediate & 16rFFFFFFFF) asSAsmInstructionOperand .
+		^ SLVMSAsmValue operands:
+		{ "Lower" (integerImmediate & 16rFFFFFFFF) asSAsmInstructionOperand .
 			 "High" ((integerImmediate >> 32) & 16rFFFFFFFF) asSAsmInstructionOperand}
 	].
-	^ { integerImmediate asSAsmInstructionOperand }
+	^ SLVMSAsmValue operands: { integerImmediate asSAsmInstructionOperand }
 ]
 
 { #category : #visiting }
@@ -127,10 +128,10 @@ SLVMSAsmConstantCodeGenerator >> visitConstantValue: value [
 
 { #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> visitFunction: aFunction [
-	^ {(moduleTranslator translateModuleElement: aFunction) asSAsmInstructionOperand}
+	^ SLVMSAsmValue operands: {(moduleTranslator translateModuleElement: aFunction) asSAsmInstructionOperand}
 ]
 
 { #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> visitGlobalVariable: aGlobalVariable [
-	^ {(moduleTranslator translateModuleElement: aGlobalVariable) asSAsmInstructionOperand}
+	^ SLVMSAsmValue operands: {(moduleTranslator translateModuleElement: aGlobalVariable) asSAsmInstructionOperand}
 ]
