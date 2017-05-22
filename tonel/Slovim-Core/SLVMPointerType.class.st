@@ -46,6 +46,21 @@ SLVMPointerType >> elementStrideDepth: depth [
 	^ baseType size
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMPointerType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stream [
+	| integerData |
+	integerData := value.
+	bigEndian ifTrue: [
+		self halt.
+	] ifFalse: [
+		1 to: size do: [ :i |
+			stream nextPut: (integerData bitAnd: 16rff).
+			integerData := integerData >> 8
+		] 
+	]
+
+]
+
 { #category : #comparing }
 SLVMPointerType >> hash [
 	^ (self class hash bitXor: baseType hash) bitXor: storage hash

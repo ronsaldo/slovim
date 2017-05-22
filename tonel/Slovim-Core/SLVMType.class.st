@@ -330,6 +330,11 @@ SLVMType >> asSlovimType: compilationTarget [
 	^ self
 ]
 
+{ #category : #'constant encoding' }
+SLVMType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stream [
+	self subclassResponsibility
+]
+
 { #category : #testing }
 SLVMType >> isArrayType [
 	^ false
@@ -440,7 +445,7 @@ SLVMType >> isVoidType [
 	^ false
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'constant encoding' }
 SLVMType >> shortName [
 	^ self asString
 ]

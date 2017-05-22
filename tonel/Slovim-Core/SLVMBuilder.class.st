@@ -105,6 +105,13 @@ SLVMBuilder >> branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock name:
 	^ self addInstruction: (SLVMBranch condition: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock) name: resultName
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMBuilder >> builtInFunctionName: name argumentTypes: argumentTypes returnType: returnType [
+	| builtInFunctionType |
+	builtInFunctionType := SLVMFunctionType arguments: argumentTypes returnType: returnType.
+	^ SLVMConstantBuiltInFunction pointerSize: self pointerSize name: name functionType: builtInFunctionType.
+]
+
 { #category : #instructions }
 SLVMBuilder >> call: functionValue arguments: arguments [
 	^ self call: functionValue arguments: arguments name: function generateSymbol
@@ -419,7 +426,7 @@ SLVMBuilder >> intCast: source target: targetType name: resultName [
 	sourceType size = targetType size ifTrue: [
 		^ self bitCast: source target: targetType name: resultName
 	] ifFalse: [ 
-		targetType size < sourceType ifTrue: [
+		targetType size < sourceType size ifTrue: [
 			^ self truncate: source target: targetType name: resultName
 		] ifFalse: [ 
 			sourceType isSigned ifTrue: [ 
@@ -636,7 +643,12 @@ SLVMBuilder >> phi: type name: resultName [
 	^ self addInstruction: (SLVMPhi type: type) name: resultName
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
+SLVMBuilder >> pointerSize [
+	^ self compilationTarget pointerSize
+]
+
+{ #category : #accessing }
 SLVMBuilder >> pointerTypeFor: baseType [
 	^ SLVMPointerType size: self compilationTarget pointerSize baseType: baseType storage: SLVMType genericStorage
 ]
