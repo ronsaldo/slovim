@@ -102,6 +102,10 @@ SLVMBuilder >> branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock [
 
 { #category : #instructions }
 SLVMBuilder >> branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock name: resultName [
+	(condition isUnaryOperation and: [ condition isLogicalNot ]) ifTrue: [ 
+		^ self addInstruction: (SLVMBranch condition: condition operand ifTrue: ifFalseBlock ifFalse: ifTrueBlock) name: resultName
+	].
+
 	^ self addInstruction: (SLVMBranch condition: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock) name: resultName
 ]
 
@@ -471,6 +475,16 @@ SLVMBuilder >> lastInstruction [
 ]
 
 { #category : #instructions }
+SLVMBuilder >> lnot: operand [
+	^ self lnot: operand name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> lnot: operand name: resultName [
+	^ self addOperation: #lnot operand: operand name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> load: variable [
 	^ self load: variable name: function generateSymbol
 ]
@@ -565,7 +579,7 @@ SLVMBuilder >> newBasicBlock: aName [
 
 { #category : #instructions }
 SLVMBuilder >> not: operand [
-	^ self not operand name: function generateSymbol
+	^ self not: operand name: function generateSymbol
 ]
 
 { #category : #instructions }

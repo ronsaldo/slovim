@@ -80,6 +80,11 @@ SLVMValue >> isSSAValue [
 ]
 
 { #category : #testing }
+SLVMValue >> isUnaryOperation [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isUndefined [
 	^ false
 ]

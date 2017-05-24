@@ -52,7 +52,10 @@ SLVMUnaryOperation >> computeTypeFor: anOperation operand: operand [
 		(operandType isFloatType or: [operandType isVectorType and: [operandType baseType isFloatType ] ]) ifFalse: [ self error: 'Unary operation ' , anOperation , ' requires float operands.' ].
 		^ operandType
 	].
-
+	operationType == #bool ifTrue: [ 
+		(operandType isBooleanType or: [operandType isVectorType and: [operandType baseType isBooleanType ] ]) ifFalse: [ self error: 'Unary operation ' , anOperation , ' requires float operands.' ].
+		^ operandType
+	].
 	self error: 'Unsupported operation type'
 
 ]
@@ -81,7 +84,17 @@ SLVMUnaryOperation >> foldConstant [
 ]
 
 { #category : #testing }
+SLVMUnaryOperation >> isLogicalNot [
+	^ operation == #lnot
+]
+
+{ #category : #testing }
 SLVMUnaryOperation >> isPureInstruction [
+	^ true
+]
+
+{ #category : #testing }
+SLVMUnaryOperation >> isUnaryOperation [
 	^ true
 ]
 
