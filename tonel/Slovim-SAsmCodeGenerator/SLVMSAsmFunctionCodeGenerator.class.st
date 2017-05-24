@@ -515,7 +515,10 @@ SLVMSAsmFunctionCodeGenerator >> target: aCompilationTarget [
 { #category : #'code generation' }
 SLVMSAsmFunctionCodeGenerator >> translateBasicBlock: basicBlock [
 	basicBlock instructionsDo: [ :instruction |
-		instruction accept: self
+		"Do not generate unused values."
+		(instruction isPureInstruction and: [ instruction instructionReferences isEmpty]) ifFalse: [
+			instruction accept: self
+		]
 	]
 ]
 
@@ -858,6 +861,14 @@ SLVMSAsmFunctionCodeGenerator >> visitUDiv: instruction [
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitURem: instruction [
 	self binaryInteger: instruction arithmetic: TacURemainder
+]
+
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitUnaryOperation: instruction [
+	| selector |
+	selector := OperationCodeGeneratorMap at: instruction operation.
+	^ self perform: selector with: instruction
+
 ]
 
 { #category : #casting }
