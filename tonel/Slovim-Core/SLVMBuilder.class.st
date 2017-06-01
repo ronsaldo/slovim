@@ -25,8 +25,10 @@ SLVMBuilder >> add: left with: right name: resultName [
 
 { #category : #adding }
 SLVMBuilder >> addDynamicLiteral: literal [
-	literal isSLVMDynamicInlineLiteral ifTrue: [ ^ SLVMConstantValue type: self dynamicObjectType value: literal ].
-	^ function addDynamicLiteral: literal
+	| objectModel |
+	objectModel := function compilationTarget objectModel.
+	(objectModel isInlineLiteral: literal) ifTrue: [ ^ objectModel convertInlineLiteral: literal ].
+	^ function addDynamicLiteral: (objectModel convertNonInlineLiteral: literal)
 ]
 
 { #category : #adding }

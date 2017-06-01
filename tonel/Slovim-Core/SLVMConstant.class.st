@@ -5,6 +5,12 @@ Class {
 }
 
 { #category : #constructor }
+SLVMConstant class >> array: anArrayType slots: anArrayOfSlots [
+	self assert: anArrayType isArrayType.
+	^ SLVMConstantArrayValue new type: anArrayType; slots: anArrayOfSlots
+]
+
+{ #category : #constructor }
 SLVMConstant class >> bool: aBoolean [
 	^ self type: SLVMType boolType value: aBoolean
 ]
@@ -38,8 +44,19 @@ SLVMConstant class >> long: anInteger [
 ]
 
 { #category : #constructor }
+SLVMConstant class >> pointer: value castTo: aTargetType [
+	^ self value: value bitcast: aTargetType
+]
+
+{ #category : #constructor }
 SLVMConstant class >> pointerToConstant: constant pointerType: pointerType [
 	^ SLVMConstantPointer constant: constant pointerType: pointerType
+]
+
+{ #category : #constructor }
+SLVMConstant class >> structure: aStructureType slots: anArrayOfSlots [
+	self assert: aStructureType isStructureType.
+	^ SLVMConstantStructureValue new type: aStructureType; slots: anArrayOfSlots
 ]
 
 { #category : #constructor }
@@ -55,6 +72,11 @@ SLVMConstant class >> uint: anInteger [
 { #category : #constructor }
 SLVMConstant class >> ulong: anInteger [
 	^ self type: SLVMType ulongType value: anInteger
+]
+
+{ #category : #constructor }
+SLVMConstant class >> value: value bitcast: aTargetType [
+	^ SLVMConstantExpresionBitCast new value: value targetType: aTargetType
 ]
 
 { #category : #testing }

@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMObject,
 	#instVars : [
 		'dynamicObjectType',
-		'voidPointerType'
+		'voidPointerType',
+		'objectModel'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -48,6 +49,12 @@ SLVMCompilationTarget >> generateLowLevelModule: aModule [
 	^ self lowLevelCodeGeneratorClass translateModule: aModule
 ]
 
+{ #category : #initialization }
+SLVMCompilationTarget >> initialize [
+	super initialize.
+	objectModel := SLVMNativeRuntimeObjectModel new target: self
+]
+
 { #category : #types }
 SLVMCompilationTarget >> int [
 	^ SLVMType intType
@@ -66,6 +73,17 @@ SLVMCompilationTarget >> newModule [
 { #category : #accessing }
 SLVMCompilationTarget >> objectHeaderSize [
 	^ 8
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> objectModel [
+	^ objectModel
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> objectModel: anObject [
+	objectModel := anObject.
+	objectModel target: self
 ]
 
 { #category : #accessing }

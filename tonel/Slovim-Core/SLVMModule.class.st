@@ -148,6 +148,11 @@ SLVMModule >> globalNamed: aSymbol [
 	^ globalValues at: aSymbol
 ]
 
+{ #category : #adding }
+SLVMModule >> globalNamed: aSymbol ifPresent: aBlock [
+	^ globalValues at: aSymbol ifPresent: aBlock
+]
+
 { #category : #accessing }
 SLVMModule >> globalValues [
 	^ globalValues
