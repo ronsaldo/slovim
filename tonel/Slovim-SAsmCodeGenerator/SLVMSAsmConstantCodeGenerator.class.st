@@ -27,6 +27,12 @@ SLVMSAsmConstantCodeGenerator >> dataGenerator [
 	^ dataGenerator ifNil: [ dataGenerator := self as: SLVMSAsmConstantDataGenerator ]
 ]
 
+{ #category : #visiting }
+SLVMSAsmConstantCodeGenerator >> getConstantDynamicLiteralLocation: value [
+	^ (moduleElement contextMetaData asSAsmInstructionOperand + target objectModel contextMetaDataHeaderSize + ((value index - 1) * target pointerSize))
+		size: target pointerSize
+]
+
 { #category : #testing }
 SLVMSAsmConstantCodeGenerator >> isImmediateConstantType: constantType [
 	constantType isScalarType ifTrue: [ 
@@ -83,10 +89,15 @@ SLVMSAsmConstantCodeGenerator >> translate: aValue [
 
 { #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> translateImmediateConstantValue: value [
-	| data integerImmediate |
+	| data integerImmediate valueType |
 	integerImmediate := 0.
-	value type isIntegerType ifTrue: [
-		integerImmediate := value value.
+	valueType := value type.
+	(valueType isScalarIntegerType) ifTrue: [
+		valueType isDynamicObjectType ifTrue: [
+			^ self translateImmediateObjectLiteral: value
+		] ifFalse: [
+			integerImmediate := value value.
+		]
 	] ifFalse: [ 
 		data := value asBlob.
 		integerImmediate := 0.
@@ -99,6 +110,21 @@ SLVMSAsmConstantCodeGenerator >> translateImmediateConstantValue: value [
 ]
 
 { #category : #visiting }
+SLVMSAsmConstantCodeGenerator >> translateImmediateObjectLiteral: constantValue [
+	| value |
+	self assert: constantValue type isDynamicObjectType.
+	value := constantValue value.
+	value isInteger ifTrue: [
+		^ SLVMSAsmValue operand: (target objectModel encodeSmallInteger: value)
+	].
+	value == nil ifTrue: [ 
+		^ SLVMSAsmValue operand: 0
+	].
+
+	self halt
+]
+
+{ #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> translateIntegerImmediate: integerImmediate size: size [
 	target pointerSize < size ifTrue: [ 
 		self assert: (size = 8 and: [target pointerSize = 4]).
@@ -107,6 +133,11 @@ SLVMSAsmConstantCodeGenerator >> translateIntegerImmediate: integerImmediate siz
 			 "High" ((integerImmediate >> 32) & 16rFFFFFFFF) asSAsmInstructionOperand}
 	].
 	^ SLVMSAsmValue operands: { integerImmediate asSAsmInstructionOperand }
+]
+
+{ #category : #visiting }
+SLVMSAsmConstantCodeGenerator >> visitConstantDynamicLiteral: value [
+	^ SLVMSAsmValue operand: (self getConstantDynamicLiteralLocation: value)
 ]
 
 { #category : #visiting }

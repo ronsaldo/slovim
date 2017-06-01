@@ -5,7 +5,8 @@ Class {
 		'target',
 		'classVariableClassMap',
 		'sasmModule',
-		'translatedElements'
+		'translatedElements',
+		'runtimeProvidedFunctionst'
 	],
 	#category : #'Slovim-SAsmCodeGenerator'
 }
@@ -13,6 +14,45 @@ Class {
 { #category : #'as yet unclassified' }
 SLVMSAsmCodeGenerator >> convertVisibility: visibility [
 	^ visibility
+]
+
+{ #category : #visiting }
+SLVMSAsmCodeGenerator >> createFunctionContextMetaData: function [
+	| metadataConstant sasmFunction type metadataVariable |
+	sasmFunction := translatedElements at: function.
+	sasmFunction contextMetaData ifNotNil: [ ^ self ].
+	
+	metadataConstant := target objectModel createFunctionContextMetaData: function.
+	
+	type := metadataConstant type.
+	metadataVariable := SAsmGlobalVariable new
+		name: (sasmFunction name , '_cmeta') asSymbol;
+		target: sasmModule target;
+		visibility: sasmFunction visibility;
+		size: type size;
+		alignment: type alignment;
+		yourself.
+	sasmFunction contextMetaData: metadataVariable.
+	sasmModule addElement: metadataVariable.
+	
+	metadataVariable content: SAsmStream new.
+	self translateConstant: metadataConstant into: metadataVariable content.
+
+]
+
+{ #category : #visiting }
+SLVMSAsmCodeGenerator >> createFunctionContextMetaDataIfNeeded: function [
+	| convention |
+	convention := sasmModule target callingConventionNamed: function callingConvention.
+	(convention hasContextMetadata or: [ function dynamicLiterals isNotEmpty ]) ifFalse: [ ^ self ].
+
+	self createFunctionContextMetaData: function
+]
+
+{ #category : #initialization }
+SLVMSAsmCodeGenerator >> initialize [
+	super initialize.
+	runtimeProvidedFunctionst := Dictionary new.
 ]
 
 { #category : #'as yet unclassified' }
@@ -23,6 +63,15 @@ SLVMSAsmCodeGenerator >> isInliningMandatory [
 { #category : #'as yet unclassified' }
 SLVMSAsmCodeGenerator >> needSSADestroyed [
 	^ true
+]
+
+{ #category : #'runtime functions' }
+SLVMSAsmCodeGenerator >> runtimeProvidedFunction: aFunctionOrASymbol [
+	aFunctionOrASymbol isSymbol ifTrue: [
+		^ runtimeProvidedFunctionst at: aFunctionOrASymbol ifAbsentPut: [SAsmSymbol new name: aFunctionOrASymbol; makeExternal; yourself]
+	].
+	
+	^ self translateModuleElement: aFunctionOrASymbol
 ]
 
 { #category : #accessing }
@@ -86,7 +135,7 @@ SLVMSAsmCodeGenerator >> translateModuleElement: element [
 	^ element accept: self
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #visiting }
 SLVMSAsmCodeGenerator >> visitFunction: aFunction [
 	| functionCodeGenerator result |
 	translatedElements at: aFunction ifPresent: [ :incomplete | ^ incomplete ].
@@ -98,6 +147,7 @@ SLVMSAsmCodeGenerator >> visitFunction: aFunction [
 		yourself.
 	translatedElements at: aFunction put: result.
 	sasmModule addElement: result.
+	self createFunctionContextMetaDataIfNeeded: aFunction.
 
 	functionCodeGenerator := SLVMSAsmFunctionCodeGenerator new.
 	functionCodeGenerator

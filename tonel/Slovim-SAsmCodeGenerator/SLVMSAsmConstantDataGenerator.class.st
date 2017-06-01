@@ -42,6 +42,20 @@ SLVMSAsmConstantDataGenerator >> visitConstantArrayValue: array [
 ]
 
 { #category : #visiting }
+SLVMSAsmConstantDataGenerator >> visitConstantExpressionAdd: expression [
+	| left right |
+	left := (self translate: expression left) asSAsmConstantExpression.
+	right := (self translate: expression right) asSAsmConstantExpression.
+	
+	"Try to fold the symbols"
+	(left isConstantExpressionSymbolValue and: [ right isConstantExpressionConstantInteger ]) ifTrue: [ 
+		^ left copy symbol: left symbol + right value.
+	].
+
+	self halt
+]
+
+{ #category : #visiting }
 SLVMSAsmConstantDataGenerator >> visitConstantStructureValue: structure [
 	| slots type |
 	slots := structure slots collect: [ :slot | (self translate: slot) asSAsmConstantExpression].

@@ -201,11 +201,11 @@ SLVMSAsmFunctionCodeGenerator >> createArguments [
 	returnType := function functionType returnType.
 	returnType isStructureType ifTrue: [
 		returnArgumentType := SLVMPointerType size: target pointerSize baseType: returnType storage: SLVMPointerType genericStorage.
-		returnArgument := stackFrameLayout createArgument: returnArgumentType spillingClass.
+		returnArgument := stackFrameLayout createArgument: returnArgumentType spillingClass registerClass: returnArgumentType registerClass.
 		returnArgumentRegister := self createVirtualRegistersForVariable: returnArgument type: returnArgumentType.
 	].
 	function arguments do: [ :arg |
-		argumentVariableMap at: arg put: (stackFrameLayout createArgument: arg type spillingClass).
+		argumentVariableMap at: arg put: (stackFrameLayout createArgument: arg type spillingClass registerClass: arg type registerClass).
 	]
 ]
 
@@ -223,13 +223,23 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegisters [
 
 	function basicBlocks do: [ :basicBlock |
 		basicBlock instructionsDo: [ :instruction |
-			type := instruction type.
-			type isVoidType ifFalse: [ 
-				valueVariableMap at: instruction ifAbsentPut: [self createVirtualRegistersForType: type].
+			instruction isBitCast ifFalse: [ 
+				type := instruction type.
+				type isVoidType ifFalse: [ 
+					valueVariableMap at: instruction ifAbsentPut: [self createVirtualRegistersForType: type].
+				]
 			]
 		]
 	].
 
+	"Nop some instructions"
+	function basicBlocks do: [ :basicBlock |
+		basicBlock instructionsDo: [ :instruction |
+			instruction isBitCast ifTrue: [ 
+				valueVariableMap at: instruction ifAbsentPut: [valueVariableMap at: instruction source]
+			]
+		]
+	].
 
 
 ]
@@ -445,6 +455,12 @@ SLVMSAsmFunctionCodeGenerator >> move: sourceValue into: targetValue [
 SLVMSAsmFunctionCodeGenerator >> postProcessCodeGeneration [
 ]
 
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> runtimeProvidedFunction: aFunctionOrASymbol [
+	^ moduleTranslator runtimeProvidedFunction: aFunctionOrASymbol
+	
+]
+
 { #category : #memory }
 SLVMSAsmFunctionCodeGenerator >> store: value scalarType: type into: pointer [
 	| temp |
@@ -544,7 +560,14 @@ SLVMSAsmFunctionCodeGenerator >> translateBasicBlocks [
 
 { #category : #'code generation' }
 SLVMSAsmFunctionCodeGenerator >> translateConstant: value [
-	^ self constantTranslator translate: value
+	| result loadedLiteral |
+	result := self constantTranslator translate: value.
+	value isConstantDynamicLiteral ifTrue: [
+		loadedLiteral := blockBuilder tacIntRegister.
+		blockBuilder tacLoad: result into: loadedLiteral.
+		^ SLVMSAsmValue registers: { loadedLiteral }
+	].
+	^ result
 	
 ]
 
@@ -589,13 +612,7 @@ SLVMSAsmFunctionCodeGenerator >> visitBitAnd: instruction [
 
 { #category : #casting }
 SLVMSAsmFunctionCodeGenerator >> visitBitCast: instruction [
-	| source sourceValue result |
-	source := instruction source.
-	sourceValue := self translateValue: source.
-	result := self translateValue: instruction.
-	self elementWise: sourceValue with: result do: [ :sourceEl :resultEl | 
-		blockBuilder tacMove: sourceEl into: resultEl.
-	].
+	"Nothing required here"
 
 ]
 
@@ -743,6 +760,33 @@ SLVMSAsmFunctionCodeGenerator >> visitLoad: instruction [
 	"Aggregate type. We have to copy."
 	self assert: result isAggregate.
 	blockBuilder tacCopy: variable to: result size: type size alignment: type alignment.
+]
+
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitMessageSend: instruction [
+	| result arguments calledFunction calledConvention selector receiver |
+	instruction type isVoidType ifTrue: [
+		result := #()
+	] ifFalse: [ 
+		result := self translateValue: instruction
+	].
+	arguments := OrderedCollection new.
+	
+	"Add the selector"
+	selector := self translateValue: instruction selector.
+	arguments addAll: selector.
+	
+	"Add the receiver"
+	receiver := self translateValue: instruction receiver.
+	arguments addAll: receiver.
+	
+	"Add the arguments"
+	instruction arguments do: [ :arg | arguments addAll: (self translateValue: arg) ].
+	
+	calledFunction := (self runtimeProvidedFunction: target objectModel messageSendTrampoline) asSAsmInstructionOperand.
+	calledConvention := sasmTarget callingConventionNamed: #smalltalk_send.
+	blockBuilder tacCall: calledFunction arguments: arguments into: result convention: calledConvention.
+
 ]
 
 { #category : #arithmetic }

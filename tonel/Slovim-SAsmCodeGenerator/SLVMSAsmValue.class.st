@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #accessing }
+SLVMSAsmValue class >> operand: anOperand [
+	^ self operands: { anOperand asSAsmInstructionOperand }
+]
+
+{ #category : #accessing }
 SLVMSAsmValue class >> operands: anArrayOfRegisters [
 	^ SLVMSAsmOperandSet new registers: anArrayOfRegisters
 ]
