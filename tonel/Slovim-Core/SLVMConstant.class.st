@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #constructor }
+SLVMConstant class >> add: left with: right [
+	^ SLVMConstantExpresionAdd left: left right: right
+]
+
+{ #category : #constructor }
 SLVMConstant class >> array: anArrayType slots: anArrayOfSlots [
 	self assert: anArrayType isArrayType.
 	^ SLVMConstantArrayValue new type: anArrayType; slots: anArrayOfSlots

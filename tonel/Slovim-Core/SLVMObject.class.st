@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #testing }
+SLVMObject >> isSLVMObject [
+	^ true
+]
+
+{ #category : #testing }
 SLVMObject >> isSSAValue [
 	^ false
 ]

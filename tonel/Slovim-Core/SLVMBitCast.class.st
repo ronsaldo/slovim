@@ -9,6 +9,11 @@ SLVMBitCast >> accept: aVisitor [
 	^ aVisitor visitBitCast: self
 ]
 
+{ #category : #testing }
+SLVMBitCast >> isBitCast [
+	^ true
+]
+
 { #category : #printing }
 SLVMBitCast >> mnemonic [
 	^ #bitcast

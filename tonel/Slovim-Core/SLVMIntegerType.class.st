@@ -65,6 +65,11 @@ SLVMIntegerType >> isUnsigned [
 ]
 
 { #category : #accessing }
+SLVMIntegerType >> registerClass [
+	^ #integer
+]
+
+{ #category : #accessing }
 SLVMIntegerType >> signed: anObject [
 	signed := anObject
 ]

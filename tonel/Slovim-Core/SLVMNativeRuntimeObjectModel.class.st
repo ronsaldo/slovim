@@ -4,13 +4,17 @@ Class {
 	#category : #'Slovim-Core-Type'
 }
 
-{ #category : #testing }
-SLVMNativeRuntimeObjectModel >> isInlineLiteral: literal [
-	| literalClass |
-	literalClass := literal class.
-	(literalClass includesBehavior: Boolean) ifTrue: [ ^ true].
-	(literalClass includesBehavior: Float) ifTrue: [ self halt ].
-	(literalClass includesBehavior: Integer) ifTrue: [ self halt ].
-	(literalClass includesBehavior: UndefinedObject) ifTrue: [ ^ true].
-	^ false
+{ #category : #'trampoline names' }
+SLVMNativeRuntimeObjectModel >> messageSendTrampoline [
+	^ #_slvm_dynrun_send_trampoline
+]
+
+{ #category : #'trampoline names' }
+SLVMNativeRuntimeObjectModel >> messageSuperSendTrampoline [
+	^ #_slvm_dynrun_supersend_trampoline
+]
+
+{ #category : #'trampoline names' }
+SLVMNativeRuntimeObjectModel >> stackLimitTrampoline [
+	^ #_slvm_dynrun_stack_limit_trap
 ]

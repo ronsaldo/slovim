@@ -89,6 +89,11 @@ SLVMPointerType >> printOn: aStream [
 ]
 
 { #category : #accessing }
+SLVMPointerType >> registerClass [
+	^ #integer
+]
+
+{ #category : #accessing }
 SLVMPointerType >> size [
 	^ size
 ]

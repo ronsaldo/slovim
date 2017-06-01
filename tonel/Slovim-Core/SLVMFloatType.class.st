@@ -36,3 +36,8 @@ SLVMFloatType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stre
 SLVMFloatType >> isFloatType [
 	^ true
 ]
+
+{ #category : #accessing }
+SLVMFloatType >> registerClass [
+	^ #float
+]

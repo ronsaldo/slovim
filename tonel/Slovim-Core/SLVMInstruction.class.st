@@ -98,6 +98,11 @@ SLVMInstruction >> isBinaryComparison [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isBitCast [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isBranch [
 	^ false
 ]

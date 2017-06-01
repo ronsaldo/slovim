@@ -20,3 +20,8 @@ SLVMBoolType >> initialize [
 SLVMBoolType >> isBooleanType [
 	^ true
 ]
+
+{ #category : #accessing }
+SLVMBoolType >> registerClass [
+	^ #integer
+]

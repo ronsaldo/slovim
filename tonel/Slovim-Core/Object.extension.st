@@ -4,3 +4,8 @@ Extension { #name : #Object }
 Object >> isSLVMDynamicInlineLiteral [
 	^ false
 ]
+
+{ #category : #'*Slovim-Core' }
+Object >> isSLVMObject [
+	^ false
+]

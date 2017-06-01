@@ -445,6 +445,11 @@ SLVMType >> isVoidType [
 	^ false
 ]
 
+{ #category : #accessing }
+SLVMType >> registerClass [
+	^ nil
+]
+
 { #category : #'constant encoding' }
 SLVMType >> shortName [
 	^ self asString

@@ -102,6 +102,11 @@ SLVMVectorType >> printOn: aStream [
 ]
 
 { #category : #accessing }
+SLVMVectorType >> registerClass [
+	^ #vector
+]
+
+{ #category : #accessing }
 SLVMVectorType >> size [
 	^ size
 ]
