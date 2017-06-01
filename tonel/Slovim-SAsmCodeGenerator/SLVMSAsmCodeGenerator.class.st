@@ -35,6 +35,19 @@ SLVMSAsmCodeGenerator >> target: anObject [
 	target := anObject
 ]
 
+{ #category : #visiting }
+SLVMSAsmCodeGenerator >> translateConstant: constant into: asmStream [
+	| translator value |
+	translator := SLVMSAsmConstantDataGenerator new
+			target: target;
+			sasmTarget: sasmModule target;
+			moduleElement: asmStream;
+			moduleTranslator: self;
+			yourself.
+	value := translator translate: constant.
+	asmStream addFirst: value asSAsmStreamElement
+]
+
 { #category : #'as yet unclassified' }
 SLVMSAsmCodeGenerator >> translateModule: module [
 	| packageRegistration |
@@ -100,7 +113,7 @@ SLVMSAsmCodeGenerator >> visitFunction: aFunction [
 SLVMSAsmCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 	| result type |
 	translatedElements at: aGlobalVariable ifPresent: [ :incomplete | ^ incomplete ].
-	type := aGlobalVariable type.
+	type := aGlobalVariable valueType.
 	
 	result := SAsmGlobalVariable new
 		name: aGlobalVariable name;
@@ -112,7 +125,10 @@ SLVMSAsmCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 	translatedElements at: aGlobalVariable put: result.
 	sasmModule addElement: result.
 	
-	self flag: 'Generate the global variable content'.
+	aGlobalVariable initialValue ifNotNil: [
+		result content: SAsmStream new.
+		self translateConstant: aGlobalVariable initialValue into: result content
+	].
 	
 	^ result
 		

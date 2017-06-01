@@ -110,6 +110,11 @@ SLVMSAsmConstantCodeGenerator >> translateIntegerImmediate: integerImmediate siz
 ]
 
 { #category : #visiting }
+SLVMSAsmConstantCodeGenerator >> visitConstantExpressionBitCast: constant [
+	^ self translate: constant value
+]
+
+{ #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> visitConstantPointer: aConstant [
 	| constantData |
 	constantData := self dataGenerator translate: aConstant constant.
