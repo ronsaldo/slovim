@@ -13,12 +13,12 @@ SLVMBuilder class >> on: aFunction [
 	^ self new function: aFunction
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> add: left with: right [
 	^ self add: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> add: left with: right name: resultName [
 	^ self addOperation: #add left: left right: right name: resultName
 ]
@@ -68,6 +68,11 @@ SLVMBuilder >> alloca: valueType name: variableName [
 	^ self addInstruction: (SLVMAlloca pointerSize: self compilationTarget pointerSize valueType: valueType) name: variableName
 ]
 
+{ #category : #'logical operations' }
+SLVMBuilder >> ashiftRight: operand name: resultName [
+	^ self addOperation: #ashiftright operand: operand name: resultName
+]
+
 { #category : #'instance creation' }
 SLVMBuilder >> basicBlock: aName do: aBlock [
 	| basicBlock oldCurrentBlock |
@@ -87,14 +92,30 @@ SLVMBuilder >> basicBlockNamed: basicBlockName do: aBlock [
 	^ bb
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> bitCast: source target: targetType [
 	^ self bitCast: source target: targetType name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> bitCast: source target: targetType name: resultName [
+	source type = targetType ifTrue: [ ^ source ].
 	^ self addInstruction: (SLVMBitCast source: source targetType: targetType) name: resultName
+]
+
+{ #category : #'logical operations' }
+SLVMBuilder >> bitand: operand name: resultName [
+	^ self addOperation: #bitand operand: operand name: resultName
+]
+
+{ #category : #'logical operations' }
+SLVMBuilder >> bitor: operand name: resultName [
+	^ self addOperation: #bitor operand: operand name: resultName
+]
+
+{ #category : #'logical operations' }
+SLVMBuilder >> bitxor: operand name: resultName [
+	^ self addOperation: #bitxor operand: operand name: resultName
 ]
 
 { #category : #instructions }
@@ -193,32 +214,32 @@ SLVMBuilder >> currentBlock: anObject [
 	currentBlock := anObject
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> div: left with: right [
 	^ self div: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> div: left with: right name: resultName [
 	^ self addOperation: #div left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> dynObjectIdentityEquals: left with: right [
 	^ self dynObjectIdentityEquals: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> dynObjectIdentityEquals: left with: right name: resultName [
 	^ self addOperation: #dynObjectIdentityEquals left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> dynObjectIdentityNotEquals: left with: right [
 	^ self dynObjectIdentityNotEquals: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> dynObjectIdentityNotEquals: left with: right name: resultName [
 	^ self addOperation: #dynObjectIdentityNotEquals left: left right: right name: resultName
 ]
@@ -238,82 +259,82 @@ SLVMBuilder >> extractVector: aVectorValue element: indexValue name: resultName 
 	^ self addInstruction: (SLVMExtractVectorElement vector: aVectorValue index: indexValue) name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> fadd: left with: right [
 	^ self fadd: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> fadd: left with: right name: resultName [
 	^ self addOperation: #fadd left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> fdiv: left with: right [
 	^ self fdiv: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> fdiv: left with: right name: resultName [
 	^ self addOperation: #fdiv left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> floatToIntCast: source target: targetType [
 	^ self floatToIntCast: source target: targetType name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> floatToIntCast: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMFloatToIntCast source: source targetType: targetType) name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> floatingPointCast: source target: targetType [
 	^ self floatingPointCast: source target: targetType name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> floatingPointCast: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMFloatingPointCast source: source targetType: targetType) name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> fmul: left with: right [
 	^ self fmul: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> fmul: left with: right name: resultName [
 	^ self addOperation: #fmul left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> fneg: operand [
 	^ self fneg: operand name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> fneg: operand name: resultName [
 	^ self addOperation: #fneg operand: operand name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> frem: left with: right [
 	^ self frem: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> frem: left with: right name: resultName [
 	^ self addOperation: #frem left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> fsub: left with: right [
 	^ self fsub: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> fsub: left with: right name: resultName [
 	^ self addOperation: #fsub left: left right: right name: resultName
 ]
@@ -358,72 +379,72 @@ SLVMBuilder >> getReference: reference element: element resultName: resultName [
 	^ self getPointer: reference element: {self constInt: 0 . element } resultName: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ieq: left with: right [
 	^ self ieq: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ieq: left with: right name: resultName [
 	^ self addOperation: #ieq left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ige: left with: right [
 	^ self ige: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ige: left with: right name: resultName [
 	^ self addOperation: #ige left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> igt: left with: right [
 	^ self igt: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> igt: left with: right name: resultName [
 	^ self addOperation: #igt left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ile: left with: right [
 	^ self ile: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ile: left with: right name: resultName [
 	^ self addOperation: #ile left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ilt: left with: right [
 	^ self ilt: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ilt: left with: right name: resultName [
 	^ self addOperation: #ilt left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ine: left with: right [
 	^ self ine: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ine: left with: right name: resultName [
 	^ self addOperation: #ine left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> intCast: source target: targetType [
 	^ self intCast: source target: targetType name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> intCast: source target: targetType name: resultName [
 	| sourceType |
 	sourceType := source type.
@@ -445,12 +466,22 @@ SLVMBuilder >> intCast: source target: targetType name: resultName [
 	]
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
+SLVMBuilder >> intToDynamicObjectCast: source target: targetType [
+	^ self intToDynamicObjectCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> intToDynamicObjectCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMIntToDynamicObjectCast source: source targetType: targetType) name: resultName
+]
+
+{ #category : #casting }
 SLVMBuilder >> intToFloatCast: source target: targetType [
 	^ self intToFloatCast: source target: targetType name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> intToFloatCast: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMIntToFloatCast source: source targetType: targetType) name: resultName
 ]
@@ -476,12 +507,12 @@ SLVMBuilder >> lastInstruction [
 	^ currentBlock lastInstruction
 ]
 
-{ #category : #instructions }
+{ #category : #'logical operations' }
 SLVMBuilder >> lnot: operand [
 	^ self lnot: operand name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #'logical operations' }
 SLVMBuilder >> lnot: operand name: resultName [
 	^ self addOperation: #lnot operand: operand name: resultName
 ]
@@ -516,52 +547,52 @@ SLVMBuilder >> makeVector: vectorType arguments: arguments name: resultName [
 	^ self addInstruction: (SLVMMakeVector type: vectorType parameters: arguments) name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> mul: left with: right [
 	^ self mul: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> mul: left with: right name: resultName [
 	^ self addOperation: #mul left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> mulMatrix: left withMatrix: right [
 	^ self mulMatrix: left withMatrix: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> mulMatrix: left withMatrix: right name: resultName [
 	^ self addOperation: #mulMatrixMatrix left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> mulMatrix: left withVector: right [
 	^ self mulMatrix: left withVector: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> mulMatrix: left withVector: right name: resultName [
 	^ self addOperation: #mulMatrixVector left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> mulVector: left withMatrix: right [
 	^ self mulVector: left withMatrix: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> mulVector: left withMatrix: right name: resultName [
 	^ self addOperation: #mulVectorMatrix left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> neg: operand [
 	^ self neg: operand name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> neg: operand name: resultName [
 	^ self addOperation: #neg operand: operand name: resultName
 ]
@@ -579,72 +610,72 @@ SLVMBuilder >> newBasicBlock: aName [
 	^ block.
 ]
 
-{ #category : #instructions }
+{ #category : #'logical operations' }
 SLVMBuilder >> not: operand [
 	^ self not: operand name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #'logical operations' }
 SLVMBuilder >> not: operand name: resultName [
 	^ self addOperation: #not operand: operand name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ofeq: left with: right [
 	^ self ofeq: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ofeq: left with: right name: resultName [
 	^ self addOperation: #ofeq left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ofge: left with: right [
 	^ self ofge: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ofge: left with: right name: resultName [
 	^ self addOperation: #ofge left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ofgt: left with: right [
 	^ self ofgt: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ofgt: left with: right name: resultName [
 	^ self addOperation: #ofgt left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ofle: left with: right [
 	^ self ofle: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ofle: left with: right name: resultName [
 	^ self addOperation: #ofle left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> oflt: left with: right [
 	^ self oflt: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> oflt: left with: right name: resultName [
 	^ self addOperation: #oflt left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ofne: left with: right [
 	^ self ofne: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ofne: left with: right name: resultName [
 	^ self addOperation: #ofne left: left right: right name: resultName
 ]
@@ -674,12 +705,12 @@ SLVMBuilder >> registerClassVariable: classVariable class: classVariableClass [
 	function module registerClassVariable: classVariable class: classVariableClass
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> rem: left with: right [
 	^ self rem: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> rem: left with: right name: resultName [
 	^ self addOperation: #rem left: left right: right name: resultName
 ]
@@ -724,6 +755,16 @@ SLVMBuilder >> send: selector returnType: returnType receiver: receiver argument
 	^ self addInstruction: (SLVMSendMessage returnType: returnType receiver: receiver selector: selector arguments: arguments) name: resultName
 ]
 
+{ #category : #'logical operations' }
+SLVMBuilder >> shiftLeft: operand name: resultName [
+	^ self addOperation: #shiftleft operand: operand name: resultName
+]
+
+{ #category : #'logical operations' }
+SLVMBuilder >> shiftRight: operand name: resultName [
+	^ self addOperation: #shiftright operand: operand name: resultName
+]
+
 { #category : #instructions }
 SLVMBuilder >> shuffleVector: firstVector with: secondVector components: components [
 	^ self shuffleVector: firstVector with: secondVector components: components name: function generateSymbol
@@ -734,7 +775,7 @@ SLVMBuilder >> shuffleVector: firstVector with: secondVector components: compone
 	^ self addInstruction: (SLVMShuffleVectors firstVector: firstVector secondVector: secondVector components: components) name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> signExtend: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMSignExtend source: source targetType: targetType) name: resultName
 ]
@@ -749,22 +790,22 @@ SLVMBuilder >> store: value in: variable name: resultName [
 	^ self addInstruction: (SLVMStoreInstruction value: value variable: variable) name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> sub: left with: right [
 	^ self sub: left with: right name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #arithmetic }
 SLVMBuilder >> sub: left with: right name: resultName [
 	^ self addOperation: #sub left: left right: right name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> truncate: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMTruncate source: source targetType: targetType) name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #comparisons }
 SLVMBuilder >> ufeq: left with: right name: resultName [
 	^ self addOperation: #ufeq left: left right: right name: resultName
 ]
@@ -787,12 +828,12 @@ SLVMBuilder >> withBasicBlock: aBasicBlock do: aBlock [
 	aBlock ensure: [ currentBlock := oldCurrentBlock ]
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> zeroExtend: source target: targetType [
 	^ self zeroExtend: source target: targetType name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #casting }
 SLVMBuilder >> zeroExtend: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMZeroExtend source: source targetType: targetType) name: resultName
 ]

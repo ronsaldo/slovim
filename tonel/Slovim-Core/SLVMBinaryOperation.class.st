@@ -32,7 +32,8 @@ SLVMBinaryOperation class >> initialize [
 		bitxor (integer evaluateBitXOr)
 
 		shiftleft (integer evaluateShiftLeft)
-		shiftright (integer evaluateShiftRight)
+		ashiftright (integer evaluateArithmeticShiftRight)
+		lshiftright (integer evaluateLogicalShiftRight)
 
 		ilt (integerComp evaluateLessThan)
 		ile (integerComp evaluateLessEqual)
@@ -138,6 +139,11 @@ SLVMBinaryOperation >> evaluateAdd [
 ]
 
 { #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateArithmeticShiftRight [
+	^ SLVMConstant type: type value: (self left value bitShift: self right value negated)
+]
+
+{ #category : #'constant folding' }
 SLVMBinaryOperation >> evaluateBitAnd [
 	^ SLVMConstant type: type value: (self left value bitAnd: self right value)
 ]
@@ -193,6 +199,11 @@ SLVMBinaryOperation >> evaluateLessThan [
 ]
 
 { #category : #'constant folding' }
+SLVMBinaryOperation >> evaluateLogicalShiftRight [
+	^ SLVMConstant type: type value: (self left value bitShift: self right value negated)
+]
+
+{ #category : #'constant folding' }
 SLVMBinaryOperation >> evaluateMul [
 	^ SLVMConstant type: type value: (self left value * self right value)
 ]
@@ -211,11 +222,6 @@ SLVMBinaryOperation >> evaluateRem [
 { #category : #'constant folding' }
 SLVMBinaryOperation >> evaluateShiftLeft [
 	^ SLVMConstant type: type value: (self left value bitShift: self right value)
-]
-
-{ #category : #'constant folding' }
-SLVMBinaryOperation >> evaluateShiftRight [
-	^ SLVMConstant type: type value: (self left value bitShift: self right value negated)
 ]
 
 { #category : #'constant folding' }
