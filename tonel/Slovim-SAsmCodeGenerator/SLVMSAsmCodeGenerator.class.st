@@ -26,7 +26,7 @@ SLVMSAsmCodeGenerator >> createFunctionContextMetaData: function [
 	
 	type := metadataConstant type.
 	metadataVariable := SAsmGlobalVariable new
-		name: (sasmFunction name , '_cmeta') asSymbol;
+		name: (sasmFunction validName , '_cmeta') asSymbol;
 		target: sasmModule target;
 		visibility: sasmFunction visibility;
 		size: type size;

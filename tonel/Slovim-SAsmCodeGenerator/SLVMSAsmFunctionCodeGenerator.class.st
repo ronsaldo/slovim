@@ -80,7 +80,7 @@ SLVMSAsmFunctionCodeGenerator class >> initialize [
 		ofge visitOrderedFloatGreaterOrEqual:
 		
 		dynObjectIdentityEquals visitIdentityEquals:
-		dynObjectIdentityEquals visitIdentityNotEquals:
+		dynObjectIdentityNotEquals visitIdentityNotEquals:
 		
 		mulMatrixMatrix visitMultiplyMatrixWithMatrix:
 		mulMatrixVector visitMultiplyMatrixWithVector:
@@ -708,6 +708,21 @@ SLVMSAsmFunctionCodeGenerator >> visitGetElementPointer: instruction [
 ]
 
 { #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitIdentityEquals: instruction [
+	self binaryInteger: instruction comparison: TacEqual
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitIdentityNotEquals: instruction [
+	self binaryInteger: instruction comparison: TacEqual
+]
+
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitIntToDynamicObjectCast: instruction [
+	self visitSignExtend: instruction.
+]
+
+{ #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> visitIntegerEqual: instruction [
 	self binaryInteger: instruction comparison: TacEqual
 ]
@@ -847,9 +862,9 @@ SLVMSAsmFunctionCodeGenerator >> visitSignExtend: instruction [
 	result := self translateValue: instruction.
 	self assert: source type isIntegerType.
 	elementSize := source type size.
-	elementSize = 1 ifTrue: [ blockBuilder tacSignExtend8: source first into: result first ].
-	elementSize = 2 ifTrue: [ blockBuilder tacSignExtend16: source first into: result first ].
-	elementSize = 4 ifTrue: [ blockBuilder tacSignExtend32: source first into: result first ].
+	elementSize = 1 ifTrue: [ blockBuilder tacSignExtend8: sourceValue into: result ].
+	elementSize = 2 ifTrue: [ blockBuilder tacSignExtend16: sourceValue into: result ].
+	elementSize = 4 ifTrue: [ blockBuilder tacSignExtend32: sourceValue into: result ].
 	result size > 1 ifTrue: [ 
 		self assert: result size = 2.
 		self halt
