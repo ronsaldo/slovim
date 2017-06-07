@@ -2,7 +2,8 @@ Class {
 	#name : #SLVMOptDestroySSA,
 	#superclass : #SLVMFunctionOptimizationPass,
 	#instVars : [
-		'phiAllocaDictionary'
+		'phiAllocaDictionary',
+		'pendingBlocks'
 	],
 	#category : #'Slovim-Core-Optimizations'
 }
@@ -92,7 +93,33 @@ SLVMOptDestroySSA >> replacePhiWithLoadsIn: aFunction [
 
 { #category : #'as yet unclassified' }
 SLVMOptDestroySSA >> splitBranch: branchInstruction [
-	self halt.
+	| function trueBlock falseBlock originalTrueBlock originalFalseBlock |
+	function := branchInstruction block function.
+	trueBlock := SLVMBasicBlock new name: #branchSplitTrue.
+	falseBlock := SLVMBasicBlock new name: #branchSplitFalse.
+	function addBasicBlock: trueBlock; addBasicBlock: falseBlock.
+	
+	originalTrueBlock := branchInstruction trueBlock.
+	originalFalseBlock := branchInstruction falseBlock.
+	trueBlock addLast: (SLVMJump destination: originalTrueBlock).
+	falseBlock addLast: (SLVMJump destination: originalFalseBlock).
+	branchInstruction
+		trueBlock: trueBlock;
+		falseBlock: falseBlock.
+		
+	branchInstruction block computeSuccessors.
+	originalTrueBlock predecessorsCouldBeRemoved.
+	originalFalseBlock predecessorsCouldBeRemoved.
+	
+	originalTrueBlock phiInstructionsDo: [ :phi |
+		phi replaceParent: branchInstruction block with: trueBlock
+	].
+	originalFalseBlock phiInstructionsDo: [ :phi |
+		phi replaceParent: branchInstruction block with: falseBlock
+	].
+	
+	function fullPrintString.
+	pendingBlocks add: trueBlock; add: falseBlock.
 ]
 
 { #category : #'as yet unclassified' }
@@ -115,7 +142,12 @@ SLVMOptDestroySSA >> storeValuesAtEndOfBlock: basicBlock [
 
 { #category : #'as yet unclassified' }
 SLVMOptDestroySSA >> storeValuesAtEndOfBlocksOf: aFunction [
-	aFunction basicBlocks do: [ :basicBlock |
+	| basicBlock |
+	pendingBlocks := Set new.
+	pendingBlocks addAll: aFunction basicBlocks.
+	[ pendingBlocks isNotEmpty ] whileTrue: [
+		basicBlock := pendingBlocks anyOne.
+		pendingBlocks remove: basicBlock.
 		self storeValuesAtEndOfBlock: basicBlock
 	]
 ]

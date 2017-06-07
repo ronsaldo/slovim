@@ -71,6 +71,11 @@ SLVMBasicBlock >> addFirst: anInstruction [
 ]
 
 { #category : #adding }
+SLVMBasicBlock >> addLast: anInstruction [
+	^ self add: anInstruction
+]
+
+{ #category : #adding }
 SLVMBasicBlock >> addPredecessor: aBasicBlock [
 	predecessors add: aBasicBlock
 ]
@@ -290,6 +295,16 @@ SLVMBasicBlock >> predecessors [
 { #category : #accessing }
 SLVMBasicBlock >> predecessors: anObject [
 	predecessors := anObject
+]
+
+{ #category : #adding }
+SLVMBasicBlock >> predecessorsCouldBeRemoved [
+	| oldPredecessors |
+	oldPredecessors := predecessors.
+	predecessors := Set new.
+	oldPredecessors do: [ :pred |
+		pred successors do: [ :succ | succ addPredecessor: pred ]
+	]
 ]
 
 { #category : #printing }

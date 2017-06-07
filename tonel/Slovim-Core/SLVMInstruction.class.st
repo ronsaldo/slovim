@@ -229,7 +229,7 @@ SLVMInstruction >> previousInstruction: anObject [
 
 { #category : #printing }
 SLVMInstruction >> printOn: aStream [
-	aStream nextPut: $%; nextPutAll: name
+	aStream nextPut: $%; nextPutAll: self validName
 ]
 
 { #category : #modifying }
@@ -285,4 +285,9 @@ SLVMInstruction >> splitBasicBlock [
 { #category : #accessing }
 SLVMInstruction >> successors [
 	^ #()
+]
+
+{ #category : #accessing }
+SLVMInstruction >> validName [
+	^ name ifNil: [ #anon ]
 ]
