@@ -129,3 +129,8 @@ SLVMMatrixType >> size [
 SLVMMatrixType >> size: anObject [
 	size := anObject
 ]
+
+{ #category : #accessing }
+SLVMMatrixType >> typeOfMemberAt: index [
+	^ self memberAt: index
+]

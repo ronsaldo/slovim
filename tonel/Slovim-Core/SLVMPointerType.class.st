@@ -76,10 +76,9 @@ SLVMPointerType >> isScalarType [
 	^ true
 ]
 
-{ #category : #accessing }
-SLVMPointerType >> pointerSize: pointerSize typeOfMemberAt: index depth: depth [
-	depth = 0 ifTrue: [ ^ self ].
-	^ SLVMPointerType size: pointerSize baseType: (self typeOfMemberAt: index) storage: storage
+{ #category : #'element accessing' }
+SLVMPointerType >> offsetWithIndex: index [
+	^ index isConstantValue ifTrue: [ baseType size * index value ] ifFalse: [ 0 ]
 ]
 
 { #category : #printing }
@@ -114,7 +113,12 @@ SLVMPointerType >> storage: aSymbol [
 	storage := aSymbol
 ]
 
+{ #category : #'element accessing' }
+SLVMPointerType >> strideWithIndex: index [
+	^ index isConstantValue ifTrue: [ 0 ] ifFalse: [ baseType size ]
+]
+
 { #category : #accessing }
 SLVMPointerType >> typeOfMemberAt: index [
-	^ baseType memberAt: index
+	^ baseType
 ]

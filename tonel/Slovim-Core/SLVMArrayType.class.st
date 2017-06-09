@@ -73,6 +73,11 @@ SLVMArrayType >> name [
 	^ self printString
 ]
 
+{ #category : #'element accessing' }
+SLVMArrayType >> offsetWithIndex: index [
+	^ index isConstantValue ifTrue: [ index value * baseType size ] ifFalse: [ 0 ]
+]
+
 { #category : #printing }
 SLVMArrayType >> printOn: aStream [
 	aStream print: baseType; nextPut: $[.
@@ -83,4 +88,14 @@ SLVMArrayType >> printOn: aStream [
 { #category : #accessing }
 SLVMArrayType >> size [
 	^ self isBounded ifTrue: [ baseType size * elements ] ifFalse: [ 0 ]
+]
+
+{ #category : #'element accessing' }
+SLVMArrayType >> strideWithIndex: index [
+	^ index isConstantValue ifTrue: [ 0 ] ifFalse: [ baseType size ]
+]
+
+{ #category : #accessing }
+SLVMArrayType >> typeOfMemberAt: index [
+	^ self memberAt: index
 ]

@@ -42,6 +42,11 @@ SLVMBinaryOperation class >> initialize [
 		igt (integerComp evaluateGreaterThan)
 		ige (integerComp evaluateGreaterEqual)
 
+		ult (integerComp evaluateLessThan)
+		ule (integerComp evaluateLessEqual)
+		ugt (integerComp evaluateGreaterThan)
+		uge (integerComp evaluateGreaterEqual)
+
 		fadd 		(float evaluateAdd)
 		fsub 		(float evaluateSub)
 		fmul 		(float evaluateMul)
@@ -116,7 +121,11 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 	leftType ~= rightType ifTrue: [ self error: 'Unsupported binary operation whose operands have a different type.' ].
 	
 	((operationType == #integer) or: [ operationType == #integerComp ]) ifTrue: [ 
-		(leftType isIntegerType or: [leftType isVectorType and: [leftType baseType isIntegerType ] ]) ifFalse: [ self error: 'Binary operation ' , anOperation , ' requires integer operands.' ].
+		(leftType isIntegerType or: [leftType isVectorType and: [leftType baseType isIntegerType ] ]) ifFalse: [
+			(operationType == #integerComp and: [ leftType isPointerType ]) ifFalse: [ 
+				self error: 'Binary operation ' , anOperation , ' requires integer operands.'
+			]
+		].
 		^ operationType == #integerComp ifTrue: [ SLVMType boolType ] ifFalse: [ leftType ]
 	].
 

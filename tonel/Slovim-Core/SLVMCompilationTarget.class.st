@@ -72,7 +72,7 @@ SLVMCompilationTarget >> newModule [
 
 { #category : #accessing }
 SLVMCompilationTarget >> objectHeaderSize [
-	^ 8
+	^ objectModel objectHeaderSize
 ]
 
 { #category : #accessing }

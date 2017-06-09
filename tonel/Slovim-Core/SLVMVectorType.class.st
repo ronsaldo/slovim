@@ -115,3 +115,8 @@ SLVMVectorType >> size [
 SLVMVectorType >> size: anObject [
 	size := anObject
 ]
+
+{ #category : #accessing }
+SLVMVectorType >> typeOfMemberAt: index [
+	^ self memberAt: index
+]

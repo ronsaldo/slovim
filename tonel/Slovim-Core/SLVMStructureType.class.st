@@ -119,6 +119,12 @@ SLVMStructureType >> names: anObject [
 	names := anObject
 ]
 
+{ #category : #'element accessing' }
+SLVMStructureType >> offsetWithIndex: index [
+	self assert: index isConstantValue.
+	^ offsets at: index value + 1
+]
+
 { #category : #accessing }
 SLVMStructureType >> offsets [
 	^ offsets
@@ -143,6 +149,17 @@ SLVMStructureType >> shortName [
 { #category : #accessing }
 SLVMStructureType >> size [
 	^ size
+]
+
+{ #category : #'element accessing' }
+SLVMStructureType >> strideWithIndex: index [
+	self assert: index isConstantValue.
+	^ 0
+]
+
+{ #category : #accessing }
+SLVMStructureType >> typeOfMemberAt: index [
+	^ self memberAt: index
 ]
 
 { #category : #accessing }

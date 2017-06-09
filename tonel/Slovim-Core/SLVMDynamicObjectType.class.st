@@ -53,10 +53,9 @@ SLVMDynamicObjectType >> isScalarType [
 	^ true
 ]
 
-{ #category : #accessing }
-SLVMDynamicObjectType >> pointerSize: pointerSize typeOfMemberAt: index depth: depth [
-	depth = 0 ifTrue: [ ^ self ].
-	^ SLVMPointerType size: pointerSize baseType: (self typeOfMemberAt: index) storage: SLVMType genericStorage
+{ #category : #'element accessing' }
+SLVMDynamicObjectType >> offsetWithIndex: index [
+	^ index isConstantValue ifTrue: [ self size * index value ] ifFalse: [ 0 ]
 ]
 
 { #category : #printing }
@@ -77,6 +76,16 @@ SLVMDynamicObjectType >> size: anObject [
 { #category : #accessing }
 SLVMDynamicObjectType >> spillingClass [
 	^ { self size . self alignment . true }
+]
+
+{ #category : #accessing }
+SLVMDynamicObjectType >> storage [
+	^ SLVMType genericStorage
+]
+
+{ #category : #'element accessing' }
+SLVMDynamicObjectType >> strideWithIndex: index [
+	^ index isConstantValue ifTrue: [ 0 ] ifFalse: [ self size ]
 ]
 
 { #category : #accessing }

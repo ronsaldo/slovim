@@ -22,6 +22,20 @@ SLVMGetElementPointer >> indices [
 	^ parameters allButFirst
 ]
 
+{ #category : #construction }
+SLVMGetElementPointer >> indicesWithStrides [
+	| elementType stride offset |
+	elementType := self pointer type.
+	
+	^ self indices collect: [ :index |
+		stride := elementType strideWithIndex: index.
+		offset := elementType offsetWithIndex: index.
+		elementType := elementType typeOfMemberAt: index.
+		{ index . stride . offset }
+	].
+
+]
+
 { #category : #testing }
 SLVMGetElementPointer >> isElementAccess [
 	^ parameters second isConstantValue and: [ parameters second value = 0 ]
@@ -44,25 +58,16 @@ SLVMGetElementPointer >> pointer [
 
 { #category : #construction }
 SLVMGetElementPointer >> pointer: pointer indices: indices [
+	| pointerType memberType |
 	self parameters: { pointer } , indices.
 	self assert: (pointer type isPointerType or: [pointer type isDynamicObjectType ]).
-	type := pointer type.
-	indices doWithIndex: [ :index :depth |
-		type := type pointerSize: pointer type size typeOfMemberAt: index depth: depth - 1.
+	pointerType := pointer type.
+	memberType := pointerType.
+	indices do: [ :index |
+		memberType := memberType typeOfMemberAt: index
 	].
 
-]
-
-{ #category : #construction }
-SLVMGetElementPointer >> strides [
-	| pointerType pointerSize |
-	pointerType := self pointer type.
-	pointerSize := pointerType size.
-	
-	^ self indices collectWithIndex: [ :index :depth |
-		pointerType := pointerType pointerSize: pointerSize typeOfMemberAt: index depth: depth - 1.
-		pointerType elementStrideDepth: depth - 1
-	].
+	type := SLVMPointerType size: pointerType size baseType: memberType storage: pointerType storage
 
 ]
 
