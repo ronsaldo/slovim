@@ -65,6 +65,11 @@ SLVMSAsmFunctionCodeGenerator class >> initialize [
 		igt visitIntegerGreaterThan:
 		ige visitIntegerGreaterOrEqual:
 
+		ult visitUnsignedIntegerLessThan:
+		ule visitUnsignedIntegerLessOrEqual:
+		ugt visitUnsignedIntegerGreaterThan:
+		uge visitUnsignedIntegerGreaterOrEqual:
+
 		uflt visitUnorderedFloatLessThan:
 		ufle visitUnorderedFloatLessOrEqual:
 		ufeq visitUnorderedFloatEqual:
@@ -667,20 +672,22 @@ SLVMSAsmFunctionCodeGenerator >> visitDiv: instruction [
 
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitGetElementPointer: instruction [
-	| constantDisplacement indicesWithStrides indices strides index stride pointer result indexValue temp |
+	| constantDisplacement indicesWithStrides pointer result indexValue temp rawIndicesWithStrides |
 	constantDisplacement := 0.
 	indicesWithStrides := OrderedCollection new.
 	
-	indices := instruction indices.
-	strides := instruction strides.
-	1 to: indices size do: [ :i |
-		index := indices at: i.
-		stride := strides at: i.
-		index isConstantValue ifTrue: [ 
-			constantDisplacement := constantDisplacement + (index value * stride)
-		] ifFalse: [
-			indicesWithStrides add: { index . stride }
-		]
+	instruction pointer type isDynamicObjectType ifTrue: [
+		constantDisplacement := target objectModel objectHeaderSize
+	].
+
+	rawIndicesWithStrides := instruction indicesWithStrides.
+	
+	rawIndicesWithStrides do: [ :indexStrideOffset |
+		indexStrideOffset second ~= 0 ifTrue: [ 
+			indicesWithStrides add: { indexStrideOffset first . indexStrideOffset second }
+		].
+	
+		constantDisplacement := constantDisplacement + indexStrideOffset third.
 	].
 
 	"Get the pointer. It should always fit in a single register."
@@ -928,6 +935,30 @@ SLVMSAsmFunctionCodeGenerator >> visitUnaryOperation: instruction [
 	selector := OperationCodeGeneratorMap at: instruction operation.
 	^ self perform: selector with: instruction
 
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitUnsignedIntegerGreaterOrEqual: instruction [
+	self flag: 'Generate the correct comparison.'.
+	self binaryInteger: instruction comparison: TacGreaterOrEqual
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitUnsignedIntegerGreaterThan: instruction [
+	self flag: 'Generate the correct comparison.'.
+	self binaryInteger: instruction comparison: TacGreater
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitUnsignedIntegerLessOrEqual: instruction [
+	self flag: 'Generate the correct comparison.'.
+	self binaryInteger: instruction comparison: TacLessOrEqual
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitUnsignedIntegerLessThan: instruction [
+	self flag: 'Generate the correct comparison.'.
+	self binaryInteger: instruction comparison: TacLess
 ]
 
 { #category : #casting }
