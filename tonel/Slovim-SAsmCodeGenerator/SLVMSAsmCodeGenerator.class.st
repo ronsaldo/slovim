@@ -6,10 +6,73 @@ Class {
 		'classVariableClassMap',
 		'sasmModule',
 		'translatedElements',
-		'runtimeProvidedFunctionst'
+		'runtimeProvidedFunctionst',
+		'debugCompileUnit',
+		'translatedDebugElements',
+		'debugTranslator'
 	],
 	#category : #'Slovim-SAsmCodeGenerator'
 }
+
+{ #category : #'debug information' }
+SLVMSAsmCodeGenerator >> buildDebugInformation: aBlock [
+	debugCompileUnit ifNotNil: [ debugCompileUnit compilationUnit build: aBlock ]
+]
+
+{ #category : #'debug information' }
+SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
+	aFunction name ifNil: [ ^ self ].
+	(aFunction hasProperty: #omitDebugInformation) ifTrue: [ ^ self ].
+	
+	self buildDebugInformation: [ :builder |
+		builder subprogram: [ :subprogram |
+			(aFunction isPublic or: [ aFunction isExternal ]) ifTrue: [ subprogram external: true ].
+			(aFunction isExternal and: [aFunction isEmpty ]) ifTrue: [ subprogram declaration: true ].
+			
+			(aFunction unmangledName isNotNil and: [aFunction unmangledName ~= aFunction name]) ifTrue: [
+				subprogram
+					linkageName: aFunction name;
+					name: aFunction unmangledName
+			] ifFalse: [
+				subprogram name: aFunction name
+			].
+		].
+
+	].
+
+]
+
+{ #category : #'debug information' }
+SLVMSAsmCodeGenerator >> buildGlobalVariableDebugInformation: aGlobalVariable [
+	aGlobalVariable name ifNil: [ ^ self ].
+	(aGlobalVariable hasProperty: #omitDebugInformation) ifTrue: [ ^ self ].
+
+	self buildDebugInformation: [ :builder |
+		builder variable: [ :debugVariable |
+			self flag: 'This external seems to cause problems.'.
+			"(aGlobalVariable isPublic or: [ aGlobalVariable isExternal ]) ifTrue: [ debugVariable external: true ]."
+			
+			(aGlobalVariable unmangledName isNotNil and: [aGlobalVariable unmangledName ~= aGlobalVariable name]) ifTrue: [
+				debugVariable name: aGlobalVariable unmangledName.
+				"debugVariable linkageName: aGlobalVariable name."
+			] ifFalse: [
+				debugVariable name: aGlobalVariable name
+			].
+		
+			debugVariable
+				type: (self translateDebugType: aGlobalVariable valueType).
+
+			(aGlobalVariable isExternal and: [aGlobalVariable initialValue isNil]) ifTrue: [
+				debugVariable declaration: true
+			] ifFalse: [
+				debugVariable location build: [ :exprBuilder |
+					exprBuilder addr: (translatedElements at: aGlobalVariable)
+				]
+			]
+		]
+	]
+
+]
 
 { #category : #'as yet unclassified' }
 SLVMSAsmCodeGenerator >> convertVisibility: visibility [
@@ -49,6 +112,11 @@ SLVMSAsmCodeGenerator >> createFunctionContextMetaDataIfNeeded: function [
 	self createFunctionContextMetaData: function
 ]
 
+{ #category : #'debug information' }
+SLVMSAsmCodeGenerator >> debugTranslator [
+	^ debugTranslator ifNil: [ debugTranslator := SLVMSAsmDebugTranslator new codeGenerator: self ]
+]
+
 { #category : #initialization }
 SLVMSAsmCodeGenerator >> initialize [
 	super initialize.
@@ -63,6 +131,16 @@ SLVMSAsmCodeGenerator >> isInliningMandatory [
 { #category : #'as yet unclassified' }
 SLVMSAsmCodeGenerator >> needSSADestroyed [
 	^ true
+]
+
+{ #category : #accessing }
+SLVMSAsmCodeGenerator >> objectModel [
+	^ target objectModel
+]
+
+{ #category : #'debug information' }
+SLVMSAsmCodeGenerator >> register: value debugElement: debugElement [
+	translatedDebugElements at: value put: debugElement
 ]
 
 { #category : #'runtime functions' }
@@ -97,6 +175,12 @@ SLVMSAsmCodeGenerator >> translateConstant: constant into: asmStream [
 	asmStream addFirst: value asSAsmStreamElement
 ]
 
+{ #category : #'debug information' }
+SLVMSAsmCodeGenerator >> translateDebugType: aType [
+	translatedDebugElements at: aType ifAbsent: [ self debugTranslator translate: aType. ].
+	^ translatedDebugElements at: aType
+]
+
 { #category : #'as yet unclassified' }
 SLVMSAsmCodeGenerator >> translateModule: module [
 	| packageRegistration |
@@ -118,6 +202,9 @@ SLVMSAsmCodeGenerator >> translateModule: module exportList: exportList packageR
 	self applyPassesIn: module functionList: (exportList select: #isFunction).
 	sasmModule := SAsmModule new target: target target.
 	translatedElements := Dictionary new.
+	translatedDebugElements := Dictionary new.
+	
+	self translateModuleDebugInformation: module.
 
 	exportList do: [ :element |
 		self translateModuleElement: element
@@ -128,6 +215,19 @@ SLVMSAsmCodeGenerator >> translateModule: module exportList: exportList packageR
 	].
 
 	^ sasmModule
+]
+
+{ #category : #'as yet unclassified' }
+SLVMSAsmCodeGenerator >> translateModuleDebugInformation: module [
+	| debugInfo |
+	target emittingDebugInformation ifFalse: [ ^ self ].
+	
+	debugCompileUnit := sasmModule buildDWCompileUnit: [ :cu |
+		debugInfo := module debugInformation.
+		debugInfo ifNotNil: [
+			
+		].
+	]
 ]
 
 { #category : #'as yet unclassified' }
@@ -155,6 +255,8 @@ SLVMSAsmCodeGenerator >> visitFunction: aFunction [
 		moduleTranslator: self;
 		generateFunction: aFunction into: result.
 		
+	self buildFunctionDebugInformation: aFunction.
+
 	^ result
 		
 ]
@@ -179,6 +281,8 @@ SLVMSAsmCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 		result content: SAsmStream new.
 		self translateConstant: aGlobalVariable initialValue into: result content
 	].
+
+	self buildGlobalVariableDebugInformation: aGlobalVariable.
 	
 	^ result
 		
