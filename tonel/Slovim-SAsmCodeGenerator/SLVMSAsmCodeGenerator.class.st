@@ -21,6 +21,7 @@ SLVMSAsmCodeGenerator >> buildDebugInformation: aBlock [
 
 { #category : #'debug information' }
 SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
+	| translatedFunction functionType |
 	aFunction name ifNil: [ ^ self ].
 	(aFunction hasProperty: #omitDebugInformation) ifTrue: [ ^ self ].
 	
@@ -28,14 +29,26 @@ SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
 		builder subprogram: [ :subprogram |
 			(aFunction isPublic or: [ aFunction isExternal ]) ifTrue: [ subprogram external: true ].
 			(aFunction isExternal and: [aFunction isEmpty ]) ifTrue: [ subprogram declaration: true ].
+			subprogram prototyped: true.
 			
 			(aFunction unmangledName isNotNil and: [aFunction unmangledName ~= aFunction name]) ifTrue: [
 				subprogram
-					linkageName: aFunction name;
+					"linkageName: aFunction name;"
 					name: aFunction unmangledName
 			] ifFalse: [
 				subprogram name: aFunction name
 			].
+		
+			aFunction isEmpty ifFalse: [
+				translatedFunction := translatedElements at: aFunction.
+				subprogram lowPC: translatedFunction.
+				subprogram highPCOffset: (translatedFunction codeSizeExpression)
+			].
+		
+			functionType := aFunction functionType.
+			functionType returnType isVoidType ifFalse: [ 
+				subprogram type: (self translateDebugType: functionType returnType)
+			]
 		].
 
 	].
@@ -49,8 +62,7 @@ SLVMSAsmCodeGenerator >> buildGlobalVariableDebugInformation: aGlobalVariable [
 
 	self buildDebugInformation: [ :builder |
 		builder variable: [ :debugVariable |
-			self flag: 'This external seems to cause problems.'.
-			"(aGlobalVariable isPublic or: [ aGlobalVariable isExternal ]) ifTrue: [ debugVariable external: true ]."
+			(aGlobalVariable isPublic or: [ aGlobalVariable isExternal ]) ifTrue: [ debugVariable external: true ].
 			
 			(aGlobalVariable unmangledName isNotNil and: [aGlobalVariable unmangledName ~= aGlobalVariable name]) ifTrue: [
 				debugVariable name: aGlobalVariable unmangledName.
@@ -214,6 +226,7 @@ SLVMSAsmCodeGenerator >> translateModule: module exportList: exportList packageR
 		sasmModule packageRegistration: (self translateModuleElement: packageRegistration)
 	].
 
+	debugCompileUnit ifNotNil: [ debugCompileUnit compilationUnit highPC: sasmModule createDummyFunction ].
 	^ sasmModule
 ]
 
@@ -225,8 +238,9 @@ SLVMSAsmCodeGenerator >> translateModuleDebugInformation: module [
 	debugCompileUnit := sasmModule buildDWCompileUnit: [ :cu |
 		debugInfo := module debugInformation.
 		debugInfo ifNotNil: [
-			
 		].
+	
+		cu lowPC: sasmModule createDummyFunction
 	]
 ]
 

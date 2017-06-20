@@ -34,6 +34,20 @@ SLVMSAsmDebugTranslator >> visitArrayType: type [
 ]
 
 { #category : #visiting }
+SLVMSAsmDebugTranslator >> visitBoolType: type [
+	codeGenerator buildDebugInformation: [ :builder |
+		builder baseType: [ :debugType |
+			codeGenerator register: type debugElement: debugType.
+			debugType
+				name: type name;
+				byteSize: type size;
+				encodingBoolean
+		]
+	].
+
+]
+
+{ #category : #visiting }
 SLVMSAsmDebugTranslator >> visitDynamicObjectType: type [
 	codeGenerator buildDebugInformation: [ :builder |
 		codeGenerator objectModel objectHeaderType ifNotNil: [ :objectHeaderType |
@@ -53,6 +67,20 @@ SLVMSAsmDebugTranslator >> visitDynamicObjectType: type [
 					name: #_Oop;
 					byteSize: type size
 			]
+		]
+	].
+
+]
+
+{ #category : #visiting }
+SLVMSAsmDebugTranslator >> visitFloatType: type [
+	codeGenerator buildDebugInformation: [ :builder |
+		builder baseType: [ :debugType |
+			codeGenerator register: type debugElement: debugType.
+			debugType
+				name: type name;
+				byteSize: type size;
+				encodingFloat
 		]
 	].
 
@@ -105,6 +133,19 @@ SLVMSAsmDebugTranslator >> visitStructureType: type [
 						dataMemberLocation: offset.
 				]
 			]
+		]
+	].
+
+]
+
+{ #category : #visiting }
+SLVMSAsmDebugTranslator >> visitVoidType: type [
+	codeGenerator buildDebugInformation: [ :builder |
+		builder baseType: [ :debugType |
+			codeGenerator register: type debugElement: debugType.
+			debugType
+				name: type name;
+				byteSize: 0
 		]
 	].
 
