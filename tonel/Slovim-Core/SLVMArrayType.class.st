@@ -38,6 +38,11 @@ SLVMArrayType >> baseType: anObject [
 	baseType := anObject
 ]
 
+{ #category : #comparing }
+SLVMArrayType >> cyclicHash: previousElements [
+	^ (self class hash bitXor: (baseType cyclicHash: previousElements)) bitXor: elements hash
+]
+
 { #category : #accessing }
 SLVMArrayType >> elements [
 	^ elements

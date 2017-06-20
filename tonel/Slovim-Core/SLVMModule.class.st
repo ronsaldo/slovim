@@ -6,7 +6,8 @@ Class {
 		'globalValues',
 		'anonymousGlobals',
 		'packages',
-		'classVariableClassMap'
+		'classVariableClassMap',
+		'debugInformation'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -76,6 +77,16 @@ SLVMModule >> createFunctionOptimizationPassesForLevel: optimizationLevel [
 	
 	"Add lot more passes depending on the optimization level."
 	^ passes asArray
+]
+
+{ #category : #accessing }
+SLVMModule >> debugInformation [
+	^ debugInformation
+]
+
+{ #category : #accessing }
+SLVMModule >> debugInformation: anObject [
+	debugInformation := anObject
 ]
 
 { #category : #building }

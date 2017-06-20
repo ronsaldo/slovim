@@ -2,7 +2,6 @@ Class {
 	#name : #SLVMFunction,
 	#superclass : #SLVMGlobalValue,
 	#instVars : [
-		'unmangledName',
 		'basicBlocks',
 		'functionType',
 		'type',
@@ -354,14 +353,4 @@ SLVMFunction >> preOrder [
 { #category : #accessing }
 SLVMFunction >> type [
 	^ type
-]
-
-{ #category : #accessing }
-SLVMFunction >> unmangledName [
-	^ unmangledName
-]
-
-{ #category : #accessing }
-SLVMFunction >> unmangledName: aSymbol [
-	unmangledName := aSymbol
 ]

@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'dynamicObjectType',
 		'voidPointerType',
-		'objectModel'
+		'objectModel',
+		'emittingDebugInformation'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -39,6 +40,16 @@ SLVMCompilationTarget >> dynamicObjectType [
 	^ dynamicObjectType ifNil: [ dynamicObjectType := SLVMDynamicObjectType new size: self pointerSize ]
 ]
 
+{ #category : #accessing }
+SLVMCompilationTarget >> emittingDebugInformation [
+	^ emittingDebugInformation
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> emittingDebugInformation: anObject [
+	emittingDebugInformation := anObject
+]
+
 { #category : #types }
 SLVMCompilationTarget >> float [
 	^ SLVMType floatType
@@ -52,7 +63,8 @@ SLVMCompilationTarget >> generateLowLevelModule: aModule [
 { #category : #initialization }
 SLVMCompilationTarget >> initialize [
 	super initialize.
-	objectModel := SLVMNativeRuntimeObjectModel new target: self
+	objectModel := SLVMNativeRuntimeObjectModel new target: self.
+	emittingDebugInformation := false.
 ]
 
 { #category : #types }
@@ -149,4 +161,9 @@ SLVMCompilationTarget >> void [
 { #category : #types }
 SLVMCompilationTarget >> voidPointerType [
 	^ voidPointerType ifNil: [ voidPointerType := self pointerTo: self void ]
+]
+
+{ #category : #initialization }
+SLVMCompilationTarget >> withDebugInformation [
+	self emittingDebugInformation: true
 ]

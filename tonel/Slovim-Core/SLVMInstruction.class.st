@@ -8,7 +8,8 @@ Class {
 		'instructionReferences',
 		'previousInstruction',
 		'nextInstruction',
-		'livenessIndex'
+		'livenessIndex',
+		'debugInformation'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -41,6 +42,16 @@ SLVMInstruction >> block [
 { #category : #accessing }
 SLVMInstruction >> block: anObject [
 	block := anObject
+]
+
+{ #category : #accessing }
+SLVMInstruction >> debugInformation [
+	^ debugInformation
+]
+
+{ #category : #accessing }
+SLVMInstruction >> debugInformation: anObject [
+	debugInformation := anObject
 ]
 
 { #category : #'basic optimizations' }

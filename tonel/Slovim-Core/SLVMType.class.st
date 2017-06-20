@@ -330,6 +330,12 @@ SLVMType >> asSlovimType: compilationTarget [
 	^ self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMType >> cyclicHash: previousElements [
+	^ self hash
+	
+]
+
 { #category : #'constant encoding' }
 SLVMType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stream [
 	self subclassResponsibility

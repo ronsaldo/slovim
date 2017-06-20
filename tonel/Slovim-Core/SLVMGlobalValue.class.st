@@ -10,6 +10,16 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #accessing }
+SLVMGlobalValue >> debugInformation [
+	^ self propertyAt: #debugInformation ifAbsent: [ nil ]
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> debugInformation: aValue [
+	^ self propertyAt: #debugInformation put: aValue
+]
+
 { #category : #properties }
 SLVMGlobalValue >> hasProperty: aSymbol [
 	^ properties includesKey: aSymbol
@@ -151,6 +161,16 @@ SLVMGlobalValue >> propertyAt: aSymbol ifPresent: aBlock [
 { #category : #properties }
 SLVMGlobalValue >> propertyAt: aSymbol put: anObject [
 	^ properties at: aSymbol put: anObject
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> unmangledName [
+	^ self propertyAt: #unmangledName ifAbsent: [ nil ]
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> unmangledName: aSymbol [
+	self propertyAt: #unmangledName put: aSymbol
 ]
 
 { #category : #accessing }
