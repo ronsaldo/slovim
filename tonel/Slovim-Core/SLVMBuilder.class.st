@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMObject,
 	#instVars : [
 		'function',
-		'currentBlock'
+		'currentBlock',
+		'debugPositionStack'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -34,6 +35,9 @@ SLVMBuilder >> addDynamicLiteral: literal [
 { #category : #adding }
 SLVMBuilder >> addInstruction: anInstruction name: theInstructionName [
 	anInstruction name: theInstructionName.
+	debugPositionStack ifNotEmpty: [
+		anInstruction debugSourceLocation: debugPositionStack top
+	].
 	currentBlock add: anInstruction.
 	^ anInstruction
 ]
@@ -439,6 +443,12 @@ SLVMBuilder >> ine: left with: right name: resultName [
 	^ self addOperation: #ine left: left right: right name: resultName
 ]
 
+{ #category : #initialization }
+SLVMBuilder >> initialize [
+	super initialize.
+	debugPositionStack := Stack new.
+]
+
 { #category : #casting }
 SLVMBuilder >> intCast: source target: targetType [
 	^ self intCast: source target: targetType name: function generateSymbol
@@ -698,6 +708,16 @@ SLVMBuilder >> pointerSize [
 { #category : #accessing }
 SLVMBuilder >> pointerTypeFor: baseType [
 	^ SLVMPointerType size: self compilationTarget pointerSize baseType: baseType storage: SLVMType genericStorage
+]
+
+{ #category : #'debug information' }
+SLVMBuilder >> popDebugSourcePosition [
+	debugPositionStack pop
+]
+
+{ #category : #'debug information' }
+SLVMBuilder >> pushDebugSourcePosition: debugPosition [
+	debugPositionStack push: debugPosition
 ]
 
 { #category : #adding }
