@@ -299,6 +299,14 @@ SLVMSAsmFunctionCodeGenerator >> elementWise: source with: source2 with: result 
 	]
 ]
 
+{ #category : #'code generation' }
+SLVMSAsmFunctionCodeGenerator >> emitIntructionDebugInformation: instruction [
+	target emittingDebugInformation ifFalse: [ ^ self ].
+	instruction debugLocation ifNotNil: [ 
+		blockBuilder debugSourceLocation: instruction debugLocation
+	]
+]
+
 { #category : #'atomic operations' }
 SLVMSAsmFunctionCodeGenerator >> generateCompareAndSwap: instruction [
 	| result variable value |
@@ -538,6 +546,7 @@ SLVMSAsmFunctionCodeGenerator >> translateBasicBlock: basicBlock [
 	basicBlock instructionsDo: [ :instruction |
 		"Do not generate unused values."
 		(instruction isPureInstruction and: [ instruction instructionReferences isEmpty]) ifFalse: [
+			self emitIntructionDebugInformation: instruction.
 			instruction accept: self
 		]
 	]
