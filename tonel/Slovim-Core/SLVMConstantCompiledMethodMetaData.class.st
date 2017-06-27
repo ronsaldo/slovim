@@ -13,6 +13,11 @@ SLVMConstantCompiledMethodMetaData >> = other [
 	^ self class = other class and: [ sourceMethod == other sourceMethod ]
 ]
 
+{ #category : #visiting }
+SLVMConstantCompiledMethodMetaData >> accept: aVisitor [
+	^ aVisitor visitConstantCompiledMethodMetadata: self
+]
+
 { #category : #comparing }
 SLVMConstantCompiledMethodMetaData >> hash [
 	^ self class hash bitXor: sourceMethod identityHash

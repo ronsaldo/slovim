@@ -25,6 +25,9 @@ SLVMConstantBuiltInFunction class >> initialize [
 		'atomic.fetch_and_subtract'
 		'atomic.swap_value'
 		
+		"Context"
+		'context.replace_function'
+		
 		"Vector functions"
 		'vector.cross'
 		'vector.dot'

@@ -73,6 +73,16 @@ SLVMGlobalVariable >> readOnly: anObject [
 	readOnly := anObject
 ]
 
+{ #category : #asserting }
+SLVMGlobalVariable >> shouldBePromotedToConstant [
+	^ self propertyAt: #shouldBePromotedToConstant ifAbsent: [ false ]
+]
+
+{ #category : #asserting }
+SLVMGlobalVariable >> shouldBePromotedToConstant: aBoolean [
+	self propertyAt: #shouldBePromotedToConstant put: aBoolean
+]
+
 { #category : #accessing }
 SLVMGlobalVariable >> type [
 	^ type

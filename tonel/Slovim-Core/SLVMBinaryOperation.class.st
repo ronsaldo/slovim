@@ -32,8 +32,8 @@ SLVMBinaryOperation class >> initialize [
 		bitxor (integer evaluateBitXOr)
 
 		shiftleft (integer evaluateShiftLeft)
-		ashiftright (integer evaluateArithmeticShiftRight)
-		lshiftright (integer evaluateLogicalShiftRight)
+		shiftright (integer evaluateArithmeticShiftRight)
+		shiftrightarithmetic (integer evaluateLogicalShiftRight)
 
 		ilt (integerComp evaluateLessThan)
 		ile (integerComp evaluateLessEqual)
