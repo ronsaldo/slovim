@@ -22,7 +22,6 @@ SLVMSAsmCodeGenerator >> buildDebugInformation: aBlock [
 { #category : #'debug information' }
 SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
 	| translatedFunction functionType |
-	aFunction name ifNil: [ ^ self ].
 	(aFunction hasProperty: #omitDebugInformation) ifTrue: [ ^ self ].
 	
 	self buildDebugInformation: [ :builder |
@@ -30,13 +29,15 @@ SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
 			(aFunction isPublic or: [ aFunction isExternal ]) ifTrue: [ subprogram external: true ].
 			(aFunction isExternal and: [aFunction isEmpty ]) ifTrue: [ subprogram declaration: true ].
 			subprogram prototyped: true.
-			
-			(aFunction unmangledName isNotNil and: [aFunction unmangledName ~= aFunction name]) ifTrue: [
-				subprogram
-					"linkageName: aFunction name;"
-					name: aFunction unmangledName
-			] ifFalse: [
-				subprogram name: aFunction name
+
+			aFunction name ifNotNil: [ 
+				(aFunction unmangledName isNotNil and: [aFunction unmangledName ~= aFunction name]) ifTrue: [
+					subprogram
+						"linkageName: aFunction name;"
+						name: aFunction unmangledName
+				] ifFalse: [
+					subprogram name: aFunction name
+				].
 			].
 		
 			aFunction isEmpty ifFalse: [

@@ -34,6 +34,8 @@ SLVMSAsmFunctionCodeGenerator class >> initialize [
 		'atomic.fetch_and_subtract' generateFetchAndSubtract:
 		'atomic.swap_value' generateSwapValue:
 		'atomic.compare_and_swap' generateCompareAndSwap:
+		
+		'context.replace_function' generateContextReplaceFunction:
 	).
 	
 	OperationCodeGeneratorMap := Dictionary newFromPairs: #(
@@ -152,6 +154,7 @@ SLVMSAsmFunctionCodeGenerator >> binaryInteger: instruction comparison: comparis
 		result size > left size ifTrue: [ 
 			self halt
 		] ifFalse: [ 
+			self halt.
 			1 to: result size do: [ :i |
 				self compare: comparison integer: (left at: i) with: (right at: i) into: (result at: i).
 			]
@@ -318,6 +321,16 @@ SLVMSAsmFunctionCodeGenerator >> generateCompareAndSwap: instruction [
 	self assert: result size = 1.
 
 	blockBuilder tacAtomicCompareAndSwap: variable first with: value first into: result first
+]
+
+{ #category : #'atomic operations' }
+SLVMSAsmFunctionCodeGenerator >> generateContextReplaceFunction: instruction [
+	| newFunction |
+	newFunction := self translateValue: instruction arguments first.
+	self assert: newFunction size = 1.
+
+	blockBuilder
+		tacContextReplaceFunction: newFunction
 ]
 
 { #category : #'atomic operations' }
@@ -730,7 +743,7 @@ SLVMSAsmFunctionCodeGenerator >> visitIdentityEquals: instruction [
 
 { #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> visitIdentityNotEquals: instruction [
-	self binaryInteger: instruction comparison: TacEqual
+	self binaryInteger: instruction comparison: TacNotEqual
 ]
 
 { #category : #casting }
@@ -944,6 +957,12 @@ SLVMSAsmFunctionCodeGenerator >> visitUnaryOperation: instruction [
 	selector := OperationCodeGeneratorMap at: instruction operation.
 	^ self perform: selector with: instruction
 
+]
+
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitUnreachable: aNode [
+	self flag: 'Emit debugger trap'.
+	
 ]
 
 { #category : #comparisons }

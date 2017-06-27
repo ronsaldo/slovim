@@ -27,7 +27,13 @@ SLVMSAsmDebugTranslator >> visitArrayType: type [
 	codeGenerator buildDebugInformation: [ :builder |
 		builder arrayType: [ :debugType |
 			codeGenerator register: type debugElement: debugType.
-			debugType type: (codeGenerator translateDebugType: type baseType)
+			debugType
+				byteSize: type size;
+				type: (codeGenerator translateDebugType: type baseType).
+				
+			builder subrangeType: [ :subrangeType |
+				subrangeType upperBound: (type elements - 1 max: 0)
+			].
 		]
 	].
 

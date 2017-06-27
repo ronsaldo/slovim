@@ -42,6 +42,16 @@ SLVMSAsmConstantDataGenerator >> visitConstantArrayValue: array [
 ]
 
 { #category : #visiting }
+SLVMSAsmConstantDataGenerator >> visitConstantCompiledMethodMetadata: compiledMethodMetadata [
+	| translatedMethod |
+	translatedMethod := (moduleTranslator translateModuleElement: compiledMethodMetadata sourceMethod).
+	translatedMethod contextMetaData ifNil: [ moduleTranslator createFunctionContextMetaData: compiledMethodMetadata sourceMethod ].
+	self assert: translatedMethod contextMetaData isNotNil.
+	
+	^ translatedMethod contextMetaData asSAsmInstructionOperand
+]
+
+{ #category : #visiting }
 SLVMSAsmConstantDataGenerator >> visitConstantExpressionAdd: expression [
 	| left right |
 	left := (self translate: expression left) asSAsmConstantExpression.

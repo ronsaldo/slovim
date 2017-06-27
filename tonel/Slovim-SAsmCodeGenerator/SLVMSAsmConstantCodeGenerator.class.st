@@ -121,6 +121,11 @@ SLVMSAsmConstantCodeGenerator >> translateImmediateObjectLiteral: constantValue 
 		^ SLVMSAsmValue operand: 0
 	].
 
+	value == false ifTrue: [ 
+	].
+	value == true ifTrue: [ 
+	].
+
 	self halt
 ]
 
