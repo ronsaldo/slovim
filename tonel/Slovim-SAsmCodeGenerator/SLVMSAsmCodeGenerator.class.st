@@ -38,6 +38,10 @@ SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
 				] ifFalse: [
 					subprogram name: aFunction name
 				].
+			] ifNil: [ 
+				aFunction unmangledName ifNotNil: [
+					subprogram name: aFunction unmangledName
+				]
 			].
 		
 			aFunction isEmpty ifFalse: [

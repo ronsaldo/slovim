@@ -692,6 +692,22 @@ SLVMSAsmFunctionCodeGenerator >> visitDiv: instruction [
 	self binaryInteger: instruction arithmetic: TacDivide
 ]
 
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitDynamicObjectToIntCast: instruction [
+	| source sourceValue result |
+	source := instruction source.
+	source isConstantValue ifTrue: [ 
+		self halt
+	].
+
+	sourceValue := self translateValue: source.
+	result := self translateValue: instruction.
+	self assert: source type isDynamicObjectType.
+
+	self flag: 'Check for overflows'.
+	blockBuilder tacArithmeticShiftRight: sourceValue with: target objectModel smallIntegerShift into: result
+]
+
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitGetElementPointer: instruction [
 	| constantDisplacement indicesWithStrides pointer result indexValue temp rawIndicesWithStrides |
@@ -748,7 +764,45 @@ SLVMSAsmFunctionCodeGenerator >> visitIdentityNotEquals: instruction [
 
 { #category : #casting }
 SLVMSAsmFunctionCodeGenerator >> visitIntToDynamicObjectCast: instruction [
-	self visitSignExtend: instruction.
+	| source sourceValue result elementSize |
+	source := instruction source.
+	source isConstantValue ifTrue: [ 
+		self halt
+	].
+
+	sourceValue := self translateValue: source.
+	result := self translateValue: instruction.
+	self assert: source type isIntegerType.
+
+	self flag: 'Check for overflows'.
+	elementSize := source type size.
+	source type size < target pointerSize ifTrue: [
+		elementSize = 1 ifTrue: [ blockBuilder tacSign: source type isSigned extend8: sourceValue into: result ].
+		elementSize = 2 ifTrue: [ blockBuilder tacSign: source type isSigned extend16: sourceValue into: result ].
+		elementSize = 4 ifTrue: [ blockBuilder tacSign: source type isSigned extend32: sourceValue into: result ].
+		blockBuilder
+			tacLogicalShiftLeft: result with: target objectModel smallIntegerShift into: result;
+			tacBitOr: result with: target objectModel smallIntegerTag into: result.
+	] ifFalse: [
+		blockBuilder
+			tacLogicalShiftLeft: sourceValue with: target objectModel smallIntegerShift into: result;
+			tacBitOr: result with: target objectModel smallIntegerTag into: result.
+"		source type size = target pointerSize ifTrue: [ 
+			source type isSigned ifTrue: [ 
+				self halt.
+			] ifFalse: [ 
+				self halt.
+			].
+		] ifFalse: [ 
+			source type isSigned ifTrue: [ 
+				self halt.
+			] ifFalse: [ 
+				self halt.
+			].
+		].
+"	].
+
+
 ]
 
 { #category : #comparisons }
@@ -808,7 +862,7 @@ SLVMSAsmFunctionCodeGenerator >> visitLoad: instruction [
 
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitMessageSend: instruction [
-	| result arguments calledFunction calledConvention selector receiver |
+	| result arguments calledFunction calledConvention selector receiver lookupClass |
 	instruction type isVoidType ifTrue: [
 		result := #()
 	] ifFalse: [ 
@@ -824,11 +878,17 @@ SLVMSAsmFunctionCodeGenerator >> visitMessageSend: instruction [
 	receiver := self translateValue: instruction receiver.
 	arguments addAll: receiver.
 	
+	"Add the lookup class"
+	instruction isSuperSend ifTrue: [ 
+		lookupClass := self translateValue: function dynamicLiterals last.
+		arguments addAll: lookupClass.
+	].
+
 	"Add the arguments"
 	instruction arguments do: [ :arg | arguments addAll: (self translateValue: arg) ].
 	
 	calledFunction := (self runtimeProvidedFunction: target objectModel messageSendTrampoline) asSAsmInstructionOperand.
-	calledConvention := sasmTarget callingConventionNamed: #smalltalk_send.
+	calledConvention := sasmTarget callingConventionNamed: (instruction isSuperSend ifTrue: [ #smalltalk_supersend ] ifFalse: [#smalltalk_send]).
 	blockBuilder tacCall: calledFunction arguments: arguments into: result convention: calledConvention.
 
 ]
