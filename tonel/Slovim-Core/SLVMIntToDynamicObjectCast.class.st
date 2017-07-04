@@ -1,6 +1,6 @@
 Class {
 	#name : #SLVMIntToDynamicObjectCast,
-	#superclass : #SLVMCast,
+	#superclass : #SLVMDynamicObjectNativeCast,
 	#category : #'Slovim-Core-SSA'
 }
 

@@ -248,6 +248,26 @@ SLVMBuilder >> dynObjectIdentityNotEquals: left with: right name: resultName [
 	^ self addOperation: #dynObjectIdentityNotEquals left: left right: right name: resultName
 ]
 
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToFloatCast: source target: targetType [
+	^ self dynamicObjectToFloatCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToFloatCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMDynamicObjectToFloatCast source: source targetType: targetType) name: resultName
+]
+
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToIntCast: source target: targetType [
+	^ self dynamicObjectToIntCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToIntCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMDynamicObjectToIntCast source: source targetType: targetType) name: resultName
+]
+
 { #category : #accessing }
 SLVMBuilder >> dynamicObjectType [
 	^ self compilationTarget dynamicObjectType
@@ -281,6 +301,16 @@ SLVMBuilder >> fdiv: left with: right [
 { #category : #arithmetic }
 SLVMBuilder >> fdiv: left with: right name: resultName [
 	^ self addOperation: #fdiv left: left right: right name: resultName
+]
+
+{ #category : #casting }
+SLVMBuilder >> floatToDynamicObjectCast: source target: targetType [
+	^ self floatToDynamicObjectCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> floatToDynamicObjectCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMFloatToDynamicObjectCast source: source targetType: targetType) name: resultName
 ]
 
 { #category : #casting }
