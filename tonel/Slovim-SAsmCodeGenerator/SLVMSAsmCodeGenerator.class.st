@@ -263,6 +263,7 @@ SLVMSAsmCodeGenerator >> visitFunction: aFunction [
 		name: aFunction name;
 		target: sasmModule target;
 		visibility: (self convertVisibility: aFunction visibility);
+		debugSourceLocation: aFunction debugSourceLocation;
 		yourself.
 	translatedElements at: aFunction put: result.
 	sasmModule addElement: result.

@@ -106,6 +106,7 @@ SLVMSAsmConstantCodeGenerator >> translateImmediateConstantValue: value [
 		].
 	].
 
+	valueType isBooleanType ifTrue: [ ^ self translateIntegerImmediate: integerImmediate asBit size: value type size ].
 	^ self translateIntegerImmediate: integerImmediate size: value type size
 ]
 

@@ -243,8 +243,8 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegisters [
 	"Nop some instructions"
 	function basicBlocks do: [ :basicBlock |
 		basicBlock instructionsDo: [ :instruction |
-			instruction isBitCast ifTrue: [ 
-				valueVariableMap at: instruction ifAbsentPut: [valueVariableMap at: instruction source]
+			(instruction isBitCast) ifTrue: [ 
+				valueVariableMap at: instruction ifAbsentPut: [self translateValue: instruction source]
 			]
 		]
 	].
@@ -305,8 +305,8 @@ SLVMSAsmFunctionCodeGenerator >> elementWise: source with: source2 with: result 
 { #category : #'code generation' }
 SLVMSAsmFunctionCodeGenerator >> emitIntructionDebugInformation: instruction [
 	target emittingDebugInformation ifFalse: [ ^ self ].
-	instruction debugLocation ifNotNil: [ 
-		blockBuilder debugSourceLocation: instruction debugLocation
+	instruction debugSourceLocation ifNotNil: [ 
+		blockBuilder debugSourceLocation: instruction debugSourceLocation
 	]
 ]
 
@@ -366,7 +366,6 @@ SLVMSAsmFunctionCodeGenerator >> generateFunction: slvmFunction into: newSasmFun
 	slvmFunction isEmpty ifTrue: [ ^ newSasmFunction ].
 	
 	function := slvmFunction.
-	function dominanceTopoSort.
 	sasmFunction := newSasmFunction.
 	sasmFunction callingConventionNamed: function callingConvention.
 	self
@@ -567,15 +566,16 @@ SLVMSAsmFunctionCodeGenerator >> translateBasicBlock: basicBlock [
 
 { #category : #'code generation' }
 SLVMSAsmFunctionCodeGenerator >> translateBasicBlocks [
-	| lowBasicBlock |
+	| lowBasicBlock blocks |
 	basicBlockMap := Dictionary new.
-	function basicBlocks do: [ :bb |
+	blocks := function dominanceTopoSort.
+	blocks do: [ :bb |
 		lowBasicBlock := SAsmBasicBlock new name: bb name.
 		sasmFunction addBasicBlock: lowBasicBlock.
 		basicBlockMap at: bb put: lowBasicBlock
 	].
 
-	function basicBlocks do: [ :bb |
+	blocks do: [ :bb |
 		lowBasicBlock := basicBlockMap at: bb.
 		lowBasicBlock build: [ :builder |
 			blockBuilder := builder.
@@ -613,11 +613,13 @@ SLVMSAsmFunctionCodeGenerator >> visitAdd: instruction [
 
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitAlloca: instruction [
-	| valueType |
+	| valueType result variable |
 	(allocaToVariableMap includesKey: instruction) ifTrue: [ ^ self ].
 	valueType := instruction valueType.
+	result := self translateValue: instruction.
 	instruction block == function basicBlocks first ifTrue: [ 
-		^ sasmFunction newLocal: valueType size alignment: valueType alignment dynamicRoot: valueType isDynamicObjectType
+		variable := sasmFunction newLocal: valueType size alignment: valueType alignment dynamicRoot: valueType isDynamicObjectType.
+		blockBuilder tacLoadLocalAddress: variable into: result
 	] ifFalse: [ 
 		self halt.
 	]
@@ -658,8 +660,18 @@ SLVMSAsmFunctionCodeGenerator >> visitBranch: instruction [
 	| condition trueDestination falseDestination |
 	condition := self translateValue: instruction condition.
 	self assert: condition size = 1.
+
 	trueDestination := basicBlockMap at: instruction trueBlock.
 	falseDestination := basicBlockMap at: instruction falseBlock.
+	instruction condition isConstantValue ifTrue: [
+		instruction condition value ifTrue: [
+			^ blockBuilder tacJump: trueDestination
+		] ifFalse: [
+			^ blockBuilder tacJump: falseDestination
+		]
+	].
+
+
 	blockBuilder tacBranch: condition true: trueDestination false: falseDestination.
 ]
 
@@ -967,6 +979,7 @@ SLVMSAsmFunctionCodeGenerator >> visitStore: instruction [
 		^ self move: (self translateValue: instruction value) into: allocatedVariable
 	].
 
+	"instruction variable isAlloca ifTrue: [ self halt ]."
 	variable := self translateValue: instruction variable.
 	self assert: variable isRegisterScalarValue.
 	
