@@ -910,6 +910,11 @@ SLVMSAsmFunctionCodeGenerator >> visitMul: instruction [
 	self binaryInteger: instruction arithmetic: TacMultiply
 ]
 
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitOrderedFloatLessThan: instruction [
+	self binaryInteger: instruction comparison: TacFloatOrderedLess
+]
+
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitRem: instruction [
 	self binaryInteger: instruction arithmetic: TacRemainder
@@ -1040,26 +1045,22 @@ SLVMSAsmFunctionCodeGenerator >> visitUnreachable: aNode [
 
 { #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> visitUnsignedIntegerGreaterOrEqual: instruction [
-	self flag: 'Generate the correct comparison.'.
-	self binaryInteger: instruction comparison: TacGreaterOrEqual
+	self binaryInteger: instruction comparison: TacAboveOrEqual
 ]
 
 { #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> visitUnsignedIntegerGreaterThan: instruction [
-	self flag: 'Generate the correct comparison.'.
-	self binaryInteger: instruction comparison: TacGreater
+	self binaryInteger: instruction comparison: TacAbove
 ]
 
 { #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> visitUnsignedIntegerLessOrEqual: instruction [
-	self flag: 'Generate the correct comparison.'.
-	self binaryInteger: instruction comparison: TacLessOrEqual
+	self binaryInteger: instruction comparison: TacBelowOrEqual
 ]
 
 { #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> visitUnsignedIntegerLessThan: instruction [
-	self flag: 'Generate the correct comparison.'.
-	self binaryInteger: instruction comparison: TacLess
+	self binaryInteger: instruction comparison: TacBelow
 ]
 
 { #category : #casting }
