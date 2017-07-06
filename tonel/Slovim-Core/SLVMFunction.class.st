@@ -63,6 +63,14 @@ SLVMFunction >> addRequiredDynamicLiteral: literal [
 	^ result
 ]
 
+{ #category : #'control flow' }
+SLVMFunction >> applyDominanceTopoSort [
+	basicBlocks := self dominanceTopoSort.
+	basicBlocks doWithIndex: [ :bb :index | bb index: index ].
+	self invalidateControlFlowCaches.
+	
+]
+
 { #category : #optimizations }
 SLVMFunction >> applyFunctionOptimizationPasses: passes [
 	passes do: [ :pass | pass passOnFunction: self ]
@@ -222,7 +230,13 @@ SLVMFunction >> dominanceTopoSort: node visitedSet: visitedSet destination: dest
 	(visitedSet includes: node) ifTrue: [ ^ self ].
 	visitedSet add: node.
 	
+	"Add the immediate dominator"
 	self dominanceTopoSort: node immediateDominator visitedSet: visitedSet destination: destination.
+	
+	"Add the predecessors"
+	node predecessors do: [ :pred | self dominanceTopoSort: pred visitedSet: visitedSet destination: destination. ].
+	
+	"Add the node"
 	destination add: node
 ]
 
@@ -288,7 +302,7 @@ SLVMFunction >> initialize [
 SLVMFunction >> invalidateControlFlowCaches [
 	preOrder := nil.
 	postOrder := nil.
-	hasDominance := false.
+	haveDominance := false.
 ]
 
 { #category : #testing }
@@ -348,6 +362,14 @@ SLVMFunction >> preOrder [
 	preOrder := OrderedCollection new.
 	self computePreOrderFor: basicBlocks first visited: visited.
 	^ preOrder
+]
+
+{ #category : #removing }
+SLVMFunction >> removeBasicBlock: aBasicBlock [
+	basicBlocks remove: aBasicBlock.
+	aBasicBlock function: nil.
+	self invalidateControlFlowCaches.
+	basicBlocks doWithIndex: [ :bb :index | bb index: index ]
 ]
 
 { #category : #accessing }

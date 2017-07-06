@@ -43,7 +43,8 @@ SLVMModule >> allGlobalValues [
 
 { #category : #optimizations }
 SLVMModule >> applyFunctionOptimizationPasses: passes [
-	globalValues valuesDo: [ :val | val isFunction ifTrue: [ val applyFunctionOptimizationPasses: passes ] ]
+	globalValues valuesDo: [ :val | val isFunction ifTrue: [ val applyFunctionOptimizationPasses: passes ] ].
+	anonymousGlobals do: [ :val | val isFunction ifTrue: [ val applyFunctionOptimizationPasses: passes ] ].
 ]
 
 { #category : #converting }
@@ -66,7 +67,7 @@ SLVMModule >> compilationTarget: anObject [
 	compilationTarget := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #optimizations }
 SLVMModule >> createFunctionOptimizationPassesForLevel: optimizationLevel [
 	| passes |
 	passes := OrderedCollection new.
@@ -176,7 +177,7 @@ SLVMModule >> initialize [
 	packages := OrderedCollection new.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #optimizations }
 SLVMModule >> optimizeWithLevel: optimizationLevel [
 	| functionOptimizationPasses |
 	optimizationLevel = 0 ifTrue: [ ^ self ].

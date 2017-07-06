@@ -83,6 +83,24 @@ SLVMOptPromoteAllocas >> findLastStoreTo: allocaInstruction before: loadInstruct
 
 ]
 
+{ #category : #accessing }
+SLVMOptPromoteAllocas >> firstDefinitionValueAt: node for: definitionsPerNode allocaInstruction: allocaInstruction [
+	definitionsPerNode at: node ifPresent: [ :definitions |
+		definitions first isPhi ifTrue: [ 
+			^ definitions first
+		].
+	].
+
+	self assert: node predecessors size <= 1.
+	node predecessors ifEmpty: [ 
+		"Undef"
+		self halt
+	] ifNotEmpty: [
+		^ self lastDefinitionValueAt: node predecessors anyOne for: definitionsPerNode allocaInstruction: allocaInstruction
+	].
+
+]
+
 { #category : #'as yet unclassified' }
 SLVMOptPromoteAllocas >> lastDefinitionValueAt: node for: definitionsPerNode allocaInstruction: alloca [
 	^ self lastDefinitionValueAt: node for: definitionsPerNode allocaInstruction: alloca forPhiNode: false
@@ -106,7 +124,7 @@ SLVMOptPromoteAllocas >> lastDefinitionValueAt: node for: definitionsPerNode all
 	^ instructionResult isStore ifTrue: [ instructionResult value ] ifFalse: [ instructionResult ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SLVMOptPromoteAllocas >> lastDefinitionValueAtLoad: loadInstruction for: definitionsPerNode allocaInstruction: allocaInstruction [
 	| loadNode definitions lastStore |
 	loadNode := loadInstruction block.
@@ -117,9 +135,7 @@ SLVMOptPromoteAllocas >> lastDefinitionValueAtLoad: loadInstruction for: definit
 	(definitions size = 1 and: [ definitions first isPhi ]) ifTrue: [ ^ definitions first ].
 	
 	lastStore := self findLastStoreTo: allocaInstruction before: loadInstruction.
-	(lastStore isNil and: [ definitions first isPhi ]) ifTrue: [ ^ definitions ].
-	
-	lastStore ifNil: [ ^ self lastDefinitionValueAt: loadNode for: definitionsPerNode allocaInstruction: allocaInstruction ].
+	lastStore ifNil: [ ^ self firstDefinitionValueAt: loadNode for: definitionsPerNode allocaInstruction: allocaInstruction ].
 	^ lastStore value
 ]
 

@@ -77,7 +77,10 @@ SLVMBasicBlock >> addLast: anInstruction [
 
 { #category : #adding }
 SLVMBasicBlock >> addPredecessor: aBasicBlock [
-	predecessors add: aBasicBlock
+	(predecessors includes: aBasicBlock) ifFalse: [ 
+		predecessors := predecessors copyWith: aBasicBlock
+	]
+	
 ]
 
 { #category : #adding }
@@ -120,8 +123,13 @@ SLVMBasicBlock >> computeLastInstruction [
 
 { #category : #adding }
 SLVMBasicBlock >> computeSuccessors [
-	successors := self lastInstruction successors.
-	successors do: [ :suc | suc addPredecessor: self]
+	self isEmpty ifTrue: [ 
+		successors := #()
+	] ifFalse: [
+		successors := self lastInstruction successors.
+		successors do: [ :suc | suc addPredecessor: self]
+	].
+
 
 ]
 
@@ -200,7 +208,7 @@ SLVMBasicBlock >> index: anObject [
 { #category : #initialization }
 SLVMBasicBlock >> initialize [
 	super initialize.
-	predecessors := Set new.
+	predecessors := #().
 	successors := #().
 ]
 
@@ -221,6 +229,11 @@ SLVMBasicBlock >> instructionsDo: aBlock [
 		aBlock value: currentInstruction.
 		currentInstruction := nextInstruction
 	]
+]
+
+{ #category : #removing }
+SLVMBasicBlock >> isCompletelyUnused [
+	^ self isEmpty and: [ predecessors isEmpty and: [ successors isEmpty ] ]
 ]
 
 { #category : #testing }
@@ -301,7 +314,7 @@ SLVMBasicBlock >> predecessors: anObject [
 SLVMBasicBlock >> predecessorsCouldBeRemoved [
 	| oldPredecessors |
 	oldPredecessors := predecessors.
-	predecessors := Set new.
+	predecessors := #().
 	oldPredecessors do: [ :pred |
 		pred successors do: [ :succ | succ addPredecessor: pred ]
 	]
@@ -366,6 +379,12 @@ SLVMBasicBlock >> removeChain: anInstructionChain [
 		anInstructionChain previousInstruction: nil.
 		numberOfInstructions := nil.
 	]
+]
+
+{ #category : #removing }
+SLVMBasicBlock >> removeFromFunction [
+	self assert: self isCompletelyUnused.
+	function removeBasicBlock: self
 ]
 
 { #category : #adding }

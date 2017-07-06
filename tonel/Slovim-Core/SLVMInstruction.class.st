@@ -10,7 +10,7 @@ Class {
 		'nextInstruction',
 		'livenessIndex',
 		'debugInformation',
-		'debugLocation'
+		'debugSourceLocation'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -56,13 +56,13 @@ SLVMInstruction >> debugInformation: anObject [
 ]
 
 { #category : #accessing }
-SLVMInstruction >> debugLocation [
-	^ debugLocation
+SLVMInstruction >> debugSourceLocation [
+	^ debugSourceLocation
 ]
 
 { #category : #accessing }
 SLVMInstruction >> debugSourceLocation: anObject [
-	debugLocation := anObject
+	debugSourceLocation := anObject
 ]
 
 { #category : #'basic optimizations' }

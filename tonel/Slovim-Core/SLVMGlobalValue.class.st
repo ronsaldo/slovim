@@ -20,6 +20,16 @@ SLVMGlobalValue >> debugInformation: aValue [
 	^ self propertyAt: #debugInformation put: aValue
 ]
 
+{ #category : #accessing }
+SLVMGlobalValue >> debugSourceLocation [
+	^ self propertyAt: #debugSourceLocation ifAbsent: [ nil ]
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> debugSourceLocation: aValue [
+	^ self propertyAt: #debugSourceLocation put: aValue
+]
+
 { #category : #properties }
 SLVMGlobalValue >> hasProperty: aSymbol [
 	^ properties includesKey: aSymbol

@@ -7,6 +7,34 @@ Class {
 	#category : #'Slovim-Core-Optimizations'
 }
 
+{ #category : #private }
+SLVMOptBasicOptimizations >> foldBranchAtBlock: block [
+	| branch jump destinations discardedBranch |
+	branch := block lastInstruction.
+	self assert: branch isBranch.
+	
+	branch condition isConstantValue ifFalse: [ ^ self ].
+	discardedBranch := nil.
+	branch condition value ifTrue: [ 
+		jump := SLVMJump destination: branch trueBlock.
+		discardedBranch := branch falseBlock
+	] ifFalse: [
+		jump := SLVMJump destination: branch falseBlock.
+		discardedBranch := branch trueBlock
+	].
+
+	jump mergeBlock: branch mergeBlock; continueBlock: branch continueBlock.
+	destinations := {branch trueBlock . branch falseBlock}.
+	branch removeFromBlock.
+	block add: jump.
+	
+	destinations do: #predecessorsCouldBeRemoved.
+	jump addUnreachableSuccessors.
+	
+	pendingWork add: discardedBranch.
+	self mergeWithNextBlockOf: block.
+]
+
 { #category : #'as yet unclassified' }
 SLVMOptBasicOptimizations >> foldConstant: instruction [
 	| folded |
@@ -19,6 +47,31 @@ SLVMOptBasicOptimizations >> foldConstant: instruction [
 		instruction replaceWith: folded.
 	].
 
+]
+
+{ #category : #private }
+SLVMOptBasicOptimizations >> mergeWithNextBlockOf: block [
+	| removedBlock |
+	removedBlock := block lastInstruction destination.
+	(removedBlock == block or: [ removedBlock predecessors size ~= 1 ]) ifTrue: [  ^ self ].
+
+	block lastInstruction removeFromBlock.
+		removedBlock instructionsDo: [ :instruction |
+		removedBlock remove: instruction.
+		block addLast: instruction
+	].
+	
+	block computeSuccessors.
+	removedBlock computeSuccessors; predecessorsCouldBeRemoved.
+	block successors do: #predecessorsCouldBeRemoved.
+		
+	block successors do: [ :succ |
+		succ phiInstructionsDo: [ :phi | phi replaceParent: removedBlock with: block ]
+	].
+			
+	self assert: removedBlock isCompletelyUnused.
+	removedBlock removeFromFunction.
+	pendingWork add: block
 ]
 
 { #category : #'as yet unclassified' }
@@ -34,13 +87,41 @@ SLVMOptBasicOptimizations >> passOnFunction: aFunction [
 	]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 SLVMOptBasicOptimizations >> processBlock: block [
+	| oldSuccessors |
+	block function ifNil: [ ^ self ].
+	
+	(block index ~= 1 and: [ block predecessors isEmpty ]) ifTrue: [ 
+		block isEmpty ifTrue: [
+			block function removeBasicBlock: block.
+			^ self
+		].
+	
+		"Remove the unreachable block"
+		oldSuccessors := block successors copy.
+		block lastInstruction removeFromBlock.
+		block successors: #().
+		oldSuccessors do: #predecessorsCouldBeRemoved.
+		
+		block function removeBasicBlock: block.
+		pendingWork addAll: oldSuccessors.
+		^ self
+	].
 
+	block isEmpty ifTrue: [ ^ self ].
+	
 	block instructionsDo: [ :instruction |
 		self processInstruction: instruction
 	].
 
+	(block lastInstruction isJump) ifTrue: [
+		self mergeWithNextBlockOf: block
+	] ifFalse: [
+		(block lastInstruction isBranch) ifTrue: [ 
+			self foldBranchAtBlock: block
+		]
+	]
 ]
 
 { #category : #'as yet unclassified' }

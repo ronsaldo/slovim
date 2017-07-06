@@ -21,7 +21,7 @@ SLVMOptDestroySSA >> addAllocaInstructionsTo: aFunction [
 					instruction removeFromBlock
 				] ifNotEmpty: [ 
 					alloca := SLVMAlloca pointerSize: pointerSize valueType: instruction type.
-					alloca name: instruction name.
+					alloca name: instruction name , '_phivar'.
 				
 					firstBlock addFirst: alloca.
 					phiAllocaDictionary at: instruction put: alloca.
@@ -40,9 +40,6 @@ SLVMOptDestroySSA >> insertPhiCopiesFrom: startBlock to: targetBlock before: bra
 	targetBlock phiInstructionsDo: [ :phiInstruction |
 		sourceVariable := phiInstruction valueFromIncomingBlock: startBlock.
 		sourceVariable ifNotNil: [
-			sourceVariable isPhi ifTrue: [ 
-				sourceVariable := phiAllocaDictionary at: sourceVariable
-			].
 		
 			(writtenVariables includes: sourceVariable) ifTrue: [ 
 				sourceVariable := conflictingVariables at: sourceVariable ifAbsentPut: [ 
@@ -51,6 +48,12 @@ SLVMOptDestroySSA >> insertPhiCopiesFrom: startBlock to: targetBlock before: bra
 					startBlock add: load before: (firstStore ifNil: [ branchInstruction ]).
 					load
 				].
+			].
+
+			sourceVariable isPhi ifTrue: [ 
+				sourceVariable := SLVMLoadInstruction variable: (phiAllocaDictionary at: sourceVariable).
+				sourceVariable name: #phiLoad.
+				startBlock add: sourceVariable before: branchInstruction.
 			].
 		
 			"Create the store."

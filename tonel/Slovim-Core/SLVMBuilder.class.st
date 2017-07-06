@@ -330,6 +330,7 @@ SLVMBuilder >> floatingPointCast: source target: targetType [
 
 { #category : #casting }
 SLVMBuilder >> floatingPointCast: source target: targetType name: resultName [
+	source type = targetType ifTrue: [ ^ source ].
 	^ self addInstruction: (SLVMFloatingPointCast source: source targetType: targetType) name: resultName
 ]
 
@@ -488,6 +489,8 @@ SLVMBuilder >> intCast: source target: targetType [
 SLVMBuilder >> intCast: source target: targetType name: resultName [
 	| sourceType |
 	sourceType := source type.
+	sourceType = targetType ifTrue: [ ^ source ].
+	
 	self assert: (sourceType isIntegerType and: [targetType isIntegerType]).
 	self flag: 'Handle vectorial types.'.
 	sourceType size = targetType size ifTrue: [

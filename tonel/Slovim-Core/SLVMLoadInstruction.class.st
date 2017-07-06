@@ -17,6 +17,17 @@ SLVMLoadInstruction >> accept: aVisitor [
 	^ aVisitor visitLoad: self
 ]
 
+{ #category : #'basic optimizations' }
+SLVMLoadInstruction >> foldConstant [
+	| var |
+	var := self variable.
+	(var isGlobalValue and: [var isGlobalVariable and: [var readOnly]]) ifTrue: [ 
+		var initialValue ifNotNil: [ :constant | ^ constant ]
+	].
+	
+	^ super foldConstant
+]
+
 { #category : #testing }
 SLVMLoadInstruction >> isLoad [
 	^ true
