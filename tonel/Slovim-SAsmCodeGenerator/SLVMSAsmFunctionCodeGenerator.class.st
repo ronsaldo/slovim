@@ -46,6 +46,9 @@ SLVMSAsmFunctionCodeGenerator class >> initialize [
 		udiv visitUDiv:
 		rem visitRem:
 		urem visitURem:
+		neg visitNegate:
+		not visitBitNot:
+		lnot visitLogicalNot:
 		
 		bitand visitBitAnd:
 		bitor visitBitOr:
@@ -59,6 +62,8 @@ SLVMSAsmFunctionCodeGenerator class >> initialize [
 		fsub visitFloatSub:
 		fmul visitFloatMul:
 		fdiv visitFloatDiv:
+		fneg visitFloatNegate:
+		fsqrt visitFloatSqrt:
 		
 		ilt visitIntegerLessThan:
 		ile visitIntegerLessOrEqual:
@@ -645,6 +650,11 @@ SLVMSAsmFunctionCodeGenerator >> visitBitCast: instruction [
 
 ]
 
+{ #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> visitBitNot: instruction [
+	self unaryInteger: instruction bitwise: TacBitNot
+]
+
 { #category : #'bitwise operations' }
 SLVMSAsmFunctionCodeGenerator >> visitBitOr: instruction [
 	self binaryInteger: instruction bitwise: TacBitOr
@@ -718,6 +728,36 @@ SLVMSAsmFunctionCodeGenerator >> visitDynamicObjectToIntCast: instruction [
 
 	self flag: 'Check for overflows'.
 	blockBuilder tacArithmeticShiftRight: sourceValue with: target objectModel smallIntegerShift into: result
+]
+
+{ #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> visitFloatAdd: instruction [
+	self binaryFloat: instruction arithmetic: TacFloatAdd
+]
+
+{ #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> visitFloatDiv: instruction [
+	self binaryFloat: instruction arithmetic: TacFloatDivide
+]
+
+{ #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> visitFloatMul: instruction [
+	self binaryFloat: instruction arithmetic: TacFloatMultiply
+]
+
+{ #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> visitFloatNegate: instruction [
+	self unaryFloat: instruction arithmetic: TacFloatNegate
+]
+
+{ #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> visitFloatSqrt: instruction [
+	self unaryFloat: instruction arithmetic: TacFloatSqrt
+]
+
+{ #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> visitFloatSub: instruction [
+	self binaryFloat: instruction arithmetic: TacFloatSubtract
 ]
 
 { #category : #visiting }
@@ -910,9 +950,39 @@ SLVMSAsmFunctionCodeGenerator >> visitMul: instruction [
 	self binaryInteger: instruction arithmetic: TacMultiply
 ]
 
+{ #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> visitNegate: instruction [
+	self unaryInteger: instruction arithmetic: TacNegate
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitOrderedFloatEqual: instruction [
+	self binaryInteger: instruction comparison: TacFloatOrderedEqual
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitOrderedFloatGreaterOrEqual: instruction [
+	self binaryInteger: instruction comparison: TacFloatOrderedGreaterOrEqual
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitOrderedFloatGreaterThan: instruction [
+	self binaryInteger: instruction comparison: TacFloatOrderedGreater
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitOrderedFloatLessOrEqual: instruction [
+	self binaryInteger: instruction comparison: TacFloatOrderedLessOrEqual
+]
+
 { #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> visitOrderedFloatLessThan: instruction [
 	self binaryInteger: instruction comparison: TacFloatOrderedLess
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitOrderedFloatNotEqual: instruction [
+	self binaryInteger: instruction comparison: TacFloatOrderedNotEqual
 ]
 
 { #category : #arithmetic }
@@ -1035,6 +1105,36 @@ SLVMSAsmFunctionCodeGenerator >> visitUnaryOperation: instruction [
 	selector := OperationCodeGeneratorMap at: instruction operation.
 	^ self perform: selector with: instruction
 
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitUnorderedFloatEqual: instruction [
+	self binaryInteger: instruction comparison: TacFloatUnorderedEqual
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitUnorderedFloatGreaterOrEqual: instruction [
+	self binaryInteger: instruction comparison: TacFloatUnorderedGreaterOrEqual
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitUnorderedFloatGreaterThan: instruction [
+	self binaryInteger: instruction comparison: TacFloatUnorderedGreater
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitUnorderedFloatLessOrEqual: instruction [
+	self binaryInteger: instruction comparison: TacFloatUnorderedLessOrEqual
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitUnorderedFloatLessThan: instruction [
+	self binaryInteger: instruction comparison: TacFloatUnorderedLess
+]
+
+{ #category : #comparisons }
+SLVMSAsmFunctionCodeGenerator >> visitUnorderedFloatNotEqual: instruction [
+	self binaryInteger: instruction comparison: TacFloatUnorderedNotEqual
 ]
 
 { #category : #visiting }
