@@ -22,7 +22,9 @@ SLVMUnaryOperation class >> initialize [
 		neg		(integer evaluateNegated)
 		not   (integer evaluateBitNot)
 		lnot  (bool evaluateLogicalNot)
+
 		fneg   (float evaluateNegated)
+		fsqrt  (float evaluateSqrt)
 	).
 
 ]
@@ -73,6 +75,11 @@ SLVMUnaryOperation >> evaluateLogicalNot [
 { #category : #'constant folding' }
 SLVMUnaryOperation >> evaluateNegated [
 	^ SLVMConstant type: type value: (self operand value negated)
+]
+
+{ #category : #'constant folding' }
+SLVMUnaryOperation >> evaluateSqrt [
+	^ SLVMConstant type: type value: (self operand value sqrt)
 ]
 
 { #category : #'basic optimizations' }
