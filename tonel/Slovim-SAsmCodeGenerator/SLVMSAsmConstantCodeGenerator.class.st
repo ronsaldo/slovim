@@ -144,6 +144,11 @@ SLVMSAsmConstantCodeGenerator >> translateIntegerImmediate: integerImmediate siz
 ]
 
 { #category : #visiting }
+SLVMSAsmConstantCodeGenerator >> visitClosureDefinition: aClosureDefinition [
+	^ SLVMSAsmValue operands: {(moduleTranslator translateModuleElement: aClosureDefinition) asSAsmInstructionOperand}
+]
+
+{ #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> visitConstantDynamicLiteral: value [
 	^ SLVMSAsmValue operand: (self getConstantDynamicLiteralLocation: value)
 ]

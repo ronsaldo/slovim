@@ -492,6 +492,23 @@ SLVMSAsmFunctionCodeGenerator >> runtimeProvidedFunction: aFunctionOrASymbol [
 ]
 
 { #category : #memory }
+SLVMSAsmFunctionCodeGenerator >> store: ssaValue intoPointerRegister: variable [
+
+	| value type |
+	value := self translateValue: ssaValue.
+	type := ssaValue type.
+
+	type isScalarType ifTrue: [
+		^ self store: value scalarType: type into: variable
+	].
+
+	"Aggregate type. We have to copy."
+
+	self halt.
+
+]
+
+{ #category : #memory }
 SLVMSAsmFunctionCodeGenerator >> store: value scalarType: type into: pointer [
 	| temp |
 	self assert: type isScalarType.
@@ -709,6 +726,14 @@ SLVMSAsmFunctionCodeGenerator >> visitCall: instruction [
 	blockBuilder tacCall: calledFunction arguments: arguments into: result convention: calledConvention.
 ]
 
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitClosureToDynamicObject: anInstruction [
+	| result closure |
+	closure := self translateValue: anInstruction source.
+	result := self translateValue: anInstruction.
+	blockBuilder tacMove: closure into: result
+]
+
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitDiv: instruction [
 	self binaryInteger: instruction arithmetic: TacDivide
@@ -812,6 +837,76 @@ SLVMSAsmFunctionCodeGenerator >> visitIdentityEquals: instruction [
 { #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> visitIdentityNotEquals: instruction [
 	self binaryInteger: instruction comparison: TacNotEqual
+]
+
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitInstantiateClosure: anInstruction [
+	| result closureFunction definition normalFunctionTypes closureInstantiateFunction capturedEnvironmentType dynamicCaptureCount closureStructureType localEnvironment functionPointerSlot functionPointerOffset captureBaseOffset dynamicCaptureIndex normalCaptureIndex captureIndex captureOffset capturePointer |
+	definition := anInstruction definition.
+	self assert: definition isClosureDefinition.
+
+	closureFunction := self translateValue: definition.
+	normalFunctionTypes := definition closureType normalFunctionTypeWith: function compilationTarget.
+	capturedEnvironmentType := normalFunctionTypes second.
+	closureStructureType := normalFunctionTypes third.
+	
+	dynamicCaptureCount := 0.
+	capturedEnvironmentType types do: [ :type |
+		type isDynamicObjectType ifTrue: [ dynamicCaptureCount := dynamicCaptureCount + 1 ]
+	].
+
+	result := self translateValue: anInstruction.
+	
+	closureInstantiateFunction := target objectModel closureInstantiateFunction.
+	closureInstantiateFunction ifNil: [
+		"Allocate the closure environment in the stack"
+		localEnvironment := sasmFunction newLocal: closureStructureType size alignment: closureStructureType alignment dynamicRoot: false.
+		blockBuilder
+			tacLoadLocalAddress: localEnvironment into: result.
+			
+		functionPointerOffset := closureStructureType offsets at: (closureStructureType offsets size - 1).
+		functionPointerOffset ~= 0 ifTrue: [
+			functionPointerSlot := blockBuilder tacIntRegister.
+			blockBuilder tacAdd: result with: 0 into: functionPointerSlot.
+		] ifFalse: [
+			functionPointerSlot := result
+		].
+	
+		blockBuilder tacStore: closureFunction into: functionPointerSlot.
+	] ifNotNil: [ 
+		blockBuilder tacCall: (self translateValue: closureInstantiateFunction)
+			arguments: {
+				closureFunction registers first .
+				definition functionType argumentsDescriptorWithTarget: target.
+				dynamicCaptureCount .
+				capturedEnvironmentType size }
+			into: result convention: (sasmTarget callingConventionNamed: closureInstantiateFunction callingConvention)
+	].
+	
+	"Load the captures"
+	captureBaseOffset := closureStructureType offsets last.
+	
+	dynamicCaptureIndex := 0.
+	normalCaptureIndex := 0.
+	anInstruction captures do: [ :cap |
+		cap type isDynamicObjectType ifTrue: [ 
+			captureIndex := dynamicCaptureIndex.
+			dynamicCaptureIndex := dynamicCaptureIndex + 1
+		] ifFalse: [ 
+			captureIndex := dynamicCaptureCount + normalCaptureIndex.
+			normalCaptureIndex := normalCaptureIndex + 1
+		].
+	
+		captureOffset := captureBaseOffset + (capturedEnvironmentType offsets at: captureIndex + 1).
+		captureOffset ~= 0 ifTrue: [ 
+			capturePointer := blockBuilder tacIntRegister.
+			blockBuilder tacAdd: result with: captureOffset into: capturePointer
+		] ifFalse: [ 
+			capturePointer := result
+		].
+	
+		self store: cap intoPointerRegister: capturePointer
+	].
 ]
 
 { #category : #casting }
@@ -1049,7 +1144,7 @@ SLVMSAsmFunctionCodeGenerator >> visitSignExtend: instruction [
 
 { #category : #memory }
 SLVMSAsmFunctionCodeGenerator >> visitStore: instruction [
-	| variable value type |
+	| variable |
 	allocaToVariableMap at: instruction variable ifPresent: [ :allocatedVariable |
 		^ self move: (self translateValue: instruction value) into: allocatedVariable
 	].
@@ -1057,17 +1152,8 @@ SLVMSAsmFunctionCodeGenerator >> visitStore: instruction [
 	"instruction variable isAlloca ifTrue: [ self halt ]."
 	variable := self translateValue: instruction variable.
 	self assert: variable isRegisterScalarValue.
-	
-	value := self translateValue: instruction value.
-	type := instruction value type.
+	self store: instruction value intoPointerRegister: variable.
 
-	type isScalarType ifTrue: [
-		^ self store: value scalarType: type into: variable
-	].
-
-	"Aggregate type. We have to copy."
-
-	self halt.
 ]
 
 { #category : #arithmetic }

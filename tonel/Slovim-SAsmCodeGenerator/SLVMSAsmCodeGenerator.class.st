@@ -9,7 +9,8 @@ Class {
 		'runtimeProvidedFunctionst',
 		'debugCompileUnit',
 		'translatedDebugElements',
-		'debugTranslator'
+		'debugTranslator',
+		'translatedClosureDefinitions'
 	],
 	#category : #'Slovim-SAsmCodeGenerator'
 }
@@ -138,6 +139,7 @@ SLVMSAsmCodeGenerator >> debugTranslator [
 SLVMSAsmCodeGenerator >> initialize [
 	super initialize.
 	runtimeProvidedFunctionst := Dictionary new.
+	translatedClosureDefinitions := IdentityDictionary new.
 ]
 
 { #category : #'as yet unclassified' }
@@ -252,6 +254,11 @@ SLVMSAsmCodeGenerator >> translateModuleDebugInformation: module [
 { #category : #'as yet unclassified' }
 SLVMSAsmCodeGenerator >> translateModuleElement: element [
 	^ element accept: self
+]
+
+{ #category : #visiting }
+SLVMSAsmCodeGenerator >> visitClosureDefinition: aNode [
+	^ self translateModuleElement: (translatedClosureDefinitions at: aNode ifAbsentPut: [self applyPassesInFunction: aNode asNormalFunction])
 ]
 
 { #category : #visiting }
