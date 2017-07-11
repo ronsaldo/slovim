@@ -14,6 +14,11 @@ SLVMValue >> addInstructionReference: anInstruction [
 	"By default, do nothing"
 ]
 
+{ #category : #accessing }
+SLVMValue >> childrenNodes [
+	^ #()
+]
+
 { #category : #printing }
 SLVMValue >> fullPrintOn: aStream [
 	self printOn: aStream
@@ -22,6 +27,16 @@ SLVMValue >> fullPrintOn: aStream [
 { #category : #printing }
 SLVMValue >> fullPrintString [
 	^ ByteString streamContents: [ :out | self fullPrintOn: out ]
+]
+
+{ #category : #testing }
+SLVMValue >> isClosureCapture [
+	^ false
+]
+
+{ #category : #testing }
+SLVMValue >> isClosureDefinition [
+	^ false
 ]
 
 { #category : #testing }
@@ -51,6 +66,11 @@ SLVMValue >> isFunction [
 
 { #category : #testing }
 SLVMValue >> isFunctionArgument [
+	^ false
+]
+
+{ #category : #testing }
+SLVMValue >> isFunctionLocalValue [
 	^ false
 ]
 
@@ -92,6 +112,11 @@ SLVMValue >> isUndefined [
 { #category : #accessing }
 SLVMValue >> livenessIndex [
 	^ nil
+]
+
+{ #category : #'as yet unclassified' }
+SLVMValue >> nodeTitle [
+	^ self printString
 ]
 
 { #category : #adding }

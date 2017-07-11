@@ -1,7 +1,8 @@
 Class {
 	#name : #SLVMFunctionArgument,
-	#superclass : #SLVMValue,
+	#superclass : #SLVMFunctionLocalValue,
 	#instVars : [
+		'function',
 		'type',
 		'index',
 		'name',
@@ -13,6 +14,16 @@ Class {
 { #category : #visitor }
 SLVMFunctionArgument >> accept: aVisitor [
 	^ aVisitor visitFunctionArgument: self
+]
+
+{ #category : #accessing }
+SLVMFunctionArgument >> function [
+	^ function
+]
+
+{ #category : #accessing }
+SLVMFunctionArgument >> function: anObject [
+	function := anObject
 ]
 
 { #category : #accessing }

@@ -65,6 +65,16 @@ SLVMCodeGenerator >> applyPassesIn: ssaModule functionList: functionList [
 	
 ]
 
+{ #category : #'code generation' }
+SLVMCodeGenerator >> applyPassesInFunction: function [
+	globalOptimization ifNotNil: [ globalOptimization passOnFunction: function ].
+	self needSSADestroyed ifTrue: [ 
+		SLVMOptDestroySSA passOnFunction: function.
+	].
+	^ function
+	
+]
+
 { #category : #initialization }
 SLVMCodeGenerator >> initialize [
 	super initialize.

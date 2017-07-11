@@ -62,6 +62,24 @@ SLVMFunctionType >> arguments: aCollection [
 	
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMFunctionType >> argumentsDescriptorWithTarget: aCompilationTarget [
+	| dynObjectCount nativeArgumentSize nativeArgumentAlignment |
+	dynObjectCount := 0.
+	nativeArgumentSize := 0.
+	nativeArgumentAlignment := aCompilationTarget pointerSize.
+	arguments do: [:arg |
+		arg isDynamicObjectType ifTrue: [ 
+			dynObjectCount := dynObjectCount + 1.
+		] ifFalse: [ 
+			nativeArgumentSize := nativeArgumentSize alignedTo: (arg alignment max: aCompilationTarget pointerSize).
+			nativeArgumentAlignment := nativeArgumentAlignment max: arg alignment
+		]
+	].
+
+	^ dynObjectCount | (nativeArgumentSize << 8) | (((nativeArgumentAlignment highBit - aCompilationTarget pointerSize highBit) max: 0) << 24)
+]
+
 { #category : #accessing }
 SLVMFunctionType >> callingConvention [
 	^ callingConvention

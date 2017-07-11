@@ -352,6 +352,11 @@ SLVMType >> isBooleanType [
 ]
 
 { #category : #testing }
+SLVMType >> isClosureType [
+	^ false
+]
+
+{ #category : #testing }
 SLVMType >> isDynamicObjectType [
 	^ false
 ]

@@ -153,6 +153,16 @@ SLVMBuilder >> call: functionValue arguments: arguments name: resultName [
 	^ self addInstruction: (SLVMCall function: functionValue arguments: arguments) name: resultName
 ]
 
+{ #category : #casting }
+SLVMBuilder >> closureToDynamicObject: source target: targetType [
+	^ self closureToDynamicObject: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> closureToDynamicObject: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMClosureToDynamicObject source: source targetType: targetType) name: resultName
+]
+
 { #category : #instructions }
 SLVMBuilder >> combineSampler: sampler with: texture [
 	^ self combineSampler: sampler with: texture name: function generateSymbol
@@ -478,6 +488,16 @@ SLVMBuilder >> ine: left with: right name: resultName [
 SLVMBuilder >> initialize [
 	super initialize.
 	debugPositionStack := Stack new.
+]
+
+{ #category : #closures }
+SLVMBuilder >> instantiateClosure: closureDefinition captures: captures [
+	^ self instantiateClosure: closureDefinition captures: captures name: function generateSymbol
+]
+
+{ #category : #closures }
+SLVMBuilder >> instantiateClosure: closureDefinition captures: captures name: resultName [
+	^ self addInstruction: (SLVMInstantiateClosure definition: closureDefinition captures: captures) name: resultName
 ]
 
 { #category : #casting }

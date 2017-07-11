@@ -71,6 +71,18 @@ SLVMBasicBlock >> addFirst: anInstruction [
 ]
 
 { #category : #adding }
+SLVMBasicBlock >> addInstructionsAfterAllocas: instructions [
+	| before |
+	before := firstInstruction.
+	self allocaInstructionsDo: [ :alloca |
+		before := alloca nextInstruction.
+	].
+	instructions do: [ :ins |
+		self add: ins before: before
+	]
+]
+
+{ #category : #adding }
 SLVMBasicBlock >> addLast: anInstruction [
 	^ self add: anInstruction
 ]
@@ -107,6 +119,13 @@ SLVMBasicBlock >> allocaInstructionsDo: aBlock [
 	self instructionsDo: [:ins |
 		ins isAlloca ifFalse: [ ^ self ].
 		aBlock value: ins
+	]
+]
+
+{ #category : #accessing }
+SLVMBasicBlock >> childrenNodes [
+	^ Array streamContents: [ :out |
+		self instructionsDo: [ :ins | out nextPut: ins ]
 	]
 ]
 
@@ -178,6 +197,24 @@ SLVMBasicBlock >> function [
 { #category : #accessing }
 SLVMBasicBlock >> function: anObject [
 	function := anObject
+]
+
+{ #category : #printing }
+SLVMBasicBlock >> gtTextViewIn: composite [
+	<gtInspectorPresentationOrder: 1>
+	composite text
+		title: 'Text';
+		display: [ :node | node fullPrintString ]
+]
+
+{ #category : #printing }
+SLVMBasicBlock >> gtTreeViewIn: composite [
+	<gtInspectorPresentationOrder: 0>
+	composite tree 
+		title: 'Nodes';
+		display: [ :node | node ];
+		children: [ :each | each childrenNodes];
+		format: [ :node | node nodeTitle ]
 ]
 
 { #category : #testing }
@@ -264,6 +301,11 @@ SLVMBasicBlock >> name [
 { #category : #accessing }
 SLVMBasicBlock >> name: anObject [
 	name := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMBasicBlock >> nodeTitle [
+	^ 'Basic block ' , self printString
 ]
 
 { #category : #accessing }

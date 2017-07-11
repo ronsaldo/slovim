@@ -53,6 +53,11 @@ SLVMModule >> asLowLevelModule [
 ]
 
 { #category : #accessing }
+SLVMModule >> childrenNodes [
+	^ anonymousGlobals , globalValues values
+]
+
+{ #category : #accessing }
 SLVMModule >> classVariableClassMap [
 	^ classVariableClassMap ifNil: [ classVariableClassMap := IdentityDictionary new ]
 ]
@@ -88,6 +93,20 @@ SLVMModule >> debugInformation [
 { #category : #accessing }
 SLVMModule >> debugInformation: anObject [
 	debugInformation := anObject
+]
+
+{ #category : #printing }
+SLVMModule >> fullPrintOn: aStream [
+	anonymousGlobals do: [ :val | val fullPrintOn: aStream ].
+	globalValues values do: [ :val | val fullPrintOn: aStream ].
+
+]
+
+{ #category : #printing }
+SLVMModule >> fullPrintString [
+	"Answer a String whose characters are a description of the receiver."
+
+	^ String streamContents: [:s | self fullPrintOn: s]
 ]
 
 { #category : #building }
@@ -170,11 +189,34 @@ SLVMModule >> globalValues [
 	^ globalValues
 ]
 
+{ #category : #'gt inspector extensions' }
+SLVMModule >> gtTextViewIn: composite [
+	<gtInspectorPresentationOrder: 1>
+	composite text
+		title: 'Text';
+		display: [ :node | node fullPrintString ]
+]
+
+{ #category : #'gt inspector extensions' }
+SLVMModule >> gtTreeViewIn: composite [
+	<gtInspectorPresentationOrder: 0>
+	composite tree 
+		title: 'Nodes';
+		display: [ :node | node ];
+		children: [ :each | each childrenNodes];
+		format: [ :node | node nodeTitle ]
+]
+
 { #category : #initialization }
 SLVMModule >> initialize [
 	anonymousGlobals := OrderedCollection new.
 	globalValues := OrderedDictionary new.
 	packages := OrderedCollection new.
+]
+
+{ #category : #'as yet unclassified' }
+SLVMModule >> nodeTitle [
+	^ #Module
 ]
 
 { #category : #optimizations }
@@ -198,13 +240,6 @@ SLVMModule >> pointerTypeFor: baseType [
 { #category : #types }
 SLVMModule >> pointerTypeFor: baseType storage: storage [
 	^ SLVMPointerType size: compilationTarget pointerSize baseType: baseType storage: storage
-]
-
-{ #category : #printing }
-SLVMModule >> printOn: aStream [
-	anonymousGlobals do: [ :val | val fullPrintOn: aStream ].
-	globalValues values do: [ :val | val fullPrintOn: aStream ].
-
 ]
 
 { #category : #'as yet unclassified' }

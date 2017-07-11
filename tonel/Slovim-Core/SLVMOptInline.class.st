@@ -108,89 +108,16 @@ SLVMOptInline >> inlineFunction: aFunction [
 
 { #category : #'as yet unclassified' }
 SLVMOptInline >> inlineFunctionContent: sourceFunction into: targetFunction arguments: arguments continuation: continuationBlock [
-	| newBlocks newBlock substitutionDictionary newInstruction resultPhi return result movedAllocas sourceFirstBlock targetFirstBlock |
-	newBlocks := OrderedCollection new.
-	movedAllocas := OrderedCollection new.
+	| substitutionDictionary |
 	substitutionDictionary := IdentityDictionary new.
-
-	"Copy the vertices of the graph"
+	
+	"Replace the arguments"
 	sourceFunction arguments doWithIndex: [ :arg :index |
 		substitutionDictionary at: arg put: (arguments at: index)
 	].
  	
-	sourceFirstBlock := sourceFunction basicBlocks first.
-	targetFirstBlock := targetFunction basicBlocks first.
 	
-	sourceFunction basicBlocks do: [ :bb |
-		newBlock := SLVMBasicBlock new name: bb name.
-		newBlocks add: newBlock.
-		targetFunction addBasicBlock: newBlock.
-		substitutionDictionary at: bb put: newBlock.
-		
-		bb instructionsDo: [ :instr |
-			newInstruction := instr copy.
-			substitutionDictionary at: instr put: newInstruction.
-			(newInstruction isAlloca and: [ bb == sourceFirstBlock ]) ifTrue: [
-				targetFirstBlock addFirst: newInstruction.
-				movedAllocas add: newInstruction.
-			] ifFalse: [ 
-				newBlock addQuiet: newInstruction
-			]
-		] 
-	].
-
-	"Fix the edges of the graph"
-	movedAllocas do: [ :instr | instr applySubstitutions: substitutionDictionary ].
-	newBlocks do: [ :bb |
-		bb instructionsDo: [ :instr |
-			instr applySubstitutions: substitutionDictionary
-		]
-	].
-
-	newBlocks do: #computeSuccessors.
-	newBlocks do: [:bb |
-		bb lastInstruction isTerminator ifTrue: [ bb lastInstruction addUnreachableSuccessors ]
-	].
-
-	"Transform the return into jumps".
-	sourceFunction functionType returnType isVoidType ifTrue: [ 
-		newBlocks do: [:bb |
-			bb lastInstruction isReturnVoid ifTrue: [
-				bb lastInstruction removeFromBlock.
-				bb add: ((SLVMJump destination: continuationBlock) name: bb function generateSymbol)
-			]
-		].
-	
-		^ {newBlocks first . nil}
-	] ifFalse: [
-		resultPhi := nil.
-		newBlocks do: [:bb |
-			return := bb lastInstruction.
-			return isReturn ifTrue: [
-				resultPhi ifNil: [
-					resultPhi := (SLVMPhi type: return value type) name: bb function generateSymbol.
-					continuationBlock addFirst: resultPhi
-				].
-		
-				resultPhi addValue: return value from: bb.
-				bb lastInstruction removeFromBlock.
-				bb add: ((SLVMJump destination: continuationBlock) name: bb function generateSymbol)
-			]
-		].
-	
-		(resultPhi isNil or: [ resultPhi parameters size = 0 ]) ifTrue: [
-			"Undefined result"
-			self halt.
-		].
-	
-		resultPhi parameters size = 1 ifTrue: [
-			result := resultPhi parameters first.
-			resultPhi removeFromBlock.
-			^ {newBlocks first . result}
-		].
-	
-		^ {newBlocks first . resultPhi}
-	]
+	^ sourceFunction copyContentsInto: targetFunction valueMap: substitutionDictionary continuation: continuationBlock
 ]
 
 { #category : #accessing }

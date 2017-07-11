@@ -1,6 +1,6 @@
 Class {
 	#name : #SLVMInstruction,
-	#superclass : #SLVMValue,
+	#superclass : #SLVMFunctionLocalValue,
 	#instVars : [
 		'name',
 		'block',
@@ -81,6 +81,11 @@ SLVMInstruction >> fullPrintOn: aStream [
 		index > 1 ifTrue: [  aStream nextPutAll: ', ' ].
 		aStream print: param
 	]
+]
+
+{ #category : #accessing }
+SLVMInstruction >> function [
+	^ self block function
 ]
 
 { #category : #testing }

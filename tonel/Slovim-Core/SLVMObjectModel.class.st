@@ -8,6 +8,16 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SLVMObjectModel >> closureHeaderType [
+	^ nil
+]
+
+{ #category : #'as yet unclassified' }
+SLVMObjectModel >> closureInstantiateFunction [
+	^ nil
+]
+
+{ #category : #'as yet unclassified' }
 SLVMObjectModel >> contextMetaDataHeaderSize [
 	self subclassResponsibility
 ]
@@ -38,6 +48,20 @@ SLVMObjectModel >> encodeSmallInteger: integer [
 		^ (integer << 1) | 1
 	] ifFalse: [
 		^ (integer << 3) | 1
+	]
+	
+]
+
+{ #category : #'as yet unclassified' }
+SLVMObjectModel >> fillClosureStructure: closureStructureType functionPointerType: closureFunctionPointer capturedEnvironmentStructure: capturedEnvironmentStructure [
+	self closureHeaderType ifNotNil: [ :objectHeader |
+		closureStructureType
+			types: { objectHeader . closureFunctionPointer . capturedEnvironmentStructure };
+			names: #(objectHeader function environment)
+	] ifNil: [
+		closureStructureType
+			types: { closureFunctionPointer . capturedEnvironmentStructure };
+			names: #(function environment)
 	]
 	
 ]
