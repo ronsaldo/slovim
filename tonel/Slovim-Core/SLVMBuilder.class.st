@@ -278,6 +278,16 @@ SLVMBuilder >> dynamicObjectToIntCast: source target: targetType name: resultNam
 	^ self addInstruction: (SLVMDynamicObjectToIntCast source: source targetType: targetType) name: resultName
 ]
 
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToPointerCast: source target: targetType typeObject: typeObject [
+	^ self dynamicObjectToPointerCast: source target: targetType typeObject: typeObject name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToPointerCast: source target: targetType typeObject: typeObject name: resultName [
+	^ self addInstruction: (SLVMDynamicObjectToPointerCast source: source targetType: targetType typeObject: typeObject) name: resultName
+]
+
 { #category : #accessing }
 SLVMBuilder >> dynamicObjectType [
 	^ self compilationTarget dynamicObjectType
@@ -536,6 +546,10 @@ SLVMBuilder >> intToDynamicObjectCast: source target: targetType [
 
 { #category : #casting }
 SLVMBuilder >> intToDynamicObjectCast: source target: targetType name: resultName [
+	source isConstantValue ifTrue: [
+		self assert: source type isIntegerType.
+		^ self addDynamicLiteral: source value
+	].
 	^ self addInstruction: (SLVMIntToDynamicObjectCast source: source targetType: targetType) name: resultName
 ]
 
@@ -756,6 +770,16 @@ SLVMBuilder >> phi: type name: resultName [
 { #category : #accessing }
 SLVMBuilder >> pointerSize [
 	^ self compilationTarget pointerSize
+]
+
+{ #category : #casting }
+SLVMBuilder >> pointerToDynamicObjectCast: source target: targetType typeObject: typeObject [
+	^ self pointerToDynamicObjectCast: source target: targetType typeObject: typeObject name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> pointerToDynamicObjectCast: source target: targetType typeObject: typeObject name: resultName [
+	^ self addInstruction: (SLVMPointerToDynamicObjectCast source: source targetType: targetType typeObject: typeObject) name: resultName
 ]
 
 { #category : #accessing }

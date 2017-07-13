@@ -226,10 +226,24 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap [
 
 { #category : #copying }
 SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation: continuationBlock [
-	| newBlocks newBlock substitutionDictionary newInstruction resultPhi return result movedAllocas sourceFirstBlock targetFirstBlock sourceFunction |
+	| newBlocks newBlock substitutionDictionary newInstruction resultPhi return result movedAllocas sourceFirstBlock targetFirstBlock sourceFunction newDynamicLiteral |
 	newBlocks := OrderedCollection new.
 	movedAllocas := OrderedCollection new.
 	substitutionDictionary := valueMap copy.
+	
+	dynamicLiterals isNotEmpty ifTrue: [
+		targetFunction dynamicLiterals ifEmpty: [ 
+			dynamicLiterals do: [ :lit |
+				newDynamicLiteral := targetFunction addRequiredDynamicLiteral: lit value.
+				substitutionDictionary at: lit put: newDynamicLiteral
+			].
+		] ifNotEmpty: [ 
+			dynamicLiterals do: [ :lit |
+				newDynamicLiteral := targetFunction addDynamicLiteral: lit value.
+				substitutionDictionary at: lit put: newDynamicLiteral
+			]
+		]
+	].
 
 	"Copy the vertices of the graph"
 	sourceFunction := self.
