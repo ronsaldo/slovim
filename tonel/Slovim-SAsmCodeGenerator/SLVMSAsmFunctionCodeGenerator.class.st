@@ -755,6 +755,20 @@ SLVMSAsmFunctionCodeGenerator >> visitDynamicObjectToIntCast: instruction [
 	blockBuilder tacArithmeticShiftRight: sourceValue with: target objectModel smallIntegerShift into: result
 ]
 
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitDynamicObjectToPointerCast: instruction [
+	| convertionFunction typeObject result convertionFunctionValue object |
+	object := self translateValue: instruction source.
+	typeObject := self translateValue: instruction typeObject.
+	result := self translateValue: instruction.
+	
+	convertionFunction := target objectModel objectToPointerFunction.
+	convertionFunctionValue := self translateValue: convertionFunction.
+	blockBuilder tacCall: convertionFunctionValue
+		arguments: { object registers first . typeObject registers first }
+		into: result convention: (sasmTarget callingConventionNamed: convertionFunction callingConvention)
+]
+
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitFloatAdd: instruction [
 	self binaryFloat: instruction arithmetic: TacFloatAdd
@@ -911,10 +925,13 @@ SLVMSAsmFunctionCodeGenerator >> visitInstantiateClosure: anInstruction [
 
 { #category : #casting }
 SLVMSAsmFunctionCodeGenerator >> visitIntToDynamicObjectCast: instruction [
-	| source sourceValue result elementSize |
+	| source sourceValue result elementSize smallIntegerConstant |
 	source := instruction source.
 	source isConstantValue ifTrue: [ 
-		self halt
+		smallIntegerConstant := (source value << target objectModel smallIntegerShift) | target objectModel smallIntegerTag.
+		self flag: 'Ensure the constant value is a small integer'.
+		result := self translateValue: instruction.
+		^ blockBuilder tacMove: smallIntegerConstant into: result
 	].
 
 	sourceValue := self translateValue: source.
@@ -1078,6 +1095,20 @@ SLVMSAsmFunctionCodeGenerator >> visitOrderedFloatLessThan: instruction [
 { #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> visitOrderedFloatNotEqual: instruction [
 	self binaryInteger: instruction comparison: TacFloatOrderedNotEqual
+]
+
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitPointerToDynamicObjectCast: instruction [
+	| convertionFunction pointer typeObject result convertionFunctionValue |
+	pointer := self translateValue: instruction source.
+	typeObject := self translateValue: instruction typeObject.
+	result := self translateValue: instruction.
+	
+	convertionFunction := target objectModel pointerToObjectFunction .
+	convertionFunctionValue := self translateValue: convertionFunction.
+	blockBuilder tacCall: convertionFunctionValue
+		arguments: { pointer registers first . typeObject registers first }
+		into: result convention: (sasmTarget callingConventionNamed: convertionFunction callingConvention)
 ]
 
 { #category : #arithmetic }
