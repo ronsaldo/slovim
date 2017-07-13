@@ -49,3 +49,8 @@ SLVMSAsmCompilationTarget >> target [
 SLVMSAsmCompilationTarget >> target: anObject [
 	target := anObject
 ]
+
+{ #category : #'as yet unclassified' }
+SLVMSAsmCompilationTarget >> withPositionIndependentCode [
+	target withPositionIndependentCode
+]
