@@ -25,9 +25,34 @@ SLVMSAsmCompilationTarget >> canonicalName [
 	^ target canonicalName
 ]
 
+{ #category : #accessing }
+SLVMSAsmCompilationTarget >> csymbolPrefix [
+	^ target csymbolPrefix
+]
+
+{ #category : #'operating systems' }
+SLVMSAsmCompilationTarget >> freebsd [
+	target freebsd
+]
+
 { #category : #convenience }
 SLVMSAsmCompilationTarget >> generateLowLevelModule: aModule [
 	^ SLVMSAsmCodeGenerator new target: self; translateModule: aModule
+]
+
+{ #category : #'operating systems' }
+SLVMSAsmCompilationTarget >> linux [
+	target linux
+]
+
+{ #category : #accessing }
+SLVMSAsmCompilationTarget >> operatingSystemName [
+	^ target operatingSystemName
+]
+
+{ #category : #'operating systems' }
+SLVMSAsmCompilationTarget >> osx [
+	target osx
 ]
 
 { #category : #accessing }
@@ -48,6 +73,11 @@ SLVMSAsmCompilationTarget >> target [
 { #category : #accessing }
 SLVMSAsmCompilationTarget >> target: anObject [
 	target := anObject
+]
+
+{ #category : #'operating systems' }
+SLVMSAsmCompilationTarget >> win32 [
+	target win32
 ]
 
 { #category : #'as yet unclassified' }

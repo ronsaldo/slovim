@@ -107,7 +107,7 @@ SLVMSAsmCodeGenerator >> createFunctionContextMetaData: function [
 	
 	type := metadataConstant type.
 	metadataVariable := SAsmGlobalVariable new
-		name: (sasmFunction validName , '_cmeta') asSymbol;
+		name: (target csymbolPrefix , sasmFunction validName , '_cmeta') asSymbol;
 		target: sasmModule target;
 		visibility: sasmFunction visibility;
 		size: type size;
@@ -266,8 +266,11 @@ SLVMSAsmCodeGenerator >> visitFunction: aFunction [
 	| functionCodeGenerator result |
 	translatedElements at: aFunction ifPresent: [ :incomplete | ^ incomplete ].
 	
-	result := SAsmFunction new
-		name: aFunction name;
+	result := SAsmFunction new.
+	aFunction name ifNotNil: [ 
+		result name: (target csymbolPrefix , aFunction name) asSymbol
+	].
+	result
 		target: sasmModule target;
 		visibility: (self convertVisibility: aFunction visibility);
 		debugSourceLocation: aFunction debugSourceLocation;
@@ -294,8 +297,11 @@ SLVMSAsmCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 	translatedElements at: aGlobalVariable ifPresent: [ :incomplete | ^ incomplete ].
 	type := aGlobalVariable valueType.
 	
-	result := SAsmGlobalVariable new
-		name: aGlobalVariable name;
+	result := SAsmGlobalVariable new.
+	aGlobalVariable name ifNotNil: [ 
+		result name: (target csymbolPrefix , aGlobalVariable name) asSymbol
+	].
+	result
 		target: sasmModule target;
 		visibility: (self convertVisibility: aGlobalVariable visibility);
 		size: type size;
