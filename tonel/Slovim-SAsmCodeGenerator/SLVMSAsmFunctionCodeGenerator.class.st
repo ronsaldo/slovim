@@ -207,7 +207,7 @@ SLVMSAsmFunctionCodeGenerator >> createAllocaVariables [
 
 { #category : #'code generation' }
 SLVMSAsmFunctionCodeGenerator >> createArguments [
-	| stackFrameLayout returnType |
+	| stackFrameLayout returnType functionType |
 	stackFrameLayout := sasmFunction stackFrameLayout.
 	argumentVariableMap := Dictionary new.
 	
@@ -217,8 +217,9 @@ SLVMSAsmFunctionCodeGenerator >> createArguments [
 		returnArgument := stackFrameLayout createArgument: returnArgumentType spillingClass registerClass: returnArgumentType registerClass.
 		returnArgumentRegister := self createVirtualRegistersForVariable: returnArgument type: returnArgumentType.
 	].
-	function arguments do: [ :arg |
-		argumentVariableMap at: arg put: (stackFrameLayout createArgument: arg type spillingClass registerClass: arg type registerClass).
+	functionType := function functionType.
+	function arguments doWithIndex: [ :arg :index |
+		argumentVariableMap at: arg put: (stackFrameLayout createArgument: arg type spillingClass registerClass: arg type registerClass dynamicRoot: (functionType argumentAt: index hasAttribute: #dynobject)).
 	]
 ]
 
@@ -843,6 +844,17 @@ SLVMSAsmFunctionCodeGenerator >> visitGetElementPointer: instruction [
 
 ]
 
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitGetThisContext: anInstruction [
+	| result marryThisContextFunction |
+	marryThisContextFunction := target objectModel marryThisContextFunction.
+	result := self translateValue: anInstruction.
+	blockBuilder tacCall: (self translateValue: marryThisContextFunction)
+		arguments: { sasmTarget framePointerRegister }
+		into: result convention: (sasmTarget callingConventionNamed: marryThisContextFunction callingConvention)
+	
+]
+
 { #category : #comparisons }
 SLVMSAsmFunctionCodeGenerator >> visitIdentityEquals: instruction [
 	self binaryInteger: instruction comparison: TacEqual
@@ -855,12 +867,13 @@ SLVMSAsmFunctionCodeGenerator >> visitIdentityNotEquals: instruction [
 
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitInstantiateClosure: anInstruction [
-	| result closureFunction definition normalFunctionTypes closureInstantiateFunction capturedEnvironmentType dynamicCaptureCount closureStructureType localEnvironment functionPointerSlot functionPointerOffset captureBaseOffset dynamicCaptureIndex normalCaptureIndex captureIndex captureOffset capturePointer |
+	| result closureFunction definition normalFunctionTypes closureInstantiateFunction capturedEnvironmentType dynamicCaptureCount closureStructureType localEnvironment functionPointerSlot functionPointerOffset captureBaseOffset dynamicCaptureIndex normalCaptureIndex captureIndex captureOffset capturePointer normalFunctionType |
 	definition := anInstruction definition.
 	self assert: definition isClosureDefinition.
 
 	closureFunction := self translateValue: definition.
-	normalFunctionTypes := definition closureType normalFunctionTypeWith: function compilationTarget.
+	normalFunctionTypes := definition normalFunctionTypes.
+	normalFunctionType := normalFunctionTypes first.
 	capturedEnvironmentType := normalFunctionTypes second.
 	closureStructureType := normalFunctionTypes third.
 	
@@ -891,7 +904,7 @@ SLVMSAsmFunctionCodeGenerator >> visitInstantiateClosure: anInstruction [
 		blockBuilder tacCall: (self translateValue: closureInstantiateFunction)
 			arguments: {
 				closureFunction registers first .
-				definition functionType argumentsDescriptorWithTarget: target.
+				normalFunctionType argumentsDescriptorWithTarget: target.
 				dynamicCaptureCount .
 				capturedEnvironmentType size }
 			into: result convention: (sasmTarget callingConventionNamed: closureInstantiateFunction callingConvention)
