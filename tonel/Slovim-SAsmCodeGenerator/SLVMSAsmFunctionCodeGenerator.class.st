@@ -316,6 +316,11 @@ SLVMSAsmFunctionCodeGenerator >> emitIntructionDebugInformation: instruction [
 	]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMSAsmFunctionCodeGenerator >> ensureFunctionContextMetaDataIsPresent [
+	moduleTranslator createFunctionContextMetaData: function
+]
+
 { #category : #'atomic operations' }
 SLVMSAsmFunctionCodeGenerator >> generateCompareAndSwap: instruction [
 	| result variable value |
@@ -723,6 +728,8 @@ SLVMSAsmFunctionCodeGenerator >> visitCall: instruction [
 	
 	calledFunction := self translateValue: instruction functionValue.
 	calledConvention := sasmTarget callingConventionNamed: instruction callingConvention.
+	calledConvention hasContextMetadata ifTrue: [ self ensureFunctionContextMetaDataIsPresent ].
+	
 	self assert: calledFunction size = 1.
 	blockBuilder tacCall: calledFunction arguments: arguments into: result convention: calledConvention.
 ]
@@ -1040,6 +1047,8 @@ SLVMSAsmFunctionCodeGenerator >> visitLoad: instruction [
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitMessageSend: instruction [
 	| result arguments calledFunction calledConvention selector receiver lookupClass |
+	self ensureFunctionContextMetaDataIsPresent.
+	
 	instruction type isVoidType ifTrue: [
 		result := #()
 	] ifFalse: [ 
@@ -1063,6 +1072,7 @@ SLVMSAsmFunctionCodeGenerator >> visitMessageSend: instruction [
 
 	"Add the arguments"
 	instruction arguments do: [ :arg | arguments addAll: (self translateValue: arg) ].
+	
 	
 	calledFunction := (self runtimeProvidedFunction: target objectModel messageSendTrampoline) asSAsmInstructionOperand.
 	calledConvention := sasmTarget callingConventionNamed: (instruction isSuperSend ifTrue: [ #smalltalk_supersend ] ifFalse: [#smalltalk_send]).
