@@ -57,7 +57,8 @@ SLVMObjectModel >> fillClosureStructure: closureStructureType functionPointerTyp
 	self closureHeaderType ifNotNil: [ :objectHeader |
 		closureStructureType
 			types: { objectHeader . closureFunctionPointer . capturedEnvironmentStructure };
-			names: #(objectHeader function environment)
+			names: #(objectHeader function environment).
+		closureFunctionPointer baseType argumentAt: 1 addAttribute: #dynobject.
 	] ifNil: [
 		closureStructureType
 			types: { closureFunctionPointer . capturedEnvironmentStructure };

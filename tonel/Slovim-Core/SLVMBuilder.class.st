@@ -434,6 +434,16 @@ SLVMBuilder >> getReference: reference element: element resultName: resultName [
 	^ self getPointer: reference element: {self constInt: 0 . element } resultName: resultName
 ]
 
+{ #category : #instructions }
+SLVMBuilder >> getThisContext [
+	^ self getThisContext: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> getThisContext: resultName [
+	^ self addInstruction: (SLVMGetThisContext type: function compilationTarget dynamicObjectType) name: resultName
+]
+
 { #category : #comparisons }
 SLVMBuilder >> ieq: left with: right [
 	^ self ieq: left with: right name: function generateSymbol

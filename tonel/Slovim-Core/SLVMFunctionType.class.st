@@ -5,7 +5,8 @@ Class {
 		'callingConvention',
 		'arguments',
 		'returnType',
-		'variadic'
+		'variadic',
+		'argumentAttributes'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -51,6 +52,22 @@ SLVMFunctionType >> accept: aVisitor [
 ]
 
 { #category : #accessing }
+SLVMFunctionType >> argumentAt: argumentIndex addAttribute: attribute [
+	| attributes |
+	attributes := argumentAttributes at: argumentIndex.
+	(attributes includes: attribute) ifFalse: [
+		argumentAttributes at: argumentIndex put: (attributes copyWith: attribute)
+	]
+]
+
+{ #category : #accessing }
+SLVMFunctionType >> argumentAt: argumentIndex hasAttribute: attribute [
+	| attributes |
+	attributes := argumentAttributes at: argumentIndex.
+	^ attributes includes: attribute
+]
+
+{ #category : #accessing }
 SLVMFunctionType >> arguments [
 	^ arguments
 ]
@@ -59,6 +76,7 @@ SLVMFunctionType >> arguments [
 SLVMFunctionType >> arguments: aCollection [
 	aCollection do: [:arg | self assert: arg isSlovimType].
 	arguments := aCollection.
+	argumentAttributes := (Array new: arguments size) atAllPut: #().
 	
 ]
 
@@ -68,8 +86,8 @@ SLVMFunctionType >> argumentsDescriptorWithTarget: aCompilationTarget [
 	dynObjectCount := 0.
 	nativeArgumentSize := 0.
 	nativeArgumentAlignment := aCompilationTarget pointerSize.
-	arguments do: [:arg |
-		arg isDynamicObjectType ifTrue: [ 
+	arguments doWithIndex: [:arg :index |
+		(arg isDynamicObjectType or: [self argumentAt: index hasAttribute: #dynobject]) ifTrue: [ 
 			dynObjectCount := dynObjectCount + 1.
 		] ifFalse: [ 
 			nativeArgumentSize := nativeArgumentSize alignedTo: (arg alignment max: aCompilationTarget pointerSize).

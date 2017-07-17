@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMFunction,
 	#instVars : [
 		'captures',
-		'closureType'
+		'closureType',
+		'normalFunctionTypes'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -23,8 +24,8 @@ SLVMClosureDefinition >> accept: aVisitor [
 
 { #category : #converting }
 SLVMClosureDefinition >> asNormalFunction [
-	| normalFunctionTypes normalFunctionType normalFunction valueMap environmentArg environmentPointer prologueInstructions dynamicCaptureCount dynamicCaptureIndex normalCaptureIndex captureIndex capturePointer captureLoad firstBlock closureStructureType |
-	normalFunctionTypes := self closureType normalFunctionTypeWith: compilationTarget.
+	| normalFunctionType normalFunction valueMap environmentArg environmentPointer prologueInstructions dynamicCaptureCount dynamicCaptureIndex normalCaptureIndex captureIndex capturePointer captureLoad firstBlock closureStructureType |
+	self normalFunctionTypes.
 
 	normalFunctionType := normalFunctionTypes first.
 	closureStructureType := normalFunctionTypes third.
@@ -111,4 +112,9 @@ SLVMClosureDefinition >> initialize [
 { #category : #testing }
 SLVMClosureDefinition >> isClosureDefinition [
 	^ true
+]
+
+{ #category : #converting }
+SLVMClosureDefinition >> normalFunctionTypes [
+	^ normalFunctionTypes ifNil: [normalFunctionTypes := self closureType normalFunctionTypeWith: compilationTarget]
 ]
