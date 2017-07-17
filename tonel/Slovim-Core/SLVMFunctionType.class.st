@@ -67,6 +67,15 @@ SLVMFunctionType >> argumentAt: argumentIndex hasAttribute: attribute [
 	^ attributes includes: attribute
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMFunctionType >> argumentDescriptorFlags [
+	(#(smalltalk smalltalk_send smalltalk_supersend) includes: callingConvention) ifTrue: [ 
+		^ 0
+	].
+	
+	^ 1<<29
+]
+
 { #category : #accessing }
 SLVMFunctionType >> arguments [
 	^ arguments
@@ -95,7 +104,7 @@ SLVMFunctionType >> argumentsDescriptorWithTarget: aCompilationTarget [
 		]
 	].
 
-	^ dynObjectCount | (nativeArgumentSize << 8) | (((nativeArgumentAlignment highBit - aCompilationTarget pointerSize highBit) max: 0) << 24)
+	^ dynObjectCount | (nativeArgumentSize << 8) | (((nativeArgumentAlignment highBit - aCompilationTarget pointerSize highBit) max: 0) << 24) | self argumentDescriptorFlags
 ]
 
 { #category : #accessing }
