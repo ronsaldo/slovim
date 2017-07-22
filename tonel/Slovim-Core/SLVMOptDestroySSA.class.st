@@ -121,7 +121,7 @@ SLVMOptDestroySSA >> splitBranch: branchInstruction [
 		phi replaceParent: branchInstruction block with: falseBlock
 	].
 	
-	function fullPrintString.
+	"function fullPrintString."
 	pendingBlocks add: trueBlock; add: falseBlock.
 ]
 

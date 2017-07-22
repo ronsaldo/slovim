@@ -26,6 +26,12 @@ SLVMPhi >> addValue: value from: incomingBlock [
 	incomingBlocks add: incomingBlock.
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMPhi >> applySubstitutions: substitutionDictionary [
+	super applySubstitutions: substitutionDictionary.
+	incomingBlocks := incomingBlocks collect: [ :bl | substitutionDictionary at: bl ]
+]
+
 { #category : #initialization }
 SLVMPhi >> initialize [
 	super initialize.

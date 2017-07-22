@@ -9,6 +9,18 @@ SLVMBoolType >> accept: aVisitor [
 	^ aVisitor visitBoolType: self
 ]
 
+{ #category : #'constant encoding' }
+SLVMBoolType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stream [
+	bigEndian ifTrue: [
+		self halt.
+	] ifFalse: [
+		1 to: size do: [ :i |
+			stream nextPut: (i = 1 ifTrue: [ 1 ] ifFalse: [0]).
+		] 
+	]
+
+]
+
 { #category : #initialization }
 SLVMBoolType >> initialize [
 	super initialize.

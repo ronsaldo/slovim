@@ -43,6 +43,18 @@ SLVMObjectModel >> createFunctionContextMetaData: function [
 ]
 
 { #category : #'immediate literals' }
+SLVMObjectModel >> encodeCharacter: character [
+	| codePoint |
+	codePoint := character asInteger.
+	target pointerSize = 4 ifTrue: [
+		^ (codePoint << 2) | 2
+	] ifFalse: [
+		^ (codePoint << 3) | 2
+	]
+	
+]
+
+{ #category : #'immediate literals' }
 SLVMObjectModel >> encodeSmallInteger: integer [
 	target pointerSize = 4 ifTrue: [
 		^ (integer << 1) | 1
@@ -72,6 +84,7 @@ SLVMObjectModel >> isInlineLiteral: literal [
 	| literalClass |
 	literalClass := literal class.
 	(literalClass includesBehavior: Boolean) ifTrue: [ ^ true].
+	(literalClass includesBehavior: Character) ifTrue: [ ^ true].
 	(literalClass includesBehavior: Float) ifTrue: [ ^ self isSmallFloat: literal ].
 	(literalClass includesBehavior: Integer) ifTrue: [ ^ self isSmallInteger: literal ].
 	(literalClass includesBehavior: UndefinedObject) ifTrue: [ ^ true].

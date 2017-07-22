@@ -82,6 +82,12 @@ SLVMFunction >> arguments [
 ]
 
 { #category : #accessing }
+SLVMFunction >> argumentsDescriptor [
+	<compileTime>
+	^ functionType argumentsDescriptorWithTarget: compilationTarget
+]
+
+{ #category : #accessing }
 SLVMFunction >> basicBlocks [
 	^ basicBlocks
 ]
@@ -493,6 +499,17 @@ SLVMFunction >> preOrder [
 	preOrder := OrderedCollection new.
 	self computePreOrderFor: basicBlocks first visited: visited.
 	^ preOrder
+]
+
+{ #category : #accessing }
+SLVMFunction >> primitive [
+	<compileTime>
+	^ self propertyAt: #primitive ifAbsent: [ nil ]
+]
+
+{ #category : #accessing }
+SLVMFunction >> primitive: aPrimitive [
+	^ self propertyAt: #primitive put: aPrimitive
 ]
 
 { #category : #removing }
