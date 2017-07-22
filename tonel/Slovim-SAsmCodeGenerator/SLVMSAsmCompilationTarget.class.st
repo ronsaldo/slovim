@@ -46,6 +46,12 @@ SLVMSAsmCompilationTarget >> linux [
 ]
 
 { #category : #accessing }
+SLVMSAsmCompilationTarget >> objectModel: anObjectModel [
+	target objectModel: (SLVMSAsmObjectModel new target: target; objectModel: anObjectModel).
+	super objectModel: anObjectModel
+]
+
+{ #category : #accessing }
 SLVMSAsmCompilationTarget >> operatingSystemName [
 	^ target operatingSystemName
 ]

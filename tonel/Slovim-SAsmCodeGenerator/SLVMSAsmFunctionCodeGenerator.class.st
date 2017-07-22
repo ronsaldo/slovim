@@ -262,7 +262,7 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegisters [
 SLVMSAsmFunctionCodeGenerator >> createVirtualRegistersForType: type [
 	type isScalarType ifTrue: [ 
 		type isScalarIntegerType ifTrue: [
-			^ SLVMSAsmValue registers: (sasmFunction addVirtualRegisters: (sasmTarget newIntegerVirtualRegistersForSize: type size))
+			^ SLVMSAsmValue registers: (sasmFunction addVirtualRegisters: (sasmTarget newIntegerVirtualRegistersForSize: type size dynamicRoot: type isDynamicObjectType))
 		].
 		type isFloatType ifTrue: [
 			^ SLVMSAsmValue registers: (sasmFunction addVirtualRegisters: (sasmTarget newFloatVirtualRegistersForSize: type size))
@@ -1059,23 +1059,29 @@ SLVMSAsmFunctionCodeGenerator >> visitMessageSend: instruction [
 	"Add the selector"
 	selector := self translateValue: instruction selector.
 	arguments addAll: selector.
-	
-	"Add the receiver"
-	receiver := self translateValue: instruction receiver.
-	arguments addAll: receiver.
-	
+
 	"Add the lookup class"
 	instruction isSuperSend ifTrue: [ 
 		lookupClass := self translateValue: function dynamicLiterals last.
 		arguments addAll: lookupClass.
 	].
-
+	
+	"Add the receiver"
+	receiver := self translateValue: instruction receiver.
+	arguments addAll: receiver.
+	
 	"Add the arguments"
 	instruction arguments do: [ :arg | arguments addAll: (self translateValue: arg) ].
 	
 	
-	calledFunction := (self runtimeProvidedFunction: target objectModel messageSendTrampoline) asSAsmInstructionOperand.
-	calledConvention := sasmTarget callingConventionNamed: (instruction isSuperSend ifTrue: [ #smalltalk_supersend ] ifFalse: [#smalltalk_send]).
+	instruction isSuperSend ifTrue: [ 
+		calledFunction := (self runtimeProvidedFunction: target objectModel messageSuperSendTrampoline) asSAsmInstructionOperand.
+		calledConvention := sasmTarget callingConventionNamed: #smalltalk_supersend
+	] ifFalse: [ 
+		calledFunction := (self runtimeProvidedFunction: target objectModel messageSendTrampoline) asSAsmInstructionOperand.
+		calledConvention := sasmTarget callingConventionNamed: #smalltalk_send.
+	].
+
 	blockBuilder tacCall: calledFunction arguments: arguments into: result convention: calledConvention.
 
 ]

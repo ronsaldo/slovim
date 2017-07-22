@@ -115,7 +115,12 @@ SLVMSAsmConstantCodeGenerator >> translateImmediateObjectLiteral: constantValue 
 	| value |
 	self assert: constantValue type isDynamicObjectType.
 	value := constantValue value.
+	value isCharacter ifTrue: [ 
+		^ SLVMSAsmValue operand: (target objectModel encodeCharacter: value)
+	].
+
 	value isInteger ifTrue: [
+		self flag: 'Make sure this is a small integer'.
 		^ SLVMSAsmValue operand: (target objectModel encodeSmallInteger: value)
 	].
 	value == nil ifTrue: [ 

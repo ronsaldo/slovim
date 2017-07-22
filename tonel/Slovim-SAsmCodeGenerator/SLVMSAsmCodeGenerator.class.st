@@ -10,7 +10,8 @@ Class {
 		'debugCompileUnit',
 		'translatedDebugElements',
 		'debugTranslator',
-		'translatedClosureDefinitions'
+		'translatedClosureDefinitions',
+		'debugAnonymousCount'
 	],
 	#category : #'Slovim-SAsmCodeGenerator'
 }
@@ -42,6 +43,9 @@ SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
 			] ifNil: [ 
 				aFunction unmangledName ifNotNil: [
 					subprogram name: aFunction unmangledName
+				] ifNil: [
+					self flag: 'This could be a closure'.
+					subprogram name: self generateDebugAnonymousName
 				]
 			].
 		
@@ -136,10 +140,17 @@ SLVMSAsmCodeGenerator >> debugTranslator [
 ]
 
 { #category : #initialization }
+SLVMSAsmCodeGenerator >> generateDebugAnonymousName [
+	debugAnonymousCount := debugAnonymousCount + 1.
+	^ 'anonymous' , debugAnonymousCount asString
+]
+
+{ #category : #initialization }
 SLVMSAsmCodeGenerator >> initialize [
 	super initialize.
 	runtimeProvidedFunctionst := Dictionary new.
 	translatedClosureDefinitions := IdentityDictionary new.
+	debugAnonymousCount := 0
 ]
 
 { #category : #'as yet unclassified' }
