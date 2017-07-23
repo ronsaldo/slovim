@@ -380,6 +380,14 @@ SLVMFunction >> dynamicLiterals [
 	^ dynamicLiterals
 ]
 
+{ #category : #accessing }
+SLVMFunction >> exitPoint [
+	<compileTime>
+	^ SLVMConstantFunctionExitPoint new
+		type: compilationTarget voidPointerType;
+		sourceMethod: self
+]
+
 { #category : #printing }
 SLVMFunction >> fullPrintOn: aStream [
 	aStream nextPut: $@; print: (name ifNil: [#anonymous]); space; print: type; cr.

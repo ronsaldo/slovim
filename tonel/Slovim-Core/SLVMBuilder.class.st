@@ -828,6 +828,16 @@ SLVMBuilder >> return: value [
 ]
 
 { #category : #instructions }
+SLVMBuilder >> return: value fromContext: context [
+	^ self return: value fromContext: context name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> return: value fromContext: context name: resultName [
+	^ self addInstruction: (SLVMReturnFromContext value: value context: context) name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> return: value name: resultName [
 	^ self addInstruction: (SLVMReturn value: value) name: resultName
 ]
@@ -840,6 +850,16 @@ SLVMBuilder >> returnVoid [
 { #category : #instructions }
 SLVMBuilder >> returnVoid: resultName [
 	^ self addInstruction: SLVMReturnVoid new name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> returnVoidFromContext: context [
+	^ self returnVoidFromContext: context name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> returnVoidFromContext: context name: resultName [
+	^ self addInstruction: (SLVMReturnVoidFromContext context: context) name: resultName
 ]
 
 { #category : #instructions }

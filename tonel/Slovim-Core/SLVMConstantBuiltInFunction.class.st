@@ -27,6 +27,7 @@ SLVMConstantBuiltInFunction class >> initialize [
 		
 		"Context"
 		'context.replace_function'
+		'context.return_from_frame_value'
 		
 		"Vector functions"
 		'vector.cross'

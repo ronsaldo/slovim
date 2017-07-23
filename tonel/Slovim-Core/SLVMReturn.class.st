@@ -4,14 +4,19 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 SLVMReturn class >> value: aReturnValue [
-	^ SLVMReturn new value: aReturnValue
+	^ self new value: aReturnValue
 ]
 
 { #category : #visitor }
 SLVMReturn >> accept: aVisitor [
 	^ aVisitor visitReturn: self
+]
+
+{ #category : #testing }
+SLVMReturn >> hasOutputs [
+	^ false
 ]
 
 { #category : #testing }

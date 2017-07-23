@@ -70,6 +70,11 @@ SLVMValue >> isFunctionArgument [
 ]
 
 { #category : #testing }
+SLVMValue >> isFunctionExitPoint [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isFunctionLocalValue [
 	^ false
 ]

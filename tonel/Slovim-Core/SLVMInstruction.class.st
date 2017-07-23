@@ -170,7 +170,17 @@ SLVMInstruction >> isReturn [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isReturnFromContext [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isReturnVoid [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isReturnVoidFromContext [
 	^ false
 ]
 
