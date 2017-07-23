@@ -66,6 +66,14 @@ SLVMSAsmConstantDataGenerator >> visitConstantExpressionAdd: expression [
 ]
 
 { #category : #visiting }
+SLVMSAsmConstantDataGenerator >> visitConstantFunctionExitPoint: anExitPoint [
+	| translatedMethod |
+	translatedMethod := (moduleTranslator translateModuleElement: anExitPoint sourceMethod).
+	^ translatedMethod requiredExitPoint asSAsmInstructionOperand
+
+]
+
+{ #category : #visiting }
 SLVMSAsmConstantDataGenerator >> visitConstantStructureValue: structure [
 	| slots type |
 	slots := structure slots collect: [ :slot | (self translate: slot) asSAsmConstantExpression].

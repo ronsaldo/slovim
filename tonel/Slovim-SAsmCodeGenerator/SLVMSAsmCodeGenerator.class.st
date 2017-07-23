@@ -23,7 +23,7 @@ SLVMSAsmCodeGenerator >> buildDebugInformation: aBlock [
 
 { #category : #'debug information' }
 SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
-	| translatedFunction functionType |
+	| translatedFunction functionType debugName |
 	(aFunction hasProperty: #omitDebugInformation) ifTrue: [ ^ self ].
 	
 	self buildDebugInformation: [ :builder |
@@ -45,12 +45,13 @@ SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
 					subprogram name: aFunction unmangledName
 				] ifNil: [
 					self flag: 'This could be a closure'.
-					subprogram name: self generateDebugAnonymousName
+					subprogram name: (debugName := self generateDebugAnonymousName).
 				]
 			].
 		
 			aFunction isEmpty ifFalse: [
 				translatedFunction := translatedElements at: aFunction.
+				translatedFunction debugName: debugName.
 				subprogram lowPC: translatedFunction.
 				subprogram highPCOffset: (translatedFunction codeSizeExpression)
 			].

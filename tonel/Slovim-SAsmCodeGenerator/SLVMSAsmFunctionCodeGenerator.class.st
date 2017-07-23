@@ -36,6 +36,7 @@ SLVMSAsmFunctionCodeGenerator class >> initialize [
 		'atomic.compare_and_swap' generateCompareAndSwap:
 		
 		'context.replace_function' generateContextReplaceFunction:
+		'context.return_from_frame_value' generateReturnFromFrameValue:
 	).
 	
 	OperationCodeGeneratorMap := Dictionary newFromPairs: #(
@@ -385,6 +386,19 @@ SLVMSAsmFunctionCodeGenerator >> generateFunction: slvmFunction into: newSasmFun
 		translateBasicBlocks;
 		postProcessCodeGeneration
 	
+]
+
+{ #category : #'atomic operations' }
+SLVMSAsmFunctionCodeGenerator >> generateReturnFromFrameValue: instruction [
+	| newFrame returnValue exitPoint |
+	newFrame := self translateValue: instruction arguments first.
+	exitPoint := self translateValue: instruction arguments second.
+	returnValue := self translateValue: instruction arguments third.
+	self assert: newFrame size = 1.
+	self assert: exitPoint size = 1.
+
+	blockBuilder
+		tacReturnFromFrame: newFrame exitPoint: exitPoint value: returnValue
 ]
 
 { #category : #'atomic operations' }
@@ -852,6 +866,13 @@ SLVMSAsmFunctionCodeGenerator >> visitGetElementPointer: instruction [
 ]
 
 { #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitGetFramePointer: anInstruction [
+	| result |
+	result := self translateValue: anInstruction.
+	blockBuilder tacMove: sasmTarget stackPointerRegister into: result
+]
+
+{ #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitGetThisContext: anInstruction [
 	| result marryThisContextFunction |
 	marryThisContextFunction := target objectModel marryThisContextFunction.
@@ -1162,6 +1183,35 @@ SLVMSAsmFunctionCodeGenerator >> visitReturn: instruction [
 		]
 	]
 	
+]
+
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitReturnFromContext: instruction [
+	| value valueType context nonLocalReturnFunction |
+	value := self translateValue: instruction value.
+	context := self translateValue: instruction context.
+	valueType := instruction value type.
+	value isAggregate ifTrue: [
+		self halt.
+	].
+
+	valueType isScalarType ifTrue: [ 
+		valueType isScalarIntegerType ifTrue: [ 
+			value size > 1 ifTrue: [ 
+				self halt.
+			] ifFalse: [
+				nonLocalReturnFunction := target objectModel nonLocalReturnFunction.
+				^ blockBuilder tacCall: (self translateValue: nonLocalReturnFunction) 
+					arguments: { context . value }
+					into: #() convention: (sasmTarget callingConventionNamed: nonLocalReturnFunction callingConvention).
+			].
+		].
+		valueType isFloatType  ifTrue: [ 
+			self halt.
+		].
+	].
+
+	self error: 'Unsupported value type for non-local return'
 ]
 
 { #category : #visiting }
