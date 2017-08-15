@@ -53,7 +53,7 @@ SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
 				translatedFunction := translatedElements at: aFunction.
 				translatedFunction debugName: debugName.
 				subprogram lowPC: translatedFunction.
-				subprogram highPCOffset: (translatedFunction codeSizeExpression)
+				subprogram highPC: translatedFunction requiredEndingLabel
 			].
 		
 			functionType := aFunction functionType.
