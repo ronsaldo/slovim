@@ -21,13 +21,18 @@ SLVMSAsmCompilationTarget class >> x86_64 [
 ]
 
 { #category : #accessing }
-SLVMSAsmCompilationTarget >> canonicalName [
-	^ target canonicalName
+SLVMSAsmCompilationTarget >> cFunctionPrefix [
+	^ target cFunctionPrefix
 ]
 
 { #category : #accessing }
-SLVMSAsmCompilationTarget >> csymbolPrefix [
-	^ target csymbolPrefix
+SLVMSAsmCompilationTarget >> cVariablePrefix [
+	^ target cVariablePrefix
+]
+
+{ #category : #accessing }
+SLVMSAsmCompilationTarget >> canonicalName [
+	^ target canonicalName
 ]
 
 { #category : #'operating systems' }

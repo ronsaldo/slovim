@@ -11,7 +11,7 @@ Class {
 
 { #category : #accessing }
 SLVMSAsmObjectModel >> importFunction: slvmFunction [
-	^ (target csymbolPrefix , slvmFunction name) asSymbol
+	^ (target cFunctionPrefix , slvmFunction name) asSymbol
 ]
 
 { #category : #accessing }
