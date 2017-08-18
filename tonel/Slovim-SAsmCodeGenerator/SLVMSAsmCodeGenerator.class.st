@@ -316,12 +316,17 @@ SLVMSAsmCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 	result
 		target: sasmModule target;
 		visibility: (self convertVisibility: aGlobalVariable visibility);
+		customSection: aGlobalVariable customSection;
 		size: type size;
 		alignment: type alignment;
 		yourself.
 	translatedElements at: aGlobalVariable put: result.
 	sasmModule addElement: result.
 	
+	aGlobalVariable headerValue ifNotNil: [ 
+		result headerContent: SAsmStream new.
+		self translateConstant: aGlobalVariable headerValue into: result headerContent
+	].
 	aGlobalVariable initialValue ifNotNil: [
 		result content: SAsmStream new.
 		self translateConstant: aGlobalVariable initialValue into: result content
