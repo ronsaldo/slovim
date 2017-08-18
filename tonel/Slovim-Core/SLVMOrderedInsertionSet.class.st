@@ -19,6 +19,11 @@ SLVMOrderedInsertionSet >> add: anElement [
 	^ anElement
 ]
 
+{ #category : #adding }
+SLVMOrderedInsertionSet >> addAll: aCollection [
+	aCollection do: [ :el | self add: el ]
+]
+
 { #category : #converting }
 SLVMOrderedInsertionSet >> asArray [
 	^ insertionOrder asArray

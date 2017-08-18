@@ -5,7 +5,8 @@ Class {
 		'valueType',
 		'type',
 		'initialValue',
-		'readOnly'
+		'readOnly',
+		'headerValue'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -28,11 +29,39 @@ SLVMGlobalVariable >> accept: aVisitor [
 	^ aVisitor visitGlobalVariable: self
 ]
 
+{ #category : #accessing }
+SLVMGlobalVariable >> customSection [
+	^ self propertyAt: #customSection ifAbsent: [ nil ]
+]
+
+{ #category : #accessing }
+SLVMGlobalVariable >> customSection: aSectionName [
+	self propertyAt: #customSection put: aSectionName
+]
+
 { #category : #printing }
 SLVMGlobalVariable >> fullPrintOn: aStream [
 	aStream nextPutAll: 'global @'; print: type; space; nextPutAll: name; space.
 	self printPropertiesOn: aStream.
 	aStream cr
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGlobalVariable >> headerReferenceOfType: aType [
+	self assert: (aType isPointerType or: [ aType isDynamicObjectType ]).
+	^ SLVMConstantGlobalVariableHeaderReference new
+		type: aType;
+		globalVariable: self
+]
+
+{ #category : #accessing }
+SLVMGlobalVariable >> headerValue [
+	^ headerValue
+]
+
+{ #category : #accessing }
+SLVMGlobalVariable >> headerValue: anObject [
+	headerValue := anObject
 ]
 
 { #category : #accessing }
