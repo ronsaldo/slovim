@@ -74,6 +74,14 @@ SLVMSAsmConstantDataGenerator >> visitConstantFunctionExitPoint: anExitPoint [
 ]
 
 { #category : #visiting }
+SLVMSAsmConstantDataGenerator >> visitConstantGlobalVariableHeaderReference: globalVariableHeaderReference [
+	| translatedGlobalVariable |
+	translatedGlobalVariable := (moduleTranslator translateModuleElement: globalVariableHeaderReference globalVariable).
+	
+	^ translatedGlobalVariable requiredHeader asSAsmInstructionOperand
+]
+
+{ #category : #visiting }
 SLVMSAsmConstantDataGenerator >> visitConstantStructureValue: structure [
 	| slots type |
 	slots := structure slots collect: [ :slot | (self translate: slot) asSAsmConstantExpression].
