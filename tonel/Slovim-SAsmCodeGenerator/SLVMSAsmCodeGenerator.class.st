@@ -36,13 +36,13 @@ SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
 				(aFunction unmangledName isNotNil and: [aFunction unmangledName ~= aFunction name]) ifTrue: [
 					subprogram
 						"linkageName: aFunction name;"
-						name: aFunction unmangledName
+						name: (debugName := aFunction unmangledName)
 				] ifFalse: [
-					subprogram name: aFunction name
+					subprogram name: (debugName := aFunction name)
 				].
 			] ifNil: [ 
 				aFunction unmangledName ifNotNil: [
-					subprogram name: aFunction unmangledName
+					subprogram name: (debugName := aFunction unmangledName)
 				] ifNil: [
 					self flag: 'This could be a closure'.
 					subprogram name: (debugName := self generateDebugAnonymousName).
