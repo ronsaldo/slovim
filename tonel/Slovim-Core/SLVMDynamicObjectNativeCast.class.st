@@ -13,6 +13,11 @@ SLVMDynamicObjectNativeCast >> initialize [
 	unchecked := false
 ]
 
+{ #category : #testing }
+SLVMDynamicObjectNativeCast >> isDynamicObjectNativeCast [
+	^ true
+]
+
 { #category : #accessing }
 SLVMDynamicObjectNativeCast >> unchecked [
 	^ unchecked

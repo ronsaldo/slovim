@@ -140,6 +140,11 @@ SLVMInstruction >> isCall [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isDynamicObjectNativeCast [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isGetElementPointer [
 	^ false
 ]

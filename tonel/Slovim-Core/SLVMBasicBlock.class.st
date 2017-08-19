@@ -27,7 +27,24 @@ SLVMBasicBlock >> add: anInstruction [
 { #category : #adding }
 SLVMBasicBlock >> add: anInstruction after: instructionPoint [
 	instructionPoint ifNil: [ ^ self addFirst: instructionPoint ].
-	self halt.
+	
+	self assert: anInstruction previousInstruction isNil.
+	self assert: anInstruction nextInstruction isNil.
+	
+	"Link the next"
+	anInstruction nextInstruction: instructionPoint nextInstruction.
+	anInstruction nextInstruction ifNotNil: [
+		anInstruction nextInstruction previousInstruction: anInstruction
+	] ifNil: [
+		lastInstruction := anInstruction
+	].
+
+	"Link the previous"
+	anInstruction previousInstruction: instructionPoint.
+	instructionPoint nextInstruction: anInstruction.
+	
+	numberOfInstructions := numberOfInstructions + 1.
+	self instructionAdded: anInstruction
 ]
 
 { #category : #adding }
