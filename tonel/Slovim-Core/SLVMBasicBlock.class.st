@@ -88,6 +88,16 @@ SLVMBasicBlock >> addFirst: anInstruction [
 ]
 
 { #category : #adding }
+SLVMBasicBlock >> addInstructions: instructions after: insertionPoint [
+	| currentPoint |
+	currentPoint := insertionPoint.
+	instructions do: [ :ins |
+		self add: ins after: currentPoint.
+		currentPoint := ins
+	]
+]
+
+{ #category : #adding }
 SLVMBasicBlock >> addInstructionsAfterAllocas: instructions [
 	| before |
 	before := firstInstruction.

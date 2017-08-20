@@ -17,6 +17,11 @@ SLVMGetThisContext >> accept: visitor [
 	^ visitor visitGetThisContext: self
 ]
 
+{ #category : #testing }
+SLVMGetThisContext >> isGetThisContext [
+	^ true
+]
+
 { #category : #printing }
 SLVMGetThisContext >> mnemonic [
 	^ 'getThisContext'

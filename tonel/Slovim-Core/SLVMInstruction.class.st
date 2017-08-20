@@ -150,6 +150,16 @@ SLVMInstruction >> isGetElementPointer [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isGetThisContext [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isInstantiateClosure [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isInstruction [
 	^ true
 ]

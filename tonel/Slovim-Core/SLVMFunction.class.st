@@ -76,6 +76,16 @@ SLVMFunction >> applyFunctionOptimizationPasses: passes [
 	passes do: [ :pass | pass passOnFunction: self ]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMFunction >> applyGCStrategy [
+	self gcStrategy ifNotNil: [ :strategyName |
+		self flag: 'Use a proper flag here.'.
+		self gcStrategy: nil.
+		(SLVMFunctionGCLoweringPass gcNamed: strategyName) passOnFunction: self
+	]
+
+]
+
 { #category : #accessing }
 SLVMFunction >> arguments [
 	^ arguments
@@ -405,6 +415,16 @@ SLVMFunction >> fullPrintOn: aStream [
 { #category : #accessing }
 SLVMFunction >> functionType [
 	^ functionType
+]
+
+{ #category : #accessing }
+SLVMFunction >> gcStrategy [
+	^ self propertyAt: #gcStrategy ifAbsent: [ nil ]
+]
+
+{ #category : #accessing }
+SLVMFunction >> gcStrategy: aGCStrategyName [
+	^ self propertyAt: #gcStrategy put: aGCStrategyName
 ]
 
 { #category : #private }

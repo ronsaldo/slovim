@@ -48,6 +48,11 @@ SLVMInstantiateClosure >> definition: definition captures: captures [
 
 ]
 
+{ #category : #testing }
+SLVMInstantiateClosure >> isInstantiateClosure [
+	^ true
+]
+
 { #category : #printing }
 SLVMInstantiateClosure >> mnemonic [
 	^ 'instantiateClosure'

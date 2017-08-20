@@ -78,11 +78,6 @@ SLVMCall >> isCall [
 ]
 
 { #category : #flags }
-SLVMCall >> isGetThisContext [
-	^ self hasFlag: #getThisContext
-]
-
-{ #category : #flags }
 SLVMCall >> isPrimitiveCall [
 	^ self hasFlag: #primitiveCall
 ]
@@ -90,11 +85,6 @@ SLVMCall >> isPrimitiveCall [
 { #category : #printing }
 SLVMCall >> mnemonic [
 	^ 'call'
-]
-
-{ #category : #flags }
-SLVMCall >> setGetThisContext [
-	^ self addFlag: #getThisContext
 ]
 
 { #category : #flags }

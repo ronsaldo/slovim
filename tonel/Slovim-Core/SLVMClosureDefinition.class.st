@@ -33,6 +33,7 @@ SLVMClosureDefinition >> asNormalFunction [
 	normalFunction := SLVMFunction pointerSize: type size functionType: normalFunctionType.
 	normalFunction makePrivate.
 	normalFunction compilationTarget: compilationTarget.
+	normalFunction gcStrategy: self gcStrategy.
 	
 	valueMap := IdentityDictionary new.
 	arguments doWithIndex: [ :arg :index |
