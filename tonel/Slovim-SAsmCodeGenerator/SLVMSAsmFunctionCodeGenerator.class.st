@@ -414,6 +414,17 @@ SLVMSAsmFunctionCodeGenerator >> generateSwapValue: instruction [
 	blockBuilder tacAtomicSwap: variable with: value into: result
 ]
 
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> increaseReferenceOf: aValue [
+	| increaseReferenceFunction |
+	increaseReferenceFunction := target objectModel increaseReference.
+	increaseReferenceFunction ifNil: [ ^ self ].
+	
+	blockBuilder tacCall: (self translateValue: increaseReferenceFunction)
+		arguments: { self translateValue: aValue }
+			into: #() convention: (sasmTarget callingConventionNamed: increaseReferenceFunction callingConvention)
+]
+
 { #category : #memory }
 SLVMSAsmFunctionCodeGenerator >> loadFrom: pointer scalarType: type into: result [
 	| temp |
@@ -945,6 +956,7 @@ SLVMSAsmFunctionCodeGenerator >> visitInstantiateClosure: anInstruction [
 	normalCaptureIndex := 0.
 	anInstruction captures do: [ :cap |
 		cap type isDynamicObjectType ifTrue: [ 
+			self increaseReferenceOf: cap.
 			captureIndex := dynamicCaptureIndex.
 			dynamicCaptureIndex := dynamicCaptureIndex + 1
 		] ifFalse: [ 

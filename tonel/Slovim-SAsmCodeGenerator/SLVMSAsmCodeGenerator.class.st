@@ -268,6 +268,11 @@ SLVMSAsmCodeGenerator >> translateModuleElement: element [
 	^ element accept: self
 ]
 
+{ #category : #testing }
+SLVMSAsmCodeGenerator >> usesGCStrategy [
+	^ true
+]
+
 { #category : #visiting }
 SLVMSAsmCodeGenerator >> visitClosureDefinition: aNode [
 	^ self translateModuleElement: (translatedClosureDefinitions at: aNode ifAbsentPut: [self applyPassesInFunction: aNode asNormalFunction])
