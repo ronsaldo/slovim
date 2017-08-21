@@ -672,6 +672,7 @@ SLVMSAsmFunctionCodeGenerator >> visitAlloca: instruction [
 	result := self translateValue: instruction.
 	instruction block == function basicBlocks first ifTrue: [ 
 		variable := sasmFunction newLocal: valueType size alignment: valueType alignment dynamicRoot: valueType isDynamicObjectType.
+		variable explicitLocalVariable: true.
 		blockBuilder tacLoadLocalAddress: variable into: result
 	] ifFalse: [ 
 		self halt.

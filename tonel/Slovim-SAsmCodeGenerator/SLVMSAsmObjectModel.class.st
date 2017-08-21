@@ -14,6 +14,11 @@ SLVMSAsmObjectModel >> importFunction: slvmFunction [
 	^ (target cFunctionPrefix , slvmFunction name) asSymbol
 ]
 
+{ #category : #testing }
+SLVMSAsmObjectModel >> isReferenceCounted [
+	^ objectModel isReferenceCounted
+]
+
 { #category : #accessing }
 SLVMSAsmObjectModel >> objectModel [
 	^ objectModel
