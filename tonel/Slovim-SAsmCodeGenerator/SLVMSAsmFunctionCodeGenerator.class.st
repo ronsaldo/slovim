@@ -15,7 +15,8 @@ Class {
 		'allocaToVariableMap',
 		'returnArgumentType',
 		'returnArgument',
-		'returnArgumentRegister'
+		'returnArgumentRegister',
+		'dynamicObjectVariableRegisters'
 	],
 	#classVars : [
 		'BuiltInFunctionSelectorMapping',
@@ -195,13 +196,19 @@ SLVMSAsmFunctionCodeGenerator >> constantTranslator [
 SLVMSAsmFunctionCodeGenerator >> createAllocaVariables [
 	| registers |
 	allocaToVariableMap := Dictionary new.
+	dynamicObjectVariableRegisters := OrderedCollection new.
+	
 	function basicBlocks first allocaInstructionsDo: [ :alloca |
 		alloca isOnlyUsedByLoadStore ifTrue: [
 			registers := self createVirtualRegistersForType: alloca valueType.
 			allocaToVariableMap at: alloca put: registers.
 			alloca instructionReferences do: [ :ref |
 				ref isLoad ifTrue: [ valueVariableMap at: ref put: registers ].
-			]
+			].
+		
+			alloca valueType isDynamicObjectType ifTrue: [
+				dynamicObjectVariableRegisters add: registers
+			] 
 		]
 	]
 ]
@@ -238,7 +245,7 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegisters [
 
 	function basicBlocks do: [ :basicBlock |
 		basicBlock instructionsDo: [ :instruction |
-			instruction isBitCast ifFalse: [ 
+			(self isNopBitCast: instruction) ifFalse: [ 
 				type := instruction type.
 				type isVoidType ifFalse: [ 
 					valueVariableMap at: instruction ifAbsentPut: [self createVirtualRegistersForType: type].
@@ -250,7 +257,7 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegisters [
 	"Nop some instructions"
 	function basicBlocks do: [ :basicBlock |
 		basicBlock instructionsDo: [ :instruction |
-			(instruction isBitCast) ifTrue: [ 
+			(self isNopBitCast: instruction) ifTrue: [ 
 				valueVariableMap at: instruction ifAbsentPut: [self translateValue: instruction source]
 			]
 		]
@@ -314,6 +321,13 @@ SLVMSAsmFunctionCodeGenerator >> emitIntructionDebugInformation: instruction [
 	target emittingDebugInformation ifFalse: [ ^ self ].
 	instruction debugSourceLocation ifNotNil: [ 
 		blockBuilder debugSourceLocation: instruction debugSourceLocation
+	]
+]
+
+{ #category : #'code generation' }
+SLVMSAsmFunctionCodeGenerator >> emitPrologueInstructions [
+	dynamicObjectVariableRegisters do: [ :reg |
+		blockBuilder tacMove: 0 into: reg
 	]
 ]
 
@@ -384,8 +398,8 @@ SLVMSAsmFunctionCodeGenerator >> generateFunction: slvmFunction into: newSasmFun
 		createArguments;
 		createVirtualRegisters;
 		translateBasicBlocks;
-		postProcessCodeGeneration
-	
+		postProcessCodeGeneration.
+
 ]
 
 { #category : #'atomic operations' }
@@ -423,6 +437,11 @@ SLVMSAsmFunctionCodeGenerator >> increaseReferenceOf: aValue [
 	blockBuilder tacCall: (self translateValue: increaseReferenceFunction)
 		arguments: { self translateValue: aValue }
 			into: #() convention: (sasmTarget callingConventionNamed: increaseReferenceFunction callingConvention)
+]
+
+{ #category : #'code generation' }
+SLVMSAsmFunctionCodeGenerator >> isNopBitCast: instruction [
+	^ instruction isBitCast and: [ instruction canBeNop ]
 ]
 
 { #category : #memory }
@@ -608,6 +627,10 @@ SLVMSAsmFunctionCodeGenerator >> target: aCompilationTarget [
 
 { #category : #'code generation' }
 SLVMSAsmFunctionCodeGenerator >> translateBasicBlock: basicBlock [
+	basicBlock index = 1 ifTrue: [ 
+		self emitPrologueInstructions
+	].
+
 	basicBlock instructionsDo: [ :instruction |
 		"Do not generate unused values."
 		(instruction isPureInstruction and: [ instruction instructionReferences isEmpty]) ifFalse: [
@@ -641,12 +664,17 @@ SLVMSAsmFunctionCodeGenerator >> translateBasicBlocks [
 { #category : #'code generation' }
 SLVMSAsmFunctionCodeGenerator >> translateConstant: value [
 	| result loadedLiteral |
+	valueVariableMap at: value ifPresent: [ :oldValue | ^ oldValue ].
+	
 	result := self constantTranslator translate: value.
 	value isConstantDynamicLiteral ifTrue: [
 		loadedLiteral := blockBuilder tacIntRegister.
 		blockBuilder tacLoad: result into: loadedLiteral.
 		^ SLVMSAsmValue registers: { loadedLiteral }
 	].
+
+	valueVariableMap at: value put: result.
+
 	^ result
 	
 ]
@@ -695,8 +723,14 @@ SLVMSAsmFunctionCodeGenerator >> visitBitAnd: instruction [
 
 { #category : #casting }
 SLVMSAsmFunctionCodeGenerator >> visitBitCast: instruction [
-	"Nothing required here"
-
+	| sourceValue result |
+	(self isNopBitCast: instruction) ifTrue: [ ^ self ].
+	
+	sourceValue := self translateValue: instruction source.
+	result := self translateValue: instruction.
+	sourceValue ~~ result ifTrue: [
+		self move: sourceValue into: result
+	].
 ]
 
 { #category : #arithmetic }
@@ -881,7 +915,7 @@ SLVMSAsmFunctionCodeGenerator >> visitGetElementPointer: instruction [
 SLVMSAsmFunctionCodeGenerator >> visitGetFramePointer: anInstruction [
 	| result |
 	result := self translateValue: anInstruction.
-	blockBuilder tacMove: sasmTarget stackPointerRegister into: result
+	blockBuilder tacMove: sasmTarget framePointerRegister into: result
 ]
 
 { #category : #visiting }
@@ -1314,6 +1348,15 @@ SLVMSAsmFunctionCodeGenerator >> visitUnaryOperation: instruction [
 	selector := OperationCodeGeneratorMap at: instruction operation.
 	^ self perform: selector with: instruction
 
+]
+
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitUndefinedInstruction: instruction [
+	| result |
+	result := self translateValue: instruction.
+	instruction type isDynamicObjectType ifTrue: [
+		^ blockBuilder tacMove: 0 into: result
+	]
 ]
 
 { #category : #comparisons }
