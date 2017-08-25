@@ -129,6 +129,10 @@ SLVMGlobalValue >> name: anObject [
 
 { #category : #printing }
 SLVMGlobalValue >> printOn: aStream [
+	self unmangledName ifNotNil: [ :prettyName |
+		^ aStream nextPut: $@; print: prettyName; space; print: (name ifNil: [#anonymous]).
+	].
+
 	aStream nextPut: $@; print: (name ifNil: [#anonymous]).
 ]
 

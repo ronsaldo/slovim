@@ -11,6 +11,13 @@ SLVMBoolType >> accept: aVisitor [
 
 { #category : #'constant encoding' }
 SLVMBoolType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stream [
+	value ifFalse: [ 
+		1 to: size do: [ :i |
+			stream nextPut: 0.
+		].
+		^ self
+	].
+
 	bigEndian ifTrue: [
 		self halt.
 	] ifFalse: [

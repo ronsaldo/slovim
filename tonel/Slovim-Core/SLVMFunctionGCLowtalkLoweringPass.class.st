@@ -68,7 +68,7 @@ SLVMFunctionGCLowtalkLoweringPass >> emitAutomaticReferenceCountingOn: aFunction
 				]
 			].
 
-			(ins isReturn and: [ ins value type isDynamicObjectType ]) ifTrue: [ 
+			((ins isReturn or: [ins isReturnFromContext ]) and: [ ins value type isDynamicObjectType ]) ifTrue: [ 
 				self increaseReference: ins value beforeReturn: ins.
 			].
 		
@@ -151,6 +151,11 @@ SLVMFunctionGCLowtalkLoweringPass >> moveReference: ins intoTemporaryBefore: aft
 	"Create the temporary"
 	| temporary |
 	temporary := SLVMAlloca pointerSize: pointerSize valueType: ins type.
+	temporary name: ins name.
+	temporary name ifNotNil: [ 
+		temporary name: (temporary name , '_tempRef') asSymbol
+	].
+
 	afterLastAlloca block add: temporary before: afterLastAlloca.
 					
 	"Store the reference"
@@ -162,6 +167,7 @@ SLVMFunctionGCLowtalkLoweringPass >> moveReference: ins intoTemporaryBefore: aft
 SLVMFunctionGCLowtalkLoweringPass >> passOnFunction: aFunction [
 	aFunction isEmpty ifTrue: [ ^ self ].
 	
+	"true ifTrue: [ ^ self ]."
 	
 	pointerSize := aFunction compilationTarget pointerSize.
 	
@@ -173,7 +179,7 @@ SLVMFunctionGCLowtalkLoweringPass >> passOnFunction: aFunction [
 	releaseReference := objectModel releaseReference.
 
 	self cleanInstructionsOf: aFunction.
-	
+
 	(increaseReference isNotNil and: [ releaseReference isNotNil ]) ifTrue: [
 		self emitAutomaticReferenceCountingOn: aFunction
 	] ifFalse: [
@@ -186,7 +192,7 @@ SLVMFunctionGCLowtalkLoweringPass >> passOnFunction: aFunction [
 SLVMFunctionGCLowtalkLoweringPass >> releaseValue: anInstruction [
 	| newInstruction |
 	newInstruction := SLVMCall function: releaseReference arguments: { anInstruction }.
-	anInstruction block add: newInstruction after: anInstruction
+	anInstruction block add: newInstruction after: anInstruction.
 ]
 
 { #category : #applying }
@@ -201,6 +207,7 @@ SLVMFunctionGCLowtalkLoweringPass >> replaceInstruction: instruction with: newIn
 
 { #category : #applying }
 SLVMFunctionGCLowtalkLoweringPass >> replaceLoadWithReadBarrier: instruction [
+	readBarrier ifNil: [ ^ self ].
 	self replaceInstruction: instruction with: (SLVMCall function: readBarrier arguments: { instruction variable })
 
 ]
@@ -212,5 +219,6 @@ SLVMFunctionGCLowtalkLoweringPass >> replaceStoreWithRefcountedWriteBarrier: ins
 
 { #category : #applying }
 SLVMFunctionGCLowtalkLoweringPass >> replaceStoreWithWriteBarrier: instruction [
+	writeBarrier ifNil: [ ^ self ].
 	self replaceInstruction: instruction with: (SLVMCall function: writeBarrier arguments: { instruction value . instruction variable })
 ]

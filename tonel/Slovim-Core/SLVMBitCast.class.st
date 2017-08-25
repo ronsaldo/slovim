@@ -10,6 +10,15 @@ SLVMBitCast >> accept: aVisitor [
 ]
 
 { #category : #testing }
+SLVMBitCast >> canBeNop [
+	instructionReferences ifEmpty: [ ^ true ].
+	instructionReferences size > 1 ifTrue: [ ^ false ].
+	instructionReferences first ~~ self nextInstruction ifTrue: [ ^ false ].
+	type isDynamicObjectType ~~ self source type isDynamicObjectType ifTrue: [ ^ false ].
+	^ true
+]
+
+{ #category : #testing }
 SLVMBitCast >> isBitCast [
 	^ true
 ]

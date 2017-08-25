@@ -58,8 +58,8 @@ SLVMCodeGenerator >> applyOptimizationsIn: ssaModule functionList: functionList 
 
 { #category : #'code generation' }
 SLVMCodeGenerator >> applyPassesIn: ssaModule functionList: functionList [
-	self usesGCStrategy ifTrue: [ functionList do: #applyGCStrategy ].
 	self applyOptimizationsIn: ssaModule functionList: functionList.
+	self usesGCStrategy ifTrue: [ functionList do: #applyGCStrategy ].
 	self needSSADestroyed ifTrue: [ 
 		SLVMOptDestroySSA passOnFunctions: functionList.
 	].
@@ -68,8 +68,8 @@ SLVMCodeGenerator >> applyPassesIn: ssaModule functionList: functionList [
 
 { #category : #'code generation' }
 SLVMCodeGenerator >> applyPassesInFunction: function [
-	self usesGCStrategy ifTrue: [ function applyGCStrategy ].
 	globalOptimization ifNotNil: [ globalOptimization passOnFunction: function ].
+	self usesGCStrategy ifTrue: [ function applyGCStrategy ].
 	self needSSADestroyed ifTrue: [ 
 		SLVMOptDestroySSA passOnFunction: function.
 	].

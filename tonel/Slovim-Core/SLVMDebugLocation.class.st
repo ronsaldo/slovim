@@ -31,6 +31,11 @@ SLVMDebugLocation >> endLine: anObject [
 	endLine := anObject
 ]
 
+{ #category : #printing }
+SLVMDebugLocation >> printOn: aStream [
+	aStream print: sourceFile; space; print: startColumn; space; print: startLine
+]
+
 { #category : #accessing }
 SLVMDebugLocation >> sourceFile [
 	^ sourceFile

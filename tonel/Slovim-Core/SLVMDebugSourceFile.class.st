@@ -27,3 +27,8 @@ SLVMDebugSourceFile >> name [
 SLVMDebugSourceFile >> name: anObject [
 	name := anObject
 ]
+
+{ #category : #printing }
+SLVMDebugSourceFile >> printOn: aStream [
+	aStream print: name
+]

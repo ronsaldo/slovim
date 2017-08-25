@@ -53,7 +53,7 @@ SLVMOptPromoteAllocas >> addUndefinedTo: definitionsPerNode allocaInstruction: a
 	| function entryBlock undefinedInstruction |
 	function := allocaInstruction block function.
 	entryBlock := function basicBlocks first.
-	undefinedInstruction := (SLVMUndefined type: allocaInstruction valueType) name: (allocaInstruction name , function generateSymbol) asSymbol.
+	undefinedInstruction := self undefinedFor: allocaInstruction valueType name: (allocaInstruction name , function generateSymbol) asSymbol.
 	entryBlock addFirst: undefinedInstruction.
 	definitionsPerNode at: entryBlock put: { undefinedInstruction }.
 	^ undefinedInstruction
@@ -85,18 +85,28 @@ SLVMOptPromoteAllocas >> findLastStoreTo: allocaInstruction before: loadInstruct
 
 { #category : #accessing }
 SLVMOptPromoteAllocas >> firstDefinitionValueAt: node for: definitionsPerNode allocaInstruction: allocaInstruction [
+	| firstDefinition secondDefinition |
 	definitionsPerNode at: node ifPresent: [ :definitions |
 		definitions first isPhi ifTrue: [ 
 			^ definitions first
 		].
 	].
 
-	self assert: node predecessors size <= 1.
+	self assert: node predecessors size <= 2.
 	node predecessors ifEmpty: [ 
 		"Undef"
 		self halt
 	] ifNotEmpty: [
-		^ self lastDefinitionValueAt: node predecessors anyOne for: definitionsPerNode allocaInstruction: allocaInstruction
+		node predecessors size = 1 ifTrue: [ 
+		^ self lastDefinitionValueAt: node predecessors first for: definitionsPerNode allocaInstruction: allocaInstruction
+		].
+	
+		self assert: node predecessors size = 2.
+		firstDefinition := self lastDefinitionValueAt: node predecessors first for: definitionsPerNode allocaInstruction: allocaInstruction.
+		secondDefinition := self lastDefinitionValueAt: node predecessors second for: definitionsPerNode allocaInstruction: allocaInstruction.
+		firstDefinition == secondDefinition ifTrue: [ ^ firstDefinition].
+		self halt
+		
 	].
 
 ]
@@ -179,7 +189,7 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 
 	(hasStore not) ifTrue: [
 		"This variable is never set. It always contains the undefined value."
-		undefined := (SLVMUndefined type: allocaInstruction valueType) name: allocaInstruction name.
+		undefined := self undefinedFor: allocaInstruction valueType name: allocaInstruction name.
 		allocaInstruction block function basicBlocks addFirst: undefined.  
 		allocaInstruction instructionReferences asArray do: [ :load |
 			load replaceWith: undefined.
@@ -256,4 +266,10 @@ SLVMOptPromoteAllocas >> sortNode: node definitions: definitions allocaInstructi
 	self assert: lastStore isNotNil.
 	
 	definitions swap: (definitions indexOf: lastStore) with: definitions size.
+]
+
+{ #category : #'as yet unclassified' }
+SLVMOptPromoteAllocas >> undefinedFor: type name: instructionName [
+	"type isDynamicObjectType ifTrue: [ ^ SLVMConstantValue type: type value: nil ]."
+	^ (SLVMUndefined type: type) name: instructionName
 ]
