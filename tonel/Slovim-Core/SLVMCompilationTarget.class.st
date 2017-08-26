@@ -82,6 +82,16 @@ SLVMCompilationTarget >> int [
 	^ SLVMType intType
 ]
 
+{ #category : #testing }
+SLVMCompilationTarget >> isBigEndian [
+	^ self isLittleEndian not
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> isLittleEndian [
+	^ true
+]
+
 { #category : #accessing }
 SLVMCompilationTarget >> lowLevelCodeGeneratorClass [
 	self subclassResponsibility
