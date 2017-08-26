@@ -16,14 +16,6 @@ SLVMConstantTest >> testConstantBool [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMConstantTest >> testConstantDouble [
-	| constant |
-	constant := SLVMConstant double: 1.0.
-	self assert: constant type equals: SLVMType doubleType. 
-	self assert: constant value equals: 1.0.
-]
-
-{ #category : #'as yet unclassified' }
 SLVMConstantTest >> testConstantFloat [
 	| constant |
 	constant := SLVMConstant float: 1.0.

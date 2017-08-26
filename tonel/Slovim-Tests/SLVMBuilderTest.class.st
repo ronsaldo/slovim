@@ -32,7 +32,7 @@ SLVMBuilderTest >> testConstDouble [
 	| constant |
 	constant := builder constDouble: 1.0.
 	self assert: constant isConstant.
-	self assert: constant type = SLVMType doubleType.
+	self assert: constant type isFloatType.
 ]
 
 { #category : #tests }
