@@ -13,8 +13,16 @@ Class {
 
 { #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> addToConstantZone: constantData [
+	^ self addToConstantZone: constantData alignment: 1
+]
+
+{ #category : #visiting }
+SLVMSAsmConstantCodeGenerator >> addToConstantZone: constantData alignment: anAlignment [
 	| builder symbol |
 	builder := moduleElement constantZoneBuilder.
+	anAlignment ~= 1 ifTrue: [ 
+		builder align: anAlignment.
+	].
 	symbol := builder newPrivateSymbol: #constant.
 	builder label: symbol;
 		add: constantData.
@@ -37,6 +45,7 @@ SLVMSAsmConstantCodeGenerator >> getConstantDynamicLiteralLocation: value [
 SLVMSAsmConstantCodeGenerator >> isImmediateConstantType: constantType [
 	constantType isScalarType ifTrue: [ 
 		self flag: 'Refine this search.'.
+		constantType isFloatType ifTrue: [ ^ false ].
 		^ true
 	].
 	^ false
@@ -167,15 +176,17 @@ SLVMSAsmConstantCodeGenerator >> visitConstantExpressionBitCast: constant [
 SLVMSAsmConstantCodeGenerator >> visitConstantPointer: aConstant [
 	| constantData |
 	constantData := self dataGenerator translate: aConstant constant.
-	^ {self addToConstantZone: (SAsmConstantExpressionValue new size: constantData size; value: constantData)}
+	^ SLVMSAsmValue operands: {self addToConstantZone: (SAsmConstantExpressionValue new size: constantData size; value: constantData) alignment: aConstant type alignment}
 ]
 
 { #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> visitConstantValue: value [
+	| constantData |
 	(self isImmediateConstantType: value type) ifTrue: [
 		^ self translateImmediateConstantValue: value
 	] ifFalse: [ 
-		self halt
+		constantData := self dataGenerator translate: value.
+		^ SLVMSAsmValue operands: {(self addToConstantZone: (SAsmConstantExpressionValue new size: constantData size; value: constantData) alignment: value type alignment) asConstantPointerOfSize: constantData size}
 	].
 	
 ]

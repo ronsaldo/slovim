@@ -103,6 +103,28 @@ SLVMSAsmFunctionCodeGenerator class >> initialize [
 ]
 
 { #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> binaryFloat: instruction arithmetic: operation [
+	| left leftValue right rightValue resultValue |
+	left := instruction left.
+	leftValue := self translateValue: left.
+	
+	right := instruction right.
+	rightValue := self translateValue: right.
+	
+	resultValue := self translateValue: instruction.
+	
+	self assert: leftValue size = rightValue size.
+	self assert: leftValue size = resultValue size.
+	self assert: instruction left type = instruction right type.
+	resultValue size ~= 1 ifTrue: [
+		"Handle the multi-register case in a special way"
+		self halt.
+	].
+	
+	^ blockBuilder tacOperation: operation result: resultValue left: leftValue right: rightValue
+]
+
+{ #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> binaryInteger: instruction arithmetic: operation [
 	| left leftValue right rightValue resultValue |
 	left := instruction left.
@@ -688,6 +710,40 @@ SLVMSAsmFunctionCodeGenerator >> translateValue: value [
 ]
 
 { #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> unaryFloat: instruction arithmetic: operation [
+	| resultValue operand operandValue |
+	operand := instruction operand.
+	operandValue := self translateValue: operand.
+	
+	resultValue := self translateValue: instruction.
+	
+	self assert: operandValue size = resultValue size.
+	resultValue size ~= 1 ifTrue: [
+		"Handle the multi-register case in a special way"
+		self halt.
+	].
+	
+	^ blockBuilder tacOperation: operation result: resultValue value: operandValue
+]
+
+{ #category : #arithmetic }
+SLVMSAsmFunctionCodeGenerator >> unaryInteger: instruction arithmetic: operation [
+	| resultValue operand operandValue |
+	operand := instruction operand.
+	operandValue := self translateValue: operand.
+	
+	resultValue := self translateValue: instruction.
+	
+	self assert: operandValue size = resultValue size.
+	resultValue size ~= 1 ifTrue: [
+		"Handle the multi-register case in a special way"
+		self halt.
+	].
+	
+	^ blockBuilder tacOperation: operation result: resultValue value: operandValue
+]
+
+{ #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitAdd: instruction [
 	self binaryInteger: instruction arithmetic: TacAdd
 ]
@@ -865,6 +921,25 @@ SLVMSAsmFunctionCodeGenerator >> visitFloatSqrt: instruction [
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitFloatSub: instruction [
 	self binaryFloat: instruction arithmetic: TacFloatSubtract
+]
+
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitFloatingPointCast: instruction [
+	| source sourceValue result sourceSize resultSize |
+	source := instruction source.
+	sourceValue := self translateValue: source.
+	result := self translateValue: instruction.
+	self assert: source type isFloatType.
+	sourceSize := source type size.
+	resultSize := instruction type size.
+	(sourceSize = 4 and: [ resultSize = 8 ]) ifTrue:[
+		^ blockBuilder tacFloat: sourceValue intoDouble: result
+	].
+	(sourceSize = 8 and: [ resultSize = 4 ]) ifTrue:[
+		^ blockBuilder tacDouble: sourceValue intoFloat: result
+	].
+
+	self error: 'Unsupported floating point cast'
 ]
 
 { #category : #visiting }

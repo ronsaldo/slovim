@@ -36,6 +36,11 @@ SLVMSAsmCompilationTarget >> canonicalName [
 ]
 
 { #category : #'operating systems' }
+SLVMSAsmCompilationTarget >> double [
+	^ self isWin32 ifTrue: [ self doubleAlign8 ] ifFalse: [ self doubleAlign4 ]
+]
+
+{ #category : #'operating systems' }
 SLVMSAsmCompilationTarget >> freebsd [
 	target freebsd
 ]
@@ -43,6 +48,11 @@ SLVMSAsmCompilationTarget >> freebsd [
 { #category : #convenience }
 SLVMSAsmCompilationTarget >> generateLowLevelModule: aModule [
 	^ SLVMSAsmCodeGenerator new target: self; translateModule: aModule
+]
+
+{ #category : #'operating systems' }
+SLVMSAsmCompilationTarget >> isWin32 [
+	^ self operatingSystemName = #win32
 ]
 
 { #category : #'operating systems' }

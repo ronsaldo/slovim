@@ -30,6 +30,11 @@ SLVMSAsmValue >> isAggregate [
 ]
 
 { #category : #testing }
+SLVMSAsmValue >> isFloatRegister [
+	^ false
+]
+
+{ #category : #testing }
 SLVMSAsmValue >> isOperandSet [
 	^ false
 ]

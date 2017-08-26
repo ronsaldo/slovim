@@ -34,6 +34,16 @@ SLVMSAsmOperandSet >> doWithIndex: aBlock [
 ]
 
 { #category : #testing }
+SLVMSAsmOperandSet >> isFloatRegister [
+	^ self isRegisterScalarValue and: [registers first isFloatRegister]
+]
+
+{ #category : #testing }
+SLVMSAsmOperandSet >> isFloatingPointRegister [
+	^ self isRegisterScalarValue and: [registers first isFloatingPointRegister]
+]
+
+{ #category : #testing }
 SLVMSAsmOperandSet >> isOperandSet [
 	^ true
 ]
