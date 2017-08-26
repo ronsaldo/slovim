@@ -338,6 +338,23 @@ SLVMSAsmFunctionCodeGenerator >> elementWise: source with: source2 with: result 
 	]
 ]
 
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> emitCastInstruction: instruction byCalling: convertionFunction [
+	^ self emitCastInstruction: instruction byCalling: convertionFunction intoResult: (self translateValue: instruction)
+]
+
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> emitCastInstruction: instruction byCalling: convertionFunction intoResult: result [
+	| pointer convertionFunctionValue |
+	pointer := self translateValue: instruction source.
+	
+	convertionFunctionValue := self translateValue: convertionFunction.
+	blockBuilder tacCall: convertionFunctionValue
+		arguments: { pointer registers first }
+		into: result convention: (sasmTarget callingConventionNamed: convertionFunction callingConvention).
+	^ result
+]
+
 { #category : #'code generation' }
 SLVMSAsmFunctionCodeGenerator >> emitIntructionDebugInformation: instruction [
 	target emittingDebugInformation ifFalse: [ ^ self ].
@@ -864,6 +881,26 @@ SLVMSAsmFunctionCodeGenerator >> visitDiv: instruction [
 ]
 
 { #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitDynamicObjectToFloatCast: instruction [
+	| result resultTemp |
+	result := self translateValue: instruction.
+	resultTemp := result.
+	instruction type size ~= 8 ifTrue: [ 
+		resultTemp := blockBuilder newDoubleFloatVirtualRegister.
+	].
+
+	self emitCastInstruction: instruction byCalling: target objectModel objectToFloatFunction intoResult: resultTemp.
+	
+	instruction type size = 8 ifTrue: [
+		self assert: resultTemp == result.
+		^ self
+	].
+	instruction type size = 4 ifTrue: [
+		blockBuilder tacDouble: resultTemp intoFloat: result
+	].
+]
+
+{ #category : #casting }
 SLVMSAsmFunctionCodeGenerator >> visitDynamicObjectToIntCast: instruction [
 	| source sourceValue result |
 	source := instruction source.
@@ -921,6 +958,11 @@ SLVMSAsmFunctionCodeGenerator >> visitFloatSqrt: instruction [
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitFloatSub: instruction [
 	self binaryFloat: instruction arithmetic: TacFloatSubtract
+]
+
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitFloatToDynamicObjectCast: instruction [
+	^ self emitCastInstruction: instruction byCalling: target objectModel floatToObjectFunction
 ]
 
 { #category : #casting }
@@ -1130,6 +1172,45 @@ SLVMSAsmFunctionCodeGenerator >> visitIntToDynamicObjectCast: instruction [
 "	].
 
 
+]
+
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitIntToFloatCast: instruction [
+	| result source sourceSize resultSize isSigned |
+	result := self translateValue: instruction.
+	source := self translateValue: instruction source.
+	isSigned := instruction source type isSigned.
+	sourceSize := instruction source type size.
+	resultSize := instruction type size.
+	sourceSize < 4 ifTrue: [
+		self halt
+	].
+
+	resultSize = 4 ifTrue: [
+		sourceSize = 4 ifTrue: [
+			isSigned ifTrue: [
+				^ blockBuilder tacInt32: source intoFloat: result
+			] ifFalse: [ 
+				^ blockBuilder tacUInt32: source intoFloat: result
+			]
+		] ifFalse: [
+			self halt
+		]
+	].
+	resultSize = 8 ifTrue: [
+		sourceSize = 4 ifTrue: [
+			isSigned ifTrue: [
+				^ blockBuilder tacInt32: source intoDouble: result
+			] ifFalse: [ 
+				^ blockBuilder tacUInt32: source intoDouble: result
+			]
+		] ifFalse: [
+			self assert: sourceSize = 8.
+			self halt
+		]
+	].
+
+	self error: 'Unsupported integer to float cast'.
 ]
 
 { #category : #comparisons }
