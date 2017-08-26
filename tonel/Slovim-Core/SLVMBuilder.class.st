@@ -190,7 +190,7 @@ SLVMBuilder >> constCString: aValue [
 
 { #category : #constants }
 SLVMBuilder >> constDouble: aValue [
-	^ SLVMConstant double: aValue
+	^ SLVMConstant type: self compilationTarget double value: aValue
 ]
 
 { #category : #constants }
@@ -382,6 +382,16 @@ SLVMBuilder >> frem: left with: right [
 { #category : #arithmetic }
 SLVMBuilder >> frem: left with: right name: resultName [
 	^ self addOperation: #frem left: left right: right name: resultName
+]
+
+{ #category : #arithmetic }
+SLVMBuilder >> fsqrt: operand [
+	^ self fsqrt: operand name: function generateSymbol
+]
+
+{ #category : #arithmetic }
+SLVMBuilder >> fsqrt: operand name: resultName [
+	^ self addOperation: #fsqrt operand: operand name: resultName
 ]
 
 { #category : #arithmetic }

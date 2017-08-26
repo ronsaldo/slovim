@@ -7,7 +7,8 @@ Class {
 		'BuiltInTypes',
 		'CharType',
 		'CrossWorkgroupStorage',
-		'DoubleType',
+		'DoubleAlign4Type',
+		'DoubleAlign8Type',
 		'FloatType',
 		'FunctionStorage',
 		'GenericStorage',
@@ -67,8 +68,13 @@ SLVMType class >> crossWorkgroupStorage [
 ]
 
 { #category : #'built in types' }
-SLVMType class >> doubleType [
-	^ DoubleType
+SLVMType class >> doubleAlign4Type [
+	^ DoubleAlign4Type
+]
+
+{ #category : #'built in types' }
+SLVMType class >> doubleAlign8Type [
+	^ DoubleAlign8Type
 ]
 
 { #category : #'built in types' }
@@ -144,9 +150,13 @@ SLVMType class >> matrixTypes [
 		SLVMMatrixType baseType: FloatType rows: 3 columns: 3.
 		SLVMMatrixType baseType: FloatType rows: 4 columns: 4.
 		
-		SLVMMatrixType baseType: DoubleType rows: 2 columns: 2.
-		SLVMMatrixType baseType: DoubleType rows: 3 columns: 3.
-		SLVMMatrixType baseType: DoubleType rows: 4 columns: 4.
+		SLVMMatrixType baseType: DoubleAlign4Type rows: 2 columns: 2.
+		SLVMMatrixType baseType: DoubleAlign4Type rows: 3 columns: 3.
+		SLVMMatrixType baseType: DoubleAlign4Type rows: 4 columns: 4.
+
+		SLVMMatrixType baseType: DoubleAlign8Type rows: 2 columns: 2.
+		SLVMMatrixType baseType: DoubleAlign8Type rows: 3 columns: 3.
+		SLVMMatrixType baseType: DoubleAlign8Type rows: 4 columns: 4.
 	}
 ]
 
@@ -171,7 +181,8 @@ SLVMType class >> primitiveTypes [
 	ULongType := SLVMIntegerType name: #ulong size: 8 alignment: 8 signed: false.
 	
 	FloatType := SLVMFloatType name: #float size: 4 alignment: 4.	
-	DoubleType := SLVMFloatType name: #double size: 8 alignment: 8.
+	DoubleAlign8Type := SLVMFloatType name: #doubleAlign8 size: 8 alignment: 8.
+	DoubleAlign4Type := SLVMFloatType name: #doubleAlign4 size: 8 alignment: 4.
 	
 	^ {
 		VoidType.
@@ -188,7 +199,8 @@ SLVMType class >> primitiveTypes [
 		ULongType.
 		
 		FloatType.
-		DoubleType.
+		DoubleAlign4Type.
+		DoubleAlign8Type.
 	}
 ]
 
@@ -275,9 +287,13 @@ SLVMType class >> vectorTypes [
 		SLVMVectorType baseType: FloatType elements: 3.
 		SLVMVectorType baseType: FloatType elements: 4.
 		
-		SLVMVectorType baseType: DoubleType elements: 2.
-		SLVMVectorType baseType: DoubleType elements: 3.
-		SLVMVectorType baseType: DoubleType elements: 4.
+		SLVMVectorType baseType: DoubleAlign4Type elements: 2.
+		SLVMVectorType baseType: DoubleAlign4Type elements: 3.
+		SLVMVectorType baseType: DoubleAlign4Type elements: 4.
+
+		SLVMVectorType baseType: DoubleAlign8Type elements: 2.
+		SLVMVectorType baseType: DoubleAlign8Type elements: 3.
+		SLVMVectorType baseType: DoubleAlign8Type elements: 4.		
 		
 		SLVMVectorType baseType: IntType elements: 2.
 		SLVMVectorType baseType: IntType elements: 3.

@@ -32,7 +32,17 @@ SLVMCompilationTarget >> char [
 
 { #category : #types }
 SLVMCompilationTarget >> double [
-	^ SLVMType doubleType
+	^ self subclassResponsibility
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> doubleAlign4 [
+	^ SLVMType doubleAlign4Type
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> doubleAlign8 [
+	^ SLVMType doubleAlign8Type
 ]
 
 { #category : #accessing }

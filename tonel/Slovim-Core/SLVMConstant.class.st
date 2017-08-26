@@ -29,8 +29,13 @@ SLVMConstant class >> cstring: value [
 ]
 
 { #category : #constructor }
-SLVMConstant class >> double: anInteger [
-	^ self type: SLVMType doubleType value: anInteger
+SLVMConstant class >> doubleAlign4: anInteger [
+	^ self type: SLVMType doubleAlign4Type value: anInteger
+]
+
+{ #category : #constructor }
+SLVMConstant class >> doubleAlign8: anInteger [
+	^ self type: SLVMType doubleAlign8Type value: anInteger
 ]
 
 { #category : #constructor }
