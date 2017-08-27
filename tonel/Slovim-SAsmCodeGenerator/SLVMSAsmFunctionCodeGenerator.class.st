@@ -966,6 +966,47 @@ SLVMSAsmFunctionCodeGenerator >> visitFloatToDynamicObjectCast: instruction [
 ]
 
 { #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitFloatToIntCast: instruction [
+	| result source sourceSize resultSize isSigned |
+	result := self translateValue: instruction.
+	source := self translateValue: instruction source.
+	isSigned := instruction type isSigned.
+	sourceSize := instruction source type size.
+	resultSize := instruction type size.
+	resultSize < 4 ifTrue: [
+		self halt
+	].
+
+	resultSize = 4 ifTrue: [
+		sourceSize = 4 ifTrue: [
+			isSigned ifTrue: [
+				^ blockBuilder tacFloat: source intoInt32: result
+			] ifFalse: [ 
+				^ blockBuilder tacFloat: source intoUInt32: result
+			]
+		] ifFalse: [
+			self assert: sourceSize = 8.
+			isSigned ifTrue: [
+				^ blockBuilder tacDouble: source intoInt32: result
+			] ifFalse: [ 
+				^ blockBuilder tacDouble: source intoUInt32: result
+			]
+		]
+	].
+
+	resultSize = 8 ifTrue: [
+		sourceSize = 4 ifTrue: [
+			self halt
+		] ifFalse: [
+			self assert: sourceSize = 8.
+			self halt
+		]
+	].
+
+	self error: 'Unsupported float to integer cast variant'.
+]
+
+{ #category : #casting }
 SLVMSAsmFunctionCodeGenerator >> visitFloatingPointCast: instruction [
 	| source sourceValue result sourceSize resultSize |
 	source := instruction source.
