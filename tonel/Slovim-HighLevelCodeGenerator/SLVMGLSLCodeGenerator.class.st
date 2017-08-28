@@ -177,7 +177,8 @@ SLVMGLSLCodeGenerator class >> initializeTypeMappings [
 		long long
 		ulong ulong
 		float float
-		double double
+		doubleAlign4 double
+		doubleAlign8 double
 		float2 vec2
 		float3 vec3
 		float4 vec4

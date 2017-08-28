@@ -223,7 +223,8 @@ SLVMCPPCodeGenerator class >> initializeTypeMappings [
 		long long
 		ulong ulong
 		float float
-		double double
+		doubleAlign4 double
+		doubleAlign8 double
 		float2 'glm::vec2'
 		float3 'glm::vec3'
 		float4 'glm::vec4'

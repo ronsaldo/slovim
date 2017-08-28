@@ -271,7 +271,8 @@ SLVMMetalCodeGenerator class >> initializeTypeMappings [
 		long long
 		ulong 'unsigned long'
 		float float
-		double double
+		doubleAlign4 double
+		doubleAlign8 double
 		float2 'metal::float2'
 		float3 'metal::float3'
 		float4 'metal::float4'
