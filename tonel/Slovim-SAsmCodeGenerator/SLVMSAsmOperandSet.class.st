@@ -24,6 +24,13 @@ SLVMSAsmOperandSet >> collect: aBlock [
 ]
 
 { #category : #accessing }
+SLVMSAsmOperandSet >> debugInformation: debugInformation [
+	registers do: [ :reg |
+		reg debugInformation: debugInformation
+	]
+]
+
+{ #category : #accessing }
 SLVMSAsmOperandSet >> do: aBlock [
 	registers do: aBlock
 ]

@@ -223,6 +223,8 @@ SLVMSAsmFunctionCodeGenerator >> createAllocaVariables [
 	function basicBlocks first allocaInstructionsDo: [ :alloca |
 		alloca isOnlyUsedByLoadStore ifTrue: [
 			registers := self createVirtualRegistersForType: alloca valueType.
+			self createRegisters: registers debugVariable: alloca.
+			
 			allocaToVariableMap at: alloca put: registers.
 			alloca instructionReferences do: [ :ref |
 				ref isLoad ifTrue: [ valueVariableMap at: ref put: registers ].
@@ -237,7 +239,7 @@ SLVMSAsmFunctionCodeGenerator >> createAllocaVariables [
 
 { #category : #'code generation' }
 SLVMSAsmFunctionCodeGenerator >> createArguments [
-	| stackFrameLayout returnType functionType |
+	| stackFrameLayout returnType functionType variable |
 	stackFrameLayout := sasmFunction stackFrameLayout.
 	argumentVariableMap := Dictionary new.
 	
@@ -249,8 +251,26 @@ SLVMSAsmFunctionCodeGenerator >> createArguments [
 	].
 	functionType := function functionType.
 	function arguments doWithIndex: [ :arg :index |
-		argumentVariableMap at: arg put: (stackFrameLayout createArgument: arg type spillingClass registerClass: arg type registerClass dynamicRoot: (functionType argumentAt: index hasAttribute: #dynobject)).
+		variable := stackFrameLayout createArgument: arg type spillingClass registerClass: arg type registerClass dynamicRoot: (functionType argumentAt: index hasAttribute: #dynobject).
+		self createVariable: variable debugVariable: arg.
+		argumentVariableMap at: arg put: variable.
 	]
+]
+
+{ #category : #'debug information' }
+SLVMSAsmFunctionCodeGenerator >> createRegisters: registers debugVariable: valueWithDebugInformation [
+	valueWithDebugInformation debugInformation ifNotNil: [ :debugInfo |
+		registers debugInformation: debugInfo
+	].
+
+]
+
+{ #category : #'debug information' }
+SLVMSAsmFunctionCodeGenerator >> createVariable: variable debugVariable: valueWithDebugInformation [
+	valueWithDebugInformation debugInformation ifNotNil: [ :debugInfo |
+		variable debugInformation: debugInfo
+	].
+
 ]
 
 { #category : #'code generation' }
@@ -260,6 +280,7 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegisters [
 	function arguments do: [ :argValue |
 		argumentVariable := argumentVariableMap at: argValue.
 		argumentRegisters := self createVirtualRegistersForVariable: argumentVariable type: argValue type.
+		self createRegisters: argumentRegisters debugVariable: argValue.
 		valueVariableMap at: argValue put: argumentRegisters.
 	].
 
@@ -270,7 +291,7 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegisters [
 			(self isNopBitCast: instruction) ifFalse: [ 
 				type := instruction type.
 				type isVoidType ifFalse: [ 
-					valueVariableMap at: instruction ifAbsentPut: [self createVirtualRegistersForType: type].
+					valueVariableMap at: instruction ifAbsentPut: [self createVirtualRegistersForType: type andInstruction: instruction].
 				]
 			]
 		]
@@ -305,6 +326,14 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegistersForType: type [
 
 	^ SLVMSAsmValue variable: (sasmFunction stackFrameLayout createLocal: type spillingClass)
 
+]
+
+{ #category : #'code generation' }
+SLVMSAsmFunctionCodeGenerator >> createVirtualRegistersForType: type andInstruction: instruction [
+	| result |
+	result := self createVirtualRegistersForType: type.
+	self createRegisters: result debugVariable: instruction.
+	^ result
 ]
 
 { #category : #'code generation' }
@@ -774,6 +803,7 @@ SLVMSAsmFunctionCodeGenerator >> visitAlloca: instruction [
 	instruction block == function basicBlocks first ifTrue: [ 
 		variable := sasmFunction newLocal: valueType size alignment: valueType alignment dynamicRoot: valueType isDynamicObjectType.
 		variable explicitLocalVariable: true.
+		self createVariable: variable debugVariable: instruction.
 		blockBuilder tacLoadLocalAddress: variable into: result
 	] ifFalse: [ 
 		self halt.
@@ -995,12 +1025,26 @@ SLVMSAsmFunctionCodeGenerator >> visitFloatToIntCast: instruction [
 	].
 
 	resultSize = 8 ifTrue: [
-		sourceSize = 4 ifTrue: [
+		target pointerSize = 8 ifTrue: [ 
+			sourceSize = 4 ifTrue: [
+				self halt
+				isSigned ifTrue: [
+					^ blockBuilder tacFloat: source intoInt64: result
+				] ifFalse: [ 
+					^ blockBuilder tacFloat: source intoUInt64: result
+				]
+			] ifFalse: [
+				self assert: sourceSize = 8.
+				isSigned ifTrue: [
+					^ blockBuilder tacDouble: source intoInt64: result
+				] ifFalse: [ 
+					^ blockBuilder tacDouble: source intoUInt64: result
+				]
+			]
+
+		] ifFalse: [ 
 			self halt
-		] ifFalse: [
-			self assert: sourceSize = 8.
-			self halt
-		]
+		].
 	].
 
 	self error: 'Unsupported float to integer cast variant'.
@@ -1235,7 +1279,15 @@ SLVMSAsmFunctionCodeGenerator >> visitIntToFloatCast: instruction [
 				^ blockBuilder tacUInt32: source intoFloat: result
 			]
 		] ifFalse: [
-			self halt
+			target pointerSize = 8 ifTrue: [ 
+				isSigned ifTrue: [
+					^ blockBuilder tacInt64: source intoFloat: result
+				] ifFalse: [ 
+					^ blockBuilder tacUInt64: source intoFloat: result
+				]
+			] ifFalse: [ 
+				self halt
+			]
 		]
 	].
 	resultSize = 8 ifTrue: [
@@ -1247,7 +1299,15 @@ SLVMSAsmFunctionCodeGenerator >> visitIntToFloatCast: instruction [
 			]
 		] ifFalse: [
 			self assert: sourceSize = 8.
-			self halt
+			target pointerSize = 8 ifTrue: [ 
+				isSigned ifTrue: [
+					^ blockBuilder tacInt64: source intoDouble: result
+				] ifFalse: [ 
+					^ blockBuilder tacUInt64: source intoDouble: result
+				]
+			] ifFalse: [ 
+				self halt
+			]
 		]
 	].
 
