@@ -18,6 +18,11 @@ SLVMDynamicObjectPointerCast >> initialize [
 	unchecked := false.
 ]
 
+{ #category : #testing }
+SLVMDynamicObjectPointerCast >> isDynamicObjectReferenceCreator [
+	^ true
+]
+
 { #category : #'as yet unclassified' }
 SLVMDynamicObjectPointerCast >> source: source targetType: targetType [
 	self shouldNotImplement

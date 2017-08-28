@@ -18,6 +18,11 @@ SLVMGetThisContext >> accept: visitor [
 ]
 
 { #category : #testing }
+SLVMGetThisContext >> isDynamicObjectReferenceCreator [
+	^ true
+]
+
+{ #category : #testing }
 SLVMGetThisContext >> isGetThisContext [
 	^ true
 ]

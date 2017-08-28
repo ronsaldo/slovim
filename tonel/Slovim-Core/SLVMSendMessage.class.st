@@ -43,6 +43,11 @@ SLVMSendMessage >> initialize [
 ]
 
 { #category : #testing }
+SLVMSendMessage >> isDynamicObjectReferenceCreator [
+	^ true
+]
+
+{ #category : #testing }
 SLVMSendMessage >> isMessageSend [
 	^ true
 ]

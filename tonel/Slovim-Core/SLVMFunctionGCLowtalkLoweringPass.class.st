@@ -57,10 +57,7 @@ SLVMFunctionGCLowtalkLoweringPass >> emitAutomaticReferenceCountingOn: aFunction
 			].
 					
 			(ins type isDynamicObjectType and:
-			[ins isMessageSend or:
-			[ins isCall or:
-			[ins isDynamicObjectNativeCast or:
-			[ins isGetThisContext ]]]]) ifTrue: [
+			[ins isDynamicObjectReferenceCreator]) ifTrue: [
 				ins instructionReferences ifEmpty: [
 					self releaseValue: ins
 				] ifNotEmpty: [

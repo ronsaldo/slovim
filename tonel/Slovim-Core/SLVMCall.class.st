@@ -77,6 +77,11 @@ SLVMCall >> isCall [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMCall >> isDynamicObjectReferenceCreator [
+	^ true
+]
+
 { #category : #flags }
 SLVMCall >> isPrimitiveCall [
 	^ self hasFlag: #primitiveCall

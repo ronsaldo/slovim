@@ -18,6 +18,11 @@ SLVMDynamicObjectNativeCast >> isDynamicObjectNativeCast [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMDynamicObjectNativeCast >> isDynamicObjectReferenceCreator [
+	^ true
+]
+
 { #category : #accessing }
 SLVMDynamicObjectNativeCast >> unchecked [
 	^ unchecked

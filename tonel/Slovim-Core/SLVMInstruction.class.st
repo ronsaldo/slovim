@@ -145,6 +145,12 @@ SLVMInstruction >> isDynamicObjectNativeCast [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isDynamicObjectReferenceCreator [
+	"I should answer true in instructions that require an implicit release reference"
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isGetElementPointer [
 	^ false
 ]
@@ -172,6 +178,11 @@ SLVMInstruction >> isJump [
 { #category : #testing }
 SLVMInstruction >> isLoad [
 	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isMessageSend [
+	^ true
 ]
 
 { #category : #testing }
