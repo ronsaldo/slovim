@@ -8,9 +8,7 @@ Class {
 		'instructionReferences',
 		'previousInstruction',
 		'nextInstruction',
-		'livenessIndex',
-		'debugInformation',
-		'debugSourceLocation'
+		'livenessIndex'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -43,26 +41,6 @@ SLVMInstruction >> block [
 { #category : #accessing }
 SLVMInstruction >> block: anObject [
 	block := anObject
-]
-
-{ #category : #accessing }
-SLVMInstruction >> debugInformation [
-	^ debugInformation
-]
-
-{ #category : #accessing }
-SLVMInstruction >> debugInformation: anObject [
-	debugInformation := anObject
-]
-
-{ #category : #accessing }
-SLVMInstruction >> debugSourceLocation [
-	^ debugSourceLocation
-]
-
-{ #category : #accessing }
-SLVMInstruction >> debugSourceLocation: anObject [
-	debugSourceLocation := anObject
 ]
 
 { #category : #'basic optimizations' }
