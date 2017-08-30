@@ -184,6 +184,17 @@ SLVMModule >> globalNamed: aSymbol ifPresent: aBlock [
 	^ globalValues at: aSymbol ifPresent: aBlock
 ]
 
+{ #category : #optimizations }
+SLVMModule >> globalOptimizeWithLevel: optimizationLevel keepStructuredControlFlow: keepStructuredControlFlow [
+	| globalOptimization |
+	optimizationLevel = 0 ifTrue: [ ^ self ].
+	globalOptimization := SLVMOptInline new.
+	globalOptimization keepStructuredControlFlow: keepStructuredControlFlow.
+	globalOptimization postInlineOptimizations: (self createFunctionOptimizationPassesForLevel: optimizationLevel).
+		
+	self applyFunctionOptimizationPasses: {globalOptimization}.
+]
+
 { #category : #accessing }
 SLVMModule >> globalValues [
 	^ globalValues

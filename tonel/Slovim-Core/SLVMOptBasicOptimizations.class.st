@@ -51,12 +51,18 @@ SLVMOptBasicOptimizations >> foldConstant: instruction [
 
 { #category : #private }
 SLVMOptBasicOptimizations >> mergeWithNextBlockOf: block [
-	| removedBlock |
+	| removedBlock function removedInstruction |
+	function := block function.
 	removedBlock := block lastInstruction destination.
 	(removedBlock == block or: [ removedBlock predecessors size ~= 1 ]) ifTrue: [  ^ self ].
-
+	self assert: removedBlock predecessors first == block.
+	self assert: removedBlock function == block function.
+	
 	block lastInstruction removeFromBlock.
-		removedBlock instructionsDo: [ :instruction |
+	removedInstruction := OrderedCollection new.
+	removedBlock instructionsDo: [:ins | removedInstruction add: ins].
+	
+	removedBlock instructionsDo: [ :instruction |
 		removedBlock remove: instruction.
 		block addLast: instruction
 	].
@@ -70,11 +76,13 @@ SLVMOptBasicOptimizations >> mergeWithNextBlockOf: block [
 	].
 			
 	self assert: removedBlock isCompletelyUnused.
+	self assert: (block successors includes: removedBlock) not.
 	removedBlock removeFromFunction.
-	pendingWork add: block
+	pendingWork add: block.
+	self validateFunction: function.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #applying }
 SLVMOptBasicOptimizations >> passOnFunction: aFunction [
 	| work |
 	pendingWork ifNil: [ pendingWork := Set new ].
@@ -83,18 +91,20 @@ SLVMOptBasicOptimizations >> passOnFunction: aFunction [
 		work := pendingWork anyOne.
 		pendingWork remove: work.
 		
-		self processBlock: work
+		self processBlock: work.
 	]
 ]
 
 { #category : #private }
 SLVMOptBasicOptimizations >> processBlock: block [
-	| oldSuccessors |
-	block function ifNil: [ ^ self ].
+	| oldSuccessors function |
+	function := block function.
+	function ifNil: [ ^ self ].
 	
-	(block index ~= 1 and: [ block predecessors isEmpty ]) ifTrue: [ 
+	(block ~~ function basicBlocks first and: [ block predecessors isEmpty ]) ifTrue: [ 
 		block isEmpty ifTrue: [
-			block function removeBasicBlock: block.
+			function removeBasicBlock: block.
+			self validateFunction: function.
 			^ self
 		].
 	
@@ -104,22 +114,30 @@ SLVMOptBasicOptimizations >> processBlock: block [
 		block successors: #().
 		oldSuccessors do: #predecessorsCouldBeRemoved.
 		
-		block function removeBasicBlock: block.
+		function removeBasicBlock: block.
 		pendingWork addAll: oldSuccessors.
+			self validateFunction: function.
 		^ self
 	].
 
-	block isEmpty ifTrue: [ ^ self ].
+	block isEmpty ifTrue: [
+		self validateFunction: function.
+		^ self
+	].
 	
 	block instructionsDo: [ :instruction |
 		self processInstruction: instruction
 	].
+	self validateFunction: function.
 
 	(block lastInstruction isJump) ifTrue: [
 		self mergeWithNextBlockOf: block
 	] ifFalse: [
 		(block lastInstruction isBranch) ifTrue: [ 
-			self foldBranchAtBlock: block
+			self foldBranchAtBlock: block.
+			self validateFunction: function.
+		] ifFalse: [
+			self validateFunction: function.
 		]
 	]
 ]

@@ -15,6 +15,8 @@ SLVMBitCast >> canBeNop [
 	instructionReferences size > 1 ifTrue: [ ^ false ].
 	instructionReferences first ~~ self nextInstruction ifTrue: [ ^ false ].
 	type isDynamicObjectType ~~ self source type isDynamicObjectType ifTrue: [ ^ false ].
+	(type isIntegerType and: [ self source type isFloatType ]) ifTrue: [ ^ false ].
+	(type isFloatType and: [ self source type isIntegerType ]) ifTrue: [ ^ false ].
 	^ true
 ]
 

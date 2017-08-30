@@ -4,8 +4,21 @@ Class {
 	#instVars : [
 		'target'
 	],
+	#classVars : [
+		'SmallFloatExponentMax',
+		'SmallFloatExponentMin',
+		'SmallFloatExponentOffset'
+	],
 	#category : #'Slovim-Core-Type'
 }
+
+{ #category : #initialization }
+SLVMObjectModel class >> initialize [
+	SmallFloatExponentOffset := "1023 - 127" 896.
+	SmallFloatExponentMin := "1023 - 127" SmallFloatExponentOffset.
+	SmallFloatExponentMax := "1023 + 128" 1151.
+
+]
 
 { #category : #'as yet unclassified' }
 SLVMObjectModel >> closureHeaderType [
@@ -55,6 +68,18 @@ SLVMObjectModel >> encodeCharacter: character [
 ]
 
 { #category : #'immediate literals' }
+SLVMObjectModel >> encodeSmallFloat: float [
+	| data bits |
+	self assert: target pointerSize = 8.
+	data := ((float basicAt: 1) << 32) | (float basicAt: 2).
+	
+	bits := self rotate64Left1: data.
+	bits := bits - (SmallFloatExponentOffset << 53).
+	bits := ((bits << 3) | 4) & 16rFFFFFFFFFFFFFFFF.
+	^ bits
+]
+
+{ #category : #'immediate literals' }
 SLVMObjectModel >> encodeSmallInteger: integer [
 	target pointerSize = 4 ifTrue: [
 		^ (integer << 1) | 1
@@ -93,8 +118,12 @@ SLVMObjectModel >> isInlineLiteral: literal [
 
 { #category : #'immediate literals' }
 SLVMObjectModel >> isSmallFloat: float [
+	| data exponent |
 	target pointerSize < 8 ifTrue: [ ^ false ].
-	self halt
+	
+	data := ((float basicAt: 1) << 32) | (float basicAt: 2).
+	exponent := (data >> 52) & 16r7fff.
+	^ SmallFloatExponentMin <= exponent and: [ exponent <= SmallFloatExponentMax ]
 ]
 
 { #category : #'immediate literals' }
@@ -115,6 +144,11 @@ SLVMObjectModel >> messageSendTrampoline [
 { #category : #'trampoline names' }
 SLVMObjectModel >> messageSuperSendTrampoline [
 	self subclassResponsibility
+]
+
+{ #category : #'immediate literals' }
+SLVMObjectModel >> rotate64Left1: bits [
+	^ ((bits << 1) | ((bits >> 63) & 1)) & 16rFFFFFFFFFFFFFFFF
 ]
 
 { #category : #'trampoline names' }

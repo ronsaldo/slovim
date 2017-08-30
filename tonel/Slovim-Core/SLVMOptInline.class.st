@@ -2,11 +2,11 @@ Class {
 	#name : #SLVMOptInline,
 	#superclass : #SLVMFunctionOptimizationPass,
 	#instVars : [
-		'maxDepth',
 		'inlinedFunctions',
 		'postInlineOptimizations',
 		'functionGraphAnalysisState',
-		'keepStructuredControlFlow'
+		'keepStructuredControlFlow',
+		'inliningMandatory'
 	],
 	#category : #'Slovim-Core-Optimizations'
 }
@@ -29,6 +29,11 @@ SLVMOptInline >> analyzeFunctionGraph: aFunction [
 				self analyzeFunctionGraph: instruction functionValue
 			].
 		
+			instruction isGetThisContext ifTrue: [
+				self flag: 'This is the place for vetting some functions'.
+				aFunction propertyAt: #recursive put: true
+			].
+		
 			(instruction isReturn or: [ instruction isReturnVoid ]) ifTrue: [
 				returnCount := returnCount + 1
 			]
@@ -45,21 +50,18 @@ SLVMOptInline >> findSomeInlineableCall: basicBlock [
 	basicBlock instructionsDo: [ :instruction |
 		instruction isCall ifTrue: [
 			function := instruction functionValue.
-			function isFunction ifTrue: [
+			(function isFunction and: [function isNotEmpty]) ifTrue: [
 				((function propertyAt: #recursive ifAbsent: [ false ]) not and:
 				[ keepStructuredControlFlow not or: [ (functionGraphAnalysisState at: function) second < 2] ] ) ifTrue: [
-					^ instruction
+					(inliningMandatory or:
+					[function hasAlwaysInlineMode or:
+					[function hasYesInlineMode]]) ifTrue: [ ^ instruction ].
 				]
 			]
 		]
 	].
 
 	^ nil
-]
-
-{ #category : #'as yet unclassified' }
-SLVMOptInline >> flattening [
-	maxDepth := -1
 ]
 
 { #category : #applying }
@@ -69,6 +71,7 @@ SLVMOptInline >> initialize [
 	functionGraphAnalysisState := Dictionary new.
 	postInlineOptimizations := #().
 	keepStructuredControlFlow := false.
+	inliningMandatory := false
 ]
 
 { #category : #'as yet unclassified' }
@@ -90,6 +93,7 @@ SLVMOptInline >> inlineFunction: aFunction [
 			self inlineFunction: callInstruction functionValue.
 			
 			entryPointAndResult := self inlineFunctionContent: callInstruction functionValue into: aFunction arguments: callInstruction arguments continuation: continuationBlock.
+		
 			entryPoint := entryPointAndResult first.
 			resultValue := entryPointAndResult second.
 			
@@ -103,6 +107,7 @@ SLVMOptInline >> inlineFunction: aFunction [
 		]
 	].
 
+	self validateFunction: aFunction.
 	postInlineOptimizations do: [ :optimization | optimization passOnFunction: aFunction ].
 ]
 
@@ -118,6 +123,16 @@ SLVMOptInline >> inlineFunctionContent: sourceFunction into: targetFunction argu
  	
 	
 	^ sourceFunction copyContentsInto: targetFunction valueMap: substitutionDictionary continuation: continuationBlock
+]
+
+{ #category : #accessing }
+SLVMOptInline >> inliningMandatory [
+	^ inliningMandatory
+]
+
+{ #category : #accessing }
+SLVMOptInline >> inliningMandatory: anObject [
+	inliningMandatory := anObject
 ]
 
 { #category : #accessing }

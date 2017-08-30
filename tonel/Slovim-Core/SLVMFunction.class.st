@@ -451,6 +451,26 @@ SLVMFunction >> gtTreeViewIn: composite [
 		format: [ :node | node nodeTitle ]
 ]
 
+{ #category : #inlining }
+SLVMFunction >> hasAlwaysInlineMode [
+	^ self inlineMode == #always
+]
+
+{ #category : #inlining }
+SLVMFunction >> hasNeverInlineMode [
+	^ self inlineMode == #never
+]
+
+{ #category : #inlining }
+SLVMFunction >> hasNoInlineMode [
+	^ self inlineMode == false
+]
+
+{ #category : #inlining }
+SLVMFunction >> hasYesInlineMode [
+	^ self inlineMode == true
+]
+
 { #category : #initialization }
 SLVMFunction >> initialize [
 	super initialize.
@@ -460,6 +480,17 @@ SLVMFunction >> initialize [
 	gensymCount := 0.
 	haveDominance := false.
 	needsCompiledMethodObject := false.
+]
+
+{ #category : #inlining }
+SLVMFunction >> inlineMode [
+	^ self propertyAt: #inlineMode ifAbsent: [ false ]
+]
+
+{ #category : #inlining }
+SLVMFunction >> inlineMode: anInlineMode [
+	self assert: (#(false true always never) includes: anInlineMode).
+	^ self propertyAt: #inlineMode put: anInlineMode
 ]
 
 { #category : #'control flow' }
@@ -477,6 +508,11 @@ SLVMFunction >> isEmpty [
 { #category : #testing }
 SLVMFunction >> isFunction [
 	^ true
+]
+
+{ #category : #testing }
+SLVMFunction >> isNotEmpty [
+	^ self isEmpty not
 ]
 
 { #category : #private }
@@ -551,4 +587,24 @@ SLVMFunction >> removeBasicBlock: aBasicBlock [
 { #category : #accessing }
 SLVMFunction >> type [
 	^ type
+]
+
+{ #category : #'development support' }
+SLVMFunction >> validate [
+	basicBlocks do: [ :bb |
+		self assert: bb function == self.
+		self assert: bb isLastTerminator.
+		
+		bb instructionsDo: [ :instruction |
+			instruction validateInBlock: bb
+		].
+	
+		bb successors do: [ :succ |
+			self assert: (basicBlocks includes: succ).
+		].
+		bb predecessors do: [ :pred |
+			self assert: (basicBlocks includes: pred).
+		].
+
+	]
 ]

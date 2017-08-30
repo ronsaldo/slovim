@@ -125,3 +125,12 @@ SLVMJump >> successors [
 SLVMJump >> type [
 	^ SLVMType voidType
 ]
+
+{ #category : #testing }
+SLVMJump >> validateInBlock: aBasicBlock [
+	super validateInBlock: aBasicBlock.
+	self assert: (block function basicBlocks includes: destination).
+	self assert: (mergeBlock isNil or: [block function basicBlocks includes: mergeBlock]).
+	self assert: (continueBlock isNil or: [block function basicBlocks includes: continueBlock]).
+	self assert: self block successors = self successors
+]

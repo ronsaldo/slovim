@@ -319,7 +319,11 @@ SLVMInstruction >> splitBasicBlock [
 	self assert: nextInstruction isNil.
 	
 	nextBlock setChain: nextChain.
-		
+	block computeSuccessors.
+	nextBlock isLastTerminator ifTrue: [
+		nextBlock computeSuccessors.
+		nextBlock successors do: #predecessorsCouldBeRemoved
+	].
 	^ nextBlock
 ]
 
@@ -331,4 +335,9 @@ SLVMInstruction >> successors [
 { #category : #accessing }
 SLVMInstruction >> validName [
 	^ name ifNil: [ #anon ]
+]
+
+{ #category : #testing }
+SLVMInstruction >> validateInBlock: aBasicBlock [
+	self assert: block == aBasicBlock
 ]

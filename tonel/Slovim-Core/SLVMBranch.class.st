@@ -148,3 +148,13 @@ SLVMBranch >> trueBlock: anObject [
 SLVMBranch >> type [
 	^ SLVMType voidType
 ]
+
+{ #category : #testing }
+SLVMBranch >> validateInBlock: aBasicBlock [
+	super validateInBlock: aBasicBlock.
+	self assert: (block function basicBlocks includes: trueBlock).
+	self assert: (block function basicBlocks includes: falseBlock).
+	self assert: (mergeBlock isNil or: [block function basicBlocks includes: mergeBlock]).
+	self assert: (continueBlock isNil or: [block function basicBlocks includes: continueBlock]).
+	self assert: self block successors = self successors.
+]

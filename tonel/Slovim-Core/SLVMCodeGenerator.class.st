@@ -49,6 +49,7 @@ SLVMCodeGenerator >> applyOptimizationsIn: ssaModule functionList: functionList 
 	(optimizationLevel = 0 and: [ self isInliningMandatory not ]) ifTrue: [ ^ self ].
 	globalOptimization ifNil: [
 		globalOptimization := SLVMOptInline new.
+		globalOptimization inliningMandatory: self isInliningMandatory.
 		globalOptimization keepStructuredControlFlow: self needStructuredControlFlow.
 		globalOptimization postInlineOptimizations: (ssaModule createFunctionOptimizationPassesForLevel: optimizationLevel).
 	].

@@ -34,6 +34,8 @@ SLVMBinaryOperation class >> initialize [
 		shiftleft (integer evaluateShiftLeft)
 		shiftright (integer evaluateArithmeticShiftRight)
 		shiftrightarithmetic (integer evaluateLogicalShiftRight)
+		rotateleft (integer evaluateRotateLeft)
+		rotateright (integer evaluateRotateRight)
 
 		ilt (integerComp evaluateLessThan)
 		ile (integerComp evaluateLessEqual)
