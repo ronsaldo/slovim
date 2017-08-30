@@ -132,6 +132,10 @@ SLVMSAsmConstantCodeGenerator >> translateImmediateObjectLiteral: constantValue 
 		self flag: 'Make sure this is a small integer'.
 		^ SLVMSAsmValue operand: (target objectModel encodeSmallInteger: value)
 	].
+	value isFloat ifTrue: [
+		self flag: 'Make sure this is a small float'.
+		^ SLVMSAsmValue operand: (target objectModel encodeSmallFloat: value)
+	].
 	value == nil ifTrue: [ 
 		^ SLVMSAsmValue operand: 0
 	].
@@ -186,7 +190,7 @@ SLVMSAsmConstantCodeGenerator >> visitConstantValue: value [
 		^ self translateImmediateConstantValue: value
 	] ifFalse: [ 
 		constantData := self dataGenerator translate: value.
-		^ SLVMSAsmValue operands: {(self addToConstantZone: (SAsmConstantExpressionValue new size: constantData size; value: constantData) alignment: value type alignment) asConstantPointerOfSize: constantData size}
+		^ SLVMSAsmValue operands: {(self addToConstantZone: (SAsmConstantExpressionValue new size: constantData size; value: constantData) alignment: value type alignment) asConstantPointerOfSize: constantData size floatingPoint: value type isFloatType}
 	].
 	
 ]

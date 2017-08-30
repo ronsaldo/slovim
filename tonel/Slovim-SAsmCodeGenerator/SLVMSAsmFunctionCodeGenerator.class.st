@@ -58,6 +58,8 @@ SLVMSAsmFunctionCodeGenerator class >> initialize [
 		
 		shiftleft visitShiftLeft:
 		shiftright visitShiftRight:
+		rotateleft visitRotateLeft:
+		rotateright visitRotateRight:
 		shiftrightarithmetic visitShiftRightArithmetic:
 		
 		fadd visitFloatAdd:
@@ -832,6 +834,17 @@ SLVMSAsmFunctionCodeGenerator >> visitBitCast: instruction [
 	sourceValue := self translateValue: instruction source.
 	result := self translateValue: instruction.
 	sourceValue ~~ result ifTrue: [
+		(instruction source type isFloatType and: [ instruction type isIntegerType ]) ifTrue: [			
+			self assert: sourceValue size = 1.
+			self assert: result size = 1.
+			^ blockBuilder tacReinterpretFloat: sourceValue asIntegerInto: result
+		].
+		(instruction source type isIntegerType and: [ instruction type isFloatType  ]) ifTrue: [
+			self assert: sourceValue size = 1.
+			self assert: result size = 1.
+			^ blockBuilder tacReinterpretInteger: sourceValue asFloatInto: result
+		].
+	
 		self move: sourceValue into: result
 	].
 ]
@@ -873,7 +886,7 @@ SLVMSAsmFunctionCodeGenerator >> visitBranch: instruction [
 
 { #category : #visiting }
 SLVMSAsmFunctionCodeGenerator >> visitCall: instruction [
-	| calledFunction arguments result calledConvention |
+	| calledFunction arguments result calledConvention callInstruction |
 	instruction functionValue isConstantBuiltInFunction ifTrue: [
 		BuiltInFunctionSelectorMapping at: instruction functionValue name ifPresent: [ :selector |
 			^ self perform: selector with: instruction
@@ -894,7 +907,11 @@ SLVMSAsmFunctionCodeGenerator >> visitCall: instruction [
 	calledConvention hasContextMetadata ifTrue: [ self ensureFunctionContextMetaDataIsPresent ].
 	
 	self assert: calledFunction size = 1.
-	blockBuilder tacCall: calledFunction arguments: arguments into: result convention: calledConvention.
+	callInstruction := blockBuilder tacCall: calledFunction arguments: arguments into: result convention: calledConvention.
+	
+	instruction functionType variadic ifTrue: [ 
+		callInstruction isVarArgs: true
+	]
 ]
 
 { #category : #visiting }
@@ -1522,6 +1539,16 @@ SLVMSAsmFunctionCodeGenerator >> visitReturnFromContext: instruction [
 SLVMSAsmFunctionCodeGenerator >> visitReturnVoid: instruction [
 	blockBuilder tacReturnVoid
 	
+]
+
+{ #category : #'bitwise operations' }
+SLVMSAsmFunctionCodeGenerator >> visitRotateLeft: instruction [
+	self binaryInteger: instruction bitwise: TacRotateLeft
+]
+
+{ #category : #'bitwise operations' }
+SLVMSAsmFunctionCodeGenerator >> visitRotateRight: instruction [
+	self binaryInteger: instruction bitwise: TacRotateRight
 ]
 
 { #category : #'bitwise operations' }
