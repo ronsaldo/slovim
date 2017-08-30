@@ -50,6 +50,14 @@ SLVMSAsmCompilationTarget >> generateLowLevelModule: aModule [
 	^ SLVMSAsmCodeGenerator new target: self; translateModule: aModule
 ]
 
+{ #category : #convenience }
+SLVMSAsmCompilationTarget >> generateLowLevelModule: aModule optimizationLevel: anOptimizationLevel [
+	^ SLVMSAsmCodeGenerator new
+		target: self;
+		optimizationLevel: anOptimizationLevel;
+		translateModule: aModule
+]
+
 { #category : #'operating systems' }
 SLVMSAsmCompilationTarget >> isWin32 [
 	^ self operatingSystemName = #win32

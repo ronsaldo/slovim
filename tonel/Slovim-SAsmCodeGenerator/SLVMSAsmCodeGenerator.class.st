@@ -164,6 +164,11 @@ SLVMSAsmCodeGenerator >> needSSADestroyed [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMSAsmCodeGenerator >> needStructuredControlFlow [
+	^ false
+]
+
 { #category : #accessing }
 SLVMSAsmCodeGenerator >> objectModel [
 	^ target objectModel
