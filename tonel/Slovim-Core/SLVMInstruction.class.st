@@ -23,6 +23,11 @@ SLVMInstruction >> addUnreachableSuccessors [
 	"This is used by branching instructions"
 ]
 
+{ #category : #enumerating }
+SLVMInstruction >> allInstructionsDo: aBlock [
+	aBlock value: self
+]
+
 { #category : #'as yet unclassified' }
 SLVMInstruction >> applySubstitutions: substitutionDictionary [
 	parameters doWithIndex: [ :param :index |

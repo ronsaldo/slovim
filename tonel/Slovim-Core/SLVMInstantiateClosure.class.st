@@ -18,6 +18,12 @@ SLVMInstantiateClosure >> accept: aVisitor [
 	^ aVisitor visitInstantiateClosure: self
 ]
 
+{ #category : #enumerating }
+SLVMInstantiateClosure >> allInstructionsDo: aBlock [
+	aBlock value: self.
+	self definition allInstructionsDo: aBlock
+]
+
 { #category : #accessing }
 SLVMInstantiateClosure >> captures [
 	^ parameters allButFirst

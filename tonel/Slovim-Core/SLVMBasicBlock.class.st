@@ -142,6 +142,13 @@ SLVMBasicBlock >> addQuiet: anInstruction [
 ]
 
 { #category : #enumerating }
+SLVMBasicBlock >> allInstructionsDo: aBlock [
+	self instructionsDo: [ :instruction |
+		instruction allInstructionsDo: aBlock
+	]
+]
+
+{ #category : #enumerating }
 SLVMBasicBlock >> allocaInstructionsDo: aBlock [
 	self instructionsDo: [:ins |
 		ins isAlloca ifFalse: [ ^ self ].

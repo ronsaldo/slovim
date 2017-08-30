@@ -63,6 +63,13 @@ SLVMFunction >> addRequiredDynamicLiteral: literal [
 	^ result
 ]
 
+{ #category : #enumerating }
+SLVMFunction >> allInstructionsDo: aBlock [
+	basicBlocks do: [ :bb |
+		bb allInstructionsDo: aBlock
+	]
+]
+
 { #category : #'control flow' }
 SLVMFunction >> applyDominanceTopoSort [
 	basicBlocks := self dominanceTopoSort.

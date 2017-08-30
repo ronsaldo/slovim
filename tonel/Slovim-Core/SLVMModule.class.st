@@ -41,6 +41,21 @@ SLVMModule >> allGlobalValues [
 	^ globalValues values , anonymousGlobals
 ]
 
+{ #category : #accessing }
+SLVMModule >> allGlobalValuesDo: aBlock [
+	globalValues valuesDo: aBlock.
+	anonymousGlobals do: aBlock
+]
+
+{ #category : #enumerating }
+SLVMModule >> allInstructionsDo: aBlock [
+	self allGlobalValuesDo: [ :global |
+		global isFunction ifTrue: [
+			global allInstructionsDo: aBlock
+		]
+	]
+]
+
 { #category : #optimizations }
 SLVMModule >> applyFunctionOptimizationPasses: passes [
 	globalValues valuesDo: [ :val | val isFunction ifTrue: [ val applyFunctionOptimizationPasses: passes ] ].
@@ -50,6 +65,11 @@ SLVMModule >> applyFunctionOptimizationPasses: passes [
 { #category : #converting }
 SLVMModule >> asLowLevelModule [
 	^ compilationTarget generateLowLevelModule: self
+]
+
+{ #category : #converting }
+SLVMModule >> asLowLevelModuleWithOptimizationLevel: anOptimizationLevel [
+	^ compilationTarget generateLowLevelModule: self optimizationLevel: anOptimizationLevel
 ]
 
 { #category : #accessing }
@@ -228,6 +248,11 @@ SLVMModule >> initialize [
 { #category : #'as yet unclassified' }
 SLVMModule >> nodeTitle [
 	^ #Module
+]
+
+{ #category : #optimizations }
+SLVMModule >> optimizeGlobalVariables [
+	SLVMOptGlobalVariables passOnModule: self
 ]
 
 { #category : #optimizations }
