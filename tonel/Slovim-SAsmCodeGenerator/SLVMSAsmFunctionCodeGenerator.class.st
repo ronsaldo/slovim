@@ -376,13 +376,18 @@ SLVMSAsmFunctionCodeGenerator >> emitCastInstruction: instruction byCalling: con
 
 { #category : #casting }
 SLVMSAsmFunctionCodeGenerator >> emitCastInstruction: instruction byCalling: convertionFunction intoResult: result [
-	| pointer convertionFunctionValue |
-	pointer := self translateValue: instruction source.
-	
+	| castedValue |
+	castedValue := self translateValue: instruction source.
+	^ self emitCastOfValue: castedValue byCalling: convertionFunction intoResult: result
+]
+
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> emitCastOfValue: castedValue byCalling: convertionFunction intoResult: result [
+	| convertionFunctionValue |
 	convertionFunctionValue := self translateValue: convertionFunction.
 	blockBuilder tacCall: convertionFunctionValue
-		arguments: { pointer registers first }
-		into: result convention: (sasmTarget callingConventionNamed: convertionFunction callingConvention).
+		arguments: { castedValue asSAsmInstructionOperand }
+		into: {result} convention: (sasmTarget callingConventionNamed: convertionFunction callingConvention).
 	^ result
 ]
 
@@ -933,7 +938,7 @@ SLVMSAsmFunctionCodeGenerator >> visitDynamicObjectToFloatCast: instruction [
 	result := self translateValue: instruction.
 	resultTemp := result.
 	instruction type size ~= 8 ifTrue: [ 
-		resultTemp := blockBuilder newDoubleFloatVirtualRegister.
+		resultTemp := blockBuilder tacDoubleFloatRegister.
 	].
 
 	self emitCastInstruction: instruction byCalling: target objectModel objectToFloatFunction intoResult: resultTemp.
@@ -1009,7 +1014,19 @@ SLVMSAsmFunctionCodeGenerator >> visitFloatSub: instruction [
 
 { #category : #casting }
 SLVMSAsmFunctionCodeGenerator >> visitFloatToDynamicObjectCast: instruction [
-	^ self emitCastInstruction: instruction byCalling: target objectModel floatToObjectFunction
+	| source sourceValue result doubleSource |
+	source := instruction source.
+	sourceValue := self translateValue: source.
+	result := self translateValue: instruction.
+		
+	source type size ~= 8 ifTrue: [
+		self assert: source type size = 4.
+		doubleSource := blockBuilder tacDoubleFloatRegister.
+		blockBuilder tacFloat: sourceValue intoDouble: doubleSource.
+		sourceValue := doubleSource
+	].
+
+	^ self emitCastOfValue: sourceValue byCalling: target objectModel floatToObjectFunction intoResult: result
 ]
 
 { #category : #casting }
