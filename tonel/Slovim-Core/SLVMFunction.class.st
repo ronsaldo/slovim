@@ -51,7 +51,7 @@ SLVMFunction >> addBasicBlock: aBasicBlock [
 
 { #category : #adding }
 SLVMFunction >> addDynamicLiteral: literal [
-	dynamicLiterals do: [ :lit | lit value = literal ifTrue: [ ^ lit ] ].
+	dynamicLiterals do: [ :lit | lit value == literal ifTrue: [ ^ lit ] ].
 	^ self addRequiredDynamicLiteral: literal
 ]
 

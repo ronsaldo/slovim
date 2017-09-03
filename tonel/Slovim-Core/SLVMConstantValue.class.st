@@ -10,7 +10,7 @@ Class {
 
 { #category : #comparing }
 SLVMConstantValue >> = other [
-	^ self class = other class and: [ self type = other type and: [ self value = other value ] ]
+	^ self class = other class and: [ self type = other type and: [ self value = other value and: [self value class == other value class ] ] ]
 ]
 
 { #category : #visitor }
@@ -25,7 +25,7 @@ SLVMConstantValue >> asBlob [
 
 { #category : #comparing }
 SLVMConstantValue >> hash [
-	^ (self class hash bitXor: type hash) bitXor: value hash
+	^ ((self class hash bitXor: type hash) bitXor: value hash) bitXor: value class identityHash
 ]
 
 { #category : #testing }
