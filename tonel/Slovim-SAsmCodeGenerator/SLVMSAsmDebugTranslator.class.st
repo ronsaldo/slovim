@@ -93,6 +93,24 @@ SLVMSAsmDebugTranslator >> visitFloatType: type [
 ]
 
 { #category : #visiting }
+SLVMSAsmDebugTranslator >> visitFunctionType: type [
+	codeGenerator buildDebugInformation: [ :builder |
+		builder subroutineType: [ :debugType |
+			codeGenerator register: type debugElement: debugType.
+			debugType
+				type: (codeGenerator translateDebugType: type returnType).
+				
+			type arguments do: [ :arg |
+				builder formalParameter: [ :parameter |
+					parameter type: (codeGenerator translateDebugType: arg).
+				]
+			]
+		]
+	].
+
+]
+
+{ #category : #visiting }
 SLVMSAsmDebugTranslator >> visitIntegerType: type [
 	codeGenerator buildDebugInformation: [ :builder |
 		builder baseType: [ :debugType |

@@ -18,15 +18,15 @@ Class {
 
 { #category : #'debug information' }
 SLVMSAsmCodeGenerator >> buildDebugInformation: aBlock [
-	debugCompileUnit ifNotNil: [ debugCompileUnit compilationUnit build: aBlock ]
+	^ debugCompileUnit ifNotNil: [ debugCompileUnit compilationUnit build: aBlock ]
 ]
 
 { #category : #'debug information' }
 SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
 	| translatedFunction functionType debugName |
-	(aFunction hasProperty: #omitDebugInformation) ifTrue: [ ^ self ].
+	(aFunction hasProperty: #omitDebugInformation) ifTrue: [ ^ nil ].
 	
-	self buildDebugInformation: [ :builder |
+	^ self buildDebugInformation: [ :builder |
 		builder subprogram: [ :subprogram |
 			(aFunction isPublic or: [ aFunction isExternal ]) ifTrue: [ subprogram external: true ].
 			(aFunction isExternal and: [aFunction isEmpty ]) ifTrue: [ subprogram declaration: true ].
@@ -49,19 +49,24 @@ SLVMSAsmCodeGenerator >> buildFunctionDebugInformation: aFunction [
 				]
 			].
 		
-			aFunction isEmpty ifFalse: [
-				translatedFunction := translatedElements at: aFunction.
-				translatedFunction debugName: debugName.
-				subprogram lowPC: translatedFunction.
-				subprogram highPC: translatedFunction requiredEndingLabel
-			].
-		
+			translatedFunction := translatedElements at: aFunction.
+			translatedFunction debugName: debugName.
+			translatedFunction debugArguments: (aFunction arguments collect: [:arg |
+				builder formalParameter: [ :formalParameter |
+					arg debugInformation ifNotNil: [ 
+						formalParameter name: arg debugInformation name
+					] ifNil: [ 
+						formalParameter name: arg name
+					].
+					formalParameter type: (self translateDebugType: arg type)
+				]
+			]).
+			
 			functionType := aFunction functionType.
 			functionType returnType isVoidType ifFalse: [ 
 				subprogram type: (self translateDebugType: functionType returnType)
 			]
 		].
-
 	].
 
 ]
@@ -285,7 +290,7 @@ SLVMSAsmCodeGenerator >> visitClosureDefinition: aNode [
 
 { #category : #visiting }
 SLVMSAsmCodeGenerator >> visitFunction: aFunction [
-	| functionCodeGenerator result |
+	| functionCodeGenerator result debugFunction |
 	translatedElements at: aFunction ifPresent: [ :incomplete | ^ incomplete ].
 	
 	result := SAsmFunction new.
@@ -300,14 +305,19 @@ SLVMSAsmCodeGenerator >> visitFunction: aFunction [
 	translatedElements at: aFunction put: result.
 	sasmModule addElement: result.
 	self createFunctionContextMetaDataIfNeeded: aFunction.
+	debugFunction := self buildFunctionDebugInformation: aFunction.
+	result debugFunction: debugFunction.
 
 	functionCodeGenerator := SLVMSAsmFunctionCodeGenerator new.
 	functionCodeGenerator
 		target: target;
 		moduleTranslator: self;
 		generateFunction: aFunction into: result.
-		
-	self buildFunctionDebugInformation: aFunction.
+
+	(debugFunction isNotNil and: [aFunction isEmpty not]) ifTrue: [ 
+		debugFunction lowPC: result.
+		debugFunction highPC: result requiredEndingLabel
+	].
 
 	^ result
 		

@@ -16,7 +16,8 @@ Class {
 		'returnArgumentType',
 		'returnArgument',
 		'returnArgumentRegister',
-		'dynamicObjectVariableRegisters'
+		'dynamicObjectVariableRegisters',
+		'debugFunction'
 	],
 	#classVars : [
 		'BuiltInFunctionSelectorMapping',
@@ -225,7 +226,7 @@ SLVMSAsmFunctionCodeGenerator >> createAllocaVariables [
 	function basicBlocks first allocaInstructionsDo: [ :alloca |
 		alloca isOnlyUsedByLoadStore ifTrue: [
 			registers := self createVirtualRegistersForType: alloca valueType.
-			self createRegisters: registers debugVariable: alloca.
+			self createRegisters: registers debugVariable: alloca type: alloca valueType.
 			
 			allocaToVariableMap at: alloca put: registers.
 			alloca instructionReferences do: [ :ref |
@@ -254,23 +255,58 @@ SLVMSAsmFunctionCodeGenerator >> createArguments [
 	functionType := function functionType.
 	function arguments doWithIndex: [ :arg :index |
 		variable := stackFrameLayout createArgument: arg type spillingClass registerClass: arg type registerClass dynamicRoot: (functionType argumentAt: index hasAttribute: #dynobject).
-		self createVariable: variable debugVariable: arg.
+		sasmFunction debugArguments ifNotNil: [ 
+			self createVariable: variable debugVariable: arg debugInformationEntry: (sasmFunction debugArguments at: index).
+		].
 		argumentVariableMap at: arg put: variable.
 	]
 ]
 
 { #category : #'debug information' }
 SLVMSAsmFunctionCodeGenerator >> createRegisters: registers debugVariable: valueWithDebugInformation [
+	self createRegisters: registers debugVariable: valueWithDebugInformation type: valueWithDebugInformation type
+]
+
+{ #category : #'debug information' }
+SLVMSAsmFunctionCodeGenerator >> createRegisters: registers debugVariable: valueWithDebugInformation type: type [
 	valueWithDebugInformation debugInformation ifNotNil: [ :debugInfo |
-		registers debugInformation: debugInfo
+		registers debugInformation: debugInfo.
+		sasmFunction debugFunction builder variable: [ :variable |
+			variable
+				name: debugInfo name;
+				type: (moduleTranslator translateDebugType: type).
+			variable location build: [ :builder | builder registers: registers registers ].
+		]
 	].
 
 ]
 
 { #category : #'debug information' }
 SLVMSAsmFunctionCodeGenerator >> createVariable: variable debugVariable: valueWithDebugInformation [
+	^ self createVariable: variable debugVariable: valueWithDebugInformation type: valueWithDebugInformation type
+]
+
+{ #category : #'debug information' }
+SLVMSAsmFunctionCodeGenerator >> createVariable: variable debugVariable: valueWithDebugInformation debugInformationEntry: debugInformationEntry [
 	valueWithDebugInformation debugInformation ifNotNil: [ :debugInfo |
-		variable debugInformation: debugInfo
+		variable debugInformation: debugInfo.
+		debugInformationEntry location build: [ :locationBuilder |
+			locationBuilder variable: variable
+		]
+	].
+
+]
+
+{ #category : #'debug information' }
+SLVMSAsmFunctionCodeGenerator >> createVariable: variable debugVariable: valueWithDebugInformation type: type [
+	valueWithDebugInformation debugInformation ifNotNil: [ :debugInfo |
+		variable debugInformation: debugInfo.
+		sasmFunction debugFunction builder variable: [ :debugVariable |
+			debugVariable
+				name: debugInfo name;
+				type: (moduleTranslator translateDebugType: type).
+			debugVariable location build: [ :builder | builder variable: variable ].
+		]
 	].
 
 ]
@@ -282,7 +318,6 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegisters [
 	function arguments do: [ :argValue |
 		argumentVariable := argumentVariableMap at: argValue.
 		argumentRegisters := self createVirtualRegistersForVariable: argumentVariable type: argValue type.
-		self createRegisters: argumentRegisters debugVariable: argValue.
 		valueVariableMap at: argValue put: argumentRegisters.
 	].
 
@@ -334,7 +369,9 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegistersForType: type [
 SLVMSAsmFunctionCodeGenerator >> createVirtualRegistersForType: type andInstruction: instruction [
 	| result |
 	result := self createVirtualRegistersForType: type.
-	self createRegisters: result debugVariable: instruction.
+	(instruction isAlloca and: [ instruction block index = 1 ]) ifFalse: [
+		self createRegisters: result debugVariable: instruction.
+	].
 	^ result
 ]
 
@@ -469,6 +506,7 @@ SLVMSAsmFunctionCodeGenerator >> generateFunction: slvmFunction into: newSasmFun
 	function := slvmFunction.
 	sasmFunction := newSasmFunction.
 	sasmFunction callingConventionNamed: function callingConvention.
+	debugFunction := newSasmFunction debugFunction.
 	self
 		createArguments;
 		createVirtualRegisters;
@@ -810,7 +848,7 @@ SLVMSAsmFunctionCodeGenerator >> visitAlloca: instruction [
 	instruction block == function basicBlocks first ifTrue: [ 
 		variable := sasmFunction newLocal: valueType size alignment: valueType alignment dynamicRoot: valueType isDynamicObjectType.
 		variable explicitLocalVariable: true.
-		self createVariable: variable debugVariable: instruction.
+		self createVariable: variable debugVariable: instruction type: valueType.
 		blockBuilder tacLoadLocalAddress: variable into: result
 	] ifFalse: [ 
 		self halt.
