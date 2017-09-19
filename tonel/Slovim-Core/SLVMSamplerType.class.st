@@ -15,7 +15,7 @@ SLVMSamplerType >> accept: aVisitor [
 ]
 
 { #category : #comparing }
-SLVMSamplerType >> hash [
+SLVMSamplerType >> internalHash [
 	^ self class hash
 ]
 

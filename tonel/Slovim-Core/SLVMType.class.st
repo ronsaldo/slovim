@@ -1,6 +1,9 @@
 Class {
 	#name : #SLVMType,
 	#superclass : #SLVMObject,
+	#instVars : [
+		'hash'
+	],
 	#classVars : [
 		'AtomicCounterStorage',
 		'BoolType',
@@ -346,14 +349,18 @@ SLVMType >> asSlovimType: compilationTarget [
 	^ self
 ]
 
-{ #category : #'as yet unclassified' }
-SLVMType >> cyclicHash: previousElements [
-	^ self hash
-	
-]
-
 { #category : #'constant encoding' }
 SLVMType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stream [
+	self subclassResponsibility
+]
+
+{ #category : #comparing }
+SLVMType >> hash [
+	^ hash ifNil: [hash := self internalHash ]
+]
+
+{ #category : #comparing }
+SLVMType >> internalHash [
 	self subclassResponsibility
 ]
 

@@ -32,15 +32,15 @@ SLVMDynamicObjectType >> elementStrideDepth: depth [
 	^ size
 ]
 
-{ #category : #comparing }
-SLVMDynamicObjectType >> hash [
-	^ self class hash bitXor: size hash
-]
-
 { #category : #initialization }
 SLVMDynamicObjectType >> initialize [
 	super initialize.
 	name := #dynobject.
+]
+
+{ #category : #comparing }
+SLVMDynamicObjectType >> internalHash [
+	^ self class hash bitXor: size hash
 ]
 
 { #category : #testing }

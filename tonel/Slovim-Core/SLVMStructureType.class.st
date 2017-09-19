@@ -8,8 +8,7 @@ Class {
 		'names',
 		'alignment',
 		'size',
-		'offsets',
-		'hash'
+		'offsets'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -41,7 +40,7 @@ SLVMStructureType class >> name: structureName types: typeList kind: structureKi
 
 { #category : #comparing }
 SLVMStructureType >> = other [
-	^ self class == other class and: [ kind = other kind and: [ types = other types ] ]
+	^ self == other
 ]
 
 { #category : #visitor }
@@ -70,20 +69,8 @@ SLVMStructureType >> computeLayout [
 ]
 
 { #category : #comparing }
-SLVMStructureType >> cyclicHash: previousElements [
-	| result cyclicElements |
-	previousElements do: [ :el | el == self ifTrue: [ ^ 0 ] ].
-	
-	result := self class hash bitXor: kind hash.
-	cyclicElements := previousElements , { self }.
-	types do: [ :type | result bitXor: (type cyclicHash: cyclicElements) ].
-	^ result
-	
-]
-
-{ #category : #comparing }
 SLVMStructureType >> hash [
-	^ hash ifNil: [hash := self cyclicHash: #()]
+	^ self identityHash
 ]
 
 { #category : #testing }

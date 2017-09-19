@@ -12,6 +12,14 @@ SLVMOpaqueType >> alignment [
 	^ 0
 ]
 
+{ #category : #comparing }
+SLVMOpaqueType >> internalHash [
+	"Answer a SmallInteger whose value is related to the receiver's identity.
+	May be overridden, and should be overridden in any classes that define = "
+
+	^ self identityHash 
+]
+
 { #category : #testing }
 SLVMOpaqueType >> isOpaqueType [
 	^ true

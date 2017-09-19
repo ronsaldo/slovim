@@ -15,7 +15,7 @@ SLVMVoidType >> accept: aVisitor [
 ]
 
 { #category : #comparing }
-SLVMVoidType >> hash [
+SLVMVoidType >> internalHash [
 	^ self class hash
 ]
 

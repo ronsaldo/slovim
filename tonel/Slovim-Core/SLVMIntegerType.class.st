@@ -37,16 +37,16 @@ SLVMIntegerType >> encodeConstant: value bigEndian: bigEndian intoByteStream: st
 
 ]
 
-{ #category : #comparing }
-SLVMIntegerType >> hash [
-	^ super hash bitXor: signed hash
-]
-
 { #category : #initialization }
 SLVMIntegerType >> initialize [
 	super initialize.
 	signed := true.
 
+]
+
+{ #category : #comparing }
+SLVMIntegerType >> internalHash [
+	^ super internalHash bitXor: signed hash
 ]
 
 { #category : #testing }

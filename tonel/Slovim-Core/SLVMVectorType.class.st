@@ -72,7 +72,7 @@ SLVMVectorType >> elements: anObject [
 ]
 
 { #category : #comparing }
-SLVMVectorType >> hash [
+SLVMVectorType >> internalHash [
 	^ ((self class hash bitXor: baseType hash) bitXor: elements hash) bitXor: alignment hash
 ]
 

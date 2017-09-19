@@ -18,7 +18,7 @@ SLVMSampledTextureType >> accept: aVisitor [
 ]
 
 { #category : #comparing }
-SLVMSampledTextureType >> hash [
+SLVMSampledTextureType >> internalHash [
 	^ self class hash bitXor: texture hash
 ]
 

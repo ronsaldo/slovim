@@ -50,8 +50,9 @@ SLVMClosureType >> functionType: anObject [
 ]
 
 { #category : #comparing }
-SLVMClosureType >> hash [
+SLVMClosureType >> internalHash [	
 	^ (self class hash bitXor: functionType hash) bitXor: captures hash
+
 ]
 
 { #category : #testing }

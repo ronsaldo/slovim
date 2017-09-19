@@ -30,7 +30,7 @@ SLVMPrimitiveType >> alignment: anObject [
 ]
 
 { #category : #comparing }
-SLVMPrimitiveType >> hash [
+SLVMPrimitiveType >> internalHash [
 	^ (self class hash bitXor: size hash) bitXor: alignment hash
 ]
 

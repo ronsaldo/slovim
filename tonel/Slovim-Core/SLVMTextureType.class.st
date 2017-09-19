@@ -58,7 +58,7 @@ SLVMTextureType >> dimensions: anObject [
 ]
 
 { #category : #comparing }
-SLVMTextureType >> hash [
+SLVMTextureType >> internalHash [
 	^ (((((self class hash bitXor: dimensions hash)
 			bitXor: sampledType hash)
 			bitXor: array hash)

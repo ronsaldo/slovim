@@ -81,7 +81,7 @@ SLVMMatrixType >> columns: anObject [
 ]
 
 { #category : #comparing }
-SLVMMatrixType >> hash [
+SLVMMatrixType >> internalHash [
 	^ (((self class hash bitXor: baseType hash) bitXor: rows hash) bitXor: columns hash) bitXor: alignment hash
 ]
 

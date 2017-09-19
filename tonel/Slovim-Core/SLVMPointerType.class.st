@@ -40,11 +40,6 @@ SLVMPointerType >> baseType: aType [
 	baseType := aType
 ]
 
-{ #category : #comparing }
-SLVMPointerType >> cyclicHash: previousElements [
-	^ (self class hash bitXor: (baseType cyclicHash: previousElements)) bitXor: storage hash
-]
-
 { #category : #accessing }
 SLVMPointerType >> elementStrideDepth: depth [
 	depth = 0 ifTrue: [ ^ size ].
@@ -67,8 +62,8 @@ SLVMPointerType >> encodeConstant: value bigEndian: bigEndian intoByteStream: st
 ]
 
 { #category : #comparing }
-SLVMPointerType >> hash [
-	^ (self class hash bitXor: baseType hash) bitXor: storage hash
+SLVMPointerType >> internalHash [
+	^ (self class hash bitXor: (baseType hash)) bitXor: storage hash
 ]
 
 { #category : #testing }

@@ -117,15 +117,16 @@ SLVMFunctionType >> callingConvention: anObject [
 	callingConvention := anObject
 ]
 
-{ #category : #comparing }
-SLVMFunctionType >> hash [
-	^ (self class hash bitXor: arguments hash) bitXor: returnType hash
-]
-
 { #category : #initialization }
 SLVMFunctionType >> initialize [
 	super initialize.
 	variadic := false.
+]
+
+{ #category : #comparing }
+SLVMFunctionType >> internalHash [	
+	^ (self class hash bitXor: arguments hash) bitXor: returnType hash
+
 ]
 
 { #category : #testing }
