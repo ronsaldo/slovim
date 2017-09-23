@@ -13,7 +13,8 @@ Class {
 		'predecessors',
 		'successors',
 		'immediateDominator',
-		'dominanceFrontier'
+		'dominanceFrontier',
+		'backEdges'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -154,6 +155,16 @@ SLVMBasicBlock >> allocaInstructionsDo: aBlock [
 		ins isAlloca ifFalse: [ ^ self ].
 		aBlock value: ins
 	]
+]
+
+{ #category : #accessing }
+SLVMBasicBlock >> backEdges [
+	^ backEdges
+]
+
+{ #category : #accessing }
+SLVMBasicBlock >> backEdges: anObject [
+	backEdges := anObject
 ]
 
 { #category : #accessing }
