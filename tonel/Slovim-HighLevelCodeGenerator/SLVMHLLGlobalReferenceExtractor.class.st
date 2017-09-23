@@ -31,7 +31,7 @@ SLVMHLLGlobalReferenceExtractor >> globals: anObject [
 { #category : #initialization }
 SLVMHLLGlobalReferenceExtractor >> initialize [
 	super initialize.
-	globals := Set new.
+	globals := SLVMOrderedInsertionSet new.
 ]
 
 { #category : #processing }

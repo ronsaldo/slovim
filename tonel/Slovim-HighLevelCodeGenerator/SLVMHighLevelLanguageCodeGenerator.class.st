@@ -1119,7 +1119,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateModule: ssaModule exportList: exp
 	translatedValueDictionary := Dictionary new.
 	
 	self applyPassesIn: ssaModule functionList: exportList.
-	
+
 	exportList do: [ :global |
 		global accept: self
 	].
