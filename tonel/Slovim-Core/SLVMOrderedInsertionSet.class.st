@@ -50,6 +50,16 @@ SLVMOrderedInsertionSet >> gtInspectorItemsIn: composite [
 	^ insertionOrder gtInspectorItemsIn: composite
 ]
 
+{ #category : #testing }
+SLVMOrderedInsertionSet >> ifEmpty: aBlock [
+	^ set ifEmpty: aBlock
+]
+
+{ #category : #testing }
+SLVMOrderedInsertionSet >> ifNotEmpty: aBlock [
+	^ set ifNotEmpty: aBlock
+]
+
 { #category : #initialization }
 SLVMOrderedInsertionSet >> initialize [
 	super initialize.
