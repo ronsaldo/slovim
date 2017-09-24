@@ -644,6 +644,21 @@ SLVMSpirVCodeGenerator >> visitExtractVectorElement: extractElement [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitFloatToIntCast: instruction [
+	| resultType source |
+	^ self instructionTranslation: instruction do: [ :id |
+		resultType := self translateValue: instruction type.
+		source := self translateValue: instruction source.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: (instruction type isUnsigned ifTrue: [SpvOpConvertFToU] ifFalse: [ SpvOpConvertFToS ])
+			type: resultType
+			result: id
+			operands: { source }
+		)
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitFloatType: floatType [
 	^ self valueTranslation: floatType do: [ :id |
 		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypeFloat result: id operands: {floatType size*8})
@@ -810,6 +825,21 @@ SLVMSpirVCodeGenerator >> visitGlobalVariable: globalVariable [
 				operands: { id . SpvDecorationDescriptorSet  . bindingSet }
 			).
 		].
+	]
+]
+
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> visitIntToFloatCast: instruction [
+	| resultType source |
+	^ self instructionTranslation: instruction do: [ :id |
+		resultType := self translateValue: instruction type.
+		source := self translateValue: instruction source.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: (instruction source type isUnsigned ifTrue: [SpvOpConvertUToF] ifFalse: [ SpvOpConvertSToF ])
+			type: resultType
+			result: id
+			operands: { source }
+		)
 	]
 ]
 
