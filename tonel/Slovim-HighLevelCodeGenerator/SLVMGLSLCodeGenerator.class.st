@@ -341,6 +341,11 @@ SLVMGLSLCodeGenerator >> translateBuiltInVariable: variableDecl [
 	variableDecl name: (BuiltInVariableMappings at: location)
 ]
 
+{ #category : #'code generation' }
+SLVMGLSLCodeGenerator >> translateHLCast: cast [
+	^ '{1}({2})' format: { cast type name . cast argument translateValueWith: self }
+]
+
 { #category : #'as yet unclassified' }
 SLVMGLSLCodeGenerator >> translateHLCombineSamplerWithTexture: combine [
 	^ ByteString streamContents: [ :out |

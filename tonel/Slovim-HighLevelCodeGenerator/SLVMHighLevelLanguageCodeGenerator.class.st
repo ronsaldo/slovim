@@ -843,6 +843,11 @@ SLVMHighLevelLanguageCodeGenerator >> translateHLCallStatementValue: statement [
 	]
 ]
 
+{ #category : #'code generation' }
+SLVMHighLevelLanguageCodeGenerator >> translateHLCast: cast [
+	^ '(({1}) {2})' format: { cast type name . cast argument translateValueWith: self }
+]
+
 { #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> translateHLCombineSamplerWithTexture: combine [
 	^ ByteString streamContents: [ :out |
@@ -1328,6 +1333,16 @@ SLVMHighLevelLanguageCodeGenerator >> visitCall: instruction [
 ]
 
 { #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> visitCastInstruction: instruction [
+	^ self pureInstructionTranslation: instruction allocate: [ SLVMHLCast new ] do: [ :node |
+
+		node
+			type: (self translateType: instruction type);
+			argument: ( self translateValue: instruction source )
+	]
+]
+
+{ #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> visitCombineSamplerWithTexture: instruction [
 	^ self pureInstructionTranslation: instruction allocate: [ SLVMHLCombineSamplerWithTexture new ] do: [ :node |
 		node combinedType: (self translateType: instruction type).
@@ -1360,6 +1375,16 @@ SLVMHighLevelLanguageCodeGenerator >> visitExtractVectorElement: instruction [
 		]
 	]
 
+]
+
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> visitFloatToIntCast: instruction [
+	^ self visitCastInstruction: instruction
+]
+
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> visitFloatingPointCast: instruction [
+	^ self visitCastInstruction: instruction
 ]
 
 { #category : #visitor }
@@ -1443,6 +1468,11 @@ SLVMHighLevelLanguageCodeGenerator >> visitGlobalVariable: globalVariable [
 			yourself
 	]
 	
+]
+
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> visitIntToFloatCast: instruction [
+	^ self visitCastInstruction: instruction
 ]
 
 { #category : #visitor }
@@ -1584,6 +1614,11 @@ SLVMHighLevelLanguageCodeGenerator >> visitShuffleVectors: instruction [
 ]
 
 { #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> visitSignExtend: instruction [
+	^ self visitCastInstruction: instruction
+]
+
+{ #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> visitStore: instruction [
 	^ self instructionTranslation: instruction allocate: [ SLVMHLVariableAssignmentStatement new ] do: [ :node |
 		node
@@ -1594,12 +1629,22 @@ SLVMHighLevelLanguageCodeGenerator >> visitStore: instruction [
 ]
 
 { #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> visitTruncate: instruction [
+	^ self visitCastInstruction: instruction
+]
+
+{ #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> visitUnaryOperation: instruction [
 	^ self pureInstructionTranslation: instruction allocate: [ SLVMHLBuiltInCallStatement new ] do: [ :node |
 		node
 			function: ('unary.', instruction operation) asSymbol;
 			arguments: { self translateValue: instruction operand }
 	]
+]
+
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> visitZeroExtend: instruction [
+	^ self visitCastInstruction: instruction
 ]
 
 { #category : #visitor }
