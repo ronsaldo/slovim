@@ -355,7 +355,6 @@ SLVMFunction >> dominanceTopoSort [
 	self computeDominance.
 	visited := Set new.
 	result := OrderedCollection new.
-	self findBackEdges.
 	basicBlocks do: [ :node | self dominanceTopoSort: node visitedSet: visited destination: result ].
 	^ result
 ]
@@ -370,11 +369,7 @@ SLVMFunction >> dominanceTopoSort: node visitedSet: visitedSet destination: dest
 	self dominanceTopoSort: node immediateDominator visitedSet: visitedSet destination: destination.
 	
 	"Add the predecessors"
-	node predecessors do: [ :pred |
-		(node backEdges includes: pred) ifFalse: [
-			self dominanceTopoSort: pred visitedSet: visitedSet destination: destination
-		]
-	].
+	node predecessors do: [ :pred | self dominanceTopoSort: pred visitedSet: visitedSet destination: destination. ].
 	
 	"Add the node"
 	destination add: node
@@ -410,36 +405,11 @@ SLVMFunction >> exitPoint [
 		sourceMethod: self
 ]
 
-{ #category : #'control flow' }
-SLVMFunction >> findBackEdges [
-	| colors |
-	basicBlocks do: [ :bb | bb backEdges: #() ].
-	colors := Array new: basicBlocks size withAll: #white.
-	self findBackEdgesFrom: self basicBlocks first colors: colors.
-]
-
-{ #category : #'control flow' }
-SLVMFunction >> findBackEdgesFrom: basicBlock colors: colors [
-	colors at: basicBlock index put: #gray.
-	basicBlock successors do: [ :succ |
-		(colors at: succ index) == #gray ifTrue: [
-			"Add the new back edge"
-			(succ backEdges includes: basicBlock) ifFalse: [ 
-				succ backEdges: (succ backEdges copyWith: basicBlock)
-			]
-		] ifFalse: [ 
-			self findBackEdgesFrom: succ colors: colors
-		]
-	].
-
-	colors at: basicBlock index put: #black.
-]
-
 { #category : #printing }
 SLVMFunction >> fullPrintOn: aStream [
-	aStream nextPut: $@; print: (name ifNil: [#anonymous]); space; print: type; cr.
+	aStream putIdentifier: ('@', name ifNil: [#anonymous]); space; print: type; cr.
 	dynamicLiterals ifNotEmpty: [
-		aStream nextPutAll: 'literals ['; cr.
+		aStream putKeyword: #literals; nextPutAll: ' ['; cr.
 		dynamicLiterals do: [ :lit | aStream print: lit value; cr ].
 		aStream nextPutAll: ']'; cr.
 	].

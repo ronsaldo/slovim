@@ -13,8 +13,7 @@ Class {
 		'predecessors',
 		'successors',
 		'immediateDominator',
-		'dominanceFrontier',
-		'backEdges'
+		'dominanceFrontier'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -158,16 +157,6 @@ SLVMBasicBlock >> allocaInstructionsDo: aBlock [
 ]
 
 { #category : #accessing }
-SLVMBasicBlock >> backEdges [
-	^ backEdges
-]
-
-{ #category : #accessing }
-SLVMBasicBlock >> backEdges: anObject [
-	backEdges := anObject
-]
-
-{ #category : #accessing }
 SLVMBasicBlock >> childrenNodes [
 	^ Array streamContents: [ :out |
 		self instructionsDo: [ :ins | out nextPut: ins ]
@@ -225,7 +214,7 @@ SLVMBasicBlock >> firstInstruction [
 
 { #category : #printing }
 SLVMBasicBlock >> fullPrintOn: aStream [
-	aStream print: self; nextPut: $:.
+	aStream putIdentifier: self printString; nextPut: $:.
 	aStream space.
 	self printArray: predecessors on: aStream.
 	aStream space.

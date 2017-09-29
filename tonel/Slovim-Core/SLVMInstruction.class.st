@@ -59,7 +59,7 @@ SLVMInstruction >> fullPrintOn: aStream [
 		self printOn: aStream.
 		aStream nextPutAll: ' = '.
 	].
-	aStream nextPutAll: self mnemonic; space.
+	aStream putKeyword: self mnemonic; space.
 	parameters doWithIndex: [ :param :index |
 		index > 1 ifTrue: [  aStream nextPutAll: ', ' ].
 		aStream print: param

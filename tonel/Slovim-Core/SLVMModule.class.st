@@ -124,9 +124,12 @@ SLVMModule >> fullPrintOn: aStream [
 
 { #category : #printing }
 SLVMModule >> fullPrintString [
-	"Answer a String whose characters are a description of the receiver."
+	^ SLVMPrintingStream fullPrintString: self
+]
 
-	^ String streamContents: [:s | self fullPrintOn: s]
+{ #category : #printing }
+SLVMModule >> fullPrintText [
+	^ SLVMPrintingTextStream fullPrintString: self
 ]
 
 { #category : #building }
@@ -225,7 +228,7 @@ SLVMModule >> gtTextViewIn: composite [
 	<gtInspectorPresentationOrder: 1>
 	composite text
 		title: 'Text';
-		display: [ :node | node fullPrintString ]
+		format: #fullPrintText
 ]
 
 { #category : #'gt inspector extensions' }

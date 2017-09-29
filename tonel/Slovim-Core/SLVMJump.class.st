@@ -66,7 +66,7 @@ SLVMJump >> destination: anObject [
 
 { #category : #printing }
 SLVMJump >> fullPrintOn: aStream [
-	aStream nextPutAll: 'jump '; print: destination
+	aStream putKeyword: #jump; space; print: destination
 ]
 
 { #category : #testing }

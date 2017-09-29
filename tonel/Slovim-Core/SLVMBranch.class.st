@@ -82,7 +82,7 @@ SLVMBranch >> falseBlock: anObject [
 
 { #category : #printing }
 SLVMBranch >> fullPrintOn: aStream [
-	aStream nextPutAll: 'branch '; print: self condition;
+	aStream putKeyword: #branch; space; print: self condition;
 		space; print: trueBlock;
 		space; print: falseBlock
 ]

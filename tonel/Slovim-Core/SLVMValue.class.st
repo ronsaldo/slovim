@@ -26,7 +26,12 @@ SLVMValue >> fullPrintOn: aStream [
 
 { #category : #printing }
 SLVMValue >> fullPrintString [
-	^ ByteString streamContents: [ :out | self fullPrintOn: out ]
+	^ SLVMPrintingStream fullPrintString: self
+]
+
+{ #category : #printing }
+SLVMValue >> fullPrintText [
+	^ SLVMPrintingTextStream fullPrintString: self
 ]
 
 { #category : #testing }

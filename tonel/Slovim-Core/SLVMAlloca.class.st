@@ -21,7 +21,7 @@ SLVMAlloca >> accept: aVisitor [
 { #category : #printing }
 SLVMAlloca >> fullPrintOn: aStream [
 	self printOn: aStream.
-	aStream nextPutAll: ' = alloca ';
+	aStream nextPutAll: ' = '; putKeyword: #alloca; space;
 		print: type
 ]
 
