@@ -6,7 +6,8 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'optimizationLevel',
-		'globalOptimization'
+		'globalOptimization',
+		'optimizedElements'
 	],
 	#category : #'Slovim-Core-CodeGeneration'
 }
@@ -46,30 +47,38 @@ SLVMCodeGenerator class >> translateModule: module function: shaderName [
 
 { #category : #'code generation' }
 SLVMCodeGenerator >> applyOptimizationsIn: ssaModule functionList: functionList [
-	(optimizationLevel = 0 and: [ self isInliningMandatory not ]) ifTrue: [ ^ self ].
-	globalOptimization ifNil: [
-		globalOptimization := SLVMOptInline new.
-		globalOptimization inliningMandatory: self isInliningMandatory.
-		globalOptimization keepStructuredControlFlow: self needStructuredControlFlow.
-		globalOptimization postInlineOptimizations: (ssaModule createFunctionOptimizationPassesForLevel: optimizationLevel).
+	(self globalOptimizationForModule: ssaModule) ifNotNil: [ :opt |
+		opt passOnFunctions: functionList
 	].
-
-	globalOptimization passOnFunctions: functionList.
 ]
 
 { #category : #'code generation' }
 SLVMCodeGenerator >> applyPassesIn: ssaModule functionList: functionList [
-	self applyOptimizationsIn: ssaModule functionList: functionList.
-	self usesGCStrategy ifTrue: [ functionList do: #applyGCStrategy ].
+	| unoptimized |
+	unoptimized := functionList.
+	optimizedElements ifNotEmpty: [
+		unoptimized := functionList reject: [ :el | optimizedElements includes: el ]
+	].
+
+	optimizedElements addAll: unoptimized.
+	self applyOptimizationsIn: ssaModule functionList: unoptimized.
+	self usesGCStrategy ifTrue: [ unoptimized do: #applyGCStrategy ].
 	self needSSADestroyed ifTrue: [ 
-		SLVMOptDestroySSA passOnFunctions: functionList.
+		SLVMOptDestroySSA passOnFunctions: unoptimized.
 	].
 	
+
 ]
 
 { #category : #'code generation' }
 SLVMCodeGenerator >> applyPassesInFunction: function [
-	globalOptimization ifNotNil: [ globalOptimization passOnFunction: function ].
+	(optimizedElements includes: function) ifTrue: [ ^ function ].
+	
+	optimizedElements add: function.
+	(self globalOptimizationForModule: function module) ifNotNil: [ :opt |
+		opt passOnFunction: function
+	].
+
 	self usesGCStrategy ifTrue: [ function applyGCStrategy ].
 	self needSSADestroyed ifTrue: [ 
 		SLVMOptDestroySSA passOnFunction: function.
@@ -78,10 +87,23 @@ SLVMCodeGenerator >> applyPassesInFunction: function [
 	
 ]
 
+{ #category : #'code generation' }
+SLVMCodeGenerator >> globalOptimizationForModule: ssaModule [
+	(optimizationLevel = 0 and: [ self isInliningMandatory not ]) ifTrue: [ ^ nil ].
+	^ globalOptimization ifNil: [
+		globalOptimization := SLVMOptInline new.
+		globalOptimization inliningMandatory: self isInliningMandatory.
+		globalOptimization keepStructuredControlFlow: self needStructuredControlFlow.
+		globalOptimization postInlineOptimizations: (ssaModule createFunctionOptimizationPassesForLevel: optimizationLevel).
+	].
+
+]
+
 { #category : #initialization }
 SLVMCodeGenerator >> initialize [
 	super initialize.
 	optimizationLevel := 0.
+	optimizedElements := IdentitySet new.
 ]
 
 { #category : #testing }

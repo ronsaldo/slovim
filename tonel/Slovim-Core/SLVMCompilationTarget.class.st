@@ -88,6 +88,11 @@ SLVMCompilationTarget >> isBigEndian [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isCurrentImage [
+	^ false
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isLittleEndian [
 	^ true
 ]

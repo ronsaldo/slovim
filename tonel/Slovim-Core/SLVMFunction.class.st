@@ -407,7 +407,7 @@ SLVMFunction >> exitPoint [
 
 { #category : #printing }
 SLVMFunction >> fullPrintOn: aStream [
-	aStream putIdentifier: ('@', name ifNil: [#anonymous]); space; print: type; cr.
+	aStream putIdentifier: ('@', (name ifNil: [#anonymous])); space; print: type; cr.
 	dynamicLiterals ifNotEmpty: [
 		aStream putKeyword: #literals; nextPutAll: ' ['; cr.
 		dynamicLiterals do: [ :lit | aStream print: lit value; cr ].
