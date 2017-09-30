@@ -193,6 +193,11 @@ SLVMPharoFunctionCodeGenerator >> initialize [
 	nextSequenceIndex := 0.
 ]
 
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> loadValueFromPointer: anInstruction [
+	self error: 'Cannot store into arbitrary pointers when using the backend without Lowcode.'
+]
+
 { #category : #accessing }
 SLVMPharoFunctionCodeGenerator >> moduleTranslator [
 	^ moduleTranslator
