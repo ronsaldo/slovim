@@ -4,10 +4,17 @@ Class {
 	#instVars : [
 		'name',
 		'arguments',
-		'basicBlocks'
+		'basicBlocks',
+		'debugInformation',
+		'debugSourceLocation'
 	],
 	#category : #'Slovim-StackCodeGenerator'
 }
+
+{ #category : #visiting }
+SLVMETreeFunction >> accept: aVisitor [
+	^ aVisitor visitFunction: self
+]
 
 { #category : #adding }
 SLVMETreeFunction >> addArgument: anArgument [
@@ -28,6 +35,26 @@ SLVMETreeFunction >> arguments [
 { #category : #accessing }
 SLVMETreeFunction >> basicBlocks [
 	^ basicBlocks
+]
+
+{ #category : #accessing }
+SLVMETreeFunction >> debugInformation [
+	^ debugInformation
+]
+
+{ #category : #accessing }
+SLVMETreeFunction >> debugInformation: anObject [
+	debugInformation := anObject
+]
+
+{ #category : #accessing }
+SLVMETreeFunction >> debugSourceLocation [
+	^ debugSourceLocation
+]
+
+{ #category : #accessing }
+SLVMETreeFunction >> debugSourceLocation: anObject [
+	debugSourceLocation := anObject
 ]
 
 { #category : #printing }

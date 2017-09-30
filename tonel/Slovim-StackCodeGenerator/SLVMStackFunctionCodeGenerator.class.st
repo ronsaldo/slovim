@@ -15,6 +15,9 @@ SLVMStackFunctionCodeGenerator >> addParametersOf: slvmInstruction into: etreeEx
 	etreeExpression parameters: (slvmInstruction parameters collect: [ :param |
 		self translateInstructionParameter: param.
 	]).
+	etreeExpression
+		debugSourceLocation: slvmInstruction debugSourceLocation;
+		debugInformation: slvmInstruction debugInformation.
 	^ etreeExpression
 ]
 
@@ -22,7 +25,10 @@ SLVMStackFunctionCodeGenerator >> addParametersOf: slvmInstruction into: etreeEx
 SLVMStackFunctionCodeGenerator >> createArguments [
 	| etreeArg |
 	slvmFunction arguments do: [ :arg |
-		etreeArg := SLVMETreeFunctionArgument new argument: arg.
+		etreeArg := SLVMETreeFunctionArgument new
+			name: arg name;
+			type: arg type;
+			flags: arg flags.
 		etreeFunction addArgument: etreeArg.
 		translatedElements at: arg put: etreeArg
 	]
@@ -43,7 +49,7 @@ SLVMStackFunctionCodeGenerator >> createBasicBlocks [
 SLVMStackFunctionCodeGenerator >> createTemporariesForBasicBlock: slvmBasicBlock into: etreeBasicBlock [
 	| etreeStatement |
 	slvmBasicBlock instructionsDo: [ :instruction |
-		etreeStatement := SLVMETreeStatement new slvmInstruction: instruction.
+		etreeStatement := SLVMETreeStatement new slvmInstruction: instruction; type: instruction type.
 		etreeBasicBlock add: etreeStatement.
 		instruction type isVoidType ifFalse: [ 
 			etreeStatement name: instruction name.
@@ -89,6 +95,7 @@ SLVMStackFunctionCodeGenerator >> translateBasicBlocks [
 { #category : #'as yet unclassified' }
 SLVMStackFunctionCodeGenerator >> translateFunction: aFunction into: expressionTreeFunction [
 	slvmFunction := aFunction.
+	slvmFunction applyDominanceTopoSort.
 	etreeFunction := expressionTreeFunction.
 	
 	translatedElements := IdentityDictionary new.
@@ -113,13 +120,17 @@ SLVMStackFunctionCodeGenerator >> translateStatement: statement [
 { #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitAlloca: anInstruction [
 	^ self addParametersOf: anInstruction
-		into: (SLVMETreeAllocaExpression new valueType: anInstruction valueType)
+		into: (SLVMETreeAllocaExpression new
+		valueType: anInstruction valueType;
+		type: anInstruction type)
 ]
 
 { #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitBinaryOperation: anInstruction [
 	^ self addParametersOf: anInstruction
-		into: (SLVMETreeBinaryExpression new operation: anInstruction operation)
+		into: (SLVMETreeBinaryExpression new
+			operation: anInstruction operation;
+			type: anInstruction type)
 ]
 
 { #category : #visiting }
@@ -128,13 +139,14 @@ SLVMStackFunctionCodeGenerator >> visitBranch: anInstruction [
 		into: (SLVMETreeBranchExpression new
 			trueBlock: (self translateInstructionParameter: anInstruction trueBlock);
 			falseBlock: (self translateInstructionParameter: anInstruction falseBlock);
+			type: anInstruction type
 			yourself)
 ]
 
 { #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitCall: anInstruction [
 	^ self addParametersOf: anInstruction
-		into: (SLVMETreeCallExpression new)
+		into: (SLVMETreeCallExpression new type: anInstruction type)
 ]
 
 { #category : #visiting }
@@ -146,30 +158,33 @@ SLVMStackFunctionCodeGenerator >> visitFunction: aFunction [
 SLVMStackFunctionCodeGenerator >> visitJump: anInstruction [
 	^ self addParametersOf: anInstruction
 		into: (SLVMETreeJumpExpression new
-			destination: (self translateInstructionParameter: anInstruction destination)
+			destination: (self translateInstructionParameter: anInstruction destination);
+			type: anInstruction type
 			yourself)
 ]
 
 { #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitLoad: anInstruction [
 	^ self addParametersOf: anInstruction
-		into: (SLVMETreeLoadExpression new)
+		into: (SLVMETreeLoadExpression new type: anInstruction type)
 ]
 
 { #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitReturn: anInstruction [
 	^ self addParametersOf: anInstruction
-		into: (SLVMETreeReturnExpression new)
+		into: (SLVMETreeReturnExpression new type: anInstruction type)
 ]
 
 { #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitStore: anInstruction [
 	^ self addParametersOf: anInstruction
-		into: (SLVMETreeStoreExpression new)
+		into: (SLVMETreeStoreExpression new type: anInstruction type)
 ]
 
 { #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitUnaryOperation: anInstruction [
 	^ self addParametersOf: anInstruction
-		into: (SLVMETreeUnaryExpression new operation: anInstruction operation)
+		into: (SLVMETreeUnaryExpression new
+		operation: anInstruction operation;
+		type: anInstruction type)
 ]

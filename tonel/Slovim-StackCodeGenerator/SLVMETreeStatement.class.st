@@ -8,10 +8,16 @@ Class {
 		'references',
 		'block',
 		'previous',
-		'next'
+		'next',
+		'type'
 	],
 	#category : #'Slovim-StackCodeGenerator'
 }
+
+{ #category : #visiting }
+SLVMETreeStatement >> accept: aVisitor [
+	^ aVisitor visitETreeStatement: self
+]
 
 { #category : #adding }
 SLVMETreeStatement >> addReference: aReference [
@@ -63,6 +69,15 @@ SLVMETreeStatement >> initialize [
 	
 	references := #().
 	
+]
+
+{ #category : #testing }
+SLVMETreeStatement >> isAllocaOnlyUsedByLoadsAndStores [
+	expression isAlloca ifFalse: [ ^ false ].
+	references do: [ :ref |
+		(ref expression isLoad or: [ref expression isStore]) ifFalse: [ ^ false ]
+	].
+	^ true
 ]
 
 { #category : #testing }
@@ -142,6 +157,16 @@ SLVMETreeStatement >> slvmInstruction [
 { #category : #accessing }
 SLVMETreeStatement >> slvmInstruction: anObject [
 	slvmInstruction := anObject
+]
+
+{ #category : #accessing }
+SLVMETreeStatement >> type [
+	^ type
+]
+
+{ #category : #accessing }
+SLVMETreeStatement >> type: anObject [
+	type := anObject
 ]
 
 { #category : #accessing }

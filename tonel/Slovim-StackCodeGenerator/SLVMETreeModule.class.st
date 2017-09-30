@@ -1,7 +1,11 @@
+"
+I am a module that uses expression trees as an intermediate representation for code.
+"
 Class {
 	#name : #SLVMETreeModule,
 	#superclass : #Object,
 	#instVars : [
+		'compilationTarget',
 		'elements'
 	],
 	#category : #'Slovim-StackCodeGenerator'
@@ -10,6 +14,23 @@ Class {
 { #category : #adding }
 SLVMETreeModule >> add: anElement [
 	elements add: anElement
+]
+
+{ #category : #converting }
+SLVMETreeModule >> asFinalModule [
+	^ (compilationTarget finalTargetCodeGeneratorClass new
+		compilationTarget: compilationTarget)
+			translateModule: self
+]
+
+{ #category : #accessing }
+SLVMETreeModule >> compilationTarget [
+	^ compilationTarget
+]
+
+{ #category : #accessing }
+SLVMETreeModule >> compilationTarget: anObject [
+	compilationTarget := anObject
 ]
 
 { #category : #accessing }

@@ -7,6 +7,16 @@ Class {
 	#category : #'Slovim-StackCodeGenerator'
 }
 
+{ #category : #visiting }
+SLVMETreeAllocaExpression >> accept: aVisitor [
+	^ aVisitor visitAlloca: self
+]
+
+{ #category : #testing }
+SLVMETreeAllocaExpression >> isAlloca [
+	^ true
+]
+
 { #category : #accessing }
 SLVMETreeAllocaExpression >> name [
 	^ #alloca

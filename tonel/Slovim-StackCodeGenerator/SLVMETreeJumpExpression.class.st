@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-StackCodeGenerator'
 }
 
+{ #category : #visiting }
+SLVMETreeJumpExpression >> accept: aVisitor [
+	^ aVisitor visitJump: self
+]
+
 { #category : #accessing }
 SLVMETreeJumpExpression >> destination [
 	^ destination
@@ -15,6 +20,11 @@ SLVMETreeJumpExpression >> destination [
 { #category : #accessing }
 SLVMETreeJumpExpression >> destination: anObject [
 	destination := anObject
+]
+
+{ #category : #testing }
+SLVMETreeJumpExpression >> isTerminator [
+	^ true
 ]
 
 { #category : #accessing }

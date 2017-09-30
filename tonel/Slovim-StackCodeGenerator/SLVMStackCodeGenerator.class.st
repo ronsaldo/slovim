@@ -32,7 +32,7 @@ SLVMStackCodeGenerator >> target: anObject [
 { #category : #'code generation' }
 SLVMStackCodeGenerator >> translateModule: module exportList: exportList [
 	self applyPassesIn: module functionList: (exportList select: #isFunction).
-	etreeModule := SLVMETreeModule new.
+	etreeModule := SLVMETreeModule new compilationTarget: target.
 	translatedElements := Dictionary new.
 	
 	exportList do: [ :element |
@@ -53,6 +53,7 @@ SLVMStackCodeGenerator >> visitFunction: aFunction [
 
 	expressionTreeFunction := SLVMETreeFunction new.
 	expressionTreeFunction name: aFunction name.
+	expressionTreeFunction debugSourceLocation: aFunction debugSourceLocation.
 	
 	etreeModule add: expressionTreeFunction.
 	translatedElements at: aFunction put: expressionTreeFunction.

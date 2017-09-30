@@ -7,9 +7,19 @@ Class {
 	#category : #'Slovim-StackCodeGenerator'
 }
 
+{ #category : #visiting }
+SLVMETreeUnaryExpression >> accept: aVisitor [
+	^ aVisitor visitUnaryExpression: self
+]
+
 { #category : #accessing }
 SLVMETreeUnaryExpression >> name [
 	^ operation
+]
+
+{ #category : #accessing }
+SLVMETreeUnaryExpression >> operand [
+	^ parameters first
 ]
 
 { #category : #accessing }

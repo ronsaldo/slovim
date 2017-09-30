@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-StackCodeGenerator-Pharo'
 }
 
+{ #category : #'as yet unclassified' }
+SLVMPharo32CompilationTarget >> finalTargetCodeGeneratorClass [
+	^ SLVMPharoCodeGenerator
+]
+
 { #category : #convenience }
 SLVMPharo32CompilationTarget >> generateLowLevelModule: aModule [
 	^ SLVMStackCodeGenerator new target: self; translateModule: aModule

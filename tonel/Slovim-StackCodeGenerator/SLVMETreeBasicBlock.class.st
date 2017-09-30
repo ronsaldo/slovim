@@ -57,6 +57,11 @@ SLVMETreeBasicBlock >> initialize [
 	super initialize.
 ]
 
+{ #category : #testing }
+SLVMETreeBasicBlock >> isLastBranch [
+	^ lastStatement isNotNil and: [ lastStatement expression isBranch ]
+]
+
 { #category : #accessing }
 SLVMETreeBasicBlock >> name [
 	^ name
