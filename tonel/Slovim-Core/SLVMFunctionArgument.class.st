@@ -6,7 +6,8 @@ Class {
 		'type',
 		'index',
 		'name',
-		'livenessIndex'
+		'livenessIndex',
+		'flags'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -14,6 +15,21 @@ Class {
 { #category : #visitor }
 SLVMFunctionArgument >> accept: aVisitor [
 	^ aVisitor visitFunctionArgument: self
+]
+
+{ #category : #accessing }
+SLVMFunctionArgument >> addFlag: aFlag [
+	flags := flags copyWith: aFlag
+]
+
+{ #category : #accessing }
+SLVMFunctionArgument >> flags [
+	^ flags
+]
+
+{ #category : #accessing }
+SLVMFunctionArgument >> flags: anObject [
+	flags := anObject
 ]
 
 { #category : #accessing }
@@ -27,6 +43,11 @@ SLVMFunctionArgument >> function: anObject [
 ]
 
 { #category : #accessing }
+SLVMFunctionArgument >> hasFlag: aFlag [
+	^ flags includes: aFlag
+]
+
+{ #category : #accessing }
 SLVMFunctionArgument >> index [
 	^ index
 ]
@@ -36,9 +57,20 @@ SLVMFunctionArgument >> index: anObject [
 	index := anObject
 ]
 
+{ #category : #initialization }
+SLVMFunctionArgument >> initialize [
+	super initialize.
+	flags := #().
+]
+
 { #category : #testing }
 SLVMFunctionArgument >> isFunctionArgument [
 	^ true
+]
+
+{ #category : #accessing }
+SLVMFunctionArgument >> isReceiver [
+	^ self hasFlag: #receiver
 ]
 
 { #category : #accessing }
@@ -49,6 +81,11 @@ SLVMFunctionArgument >> livenessIndex [
 { #category : #accessing }
 SLVMFunctionArgument >> livenessIndex: anObject [
 	livenessIndex := anObject
+]
+
+{ #category : #accessing }
+SLVMFunctionArgument >> makeReceiver [
+	self addFlag: #receiver
 ]
 
 { #category : #accessing }

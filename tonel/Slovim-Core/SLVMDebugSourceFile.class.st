@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-Debug'
 }
 
+{ #category : #'instance creation' }
+SLVMDebugSourceFile class >> null [
+	^ self new name: #anon; directory: ''
+]
+
 { #category : #accessing }
 SLVMDebugSourceFile >> directory [
 	^ directory
