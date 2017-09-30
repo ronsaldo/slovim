@@ -13,7 +13,8 @@ Class {
 
 { #category : #adding }
 SLVMETreeModule >> add: anElement [
-	elements add: anElement
+	elements add: anElement.
+	anElement module: self.
 ]
 
 { #category : #converting }

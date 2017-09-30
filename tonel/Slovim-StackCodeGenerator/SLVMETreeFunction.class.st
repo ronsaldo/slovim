@@ -3,10 +3,13 @@ Class {
 	#superclass : #SLVMETreeObject,
 	#instVars : [
 		'name',
+		'module',
 		'arguments',
 		'basicBlocks',
 		'debugInformation',
-		'debugSourceLocation'
+		'debugSourceLocation',
+		'selector',
+		'classBinding'
 	],
 	#category : #'Slovim-StackCodeGenerator'
 }
@@ -35,6 +38,16 @@ SLVMETreeFunction >> arguments [
 { #category : #accessing }
 SLVMETreeFunction >> basicBlocks [
 	^ basicBlocks
+]
+
+{ #category : #accessing }
+SLVMETreeFunction >> classBinding [
+	^ classBinding
+]
+
+{ #category : #accessing }
+SLVMETreeFunction >> classBinding: anObject [
+	classBinding := anObject
 ]
 
 { #category : #accessing }
@@ -88,6 +101,16 @@ SLVMETreeFunction >> initialize [
 ]
 
 { #category : #accessing }
+SLVMETreeFunction >> module [
+	^ module
+]
+
+{ #category : #accessing }
+SLVMETreeFunction >> module: anObject [
+	module := anObject
+]
+
+{ #category : #accessing }
 SLVMETreeFunction >> name [
 	^ name
 ]
@@ -105,6 +128,16 @@ SLVMETreeFunction >> prettyPrintOn: aStream [
 { #category : #printing }
 SLVMETreeFunction >> printOn: aStream [
 	aStream nextPutAll: self validName
+]
+
+{ #category : #accessing }
+SLVMETreeFunction >> selector [
+	^ selector
+]
+
+{ #category : #accessing }
+SLVMETreeFunction >> selector: anObject [
+	selector := anObject
 ]
 
 { #category : #accessing }

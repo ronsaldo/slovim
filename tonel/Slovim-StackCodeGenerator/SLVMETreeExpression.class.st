@@ -1,9 +1,8 @@
 Class {
 	#name : #SLVMETreeExpression,
-	#superclass : #SLVMETreeNode,
+	#superclass : #SLVMETreeValue,
 	#instVars : [
-		'parameters',
-		'type'
+		'parameters'
 	],
 	#category : #'Slovim-StackCodeGenerator'
 }
@@ -66,14 +65,4 @@ SLVMETreeExpression >> prettyPrintOn: aStream [
 		op prettyPrintOn: aStream.
 	].
 	aStream nextPutAll: ')'
-]
-
-{ #category : #accessing }
-SLVMETreeExpression >> type [
-	^ type
-]
-
-{ #category : #accessing }
-SLVMETreeExpression >> type: anObject [
-	type := anObject
 ]

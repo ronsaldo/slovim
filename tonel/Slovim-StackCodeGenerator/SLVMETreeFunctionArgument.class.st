@@ -1,9 +1,8 @@
 Class {
 	#name : #SLVMETreeFunctionArgument,
-	#superclass : #SLVMETreeNode,
+	#superclass : #SLVMETreeValue,
 	#instVars : [
 		'name',
-		'type',
 		'flags'
 	],
 	#category : #'Slovim-StackCodeGenerator'
@@ -47,16 +46,6 @@ SLVMETreeFunctionArgument >> name: anObject [
 { #category : #printing }
 SLVMETreeFunctionArgument >> prettyPrintOn: aStream [
 	aStream nextPutAll: '('; putKeyword: #arg; space; putIdentifier: self validName; nextPutAll: ')'
-]
-
-{ #category : #accessing }
-SLVMETreeFunctionArgument >> type [
-	^ type
-]
-
-{ #category : #accessing }
-SLVMETreeFunctionArgument >> type: anObject [
-	type := anObject
 ]
 
 { #category : #accessing }

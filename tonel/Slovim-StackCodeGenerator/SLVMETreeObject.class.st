@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #testing }
+SLVMETreeObject >> isGlobalVariable [
+	^ false
+]
+
+{ #category : #testing }
 SLVMETreeObject >> isStatement [
 	^ false
 ]

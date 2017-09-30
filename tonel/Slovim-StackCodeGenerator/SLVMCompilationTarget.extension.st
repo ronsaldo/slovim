@@ -2,7 +2,8 @@ Extension { #name : #SLVMCompilationTarget }
 
 { #category : #'*Slovim-StackCodeGenerator' }
 SLVMCompilationTarget class >> forCurrentImage [
-	^ Smalltalk wordSize = 4 ifTrue: [ self pharo32 ] ifFalse: [ self pharo64 ]
+	^ (Smalltalk wordSize = 4 ifTrue: [ self pharo32 ] ifFalse: [ self pharo64 ])
+		currentImage: true
 ]
 
 { #category : #'*Slovim-StackCodeGenerator' }

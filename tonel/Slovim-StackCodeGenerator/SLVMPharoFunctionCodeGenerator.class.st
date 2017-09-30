@@ -109,10 +109,16 @@ SLVMPharoFunctionCodeGenerator >> compilationTarget: anObject [
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> convertPointerIntoVariable: aVariableExpression [
+	| binding |
 	(promotedAllocas includesKey: aVariableExpression) ifTrue: [ 
 		^ promotedAllocas at: aVariableExpression.
 	].
 	
+	aVariableExpression isGlobalVariable ifTrue: [
+		binding := moduleTranslator translateElement: aVariableExpression.
+		^ SLVMPharoLiteralVariable new binding: binding
+	].
+
 	^ nil
 
 ]
@@ -124,7 +130,8 @@ SLVMPharoFunctionCodeGenerator >> createArguments [
 	etreeFunction arguments doWithIndex: [ :arg :index |
 		(index = 1 and: [ arg isReceiver ]) ifTrue: [ 
 			ir numArgs: etreeFunction arguments size - 1.
-			self halt
+			temp := SLVMPharoFunctionReceiver new type: arg type.
+			translatedElements at: arg put: temp
 		] ifFalse: [ 
 			temp := self createTemporary: arg validName type: arg type.
 			translatedElements at: arg put: temp
@@ -157,13 +164,14 @@ SLVMPharoFunctionCodeGenerator >> createBasicBlocksAndTemporaries [
 ]
 
 { #category : #'code generation' }
-SLVMPharoFunctionCodeGenerator >> createTemporary: name type: type [
-	| tempMap tempName index temp |
+SLVMPharoFunctionCodeGenerator >> createTemporary: rawName type: type [
+	| tempMap tempName index temp name |
 	tempMap := self currentScope tempMap.
+	name := rawName asSymbol.
 	tempName := tempMap at: name ifPresent: [('<temp:' , tempMap size asString, '>') asSymbol] ifAbsent: [ name ].
 	
 	index := tempMap size + 1.
-	temp := SLVMPharoFunctionTemporary new name: name; type: type; yourself.
+	temp := SLVMPharoFunctionLocal new name: name; type: type; yourself.
 	tempMap at: tempName put: index.
 	^ temp
 ]
@@ -333,6 +341,13 @@ SLVMPharoFunctionCodeGenerator >> translateFunction: aFunction [
 	self translateBasicBlocks.
 	
 	compiledMethod := ir optimize compiledMethod.
+	etreeFunction classBinding ifNotNil: [ 
+		compiledMethod classBinding: etreeFunction classBinding
+	].
+	etreeFunction selector ifNotNil: [ 
+		compiledMethod selector: etreeFunction selector
+	].
+
 	^ compiledMethod
 ]
 
@@ -346,10 +361,8 @@ SLVMPharoFunctionCodeGenerator >> translateStatement: statement [
 	"Store or pop the result of the expression."
 	statement expression isTerminator ifTrue: [ ^ self ].
 	statement type isVoidType ifTrue: [ ^ self ].
-	statement references ifEmpty: [
-		self pop.
-	] ifNotEmpty: [
-		self storeIntoTemp: (translatedElements at: statement)
+	statement references ifNotEmpty: [
+		(translatedElements at: statement) emitStoreStackTopWith: self.
 	].
 
 ]
@@ -390,6 +403,16 @@ SLVMPharoFunctionCodeGenerator >> visitCall: anInstruction [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitConstantValue: aConstant [
+	self pushLiteral: aConstant value
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitETreeStatement: anStatement [
+	(translatedElements at: anStatement) emitPushWith: self
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitExpression: anExpression [
 	anExpression debugSourceLocation ifNotNil: [ :loc |
 		self withDebugSourceLocation: loc do: [ 
@@ -413,6 +436,11 @@ SLVMPharoFunctionCodeGenerator >> visitFunctionArgument: anArgument [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitIntToDynamicObjectCast: cast [
+	self visitExpression: cast source
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitJump: aBranch [
 	self add: (IRJump new destination: (translatedElements at: aBranch destination))
 ]
@@ -427,6 +455,29 @@ SLVMPharoFunctionCodeGenerator >> visitLoad: anInstruction [
 	].
 
 	variable emitPushWith: self
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitMessageSend: anInstruction [
+	| selector arguments |
+	self visitExpression: anInstruction receiver.
+	
+	selector := anInstruction selector.
+	arguments := anInstruction arguments.
+	(selector isConstantDynamicLiteral and: [selector value isSymbol]) ifTrue: [
+		arguments do: [ :arg |
+			self visitExpression: arg
+		].
+		self send: selector value
+	] ifFalse: [
+		self visitExpression: selector.
+		arguments do: [ :arg |
+			self visitExpression: arg
+		].
+		self pushConsArray: arguments size.
+		self send: #perform:withArguments:
+	].
+
 ]
 
 { #category : #visiting }

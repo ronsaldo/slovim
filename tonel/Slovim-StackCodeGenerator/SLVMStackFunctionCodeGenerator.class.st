@@ -150,8 +150,29 @@ SLVMStackFunctionCodeGenerator >> visitCall: anInstruction [
 ]
 
 { #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitConstantDynamicLiteral: constant [
+	^ SLVMETreeConstantDynamicLiteral new type: constant type; value: constant value
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitConstantValue: constant [
+	^ SLVMETreeConstantValue new type: constant type; value: constant value
+]
+
+{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitFunction: aFunction [
 	^ moduleCodeGenerator translateModuleElement: aFunction
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitGlobalVariable: aFunction [
+	^ moduleCodeGenerator translateModuleElement: aFunction
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitIntToDynamicObjectCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeIntToDynamicObjectCast new type: anInstruction type)
 ]
 
 { #category : #visiting }
@@ -167,6 +188,12 @@ SLVMStackFunctionCodeGenerator >> visitJump: anInstruction [
 SLVMStackFunctionCodeGenerator >> visitLoad: anInstruction [
 	^ self addParametersOf: anInstruction
 		into: (SLVMETreeLoadExpression new type: anInstruction type)
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitMessageSend: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeMessageSendExpression new type: anInstruction type)
 ]
 
 { #category : #visiting }

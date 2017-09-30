@@ -27,6 +27,12 @@ SLVMPharoCodeGenerator >> functionCodeGeneratorClass [
 	^ SLVMPharoFunctionCodeGenerator
 ]
 
+{ #category : #initialization }
+SLVMPharoCodeGenerator >> initialize [
+	pharoModule := SLVMPharoCompilationModule new.
+	translatedElements := IdentityDictionary new.
+]
+
 { #category : #'code generation' }
 SLVMPharoCodeGenerator >> translateElement: anElement [
 	^ anElement accept: self
@@ -34,8 +40,6 @@ SLVMPharoCodeGenerator >> translateElement: anElement [
 
 { #category : #'code generation' }
 SLVMPharoCodeGenerator >> translateModule: anETreeModule [
-	pharoModule := SLVMPharoCompilationModule new.
-	translatedElements := IdentityDictionary new.
 	anETreeModule elements do: [ :el | self translateElement: el ].
 	^ pharoModule
 ]
@@ -53,5 +57,15 @@ SLVMPharoCodeGenerator >> visitFunction: aFunction [
 		moduleTranslator: self.
 	translatedFunction := functionCodeGenerator translateFunction: aFunction.
 	binding value: translatedFunction.
+	^ binding
+]
+
+{ #category : #visiting }
+SLVMPharoCodeGenerator >> visitGlobalVariable: aGlobalVariable [
+	| binding |
+	translatedElements at: aGlobalVariable ifPresent: [ :incomplete | ^ incomplete ].
+	binding := aGlobalVariable binding ifNil: [ GlobalVariable key: aGlobalVariable name value: nil].
+	pharoModule add: binding.
+	
 	^ binding
 ]
