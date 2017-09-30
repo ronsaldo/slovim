@@ -473,6 +473,16 @@ SLVMFunction >> hasNoInlineMode [
 	^ self inlineMode == false
 ]
 
+{ #category : #testing }
+SLVMFunction >> hasSelectorAndClassBinding [
+	^ self propertyAt: #selectorAndClassBinding ifAbsent: [ false ]
+]
+
+{ #category : #testing }
+SLVMFunction >> hasSelectorAndClassBinding: aBoolean [
+	^ self propertyAt: #selectorAndClassBinding put: aBoolean
+]
+
 { #category : #inlining }
 SLVMFunction >> hasYesInlineMode [
 	^ self inlineMode == true
