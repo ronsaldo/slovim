@@ -1,3 +1,6 @@
+"
+I am a SLVM object. I add some testing methods.
+"
 Class {
 	#name : #SLVMObject,
 	#superclass : #Object,

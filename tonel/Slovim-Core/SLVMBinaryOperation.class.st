@@ -1,3 +1,6 @@
+"
+I represent a binary operation
+"
 Class {
 	#name : #SLVMBinaryOperation,
 	#superclass : #SLVMInstruction,

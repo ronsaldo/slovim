@@ -1,3 +1,6 @@
+"
+I am a builder for adding instructions into functions.
+"
 Class {
 	#name : #SLVMBuilder,
 	#superclass : #SLVMObject,

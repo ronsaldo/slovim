@@ -1,3 +1,6 @@
+"
+I represent a closure inside a function. I can be instantiated into a normal function that receives the captured state in a structure pointer passed as the first parameter.
+"
 Class {
 	#name : #SLVMClosureDefinition,
 	#superclass : #SLVMFunction,

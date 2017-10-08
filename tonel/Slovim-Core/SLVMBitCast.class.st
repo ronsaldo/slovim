@@ -1,3 +1,6 @@
+"
+I am a casting instruction that just reinterprets the meaning of the input value bits
+"
 Class {
 	#name : #SLVMBitCast,
 	#superclass : #SLVMCast,

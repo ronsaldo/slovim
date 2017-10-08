@@ -1,3 +1,6 @@
+"
+I represent a control flow if style branch,
+"
 Class {
 	#name : #SLVMBranch,
 	#superclass : #SLVMInstruction,

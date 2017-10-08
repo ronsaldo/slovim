@@ -1,3 +1,6 @@
+"
+I represent a value in SSA form.
+"
 Class {
 	#name : #SLVMValue,
 	#superclass : #SLVMObject,

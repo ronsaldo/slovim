@@ -1,3 +1,6 @@
+"
+I represent a basic block in a function.
+"
 Class {
 	#name : #SLVMBasicBlock,
 	#superclass : #SLVMObject,

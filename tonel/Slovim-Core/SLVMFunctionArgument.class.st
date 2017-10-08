@@ -1,3 +1,6 @@
+"
+I represent a function argument.
+"
 Class {
 	#name : #SLVMFunctionArgument,
 	#superclass : #SLVMFunctionLocalValue,

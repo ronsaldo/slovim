@@ -1,3 +1,6 @@
+"
+I am a casting instruction for converting an integer into a float.
+"
 Class {
 	#name : #SLVMIntToFloatCast,
 	#superclass : #SLVMCast,

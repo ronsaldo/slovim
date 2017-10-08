@@ -1,3 +1,6 @@
+"
+I represent a SSA module that can contain named and unnamed elements. The elements in a module are global values.
+"
 Class {
 	#name : #SLVMModule,
 	#superclass : #SLVMObject,

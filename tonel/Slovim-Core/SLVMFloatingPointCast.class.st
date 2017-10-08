@@ -1,3 +1,6 @@
+"
+I am casting instruction for converting between floats of different sizes.
+"
 Class {
 	#name : #SLVMFloatingPointCast,
 	#superclass : #SLVMCast,

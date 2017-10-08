@@ -1,3 +1,6 @@
+"
+I am a casting instructio for converting a closure into a dynamic object.
+"
 Class {
 	#name : #SLVMClosureToDynamicObject,
 	#superclass : #SLVMDynamicObjectNativeCast,

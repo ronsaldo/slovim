@@ -1,3 +1,6 @@
+"
+I am a casting instruction for boxing and unboxing pointers in dynamic objects.
+"
 Class {
 	#name : #SLVMDynamicObjectPointerCast,
 	#superclass : #SLVMCast,

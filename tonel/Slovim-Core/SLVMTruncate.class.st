@@ -1,3 +1,6 @@
+"
+I am a casting instruction truncating integers,
+"
 Class {
 	#name : #SLVMTruncate,
 	#superclass : #SLVMCast,

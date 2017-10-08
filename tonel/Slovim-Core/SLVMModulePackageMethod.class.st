@@ -1,3 +1,6 @@
+"
+I represent metadata for registering a Smalltalk method in a class.
+"
 Class {
 	#name : #SLVMModulePackageMethod,
 	#superclass : #SLVMModulePackageElement,

@@ -1,3 +1,6 @@
+"
+I represent a constant value.
+"
 Class {
 	#name : #SLVMConstantValue,
 	#superclass : #SLVMConstant,

@@ -1,3 +1,6 @@
+"
+I am casting instruction for unboxing integers from dynamic objects.
+"
 Class {
 	#name : #SLVMDynamicObjectToIntCast,
 	#superclass : #SLVMDynamicObjectNativeCast,

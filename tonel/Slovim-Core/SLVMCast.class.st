@@ -1,3 +1,6 @@
+"
+I am a casting instruction.
+"
 Class {
 	#name : #SLVMCast,
 	#superclass : #SLVMInstruction,

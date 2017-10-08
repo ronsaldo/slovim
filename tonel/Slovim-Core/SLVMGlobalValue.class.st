@@ -1,3 +1,6 @@
+"
+I represent  a global value.
+"
 Class {
 	#name : #SLVMGlobalValue,
 	#superclass : #SLVMConstant,

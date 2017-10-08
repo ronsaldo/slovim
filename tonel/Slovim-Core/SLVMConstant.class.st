@@ -1,3 +1,6 @@
+"
+I represent a constant whose value could be dependent on the target architecture or target module.
+"
 Class {
 	#name : #SLVMConstant,
 	#superclass : #SLVMValue,

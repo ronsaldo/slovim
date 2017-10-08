@@ -1,3 +1,6 @@
+"
+I represent a function call.
+"
 Class {
 	#name : #SLVMCall,
 	#superclass : #SLVMInstruction,

@@ -1,3 +1,6 @@
+"
+I am a casting instruction for converting between dynamic objects and native types.
+"
 Class {
 	#name : #SLVMDynamicObjectNativeCast,
 	#superclass : #SLVMCast,

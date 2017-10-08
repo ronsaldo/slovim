@@ -1,3 +1,6 @@
+"
+I represent a value that is captured by a closure.
+"
 Class {
 	#name : #SLVMClosureCapture,
 	#superclass : #SLVMFunctionLocalValue,

@@ -1,3 +1,6 @@
+"
+I am casting instruction for boxing floats in dynamic objects.
+"
 Class {
 	#name : #SLVMFloatToDynamicObjectCast,
 	#superclass : #SLVMDynamicObjectNativeCast,

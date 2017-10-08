@@ -1,3 +1,8 @@
+"
+I perform stack based allocations for local variables.
+
+Alloca instructions placed in the first basic block of a function are usually optimized in an special way.
+"
 Class {
 	#name : #SLVMAlloca,
 	#superclass : #SLVMInstruction,

@@ -1,3 +1,6 @@
+"
+I am a SSA value visitor.
+"
 Class {
 	#name : #SLVMValueVisitor,
 	#superclass : #SLVMObject,

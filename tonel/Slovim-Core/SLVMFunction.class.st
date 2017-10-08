@@ -1,3 +1,6 @@
+"
+I represent a function.
+"
 Class {
 	#name : #SLVMFunction,
 	#superclass : #SLVMGlobalValue,

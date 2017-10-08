@@ -1,3 +1,6 @@
+"
+I am a casting instruction for converting a float by truncation into an integer.
+"
 Class {
 	#name : #SLVMFloatToIntCast,
 	#superclass : #SLVMCast,

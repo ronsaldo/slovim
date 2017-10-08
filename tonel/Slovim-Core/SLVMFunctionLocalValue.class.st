@@ -1,3 +1,6 @@
+"
+I represent a value that is only valid in the local scope of a function.
+"
 Class {
 	#name : #SLVMFunctionLocalValue,
 	#superclass : #SLVMValue,

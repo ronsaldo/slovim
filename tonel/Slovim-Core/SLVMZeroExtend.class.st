@@ -1,3 +1,6 @@
+"
+I am casting instruction zero extending integers.
+"
 Class {
 	#name : #SLVMZeroExtend,
 	#superclass : #SLVMCast,

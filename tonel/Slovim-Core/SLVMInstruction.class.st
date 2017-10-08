@@ -1,3 +1,6 @@
+"
+I represent an instruction in single static assignment form.
+"
 Class {
 	#name : #SLVMInstruction,
 	#superclass : #SLVMFunctionLocalValue,
