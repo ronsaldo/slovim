@@ -46,6 +46,7 @@ SLVMStackCodeGenerator >> target: anObject [
 { #category : #'code generation' }
 SLVMStackCodeGenerator >> translateFinalModuleElement: element [
 	| intermediate |
+	element isFunction ifTrue: [ self applyPassesInFunction: element ].
 	intermediate := self translateModuleElement: element.
 	^ self finalCodeGenerator translateElement: intermediate
 

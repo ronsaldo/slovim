@@ -28,6 +28,11 @@ SLVMETreeExpression >> isBranch [
 ]
 
 { #category : #testing }
+SLVMETreeExpression >> isGetElementPointer [
+	^ false
+]
+
+{ #category : #testing }
 SLVMETreeExpression >> isLoad [
 	^ false
 ]

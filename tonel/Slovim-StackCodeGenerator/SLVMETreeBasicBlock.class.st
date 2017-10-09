@@ -63,6 +63,16 @@ SLVMETreeBasicBlock >> isLastBranch [
 ]
 
 { #category : #accessing }
+SLVMETreeBasicBlock >> lastExpression [
+	^ lastStatement expression
+]
+
+{ #category : #accessing }
+SLVMETreeBasicBlock >> lastStatement [
+	^ lastStatement
+]
+
+{ #category : #accessing }
 SLVMETreeBasicBlock >> name [
 	^ name
 ]

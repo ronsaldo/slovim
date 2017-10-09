@@ -134,6 +134,12 @@ SLVMStackFunctionCodeGenerator >> visitBinaryOperation: anInstruction [
 ]
 
 { #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitBitCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeBitCast new type: anInstruction type)
+]
+
+{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitBranch: anInstruction [
 	^ self addParametersOf: anInstruction
 		into: (SLVMETreeBranchExpression new
@@ -160,8 +166,44 @@ SLVMStackFunctionCodeGenerator >> visitConstantValue: constant [
 ]
 
 { #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitDynamicObjectToFloatCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeDynamicObjectToFloatCast new type: anInstruction type)
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitDynamicObjectToIntCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeDynamicObjectToIntCast new type: anInstruction type)
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitFloatToCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeFloatToIntCast new type: anInstruction type)
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitFloatToDynamicObjectCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeFloatToDynamicObjectCast new type: anInstruction type)
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitFloatingPointCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeFloatingPointCast new type: anInstruction type)
+]
+
+{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitFunction: aFunction [
 	^ moduleCodeGenerator translateModuleElement: aFunction
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitGetElementPointer: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeGetElementPointer new type: anInstruction type)
 ]
 
 { #category : #visiting }
@@ -173,6 +215,12 @@ SLVMStackFunctionCodeGenerator >> visitGlobalVariable: aFunction [
 SLVMStackFunctionCodeGenerator >> visitIntToDynamicObjectCast: anInstruction [
 	^ self addParametersOf: anInstruction
 		into: (SLVMETreeIntToDynamicObjectCast new type: anInstruction type)
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitIntToFloatCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeIntToFloatCast new type: anInstruction type)
 ]
 
 { #category : #visiting }
@@ -203,9 +251,21 @@ SLVMStackFunctionCodeGenerator >> visitReturn: anInstruction [
 ]
 
 { #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitSignExtend: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeSignExtend new type: anInstruction type)
+]
+
+{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitStore: anInstruction [
 	^ self addParametersOf: anInstruction
 		into: (SLVMETreeStoreExpression new type: anInstruction type)
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitTruncate: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeTruncate new type: anInstruction type)
 ]
 
 { #category : #visiting }
@@ -214,4 +274,10 @@ SLVMStackFunctionCodeGenerator >> visitUnaryOperation: anInstruction [
 		into: (SLVMETreeUnaryExpression new
 		operation: anInstruction operation;
 		type: anInstruction type)
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitZeroExtend: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeZeroExtend new type: anInstruction type)
 ]

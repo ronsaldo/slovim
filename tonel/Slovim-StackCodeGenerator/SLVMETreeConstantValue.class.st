@@ -12,6 +12,11 @@ SLVMETreeConstantValue >> accept: aVisitor [
 	^ aVisitor visitConstantValue: self
 ]
 
+{ #category : #testing }
+SLVMETreeConstantValue >> isConstantValue [
+	^ true
+]
+
 { #category : #printing }
 SLVMETreeConstantValue >> prettyPrintOn: aStream [
 	aStream nextPut:$(; putKeyword: #constant; space; print: value; nextPut:$)

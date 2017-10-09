@@ -18,7 +18,8 @@ Class {
 		'nextSequenceIndex',
 		'elseSequences',
 		'currentBasicBlock',
-		'moduleTranslator'
+		'moduleTranslator',
+		'thenSequences'
 	],
 	#classVars : [
 		'BinaryOperationMessageMap'
@@ -144,7 +145,10 @@ SLVMPharoFunctionCodeGenerator >> createBasicBlockAndTemporaries: aBasicBlock [
 	| sequence |
 	sequence := self newSequence.
 	aBasicBlock isLastBranch ifTrue: [ 
-		elseSequences at: aBasicBlock put: self newSequence
+		elseSequences at: aBasicBlock put: self newSequence.
+		aBasicBlock lastExpression trueBlock index <= aBasicBlock index ifTrue: [ 
+			thenSequences at: aBasicBlock put: self newSequence
+		].
 	].
 
 	translatedElements at: aBasicBlock put: sequence.
@@ -193,6 +197,36 @@ SLVMPharoFunctionCodeGenerator >> currentScope [
 	^ ir
 ]
 
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> emitGetElementPointerOffsets: instruction [
+	| indicesWithStrides constantDisplacement rawIndicesWithStrides |
+	constantDisplacement := 0.
+	indicesWithStrides := OrderedCollection new.
+	rawIndicesWithStrides := instruction indicesWithStrides.
+	
+	rawIndicesWithStrides do: [ :indexStrideOffset |
+		indexStrideOffset second ~= 0 ifTrue: [ 
+			indicesWithStrides add: { indexStrideOffset first . indexStrideOffset second }
+		].
+	
+		constantDisplacement := constantDisplacement + indexStrideOffset third.
+	].
+
+	constantDisplacement ~= 0 ifTrue: [
+		self pushLiteral: constantDisplacement;
+			send: #+.
+	].
+
+	indicesWithStrides do: [ :pair |
+		self
+			visitExpression: pair first;
+			pushLiteral: pair second;
+			send: #*;
+			send: #+
+	].
+
+]
+
 { #category : #initialization }
 SLVMPharoFunctionCodeGenerator >> initialize [
 	super initialize.
@@ -202,8 +236,14 @@ SLVMPharoFunctionCodeGenerator >> initialize [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> isObjectElementPointer: expression [
+	^ expression isGetElementPointer and: [ expression pointer type isDynamicObjectType ]
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> loadValueFromPointer: anInstruction [
-	self error: 'Cannot store into arbitrary pointers when using the backend without Lowcode.'
+	self visitExpression: anInstruction variable.
+	self send: anInstruction type selectorForLoadingFromPointer
 ]
 
 { #category : #accessing }
@@ -292,7 +332,10 @@ SLVMPharoFunctionCodeGenerator >> storeTemp: aSymbol [
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> storeValueIntoPointer: anInstruction [
-	self error: 'Cannot store into arbitrary pointers when using the backend without Lowcode.'
+	self visitExpression: anInstruction variable.
+	self visitExpression: anInstruction value.
+	self send: anInstruction value type selectorForStoringIntoPointer.
+	self popTop.
 ]
 
 { #category : #'code generation' }
@@ -317,12 +360,13 @@ SLVMPharoFunctionCodeGenerator >> translateBasicBlocks [
 
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> translateFunction: aFunction [
-	| compiledMethod |
+	| compiledMethod trailer |
 	etreeFunction := aFunction.
 	ir := IRMethod new.
 	
 	translatedElements := IdentityDictionary new.
 	elseSequences := IdentityDictionary new.
+	thenSequences := IdentityDictionary new.
 	basicBlockMap := OrderedCollection new.
 	promotedAllocas := IdentityDictionary new.
 	self createArguments.
@@ -339,8 +383,16 @@ SLVMPharoFunctionCodeGenerator >> translateFunction: aFunction [
 	].
 
 	self translateBasicBlocks.
+
+	trailer := CompiledMethodTrailer empty.
+	aFunction debugSourceLocation ifNotNil: [
+		aFunction debugSourceLocation sourceCode ifNotNil: [:sourceCode |
+			trailer sourceCode: sourceCode
+		]
+	].
 	
-	compiledMethod := ir optimize compiledMethod.
+	compiledMethod := ir optimize compiledMethodWith: trailer.
+
 	etreeFunction classBinding ifNotNil: [ 
 		compiledMethod classBinding: etreeFunction classBinding
 	].
@@ -377,16 +429,53 @@ SLVMPharoFunctionCodeGenerator >> visitBinaryExpression: aBinaryExpression [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitBitCast: instruction [
+	| sourceType targetType |
+	(instruction type isPointerType and: [ self isObjectElementPointer: instruction source ]) ifTrue: [ 
+		self visitExpression: instruction source pointer.
+		self send: #asPointerToInternalObjectData.
+		self emitGetElementPointerOffsets: instruction source.
+		^ self
+	].
+
+	self visitExpression: instruction source.
+	
+	sourceType := instruction source type.
+	targetType := instruction type.
+	(sourceType isFloatType and: [targetType isIntegerType]) ifTrue: [
+		self halt
+	].
+	(sourceType isIntegerType and: [targetType isFloatType]) ifTrue: [
+		self halt
+	].
+	(sourceType isIntegerType and: [targetType isPointerType]) ifTrue: [
+		self halt
+	].
+	(sourceType isPointerType and: [targetType isIntegerType]) ifTrue: [
+		self halt
+	].
+
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitBranch: aBranch [
-	| elseSequence |
+	| elseSequence thenSequence |
 	self visitExpression: aBranch condition.
-	elseSequence := elseSequences at: currentBasicBlock.
+	thenSequence := thenSequences at: currentBasicBlock ifAbsent: [translatedElements at: aBranch trueBlock ].
+	elseSequence := elseSequences at: currentBasicBlock .
+	
 	self add: (IRJumpIf new boolean: true;
-		destination: (translatedElements at: aBranch trueBlock);
+		destination: thenSequence;
 		otherwise: elseSequence).
 	
 	self withSequence: elseSequence do: [
-		self add: (IRJump  new destination: (translatedElements at: aBranch falseBlock))
+		self add: (IRJump new destination: (translatedElements at: aBranch falseBlock))
+	].
+
+	thenSequence ~~ (translatedElements at: aBranch trueBlock) ifTrue: [ 
+		self withSequence: thenSequence do: [
+			self add: (IRJump new destination: (translatedElements at: aBranch trueBlock))
+		].
 	]
 
 ]
@@ -403,8 +492,23 @@ SLVMPharoFunctionCodeGenerator >> visitCall: anInstruction [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitConstantDynamicLiteral: aLiteralConstant [
+	self pushLiteral: aLiteralConstant value
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitConstantValue: aConstant [
 	self pushLiteral: aConstant value
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitDynamicObjectToFloatCast: cast [
+	self visitExpression: cast source
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitDynamicObjectToIntCast: cast [
+	self visitExpression: cast source
 ]
 
 { #category : #visiting }
@@ -424,6 +528,17 @@ SLVMPharoFunctionCodeGenerator >> visitExpression: anExpression [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitFloatToDynamicObjectCast: cast [
+	self visitExpression: cast source
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitFloatToIntCast: cast [
+	self visitExpression: cast source.
+	self send: #asInteger
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitFunction: aFunction [
 	| translatedFunction |
 	translatedFunction := moduleTranslator translateElement: aFunction.
@@ -436,8 +551,23 @@ SLVMPharoFunctionCodeGenerator >> visitFunctionArgument: anArgument [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitGetElementPointer: anInstruction [
+	self assert: anInstruction type isDynamicObjectType not.
+
+	self visitExpression: anInstruction pointer.
+	self emitGetElementPointerOffsets: anInstruction.
+
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitIntToDynamicObjectCast: cast [
 	self visitExpression: cast source
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitIntToFloatCast: cast [
+	self visitExpression: cast source.
+	self send: #asFloat
 ]
 
 { #category : #visiting }
