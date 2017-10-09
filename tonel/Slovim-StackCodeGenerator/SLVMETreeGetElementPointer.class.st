@@ -10,6 +10,16 @@ SLVMETreeGetElementPointer >> accept: aVisitor [
 ]
 
 { #category : #accessing }
+SLVMETreeGetElementPointer >> indexAt: anIndex [
+	^ parameters at: anIndex + 1
+]
+
+{ #category : #accessing }
+SLVMETreeGetElementPointer >> indexCount [
+	^ parameters size - 1
+]
+
+{ #category : #accessing }
 SLVMETreeGetElementPointer >> indices [
 	^ parameters allButFirst
 ]

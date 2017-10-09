@@ -120,6 +120,12 @@ SLVMPharoFunctionCodeGenerator >> convertPointerIntoVariable: aVariableExpressio
 		^ SLVMPharoLiteralVariable new binding: binding
 	].
 
+	(self isObjectConstantSlotPointer: aVariableExpression) ifTrue: [ 
+		^ SLVMPharoObjectSlot new
+			pointer: aVariableExpression pointer;
+			slotIndex: (aVariableExpression indexAt: 2) value; yourself
+	].
+
 	^ nil
 
 ]
@@ -236,6 +242,11 @@ SLVMPharoFunctionCodeGenerator >> initialize [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> isObjectConstantSlotPointer: expression [
+	^ expression isGetElementPointer and: [ expression pointer type isDynamicObjectType and: [expression indexCount = 2] ]
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> isObjectElementPointer: expression [
 	^ expression isGetElementPointer and: [ expression pointer type isDynamicObjectType ]
 ]
@@ -256,7 +267,7 @@ SLVMPharoFunctionCodeGenerator >> moduleTranslator: anObject [
 	moduleTranslator := anObject
 ]
 
-{ #category : #'bytecode construction' }
+{ #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> newBytecodeIndex [
 	^ lastBytecodeIndex := lastBytecodeIndex + 1
 ]
@@ -276,55 +287,67 @@ SLVMPharoFunctionCodeGenerator >> popTop [
 	self add: IRInstruction popTop
 ]
 
-{ #category : #'bytecode construction' }
+{ #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> popTopOfType: aType [
 	aType isVoidType ifTrue: [ ^ self ].
 	self popTop
 ]
 
-{ #category : #'bytecode construction' }
+{ #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> pushConsArray: size [
 
 	self add: (IRInstruction pushConsArray: size)
 ]
 
-{ #category : #'bytecode construction' }
+{ #category : #instructions }
+SLVMPharoFunctionCodeGenerator >> pushInstVar: index [
+
+	self add: (IRInstruction pushInstVar: index).
+]
+
+{ #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> pushLiteral: object [
 
 	self add: (IRInstruction pushLiteral: object)
 ]
 
-{ #category : #'bytecode construction' }
+{ #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> pushLiteralVariable: object [
 
 	self add: (IRInstruction pushLiteralVariable: object)
 ]
 
-{ #category : #'bytecode construction' }
+{ #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> pushReceiver [
 
 	self add: (IRInstruction pushReceiver)
 ]
 
-{ #category : #'bytecode construction' }
+{ #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> pushTemp: aSymbol [
 
 	^ self add: (IRInstruction pushTemp: aSymbol)
 ]
 
-{ #category : #'bytecode construction' }
+{ #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> returnTop [
 
 	self add: IRInstruction returnTop.
 ]
 
-{ #category : #'bytecode construction' }
+{ #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> send: selector [
 
 	^self add: (IRInstruction send: selector)
 ]
 
-{ #category : #'bytecode construction' }
+{ #category : #instructions }
+SLVMPharoFunctionCodeGenerator >> storeInstVar: name [
+
+	^self add: (IRInstruction storeInstVar: name).
+]
+
+{ #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> storeTemp: aSymbol [
 
 	^self add: (IRInstruction storeTemp: aSymbol)

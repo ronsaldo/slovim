@@ -29,6 +29,11 @@ SLVMETreeFunctionArgument >> hasFlag: aFlag [
 ]
 
 { #category : #testing }
+SLVMETreeFunctionArgument >> isFunctionArgument [
+	^ true
+]
+
+{ #category : #testing }
 SLVMETreeFunctionArgument >> isReceiver [
 	^ self hasFlag: #receiver
 ]

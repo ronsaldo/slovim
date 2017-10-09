@@ -27,6 +27,11 @@ SLVMETreeValue >> isConstantValue [
 	^ false
 ]
 
+{ #category : #testing }
+SLVMETreeValue >> isFunctionArgument [
+	^ false
+]
+
 { #category : #accessing }
 SLVMETreeValue >> type [
 	^ type
