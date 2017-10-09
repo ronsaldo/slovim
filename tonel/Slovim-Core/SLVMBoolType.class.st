@@ -44,3 +44,8 @@ SLVMBoolType >> isBooleanType [
 SLVMBoolType >> registerClass [
 	^ #integer
 ]
+
+{ #category : #'as yet unclassified' }
+SLVMBoolType >> selectorForLoadingFromPointer [
+	^ #boolValue
+]

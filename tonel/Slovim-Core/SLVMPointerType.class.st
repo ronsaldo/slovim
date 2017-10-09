@@ -92,6 +92,16 @@ SLVMPointerType >> registerClass [
 	^ #integer
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMPointerType >> selectorForLoadingFromPointer [
+	^ #pointerValue
+]
+
+{ #category : #'as yet unclassified' }
+SLVMPointerType >> selectorForStoringIntoPointer [
+	^ #pointerValue:
+]
+
 { #category : #accessing }
 SLVMPointerType >> size [
 	^ size

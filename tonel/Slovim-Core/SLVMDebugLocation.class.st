@@ -8,7 +8,8 @@ Class {
 		'endLine',
 		'endColumn',
 		'start',
-		'stop'
+		'stop',
+		'collection'
 	],
 	#category : #'Slovim-Core-Debug'
 }
@@ -22,6 +23,16 @@ SLVMDebugLocation class >> null [
 		sourceFile: SLVMDebugSourceFile null;
 		yourself
 		
+]
+
+{ #category : #accessing }
+SLVMDebugLocation >> collection [
+	^ collection
+]
+
+{ #category : #accessing }
+SLVMDebugLocation >> collection: anObject [
+	collection := anObject
 ]
 
 { #category : #accessing }
@@ -47,6 +58,11 @@ SLVMDebugLocation >> endLine: anObject [
 { #category : #printing }
 SLVMDebugLocation >> printOn: aStream [
 	aStream print: sourceFile; space; print: startLine; space; print: startColumn
+]
+
+{ #category : #accessing }
+SLVMDebugLocation >> sourceCode [
+	^ collection ifNotNil: [collection copyFrom: start to: stop]
 ]
 
 { #category : #accessing }

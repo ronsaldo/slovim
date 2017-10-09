@@ -59,6 +59,11 @@ SLVMPrimitiveType >> printOn: aStream [
 	aStream nextPutAll: name
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMPrimitiveType >> selectorForStoringIntoPointer [
+	^ (self selectorForLoadingFromPointer , ':') asSymbol
+]
+
 { #category : #accessing }
 SLVMPrimitiveType >> size [
 	^ size

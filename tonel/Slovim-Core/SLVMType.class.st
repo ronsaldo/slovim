@@ -484,6 +484,16 @@ SLVMType >> registerClass [
 	^ nil
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMType >> selectorForLoadingFromPointer [
+	self subclassResponsibility
+]
+
+{ #category : #'as yet unclassified' }
+SLVMType >> selectorForStoringIntoPointer [
+	self subclassResponsibility
+]
+
 { #category : #'constant encoding' }
 SLVMType >> shortName [
 	^ self asString

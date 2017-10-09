@@ -36,15 +36,15 @@ SLVMStoreInstruction >> type [
 
 { #category : #accessing }
 SLVMStoreInstruction >> value [
-	^ parameters first
+	^ parameters second
 ]
 
 { #category : #construction }
 SLVMStoreInstruction >> value: value variable: variable [
-	self parameters: { value . variable }
+	self parameters: { variable . value }
 ]
 
 { #category : #accessing }
 SLVMStoreInstruction >> variable [
-	^ parameters second
+	^ parameters first
 ]

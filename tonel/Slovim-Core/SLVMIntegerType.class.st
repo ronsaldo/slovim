@@ -69,6 +69,11 @@ SLVMIntegerType >> registerClass [
 	^ #integer
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMIntegerType >> selectorForLoadingFromPointer [
+	^ ((signed ifTrue: [ 'u' ] ifFalse: [ '' ]) , 'int' , (size * 8) asString , 'Value') asSymbol
+]
+
 { #category : #accessing }
 SLVMIntegerType >> signed: anObject [
 	signed := anObject
