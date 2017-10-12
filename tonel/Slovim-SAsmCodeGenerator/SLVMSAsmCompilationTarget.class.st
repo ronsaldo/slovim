@@ -84,6 +84,16 @@ SLVMSAsmCompilationTarget >> osx [
 	target osx
 ]
 
+{ #category : #'position indepence code' }
+SLVMSAsmCompilationTarget >> pic [
+	target positionIndependentCode: true; executable: false
+]
+
+{ #category : #'position indepence code' }
+SLVMSAsmCompilationTarget >> pie [
+	target positionIndependentCode: true; executable: true
+]
+
 { #category : #accessing }
 SLVMSAsmCompilationTarget >> pointerAlignment [
 	^ target pointerAlignment
