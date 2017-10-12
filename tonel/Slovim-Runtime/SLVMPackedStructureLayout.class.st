@@ -4,6 +4,13 @@ Class {
 	#category : #'Slovim-Runtime-Slots'
 }
 
+{ #category : #'instance creation' }
+SLVMPackedStructureLayout class >> extending: superLayout scope: aScope host: aClass [
+	^ (superLayout extendSLVMPackedStructure: aScope)
+		host: aClass;
+		yourself
+]
+
 { #category : #private }
 SLVMPackedStructureLayout >> computeLayout [
 	structureSize := 0.

@@ -33,9 +33,20 @@ SLVMStructureFieldSlot >> offset: anObject [
 	offset := anObject
 ]
 
+{ #category : #printing }
+SLVMStructureFieldSlot >> printOn: aStream [
+	aStream 
+		store: self name;
+		nextPutAll: ' => (';
+		nextPutAll: self class name;
+		nextPutAll: ' typeNamed: ';
+		nextPutAll: type name printString;
+		nextPutAll: ')'
+]
+
 { #category : #'meta-object-protocol' }
 SLVMStructureFieldSlot >> read: anObject [
-	^ anObject asPointerToInternalObjectData perform: type selectorForLoadingFromPointer
+	^ type readFromPointer: anObject asPointerToInternalObjectData + offset
 ]
 
 { #category : #accessing }
@@ -50,5 +61,5 @@ SLVMStructureFieldSlot >> type: anObject [
 
 { #category : #writing }
 SLVMStructureFieldSlot >> write: value to: anObject [
-	^ anObject asPointerToInternalObjectData perform: type selectorForStoringIntoPointer with: value
+	^ type write: value intoPointer: anObject asPointerToInternalObjectData + offset
 ]

@@ -4,6 +4,13 @@ Class {
 	#category : #'Slovim-Runtime-Slots'
 }
 
+{ #category : #'instance creation' }
+SLVMUnionLayout class >> extending: superLayout scope: aScope host: aClass [
+	^ (superLayout extendSLVMUnion: aScope)
+		host: aClass;
+		yourself
+]
+
 { #category : #private }
 SLVMUnionLayout >> computeLayout [
 	structureSize := 0.
