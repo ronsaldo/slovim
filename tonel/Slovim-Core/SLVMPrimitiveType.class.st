@@ -59,6 +59,11 @@ SLVMPrimitiveType >> printOn: aStream [
 	aStream nextPutAll: name
 ]
 
+{ #category : #'pointer accessing' }
+SLVMPrimitiveType >> readFromPointer: pointer [
+	^ pointer perform: self selectorForLoadingFromPointer
+]
+
 { #category : #'as yet unclassified' }
 SLVMPrimitiveType >> selectorForStoringIntoPointer [
 	^ (self selectorForLoadingFromPointer , ':') asSymbol
@@ -72,4 +77,9 @@ SLVMPrimitiveType >> size [
 { #category : #accessing }
 SLVMPrimitiveType >> size: anObject [
 	size := anObject
+]
+
+{ #category : #writing }
+SLVMPrimitiveType >> write: value intoPointer: pointer [
+	^ pointer perform: self selectorForStoringIntoPointer with: value
 ]

@@ -479,6 +479,11 @@ SLVMType >> isVoidType [
 	^ false
 ]
 
+{ #category : #'pointer accessing' }
+SLVMType >> readFromPointer: pointer [
+	^ #unreadable
+]
+
 { #category : #accessing }
 SLVMType >> registerClass [
 	^ nil
@@ -512,4 +517,9 @@ SLVMType >> spillingClass [
 { #category : #accessing }
 SLVMType >> useScope [
 	^ nil
+]
+
+{ #category : #'pointer accessing' }
+SLVMType >> write: value intoPointer: pointer [
+
 ]
