@@ -1,6 +1,6 @@
 Class {
 	#name : #SLVMETreeStatement,
-	#superclass : #SLVMETreeNode,
+	#superclass : #SLVMETreeValue,
 	#instVars : [
 		'name',
 		'slvmInstruction',
@@ -8,8 +8,7 @@ Class {
 		'references',
 		'block',
 		'previous',
-		'next',
-		'type'
+		'next'
 	],
 	#category : #'Slovim-StackCodeGenerator'
 }
@@ -157,16 +156,6 @@ SLVMETreeStatement >> slvmInstruction [
 { #category : #accessing }
 SLVMETreeStatement >> slvmInstruction: anObject [
 	slvmInstruction := anObject
-]
-
-{ #category : #accessing }
-SLVMETreeStatement >> type [
-	^ type
-]
-
-{ #category : #accessing }
-SLVMETreeStatement >> type: anObject [
-	type := anObject
 ]
 
 { #category : #accessing }
