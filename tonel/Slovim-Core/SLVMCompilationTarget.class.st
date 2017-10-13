@@ -102,6 +102,12 @@ SLVMCompilationTarget >> lowLevelCodeGeneratorClass [
 	self subclassResponsibility
 ]
 
+{ #category : #testing }
+SLVMCompilationTarget >> needsSlotForGOTPointer [
+	<compileTime>
+	^ false
+]
+
 { #category : #convenience }
 SLVMCompilationTarget >> newModule [
 	^ SLVMModule new compilationTarget: self; yourself
