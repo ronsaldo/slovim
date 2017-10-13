@@ -68,6 +68,12 @@ SLVMSAsmCompilationTarget >> linux [
 	target linux
 ]
 
+{ #category : #testing }
+SLVMSAsmCompilationTarget >> needsSlotForGOTPointer [
+	<compileTime>
+	^ target needsSlotForGOTPointer
+]
+
 { #category : #accessing }
 SLVMSAsmCompilationTarget >> objectModel: anObjectModel [
 	target objectModel: (SLVMSAsmObjectModel new target: target; objectModel: anObjectModel).
