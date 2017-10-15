@@ -9,6 +9,11 @@ SLVMConstantExpresionBitCast >> accept: aVisitor [
 	^ aVisitor visitConstantExpressionBitCast: self
 ]
 
+{ #category : #testing }
+SLVMConstantExpresionBitCast >> isConstantExpressionBitCast [
+	^ true
+]
+
 { #category : #printing }
 SLVMConstantExpresionBitCast >> mnemonic [
 	^ #const_bitcast

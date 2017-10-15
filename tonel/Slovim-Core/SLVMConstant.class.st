@@ -89,6 +89,9 @@ SLVMConstant class >> ulong: anInteger [
 
 { #category : #constructor }
 SLVMConstant class >> value: value bitcast: aTargetType [
+	value isConstantExpressionBitCast ifTrue: [
+		^ SLVMConstantExpresionBitCast new value: value value targetType: aTargetType
+	].
 	^ SLVMConstantExpresionBitCast new value: value targetType: aTargetType
 ]
 

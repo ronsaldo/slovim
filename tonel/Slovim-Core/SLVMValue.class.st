@@ -58,6 +58,11 @@ SLVMValue >> isConstantBuiltInFunction [
 ]
 
 { #category : #testing }
+SLVMValue >> isConstantExpressionBitCast [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isConstantPointer [
 	^ false
 ]
