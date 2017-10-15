@@ -3,17 +3,17 @@ I represent a string constant.
 "
 Class {
 	#name : #SLVMStringConstantValue,
-	#superclass : #SLVMConstantValue,
+	#superclass : #SLVMConstantArrayBlob,
 	#instVars : [
 		'hasExtraNullCharacter'
 	],
 	#category : #'Slovim-Core-SSA'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #converting }
 SLVMStringConstantValue >> asBlob [
 	^ ByteArray streamContents: [ :out |
-		value do: [ :char | out nextPut: char asInteger ].
+		data do: [ :char | out nextPut: char asInteger ].
 		hasExtraNullCharacter ifTrue: [
 			out nextPut: 0
 		]

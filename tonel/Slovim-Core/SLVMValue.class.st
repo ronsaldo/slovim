@@ -53,6 +53,11 @@ SLVMValue >> isConstant [
 ]
 
 { #category : #testing }
+SLVMValue >> isConstantArrayBlob [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isConstantBuiltInFunction [
 	^ false
 ]

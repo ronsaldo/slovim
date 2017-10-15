@@ -13,6 +13,12 @@ SLVMConstant class >> add: left with: right [
 ]
 
 { #category : #constructor }
+SLVMConstant class >> array: anArrayType blob: data [
+	self assert: anArrayType isArrayType.
+	^ SLVMConstantArrayBlob new type: anArrayType; data: data
+]
+
+{ #category : #constructor }
 SLVMConstant class >> array: anArrayType slots: anArrayOfSlots [
 	self assert: anArrayType isArrayType.
 	^ SLVMConstantArrayValue new type: anArrayType; slots: anArrayOfSlots
@@ -28,7 +34,7 @@ SLVMConstant class >> cstring: value [
 	^ SLVMStringConstantValue new
 		type: (SLVMArrayType baseType: SLVMType charType elements: value size);
 		hasExtraNullCharacter: true;
-		value: value
+		data: value
 ]
 
 { #category : #constructor }
