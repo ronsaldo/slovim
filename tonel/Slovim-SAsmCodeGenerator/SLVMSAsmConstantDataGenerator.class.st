@@ -30,6 +30,11 @@ SLVMSAsmConstantDataGenerator >> emitImmediateLiteralObject: constant [
 ]
 
 { #category : #visiting }
+SLVMSAsmConstantDataGenerator >> visitConstantArrayBlob: constant [
+	^ SAsmConstantExpressionConstantBlob new value: constant asBlob; yourself
+]
+
+{ #category : #visiting }
 SLVMSAsmConstantDataGenerator >> visitConstantArrayValue: array [
 	| slots type |
 	slots := array slots collect: [ :slot | (self translate: slot) asSAsmConstantExpression ].
