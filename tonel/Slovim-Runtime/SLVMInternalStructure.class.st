@@ -4,9 +4,14 @@ Class {
 	#category : #'Slovim-Runtime-Slots'
 }
 
-{ #category : #accessing }
-SLVMInternalStructure class >> new [
+{ #category : #'instance creation' }
+SLVMInternalStructure class >> basicNew [
 	^ self basicNew: self structureSize
+]
+
+{ #category : #'instance creation' }
+SLVMInternalStructure class >> basicNew: aVariableSize [
+	^ super basicNew: self structureSize + aVariableSize
 ]
 
 { #category : #accessing }
