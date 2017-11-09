@@ -43,6 +43,18 @@ SLVMETreeBranchExpression >> name [
 	^ #branch
 ]
 
+{ #category : #printing }
+SLVMETreeBranchExpression >> prettyPrintOn: aStream [
+	aStream nextPutAll: '('; putKeyword: self name.
+	aStream space.
+	self condition prettyPrintOn: aStream.
+	aStream space.
+	trueBlock prettyPrintOn: aStream.
+	aStream space.
+	falseBlock prettyPrintOn: aStream.
+	aStream nextPutAll: ')'
+]
+
 { #category : #accessing }
 SLVMETreeBranchExpression >> trueBlock [
 	^ trueBlock

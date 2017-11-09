@@ -7,6 +7,12 @@ SLVMCompilationTarget class >> forCurrentImage [
 ]
 
 { #category : #'*Slovim-StackCodeGenerator' }
+SLVMCompilationTarget class >> forCurrentImageWithLowcode [
+	^ (Smalltalk wordSize = 4 ifTrue: [ self pharoLowcode32 ] ifFalse: [ self pharoLowcode64 ])
+		currentImage: true
+]
+
+{ #category : #'*Slovim-StackCodeGenerator' }
 SLVMCompilationTarget class >> pharo32 [
 	^ SLVMPharo32CompilationTarget new
 ]
@@ -14,6 +20,16 @@ SLVMCompilationTarget class >> pharo32 [
 { #category : #'*Slovim-StackCodeGenerator' }
 SLVMCompilationTarget class >> pharo64 [
 	^ SLVMPharo64CompilationTarget new
+]
+
+{ #category : #'*Slovim-StackCodeGenerator' }
+SLVMCompilationTarget class >> pharoLowcode32 [
+	^ SLVMPharoLowcode32CompilationTarget new
+]
+
+{ #category : #'*Slovim-StackCodeGenerator' }
+SLVMCompilationTarget class >> pharoLowcode64 [
+	^ SLVMPharoLowcode64CompilationTarget new
 ]
 
 { #category : #'*Slovim-StackCodeGenerator' }

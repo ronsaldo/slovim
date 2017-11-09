@@ -82,6 +82,11 @@ SLVMETreeBasicBlock >> name: anObject [
 	name := anObject
 ]
 
+{ #category : #printing }
+SLVMETreeBasicBlock >> prettyPrintOn: aStream [
+	aStream nextPutAll: self validName
+]
+
 { #category : #removing }
 SLVMETreeBasicBlock >> removeStatement: anStatement [
 	self assert: anStatement block == self.

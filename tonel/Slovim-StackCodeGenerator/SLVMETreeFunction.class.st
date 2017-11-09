@@ -92,6 +92,14 @@ SLVMETreeFunction >> fullPrintText [
 	^ SLVMPrintingTextStream fullPrintString: self
 ]
 
+{ #category : #'gt-inspector-extension' }
+SLVMETreeFunction >> gtInspectorModuleText: composite [
+	<gtInspectorPresentationOrder: 1>
+	^ (composite text)
+		title: 'Assembly Module';
+		format: #fullPrintText
+]
+
 { #category : #initialization }
 SLVMETreeFunction >> initialize [
 	super initialize.

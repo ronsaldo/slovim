@@ -83,7 +83,7 @@ SLVMPharoFunctionCodeGenerator class >> initialize [
 		ofge #'>='
 		
 		dynObjectIdentityEquals #'=='
-		dynObjectIdentityNotEquals #'~='
+		dynObjectIdentityNotEquals #'~~'
 		
 		mulMatrixMatrix *
 		mulMatrixVector *
@@ -108,7 +108,12 @@ SLVMPharoFunctionCodeGenerator >> compilationTarget: anObject [
 	compilationTarget := anObject
 ]
 
-{ #category : #visiting }
+{ #category : #instructions }
+SLVMPharoFunctionCodeGenerator >> convertBooleanValueToOop: value [
+	"Nothing required here"
+]
+
+{ #category : #variables }
 SLVMPharoFunctionCodeGenerator >> convertPointerIntoVariable: aVariableExpression [
 	| binding |
 	(promotedAllocas includesKey: aVariableExpression) ifTrue: [ 
@@ -131,6 +136,11 @@ SLVMPharoFunctionCodeGenerator >> convertPointerIntoVariable: aVariableExpressio
 ]
 
 { #category : #'code generation' }
+SLVMPharoFunctionCodeGenerator >> createArgumentTemporary: rawName type: type [
+	^ self createObjectTemporary: rawName type: type
+]
+
+{ #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> createArguments [
 	| temp |
 	ir numArgs: etreeFunction arguments size.
@@ -140,7 +150,7 @@ SLVMPharoFunctionCodeGenerator >> createArguments [
 			temp := SLVMPharoFunctionReceiver new type: arg type.
 			translatedElements at: arg put: temp
 		] ifFalse: [ 
-			temp := self createTemporary: arg validName type: arg type.
+			temp := self createArgumentTemporary: arg validName type: arg type.
 			translatedElements at: arg put: temp
 		]
 	]
@@ -174,16 +184,38 @@ SLVMPharoFunctionCodeGenerator >> createBasicBlocksAndTemporaries [
 ]
 
 { #category : #'code generation' }
-SLVMPharoFunctionCodeGenerator >> createTemporary: rawName type: type [
+SLVMPharoFunctionCodeGenerator >> createObjectTemporary: rawName [
+	| tempMap tempName index name |
+	tempMap := self currentScope tempMap.
+	name := rawName asSymbol.
+	tempName := tempMap at: name ifPresent: [('<temp:' , tempMap size asString, '>') asSymbol] ifAbsent: [ name ].
+	
+	index := tempMap size + 1.
+	tempMap at: tempName put: index.
+	^ index
+]
+
+{ #category : #'code generation' }
+SLVMPharoFunctionCodeGenerator >> createObjectTemporary: rawName type: type [
 	| tempMap tempName index temp name |
 	tempMap := self currentScope tempMap.
 	name := rawName asSymbol.
 	tempName := tempMap at: name ifPresent: [('<temp:' , tempMap size asString, '>') asSymbol] ifAbsent: [ name ].
 	
 	index := tempMap size + 1.
-	temp := SLVMPharoFunctionLocal new name: name; type: type; yourself.
+	temp := SLVMPharoFunctionLocal new name: name; location: name; type: type; yourself.
 	tempMap at: tempName put: index.
 	^ temp
+]
+
+{ #category : #'code generation' }
+SLVMPharoFunctionCodeGenerator >> createPrelude [
+	"Nothing required here."
+]
+
+{ #category : #'code generation' }
+SLVMPharoFunctionCodeGenerator >> createTemporary: rawName type: type [
+	^ self createObjectTemporary: rawName type: type
 ]
 
 { #category : #'code generation' }
@@ -201,6 +233,11 @@ SLVMPharoFunctionCodeGenerator >> createTemporaryForStatement: anStatement [
 { #category : #private }
 SLVMPharoFunctionCodeGenerator >> currentScope [
 	^ ir
+]
+
+{ #category : #'code generation' }
+SLVMPharoFunctionCodeGenerator >> emitBasicBlockPrelude: aPrelude [
+	"Nothing required"
 ]
 
 { #category : #visiting }
@@ -293,6 +330,11 @@ SLVMPharoFunctionCodeGenerator >> popTopOfType: aType [
 	self popTop
 ]
 
+{ #category : #'code generation' }
+SLVMPharoFunctionCodeGenerator >> postProcessTranslation [
+	"Nothing required here"
+]
+
 { #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> pushConsArray: size [
 
@@ -329,6 +371,11 @@ SLVMPharoFunctionCodeGenerator >> pushTemp: aSymbol [
 	^ self add: (IRInstruction pushTemp: aSymbol)
 ]
 
+{ #category : #variables }
+SLVMPharoFunctionCodeGenerator >> pushVariable: aVariable [
+	^ aVariable emitPushWith: self
+]
+
 { #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> returnTop [
 
@@ -339,6 +386,30 @@ SLVMPharoFunctionCodeGenerator >> returnTop [
 SLVMPharoFunctionCodeGenerator >> send: selector [
 
 	^self add: (IRInstruction send: selector)
+]
+
+{ #category : #'code generation' }
+SLVMPharoFunctionCodeGenerator >> setupCompiledMethod: compiledMethod [
+
+]
+
+{ #category : #'code generation' }
+SLVMPharoFunctionCodeGenerator >> setupIRMethodCompilationContext [
+	"Nothing required here"
+]
+
+{ #category : #variables }
+SLVMPharoFunctionCodeGenerator >> storeAndPopStackTopIntoVariable: aVariable [
+	aVariable emitStoreStackTopWith: self.
+	self popTop
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> storeAndPopValueIntoPointer: anInstruction [
+	self visitExpression: anInstruction value.
+	self visitExpression: anInstruction variable.
+	self send: anInstruction value type selectorForStoringIntoPointer.
+	self popTop.
 ]
 
 { #category : #instructions }
@@ -353,24 +424,14 @@ SLVMPharoFunctionCodeGenerator >> storeTemp: aSymbol [
 	^self add: (IRInstruction storeTemp: aSymbol)
 ]
 
-{ #category : #visiting }
-SLVMPharoFunctionCodeGenerator >> storeValueIntoPointer: anInstruction [
-	self visitExpression: anInstruction variable.
-	self visitExpression: anInstruction value.
-	self send: anInstruction value type selectorForStoringIntoPointer.
-	self popTop.
-]
-
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> translateBasicBlock: basicBlock into: sequence [
 	currentSequence := sequence.
 	currentBasicBlock := basicBlock.
+	self emitBasicBlockPrelude: basicBlock.
 	basicBlock statementsDo: [ :statement |
 		self translateStatement: statement.
 		statement expression isTerminator ifTrue: [ ^ self ].
-		(promotedAllocas includesKey: statement) ifFalse: [ 
-			self popTopOfType: statement type
-		]
 	]
 ]
 
@@ -386,12 +447,15 @@ SLVMPharoFunctionCodeGenerator >> translateFunction: aFunction [
 	| compiledMethod trailer |
 	etreeFunction := aFunction.
 	ir := IRMethod new.
+	self setupIRMethodCompilationContext.
 	
 	translatedElements := IdentityDictionary new.
 	elseSequences := IdentityDictionary new.
 	thenSequences := IdentityDictionary new.
 	basicBlockMap := OrderedCollection new.
 	promotedAllocas := IdentityDictionary new.
+
+	self createPrelude.
 	self createArguments.
 	self createBasicBlocksAndTemporaries.
 	ir startSequence: ((IRSequence orderNumber: 0) method:ir).
@@ -400,13 +464,13 @@ SLVMPharoFunctionCodeGenerator >> translateFunction: aFunction [
 			destination: basicBlockMap first value;
 			bytecodeIndex: self newBytecodeIndex;
 			yourself).
-	
+				
 	aFunction debugSourceLocation ifNotNil: [ :loc |
 		currentSourceLocation := loc
 	].
 
 	self translateBasicBlocks.
-
+	self postProcessTranslation.
 	trailer := CompiledMethodTrailer empty.
 	aFunction debugSourceLocation ifNotNil: [
 		aFunction debugSourceLocation sourceCode ifNotNil: [:sourceCode |
@@ -415,6 +479,7 @@ SLVMPharoFunctionCodeGenerator >> translateFunction: aFunction [
 	].
 	
 	compiledMethod := ir optimize compiledMethodWith: trailer.
+	self setupCompiledMethod: compiledMethod.
 
 	etreeFunction classBinding ifNotNil: [ 
 		compiledMethod classBinding: etreeFunction classBinding
@@ -437,8 +502,11 @@ SLVMPharoFunctionCodeGenerator >> translateStatement: statement [
 	statement expression isTerminator ifTrue: [ ^ self ].
 	statement type isVoidType ifTrue: [ ^ self ].
 	statement references ifNotEmpty: [
-		(translatedElements at: statement) emitStoreStackTopWith: self.
-	].
+		self storeAndPopStackTopIntoVariable: (translatedElements at: statement)
+	] ifEmpty: [
+		self assert: (promotedAllocas includesKey: statement) not.
+		self popTopOfType: statement type
+	]
 
 ]
 
@@ -484,6 +552,7 @@ SLVMPharoFunctionCodeGenerator >> visitBitCast: instruction [
 SLVMPharoFunctionCodeGenerator >> visitBranch: aBranch [
 	| elseSequence thenSequence |
 	self visitExpression: aBranch condition.
+	self convertBooleanValueToOop: aBranch condition.
 	thenSequence := thenSequences at: currentBasicBlock ifAbsent: [translatedElements at: aBranch trueBlock ].
 	elseSequence := elseSequences at: currentBasicBlock .
 	
@@ -536,7 +605,7 @@ SLVMPharoFunctionCodeGenerator >> visitDynamicObjectToIntCast: cast [
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitETreeStatement: anStatement [
-	(translatedElements at: anStatement) emitPushWith: self
+	^ self pushVariable: (translatedElements at: anStatement)
 ]
 
 { #category : #visiting }
@@ -570,7 +639,7 @@ SLVMPharoFunctionCodeGenerator >> visitFunction: aFunction [
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitFunctionArgument: anArgument [
-	(translatedElements at: anArgument) emitPushWith: self
+	self pushVariable: (translatedElements at: anArgument)
 ]
 
 { #category : #visiting }
@@ -607,7 +676,7 @@ SLVMPharoFunctionCodeGenerator >> visitLoad: anInstruction [
 		^ self loadValueFromPointer: anInstruction
 	].
 
-	variable emitPushWith: self
+	^ self pushVariable: variable
 ]
 
 { #category : #visiting }
@@ -647,12 +716,11 @@ SLVMPharoFunctionCodeGenerator >> visitStore: anInstruction [
 	| variable |
 	variable := self convertPointerIntoVariable: anInstruction variable.
 	variable ifNil: [ 
-		^ self storeValueIntoPointer: anInstruction
+		^ self storeAndPopValueIntoPointer: anInstruction
 	].
 
 	self visitExpression: anInstruction value.
-	variable emitStoreStackTopWith: self.
-	self popTopOfType: anInstruction value type.
+	self storeAndPopStackTopIntoVariable: variable.
 ]
 
 { #category : #'as yet unclassified' }

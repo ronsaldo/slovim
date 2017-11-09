@@ -7,12 +7,25 @@ Class {
 	#category : #'Slovim-StackCodeGenerator-Pharo'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #'code generation' }
+SLVMPharoVariable >> emitPushUsingLowcodeWith: aCodeGenerator [
+	self assert: type isDynamicObjectType.
+	^ self emitPushWith: aCodeGenerator
+]
+
+{ #category : #'code generation' }
 SLVMPharoVariable >> emitPushWith: aCodeGenerator [
 	self subclassResponsibility
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'code generation' }
+SLVMPharoVariable >> emitStoreAndPopStackTopUsingLowcodeWith: aCodeGenerator [
+	self assert: type isDynamicObjectType.
+	self emitStoreStackTopWith: aCodeGenerator.
+	aCodeGenerator popTop
+]
+
+{ #category : #'code generation' }
 SLVMPharoVariable >> emitStoreStackTopWith: aCodeGenerator [
 	self subclassResponsibility
 ]

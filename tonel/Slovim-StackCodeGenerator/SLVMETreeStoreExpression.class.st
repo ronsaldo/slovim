@@ -21,10 +21,10 @@ SLVMETreeStoreExpression >> name [
 
 { #category : #evaluating }
 SLVMETreeStoreExpression >> value [
-	^ parameters second
+	^ parameters first
 ]
 
 { #category : #evaluating }
 SLVMETreeStoreExpression >> variable [
-	^ parameters first
+	^ parameters second
 ]

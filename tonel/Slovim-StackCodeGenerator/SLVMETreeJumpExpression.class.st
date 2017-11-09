@@ -31,3 +31,11 @@ SLVMETreeJumpExpression >> isTerminator [
 SLVMETreeJumpExpression >> name [
 	^ #jump
 ]
+
+{ #category : #printing }
+SLVMETreeJumpExpression >> prettyPrintOn: aStream [
+	aStream nextPutAll: '('; putKeyword: self name.
+	aStream space.
+	destination prettyPrintOn: aStream.
+	aStream nextPutAll: ')'
+]

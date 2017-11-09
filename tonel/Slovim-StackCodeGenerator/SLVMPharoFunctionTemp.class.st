@@ -2,10 +2,21 @@ Class {
 	#name : #SLVMPharoFunctionTemp,
 	#superclass : #SLVMPharoVariable,
 	#instVars : [
-		'name'
+		'name',
+		'location'
 	],
 	#category : #'Slovim-StackCodeGenerator-Pharo'
 }
+
+{ #category : #accessing }
+SLVMPharoFunctionTemp >> location [
+	^ location
+]
+
+{ #category : #accessing }
+SLVMPharoFunctionTemp >> location: anObject [
+	location := anObject
+]
 
 { #category : #accessing }
 SLVMPharoFunctionTemp >> name [
