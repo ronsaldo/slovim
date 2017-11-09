@@ -99,7 +99,7 @@ SLVMPointerType >> selectorForLoadingFromPointer [
 
 { #category : #'as yet unclassified' }
 SLVMPointerType >> selectorForStoringIntoPointer [
-	^ #pointerValue:
+	^ #pointerValueInto:
 ]
 
 { #category : #accessing }
