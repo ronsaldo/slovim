@@ -1,6 +1,6 @@
 Class {
 	#name : #SLVMETreeDynamicObjectToFloatCast,
-	#superclass : #SLVMETreeDynamicObjectNativeCast,
+	#superclass : #SLVMETreeDynamicObjectToNativeCast,
 	#category : #'Slovim-StackCodeGenerator'
 }
 

@@ -1,6 +1,12 @@
 Extension { #name : #SLVMBoolType }
 
 { #category : #'*Slovim-StackCodeGenerator' }
+SLVMBoolType >> fromOopUsingLowcodeWith: builder [
+	self assert: size = 1.
+	^ builder lowcodeOopToBoolean32
+]
+
+{ #category : #'*Slovim-StackCodeGenerator' }
 SLVMBoolType >> pushFromMemoryUsingLowcodeWith: builder [
 	self assert: size = 1.
 	builder lowcodeLoadInt8FromMemory.

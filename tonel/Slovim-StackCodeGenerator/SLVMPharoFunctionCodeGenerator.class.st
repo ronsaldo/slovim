@@ -477,7 +477,8 @@ SLVMPharoFunctionCodeGenerator >> translateFunction: aFunction [
 			trailer sourceCode: sourceCode
 		]
 	].
-	
+
+	etreeFunction selector = #initializeWithRows:columns: ifTrue: [ self halt ].
 	compiledMethod := ir optimize compiledMethodWith: trailer.
 	self setupCompiledMethod: compiledMethod.
 
@@ -549,6 +550,11 @@ SLVMPharoFunctionCodeGenerator >> visitBitCast: instruction [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitBoolToDynamicObjectCast: cast [
+	self visitExpression: cast source
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitBranch: aBranch [
 	| elseSequence thenSequence |
 	self visitExpression: aBranch condition.
@@ -591,6 +597,11 @@ SLVMPharoFunctionCodeGenerator >> visitConstantDynamicLiteral: aLiteralConstant 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitConstantValue: aConstant [
 	self pushLiteral: aConstant value
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitDynamicObjectToBoolCast: cast [
+	self visitExpression: cast source
 ]
 
 { #category : #visiting }

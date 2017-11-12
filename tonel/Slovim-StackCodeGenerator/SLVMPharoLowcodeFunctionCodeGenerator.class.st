@@ -258,15 +258,16 @@ SLVMPharoLowcodeFunctionCodeGenerator >> emitGetElementPointerOffsets: instructi
 			self
 				visitExpression: pair first;
 				lowcodePushConstantUInt32: pair second;
-				lowcodePushZero32;
-				lowcodeEffectiveAddress32
+				lowcodeMul32;
+				lowcodeAdd32
 		] ifFalse: [
 			self assert: pair first type size = 8.
 			self
 				visitExpression: pair first;
 				lowcodePushConstantUInt64: pair second;
 				lowcodePushZero64;
-				lowcodeEffectiveAddress64
+				lowcodeMul64;
+				lowcodeAdd64
 		].
 	].
 
@@ -1943,8 +1944,20 @@ SLVMPharoLowcodeFunctionCodeGenerator >> visitBitCast: instruction [
 ]
 
 { #category : #visiting }
+SLVMPharoLowcodeFunctionCodeGenerator >> visitBoolToDynamicObjectCast: cast [
+	self visitExpression: cast source.
+	cast source type toOopUsingLowcodeWith: self.
+]
+
+{ #category : #visiting }
 SLVMPharoLowcodeFunctionCodeGenerator >> visitConstantValue: aConstant [
 	aConstant type pushConstant: aConstant value usingLowcodeWith: self
+]
+
+{ #category : #visiting }
+SLVMPharoLowcodeFunctionCodeGenerator >> visitDynamicObjectToBoolCast: cast [
+	self visitExpression: cast source.
+	cast type fromOopUsingLowcodeWith: self.
 ]
 
 { #category : #visiting }

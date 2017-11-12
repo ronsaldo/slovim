@@ -34,7 +34,7 @@ SLVMETreeBasicBlock >> addLast: aStatement [
 
 { #category : #printing }
 SLVMETreeBasicBlock >> fullPrintOn: aStream [
-	aStream putIdentifier: self validName; nextPutAll: ':'; cr.
+	self prettyPrintOn: aStream. aStream nextPut: $:; cr.
 	self statementsDo: [ :expr |
 		aStream tab.
 		expr fullPrintOn: aStream.
@@ -84,7 +84,7 @@ SLVMETreeBasicBlock >> name: anObject [
 
 { #category : #printing }
 SLVMETreeBasicBlock >> prettyPrintOn: aStream [
-	aStream nextPutAll: self validName
+	aStream putIdentifier: self validName , '@' , index printString
 ]
 
 { #category : #removing }

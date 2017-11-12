@@ -95,6 +95,7 @@ SLVMStackFunctionCodeGenerator >> translateBasicBlocks [
 { #category : #'as yet unclassified' }
 SLVMStackFunctionCodeGenerator >> translateFunction: aFunction into: expressionTreeFunction [
 	slvmFunction := aFunction.
+		
 	slvmFunction applyDominanceTopoSort.
 	etreeFunction := expressionTreeFunction.
 	
@@ -140,6 +141,12 @@ SLVMStackFunctionCodeGenerator >> visitBitCast: anInstruction [
 ]
 
 { #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitBoolToDynamicObjectCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeBoolToDynamicObjectCast new type: anInstruction type)
+]
+
+{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitBranch: anInstruction [
 	^ self addParametersOf: anInstruction
 		into: (SLVMETreeBranchExpression new
@@ -163,6 +170,12 @@ SLVMStackFunctionCodeGenerator >> visitConstantDynamicLiteral: constant [
 { #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitConstantValue: constant [
 	^ SLVMETreeConstantValue new type: constant type; value: constant value
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitDynamicObjectToBoolCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeDynamicObjectToBoolCast new type: anInstruction type)
 ]
 
 { #category : #visiting }
