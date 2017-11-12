@@ -834,6 +834,11 @@ SLVMSAsmFunctionCodeGenerator >> unaryInteger: instruction arithmetic: operation
 	^ blockBuilder tacOperation: operation result: resultValue value: operandValue
 ]
 
+{ #category : #'bitwise operations' }
+SLVMSAsmFunctionCodeGenerator >> unaryInteger: instruction bitwise: tacOperation [
+	^ self unaryInteger: instruction arithmetic: tacOperation
+]
+
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitAdd: instruction [
 	self binaryInteger: instruction arithmetic: TacAdd
@@ -892,7 +897,7 @@ SLVMSAsmFunctionCodeGenerator >> visitBitCast: instruction [
 	].
 ]
 
-{ #category : #arithmetic }
+{ #category : #'bitwise operations' }
 SLVMSAsmFunctionCodeGenerator >> visitBitNot: instruction [
 	self unaryInteger: instruction bitwise: TacBitNot
 ]
@@ -905,6 +910,15 @@ SLVMSAsmFunctionCodeGenerator >> visitBitOr: instruction [
 { #category : #'bitwise operations' }
 SLVMSAsmFunctionCodeGenerator >> visitBitXor: instruction [
 	self binaryInteger: instruction bitwise: TacBitXor
+]
+
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitBoolToDynamicObjectCast: instruction [
+	| source result |
+	source := self translateValue: instruction source.
+	result := self translateValue: instruction.
+	
+	^ self emitCastOfValue: source byCalling: target objectModel boolToObjectFunction intoResult: result
 ]
 
 { #category : #visiting }
@@ -968,6 +982,13 @@ SLVMSAsmFunctionCodeGenerator >> visitClosureToDynamicObject: anInstruction [
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitDiv: instruction [
 	self binaryInteger: instruction arithmetic: TacDivide
+]
+
+{ #category : #casting }
+SLVMSAsmFunctionCodeGenerator >> visitDynamicObjectToBoolCast: instruction [
+	| result |
+	result := self translateValue: instruction.
+	self emitCastInstruction: instruction byCalling: target objectModel objectToBoolFunction intoResult: result.
 ]
 
 { #category : #casting }
@@ -1439,6 +1460,11 @@ SLVMSAsmFunctionCodeGenerator >> visitLoad: instruction [
 	"Aggregate type. We have to copy."
 	self assert: result isAggregate.
 	blockBuilder tacCopy: variable to: result size: type size alignment: type alignment.
+]
+
+{ #category : #'bitwise operations' }
+SLVMSAsmFunctionCodeGenerator >> visitLogicalNot: instruction [
+	self unaryInteger: instruction bitwise: TacLogicalNot
 ]
 
 { #category : #visiting }
