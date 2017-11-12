@@ -16,7 +16,8 @@ Class {
 		'predecessors',
 		'successors',
 		'immediateDominator',
-		'dominanceFrontier'
+		'dominanceFrontier',
+		'backEdgesToMe'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -71,6 +72,12 @@ SLVMBasicBlock >> add: anInstruction before: instructionPoint [
 	
 	numberOfInstructions := numberOfInstructions + 1.
 	self instructionAdded: anInstruction
+]
+
+{ #category : #testing }
+SLVMBasicBlock >> addBackEdgeToMe: aBackEdge [
+	self assert: (predecessors includes: aBackEdge).
+	backEdgesToMe := backEdgesToMe copyWith: aBackEdge
 ]
 
 { #category : #adding }
@@ -157,6 +164,16 @@ SLVMBasicBlock >> allocaInstructionsDo: aBlock [
 		ins isAlloca ifFalse: [ ^ self ].
 		aBlock value: ins
 	]
+]
+
+{ #category : #accessing }
+SLVMBasicBlock >> backEdgesToMe [
+	^ backEdgesToMe
+]
+
+{ #category : #accessing }
+SLVMBasicBlock >> backEdgesToMe: anObject [
+	backEdgesToMe := anObject
 ]
 
 { #category : #accessing }
@@ -284,6 +301,7 @@ SLVMBasicBlock >> initialize [
 	super initialize.
 	predecessors := #().
 	successors := #().
+	backEdgesToMe := #().
 ]
 
 { #category : #adding }
@@ -303,6 +321,11 @@ SLVMBasicBlock >> instructionsDo: aBlock [
 		aBlock value: currentInstruction.
 		currentInstruction := nextInstruction
 	]
+]
+
+{ #category : #testing }
+SLVMBasicBlock >> isBackEdgeToMe: aNode [
+	^ backEdgesToMe includes: aNode
 ]
 
 { #category : #removing }

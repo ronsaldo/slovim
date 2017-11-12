@@ -150,6 +150,35 @@ SLVMFunction >> compiledMethodMetaDataValue [
 ]
 
 { #category : #'control flow' }
+SLVMFunction >> computeBackEdges [
+	| colors |
+	colors := Array new: basicBlocks size withAll: #white.
+	basicBlocks do: [ :bb | bb backEdgesToMe: #() ].
+	basicBlocks do: [ :bb | self computeBackEdgesFrom: bb colors: colors ].
+]
+
+{ #category : #'control flow' }
+SLVMFunction >> computeBackEdgesFrom: basicBlock colors: visited [
+	| color predColor |
+	color := visited at: basicBlock index.
+	color == #black ifTrue: [ ^ self ].
+	self assert: color == #white.
+	visited at: basicBlock index put: #gray.
+	
+	basicBlock successors do: [ :succ |
+		predColor := visited at: succ index.
+		predColor == #gray ifTrue: [
+			succ addBackEdgeToMe: basicBlock
+		] ifFalse: [
+			self computeBackEdgesFrom: succ colors: visited
+		]
+	].
+
+	visited at: basicBlock index put: #black.
+
+]
+
+{ #category : #'control flow' }
 SLVMFunction >> computeDominance [
 	"
 	Dominance algorithm taken from paper 'A Simple, Fast Dominance Algorithm' by Cooper et al.
@@ -356,9 +385,11 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 SLVMFunction >> dominanceTopoSort [
 	| visited result |
 	self computeDominance.
+	self computeBackEdges.
 	visited := Set new.
 	result := OrderedCollection new.
 	basicBlocks do: [ :node | self dominanceTopoSort: node visitedSet: visited destination: result ].
+
 	^ result
 ]
 
@@ -370,12 +401,17 @@ SLVMFunction >> dominanceTopoSort: node visitedSet: visitedSet destination: dest
 	
 	"Add the immediate dominator"
 	self dominanceTopoSort: node immediateDominator visitedSet: visitedSet destination: destination.
-	
-	"Add the predecessors"
-	node predecessors do: [ :pred | self dominanceTopoSort: pred visitedSet: visitedSet destination: destination. ].
-	
+
+	"Add the predecessors that are not back edges"
+	node predecessors do: [ :pred |
+		(node isBackEdgeToMe: pred) ifFalse: [ 
+			self dominanceTopoSort: pred visitedSet: visitedSet destination: destination
+		]
+	].
+
 	"Add the node"
-	destination add: node
+	destination add: node.
+
 ]
 
 { #category : #'control flow' }

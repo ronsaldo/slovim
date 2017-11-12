@@ -125,6 +125,16 @@ SLVMBuilder >> bitxor: operand name: resultName [
 	^ self addOperation: #bitxor operand: operand name: resultName
 ]
 
+{ #category : #casting }
+SLVMBuilder >> boolToDynamicObjectCast: source target: targetType [
+	^ self boolToDynamicObjectCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> boolToDynamicObjectCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMBoolToDynamicObjectCast source: source targetType: targetType) name: resultName
+]
+
 { #category : #instructions }
 SLVMBuilder >> branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock [
 	^ self branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock name: function generateSymbol
@@ -259,6 +269,16 @@ SLVMBuilder >> dynObjectIdentityNotEquals: left with: right [
 { #category : #comparisons }
 SLVMBuilder >> dynObjectIdentityNotEquals: left with: right name: resultName [
 	^ self addOperation: #dynObjectIdentityNotEquals left: left right: right name: resultName
+]
+
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToBoolCast: source target: targetType [
+	^ self dynamicObjectToBoolCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToBoolCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMDynamicObjectToBoolCast source: source targetType: targetType) name: resultName
 ]
 
 { #category : #casting }

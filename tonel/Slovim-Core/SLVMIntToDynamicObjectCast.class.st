@@ -3,7 +3,7 @@ I am casting instruction for boxing integers in dynamic objects.
 "
 Class {
 	#name : #SLVMIntToDynamicObjectCast,
-	#superclass : #SLVMDynamicObjectNativeCast,
+	#superclass : #SLVMNativeToDynamicObjectCast,
 	#category : #'Slovim-Core-SSA'
 }
 

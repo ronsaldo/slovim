@@ -3,7 +3,7 @@ I am casting instruction for unboxing floats from dynamic objects.
 "
 Class {
 	#name : #SLVMDynamicObjectToFloatCast,
-	#superclass : #SLVMDynamicObjectNativeCast,
+	#superclass : #SLVMDynamicObjectToNativeCast,
 	#category : #'Slovim-Core-SSA'
 }
 
