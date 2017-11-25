@@ -34,6 +34,11 @@ SLVMETreeFunctionArgument >> isFunctionArgument [
 ]
 
 { #category : #testing }
+SLVMETreeFunctionArgument >> isPureExpression [
+	^ true
+]
+
+{ #category : #testing }
 SLVMETreeFunctionArgument >> isReceiver [
 	^ self hasFlag: #receiver
 ]

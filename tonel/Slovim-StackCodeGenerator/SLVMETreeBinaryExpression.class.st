@@ -12,6 +12,11 @@ SLVMETreeBinaryExpression >> accept: aVisitor [
 	^ aVisitor visitBinaryExpression: self
 ]
 
+{ #category : #testing }
+SLVMETreeBinaryExpression >> isPureExpression [
+	^ self left isPureExpression and: [ self right isPureExpression ]
+]
+
 { #category : #accessing }
 SLVMETreeBinaryExpression >> left [
 	^ parameters first

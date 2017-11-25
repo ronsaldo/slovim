@@ -17,6 +17,11 @@ SLVMETreeExpression >> initialize [
 	parameters := #()
 ]
 
+{ #category : #testing }
+SLVMETreeExpression >> isPureExpression [
+	^ false
+]
+
 { #category : #accessing }
 SLVMETreeExpression >> name [
 	self subclassResponsibility

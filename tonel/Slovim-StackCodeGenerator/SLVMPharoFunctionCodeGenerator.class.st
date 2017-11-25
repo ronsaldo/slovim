@@ -257,7 +257,7 @@ SLVMPharoFunctionCodeGenerator >> emitGetElementPointerOffsets: instruction [
 
 	constantDisplacement ~= 0 ifTrue: [
 		self pushLiteral: constantDisplacement;
-			send: #+.
+			send: #_slvm_pointerAddOffset:.
 	].
 
 	indicesWithStrides do: [ :pair |
@@ -265,7 +265,7 @@ SLVMPharoFunctionCodeGenerator >> emitGetElementPointerOffsets: instruction [
 			visitExpression: pair first;
 			pushLiteral: pair second;
 			send: #*;
-			send: #+
+			send: #_slvm_pointerAddOffset:
 	].
 
 ]
@@ -291,7 +291,7 @@ SLVMPharoFunctionCodeGenerator >> isObjectElementPointer: expression [
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> loadValueFromPointer: anInstruction [
 	self visitExpression: anInstruction variable.
-	self send: anInstruction type selectorForLoadingFromPointer
+	anInstruction type loadValueFromPointerWith: self
 ]
 
 { #category : #accessing }
@@ -408,8 +408,7 @@ SLVMPharoFunctionCodeGenerator >> storeAndPopStackTopIntoVariable: aVariable [
 SLVMPharoFunctionCodeGenerator >> storeAndPopValueIntoPointer: anInstruction [
 	self visitExpression: anInstruction value.
 	self visitExpression: anInstruction variable.
-	self send: anInstruction value type selectorForStoringIntoPointer.
-	self popTop.
+	anInstruction value type storeAndPopValueIntoPointerWith: self.
 ]
 
 { #category : #instructions }
@@ -509,6 +508,19 @@ SLVMPharoFunctionCodeGenerator >> translateStatement: statement [
 		self popTopOfType: statement type
 	]
 
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitAlloca: allocaExpression [
+	| valueType |
+	valueType := allocaExpression valueType.
+	valueType behavior ifNotNil: [
+		^ self
+			pushLiteralVariable: valueType behavior binding;
+			send: #basicNew;
+			send: #asPointerToInternalObjectData
+	].
+	self halt
 ]
 
 { #category : #visiting }

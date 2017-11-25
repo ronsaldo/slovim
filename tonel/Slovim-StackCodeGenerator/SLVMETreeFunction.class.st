@@ -108,6 +108,11 @@ SLVMETreeFunction >> initialize [
 	
 ]
 
+{ #category : #testing }
+SLVMETreeFunction >> isPureExpression [
+	^ true
+]
+
 { #category : #accessing }
 SLVMETreeFunction >> module [
 	^ module

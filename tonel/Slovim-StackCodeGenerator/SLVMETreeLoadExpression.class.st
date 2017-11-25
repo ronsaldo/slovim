@@ -14,6 +14,11 @@ SLVMETreeLoadExpression >> isLoad [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMETreeLoadExpression >> isPureExpression [
+	^ self variable isPureExpression
+]
+
 { #category : #accessing }
 SLVMETreeLoadExpression >> name [
 	^ #load

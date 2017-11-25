@@ -10,6 +10,11 @@ SLVMETreeObject >> isGlobalVariable [
 ]
 
 { #category : #testing }
+SLVMETreeObject >> isPureExpression [
+	^ false
+]
+
+{ #category : #testing }
 SLVMETreeObject >> isStatement [
 	^ false
 ]

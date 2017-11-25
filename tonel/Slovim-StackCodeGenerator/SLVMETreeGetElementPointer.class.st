@@ -43,6 +43,12 @@ SLVMETreeGetElementPointer >> isGetElementPointer [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMETreeGetElementPointer >> isPureExpression [
+	self parameters do: [ :param | param isPureExpression ifFalse: [ ^ false ] ].
+	^ true
+]
+
 { #category : #accessing }
 SLVMETreeGetElementPointer >> name [
 	^ 'getElementPointer'

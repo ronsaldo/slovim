@@ -80,6 +80,12 @@ SLVMETreeStatement >> isAllocaOnlyUsedByLoadsAndStores [
 ]
 
 { #category : #testing }
+SLVMETreeStatement >> isPureExpression [
+	"My value is a pure expression, but I am not necessarily pure"
+	^ true
+]
+
+{ #category : #testing }
 SLVMETreeStatement >> isStatement [
 	^ true
 ]
@@ -91,11 +97,14 @@ SLVMETreeStatement >> mergePreviousExpressions [
 	parameters := expression parameters.
 	parameters size to: 1 by: -1 do: [ :i |
 		param := parameters at: i.
-		(param isStatement and: [ param references size == 1 and: [ param == previous ] ]) ifTrue: [
+		(param isStatement and: [ param references size == 1 and: [
+				param == previous or: [param expression isPureExpression] ] ]) ifTrue: [
 			param removeFromBlock.
 			parameters at: i put: param expression.
 		]
-	]
+	].
+
+	
 ]
 
 { #category : #accessing }

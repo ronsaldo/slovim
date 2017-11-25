@@ -8,3 +8,8 @@ Class {
 SLVMETreeConstant >> isConstant [
 	^ true
 ]
+
+{ #category : #testing }
+SLVMETreeConstant >> isPureExpression [
+	^ true
+]
