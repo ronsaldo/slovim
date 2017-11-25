@@ -44,5 +44,5 @@ SLVMFloatType >> registerClass [
 
 { #category : #'as yet unclassified' }
 SLVMFloatType >> selectorForLoadingFromPointer [
-	^ ('float' , (size * 8) asString , 'Value') asSymbol
+	^ ('_slvm_float' , (size * 8) asString , 'Value') asSymbol
 ]

@@ -47,5 +47,5 @@ SLVMBoolType >> registerClass [
 
 { #category : #'as yet unclassified' }
 SLVMBoolType >> selectorForLoadingFromPointer [
-	^ #boolValue
+	^ #_slvm_boolValue
 ]

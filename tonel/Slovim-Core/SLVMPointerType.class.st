@@ -94,7 +94,7 @@ SLVMPointerType >> registerClass [
 
 { #category : #'as yet unclassified' }
 SLVMPointerType >> selectorForLoadingFromPointer [
-	^ #pointerValue
+	^ #_slvm_pointerValue
 ]
 
 { #category : #'as yet unclassified' }

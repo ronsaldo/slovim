@@ -479,6 +479,11 @@ SLVMType >> isVoidType [
 	^ false
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMType >> loadValueFromPointerWith: irBuilder [
+	^ irBuilder send: self selectorForLoadingFromPointer
+]
+
 { #category : #'pointer accessing' }
 SLVMType >> readFromPointer: pointer [
 	^ #unreadable
@@ -512,6 +517,13 @@ SLVMType >> size [
 { #category : #accessing }
 SLVMType >> spillingClass [
 	^ { self size . self alignment . false }
+]
+
+{ #category : #'as yet unclassified' }
+SLVMType >> storeAndPopValueIntoPointerWith: irBuilder [
+	irBuilder
+		send: self selectorForStoringIntoPointer;
+		popTop
 ]
 
 { #category : #accessing }

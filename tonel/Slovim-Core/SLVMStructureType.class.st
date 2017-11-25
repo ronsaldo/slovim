@@ -8,7 +8,8 @@ Class {
 		'names',
 		'alignment',
 		'size',
-		'offsets'
+		'offsets',
+		'behavior'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -53,6 +54,16 @@ SLVMStructureType >> alignment [
 	^ alignment
 ]
 
+{ #category : #accessing }
+SLVMStructureType >> behavior [
+	^ behavior
+]
+
+{ #category : #accessing }
+SLVMStructureType >> behavior: anObject [
+	behavior := anObject
+]
+
 { #category : #private }
 SLVMStructureType >> computeLayout [
 	| currentOffset offset |
@@ -91,6 +102,18 @@ SLVMStructureType >> kind [
 { #category : #accessing }
 SLVMStructureType >> kind: anObject [
 	kind := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> loadValueFromPointerWith: irBuilder [
+	behavior ifNotNil: [ 
+		^ irBuilder
+			pushLiteralVariable: behavior binding;
+			send: #_slvm_loadStructureValue:
+	].
+
+	self halt
+	
 ]
 
 { #category : #accessing }
@@ -149,6 +172,19 @@ SLVMStructureType >> shortName [
 { #category : #accessing }
 SLVMStructureType >> size [
 	^ size
+]
+
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> storeAndPopValueIntoPointerWith: irBuilder [
+	behavior ifNotNil: [ 
+		^ irBuilder
+			pushLiteralVariable: behavior binding;
+			send: #_slvm_storeStructureValueInto:behavior:;
+			popTop
+	].
+
+	self halt
+	
 ]
 
 { #category : #'element accessing' }
