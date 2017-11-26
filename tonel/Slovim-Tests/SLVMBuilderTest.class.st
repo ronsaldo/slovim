@@ -7,15 +7,20 @@ Class {
 	#instVars : [
 		'functionType',
 		'function',
-		'builder'
+		'builder',
+		'target',
+		'module'
 	],
 	#category : #'Slovim-Tests'
 }
 
 { #category : #running }
 SLVMBuilderTest >> setUp [
+	target := SLVM32BitsPointerCompilationTarget new.
+	module := SLVMModule new compilationTarget: target.
+	
 	functionType := SLVMFunctionType arguments: {SLVMType intType} returnType: SLVMType voidType.
-	function := SLVMFunction name: #testFunction functionType: functionType.
+	function := SLVMFunction module: module name: #testFunction functionType: functionType.
 	builder := SLVMBuilder on: function.
 ]
 

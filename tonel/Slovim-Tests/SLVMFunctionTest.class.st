@@ -7,11 +7,11 @@ Class {
 	#category : #'Slovim-Tests'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #tests }
 SLVMFunctionTest >> testGenerateSymbol [
 	| functionType function gsym1 gsym2 |
 	functionType := SLVMFunctionType arguments: {SLVMType intType} returnType: SLVMType voidType.
-	function := SLVMFunction name: #testFunction functionType: functionType.
+	function := SLVMFunction pointerSize: 4 name: #testFunction functionType: functionType.
 	gsym1 := function generateSymbol.
 	gsym2 := function generateSymbol.
 	self assert: gsym1 isSymbol.
