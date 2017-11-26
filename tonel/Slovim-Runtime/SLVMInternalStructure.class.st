@@ -128,15 +128,27 @@ SLVMInternalStructure >> _slvm_int8Value: anInteger [
 		basicAt: 1 put: anInteger & 16rff
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'value accessors' }
 SLVMInternalStructure >> _slvm_loadStructureValue: internalStructureType [
-	internalStructureType == self class ifTrue: [ ^ self ].
-	self halt
+	| result |
+	internalStructureType == self class ifTrue: [ ^ self copy ].
+	result := internalStructureType new.
+	1 to: internalStructureType structureSize do: [ :i |
+		result byteAt: i put: (self byteAt: i)
+	].
+	^ result
 ]
 
 { #category : #arithmetic }
 SLVMInternalStructure >> _slvm_pointerAddOffset: extraOffset [
 	^ SLVMInternalObjectPointer new object: self; offset: extraOffset; yourself
+]
+
+{ #category : #'value accessors' }
+SLVMInternalStructure >> _slvm_storeStructureValue: value behavior: behavior [
+	1 to: behavior structureSize do: [ :i |
+		self byteAt: i put: (value byteAt: i)
+	].
 ]
 
 { #category : #'value accessors' }
