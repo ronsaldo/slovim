@@ -168,6 +168,14 @@ SLVMStackFunctionCodeGenerator >> visitConstantDynamicLiteral: constant [
 ]
 
 { #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitConstantStructureValue: constant [
+	^ SLVMETreeConstantStructureValue new
+		type: constant type;
+		slots: (constant slots collect: [ :s | self translateInstructionParameter: s]);
+		yourself
+]
+
+{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitConstantValue: constant [
 	^ SLVMETreeConstantValue new type: constant type; value: constant value
 ]
@@ -188,6 +196,12 @@ SLVMStackFunctionCodeGenerator >> visitDynamicObjectToFloatCast: anInstruction [
 SLVMStackFunctionCodeGenerator >> visitDynamicObjectToIntCast: anInstruction [
 	^ self addParametersOf: anInstruction
 		into: (SLVMETreeDynamicObjectToIntCast new type: anInstruction type)
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitDynamicObjectToStructureCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeDynamicObjectToStructureCast new type: anInstruction type)
 ]
 
 { #category : #visiting }
@@ -273,6 +287,12 @@ SLVMStackFunctionCodeGenerator >> visitSignExtend: anInstruction [
 SLVMStackFunctionCodeGenerator >> visitStore: anInstruction [
 	^ self addParametersOf: anInstruction
 		into: (SLVMETreeStoreExpression new type: anInstruction type)
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitStructureToDynamicObjectCast: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeStructureToDynamicObjectCast new type: anInstruction type)
 ]
 
 { #category : #visiting }

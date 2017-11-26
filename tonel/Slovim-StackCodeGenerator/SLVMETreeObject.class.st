@@ -5,6 +5,16 @@ Class {
 }
 
 { #category : #testing }
+SLVMETreeObject >> isETreeFunction [
+	^ false
+]
+
+{ #category : #testing }
+SLVMETreeObject >> isETreeMethod [
+	^ false
+]
+
+{ #category : #testing }
 SLVMETreeObject >> isGlobalVariable [
 	^ false
 ]

@@ -22,7 +22,8 @@ Class {
 		'thenSequences'
 	],
 	#classVars : [
-		'BinaryOperationMessageMap'
+		'BinaryOperationMessageMap',
+		'UnaryOperationMessageMap'
 	],
 	#category : #'Slovim-StackCodeGenerator-Pharo'
 }
@@ -88,7 +89,15 @@ SLVMPharoFunctionCodeGenerator class >> initialize [
 		mulMatrixMatrix *
 		mulMatrixVector *
 		mulVectorMatrix *
-	)
+	).
+	
+	UnaryOperationMessageMap := Dictionary newFromPairs: #(
+		neg negated
+		not bitInvert
+		
+		fneg negated
+		fsqrt sqrt
+	).
 ]
 
 { #category : #'bytecode construction' }
@@ -594,6 +603,13 @@ SLVMPharoFunctionCodeGenerator >> visitBranch: aBranch [
 SLVMPharoFunctionCodeGenerator >> visitCall: anInstruction [
 	| arguments |
 	self visitExpression: anInstruction functionValue.
+	anInstruction functionValue isETreeMethod ifTrue: [ 
+		arguments := anInstruction arguments.
+		arguments do: [ :arg | self visitExpression: arg ].
+		self pushConsArray: arguments size - 1.
+		^ self send: #valueWithReceiver:arguments:	
+	].
+
 	self pushLiteral: nil.
 	arguments := anInstruction arguments.
 	arguments do: [ :arg | self visitExpression: arg ].
@@ -604,6 +620,13 @@ SLVMPharoFunctionCodeGenerator >> visitCall: anInstruction [
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitConstantDynamicLiteral: aLiteralConstant [
 	self pushLiteral: aLiteralConstant value
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitConstantStructureValue: constant [
+	| value |
+	value := constant evaluate.
+	^ self pushLiteral: value
 ]
 
 { #category : #visiting }
@@ -623,6 +646,11 @@ SLVMPharoFunctionCodeGenerator >> visitDynamicObjectToFloatCast: cast [
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitDynamicObjectToIntCast: cast [
+	self visitExpression: cast source
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitDynamicObjectToStructureCast: cast [
 	self visitExpression: cast source
 ]
 
@@ -744,6 +772,18 @@ SLVMPharoFunctionCodeGenerator >> visitStore: anInstruction [
 
 	self visitExpression: anInstruction value.
 	self storeAndPopStackTopIntoVariable: variable.
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitStructureToDynamicObjectCast: cast [
+	self visitExpression: cast source
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitUnaryExpression: anUnaryExpression [
+	self visitExpression: anUnaryExpression operand.
+	
+	self send: (UnaryOperationMessageMap at: anUnaryExpression operation)
 ]
 
 { #category : #'as yet unclassified' }

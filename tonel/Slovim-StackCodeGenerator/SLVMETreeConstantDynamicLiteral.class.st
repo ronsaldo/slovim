@@ -12,6 +12,11 @@ SLVMETreeConstantDynamicLiteral >> accept: aVisitor [
 	^ aVisitor visitConstantDynamicLiteral: self
 ]
 
+{ #category : #'public access' }
+SLVMETreeConstantDynamicLiteral >> evaluate [
+	^ value
+]
+
 { #category : #testing }
 SLVMETreeConstantDynamicLiteral >> isConstantDynamicLiteral [
 	^ true

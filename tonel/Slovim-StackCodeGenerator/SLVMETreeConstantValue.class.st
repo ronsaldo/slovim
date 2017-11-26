@@ -12,6 +12,11 @@ SLVMETreeConstantValue >> accept: aVisitor [
 	^ aVisitor visitConstantValue: self
 ]
 
+{ #category : #'public access' }
+SLVMETreeConstantValue >> evaluate [
+	^ value
+]
+
 { #category : #testing }
 SLVMETreeConstantValue >> isConstantValue [
 	^ true

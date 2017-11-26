@@ -109,6 +109,16 @@ SLVMETreeFunction >> initialize [
 ]
 
 { #category : #testing }
+SLVMETreeFunction >> isETreeFunction [
+	^ true
+]
+
+{ #category : #testing }
+SLVMETreeFunction >> isETreeMethod [
+	^ arguments isNotEmpty and: [ arguments first isReceiver ]
+]
+
+{ #category : #testing }
 SLVMETreeFunction >> isPureExpression [
 	^ true
 ]
