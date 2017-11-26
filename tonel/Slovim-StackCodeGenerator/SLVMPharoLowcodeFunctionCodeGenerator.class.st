@@ -1979,6 +1979,12 @@ SLVMPharoLowcodeFunctionCodeGenerator >> visitDynamicObjectToStructureCast: cast
 ]
 
 { #category : #visiting }
+SLVMPharoLowcodeFunctionCodeGenerator >> visitExtractValue: anInstruction [
+	self visitExpression: anInstruction aggregate.
+	self halt
+]
+
+{ #category : #visiting }
 SLVMPharoLowcodeFunctionCodeGenerator >> visitFloatToDynamicObjectCast: cast [
 	self visitExpression: cast source.
 	cast source type toOopUsingLowcodeWith: self.
@@ -1988,6 +1994,12 @@ SLVMPharoLowcodeFunctionCodeGenerator >> visitFloatToDynamicObjectCast: cast [
 SLVMPharoLowcodeFunctionCodeGenerator >> visitFloatToIntCast: cast [
 	self visitExpression: cast source.
 	cast source type toInteger: cast type usingLowcodeWith: self.
+]
+
+{ #category : #visiting }
+SLVMPharoLowcodeFunctionCodeGenerator >> visitFloatingPointCast: cast [
+	self visitExpression: cast source.
+	self halt
 ]
 
 { #category : #visiting }

@@ -33,6 +33,11 @@ SLVMStackCodeGenerator >> needSSADestroyed [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMStackCodeGenerator >> needStructuredControlFlow [
+	^ false
+]
+
 { #category : #accessing }
 SLVMStackCodeGenerator >> target [
 	^ target

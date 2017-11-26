@@ -205,6 +205,14 @@ SLVMStackFunctionCodeGenerator >> visitDynamicObjectToStructureCast: anInstructi
 ]
 
 { #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitExtractValue: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeExtractValue new
+		type: anInstruction type;
+		indices: anInstruction indices)
+]
+
+{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitFloatToCast: anInstruction [
 	^ self addParametersOf: anInstruction
 		into: (SLVMETreeFloatToIntCast new type: anInstruction type)

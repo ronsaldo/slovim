@@ -400,11 +400,11 @@ SLVMPharoFunctionCodeGenerator >> send: selector [
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> setupCompiledMethod: compiledMethod [
 
+
 ]
 
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> setupIRMethodCompilationContext [
-	"Nothing required here"
 ]
 
 { #category : #variables }
@@ -671,6 +671,27 @@ SLVMPharoFunctionCodeGenerator >> visitExpression: anExpression [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitExtractValue: anInstruction [
+	| aggregateType offset currentType indexConstant |
+	self visitExpression: anInstruction aggregate.
+	aggregateType := anInstruction aggregate type.
+	offset := 0.
+	currentType := aggregateType.
+	anInstruction indices do: [ :index |
+		indexConstant := SLVMConstant type: aggregateType value: index.
+		offset := offset + (currentType offsetWithIndex: indexConstant).
+		currentType := currentType typeOfMemberAt: indexConstant.
+	].
+
+	offset ~= 0 ifTrue: [
+		self pushLiteral: offset;
+			send: #_slvm_pointerAddOffset:.
+	].
+
+	anInstruction type loadValueFromPointerWith: self
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitFloatToDynamicObjectCast: cast [
 	self visitExpression: cast source
 ]
@@ -679,6 +700,13 @@ SLVMPharoFunctionCodeGenerator >> visitFloatToDynamicObjectCast: cast [
 SLVMPharoFunctionCodeGenerator >> visitFloatToIntCast: cast [
 	self visitExpression: cast source.
 	self send: #asInteger
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitFloatingPointCast: cast [
+	self visitExpression: cast source.
+	self flag: 'Truncate the precision when required.'.
+	
 ]
 
 { #category : #visiting }
