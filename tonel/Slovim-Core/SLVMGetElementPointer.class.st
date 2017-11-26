@@ -17,6 +17,12 @@ SLVMGetElementPointer >> accept: aVisitor [
 	^ aVisitor visitGetElementPointer: self
 ]
 
+{ #category : #testing }
+SLVMGetElementPointer >> hasConstantIndices [
+	self indices do: [ :index | index isConstantValue ifFalse: [^ false] ].
+	^ true
+]
+
 { #category : #accessing }
 SLVMGetElementPointer >> indices [
 	^ parameters allButFirst

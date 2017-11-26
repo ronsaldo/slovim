@@ -54,6 +54,11 @@ SLVMArrayType >> internalHash [
 ]
 
 { #category : #testing }
+SLVMArrayType >> isAggregateType [
+	^ true
+]
+
+{ #category : #testing }
 SLVMArrayType >> isArrayType [
 	^ true
 ]

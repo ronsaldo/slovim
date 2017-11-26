@@ -137,6 +137,11 @@ SLVMInstruction >> isDynamicObjectReferenceCreator [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isExtractValue [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isGetElementPointer [
 	^ false
 ]

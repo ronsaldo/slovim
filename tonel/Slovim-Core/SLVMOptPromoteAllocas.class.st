@@ -111,6 +111,23 @@ SLVMOptPromoteAllocas >> firstDefinitionValueAt: node for: definitionsPerNode al
 
 ]
 
+{ #category : #'aggregate element loading' }
+SLVMOptPromoteAllocas >> isAllocaUsedForLoadingAggregateField: alloca [
+	| references loadingPlaces |
+	alloca valueType isAggregateType ifFalse: [ ^ false ].
+	
+	references := alloca instructionReferences.
+	references size ~= 2 ifTrue: [ ^ false ].
+	(references first isStore and: [ references second isGetElementPointer ]) ifFalse: [ ^ false ].
+	(references second hasConstantIndices and: [ references second indices first value = 0 ]) ifFalse: [ ^ false ].
+
+	references first nextInstruction == references second ifFalse: [ ^ false ].
+	
+	loadingPlaces := references second instructionReferences.
+	loadingPlaces do: [ :p | p isLoad ifFalse: [^ false ] ].
+	^ true
+]
+
 { #category : #'as yet unclassified' }
 SLVMOptPromoteAllocas >> lastDefinitionValueAt: node for: definitionsPerNode allocaInstruction: alloca [
 	^ self lastDefinitionValueAt: node for: definitionsPerNode allocaInstruction: alloca forPhiNode: false
@@ -149,10 +166,12 @@ SLVMOptPromoteAllocas >> lastDefinitionValueAtLoad: loadInstruction for: definit
 	^ lastStore value
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #applying }
 SLVMOptPromoteAllocas >> passOnFunction: aFunction [
 	| toBePromoted |
 	aFunction isEmpty ifTrue: [ ^ self ].
+	self promoteAggregateLoadsOn: aFunction.
+	
 	toBePromoted := OrderedCollection new.
 	aFunction basicBlocks first instructionsDo: [ :ins |
 		(ins isAlloca and: [self canBePromoted: ins]) ifTrue: [ 
@@ -245,6 +264,43 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 	].
 
 	allocaInstruction removeFromBlock.
+
+]
+
+{ #category : #applying }
+SLVMOptPromoteAllocas >> promoteAggregateLoadsOn: aFunction [
+	aFunction basicBlocks first allocaInstructionsDo: [ :alloca |
+		(self isAllocaUsedForLoadingAggregateField: alloca) ifTrue: [
+			self promoteAllocaForLoadingAggregateField: alloca
+		]
+	]
+]
+
+{ #category : #'aggregate element loading' }
+SLVMOptPromoteAllocas >> promoteAllocaForLoadingAggregateField: alloca [
+	| references loadingPlaces aggregateValue gep indices fieldValue store |
+	references := alloca instructionReferences.
+	store := references first.
+	self assert: store isStore.
+	aggregateValue := references first value.
+	
+	gep := references second.
+	self assert: gep isGetElementPointer.
+	indices := gep indices allButFirst collect: #value.
+	
+	loadingPlaces := references second instructionReferences.
+	loadingPlaces do: [ :fieldLoadPlace | 
+		self assert: fieldLoadPlace isLoad.
+		fieldValue := SLVMExtractValue aggregate: aggregateValue indices: indices.
+		fieldValue name: fieldLoadPlace name. 
+		fieldLoadPlace block add: fieldValue before: fieldLoadPlace.
+		fieldLoadPlace replaceWith: fieldValue
+	].
+
+	gep removeFromBlock.
+	store removeFromBlock.
+	alloca removeFromBlock
+	
 
 ]
 

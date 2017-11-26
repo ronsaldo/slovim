@@ -85,6 +85,11 @@ SLVMStructureType >> hash [
 ]
 
 { #category : #testing }
+SLVMStructureType >> isAggregateType [
+	^ true
+]
+
+{ #category : #testing }
 SLVMStructureType >> isScalarType [
 	^ false
 ]

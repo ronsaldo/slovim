@@ -7,7 +7,8 @@ Class {
 	#instVars : [
 		'function',
 		'currentBlock',
-		'debugPositionStack'
+		'debugPositionStack',
+		'allocaBuilder'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -73,6 +74,16 @@ SLVMBuilder >> alloca: valueType [
 { #category : #instructions }
 SLVMBuilder >> alloca: valueType name: variableName [
 	^ self addInstruction: (SLVMAlloca pointerSize: self compilationTarget pointerSize valueType: valueType) name: variableName
+]
+
+{ #category : #accessing }
+SLVMBuilder >> allocaBuilder [
+	^ allocaBuilder
+]
+
+{ #category : #accessing }
+SLVMBuilder >> allocaBuilder: anObject [
+	allocaBuilder := anObject
 ]
 
 { #category : #'logical operations' }
@@ -738,6 +749,11 @@ SLVMBuilder >> newBasicBlock: aName [
 	block := SLVMBasicBlock new name: aName.
 	function addBasicBlock: block.
 	^ block.
+]
+
+{ #category : #'instance creation' }
+SLVMBuilder >> newBasicBlockHere: aName [
+	^ currentBlock := self newBasicBlock: aName
 ]
 
 { #category : #'logical operations' }

@@ -505,6 +505,17 @@ SLVMBasicBlock >> setChain: anInstructionChain [
 ]
 
 { #category : #accessing }
+SLVMBasicBlock >> size [
+	| result |
+	self flag: 'TODO: Add a cache for the size'.
+	result := 0.
+	self instructionsDo: [ :ins |
+		result := result + 1
+	].
+	^ result
+]
+
+{ #category : #accessing }
 SLVMBasicBlock >> successors [
 	^ successors
 ]

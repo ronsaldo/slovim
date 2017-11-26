@@ -365,6 +365,11 @@ SLVMType >> internalHash [
 ]
 
 { #category : #testing }
+SLVMType >> isAggregateType [
+	^ false
+]
+
+{ #category : #testing }
 SLVMType >> isArrayType [
 	^ false
 ]
