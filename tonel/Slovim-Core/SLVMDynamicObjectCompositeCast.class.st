@@ -2,7 +2,7 @@
 I am a casting instruction for boxing and unboxing pointers in dynamic objects.
 "
 Class {
-	#name : #SLVMDynamicObjectPointerCast,
+	#name : #SLVMDynamicObjectCompositeCast,
 	#superclass : #SLVMCast,
 	#instVars : [
 		'unchecked'
@@ -11,44 +11,44 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-SLVMDynamicObjectPointerCast class >> source: source targetType: targetType typeObject: typeObject [
+SLVMDynamicObjectCompositeCast class >> source: source targetType: targetType typeObject: typeObject [
 	^ self new source: source targetType: targetType typeObject: typeObject
 ]
 
 { #category : #initialization }
-SLVMDynamicObjectPointerCast >> initialize [
+SLVMDynamicObjectCompositeCast >> initialize [
 	super initialize.
 	unchecked := false.
 ]
 
 { #category : #testing }
-SLVMDynamicObjectPointerCast >> isDynamicObjectReferenceCreator [
+SLVMDynamicObjectCompositeCast >> isDynamicObjectReferenceCreator [
 	^ true
 ]
 
 { #category : #'as yet unclassified' }
-SLVMDynamicObjectPointerCast >> source: source targetType: targetType [
+SLVMDynamicObjectCompositeCast >> source: source targetType: targetType [
 	self shouldNotImplement
 ]
 
 { #category : #'as yet unclassified' }
-SLVMDynamicObjectPointerCast >> source: source targetType: targetType typeObject: typeObject [
+SLVMDynamicObjectCompositeCast >> source: source targetType: targetType typeObject: typeObject [
 	self parameters: { source . typeObject }.
 	type := targetType
 	
 ]
 
 { #category : #'as yet unclassified' }
-SLVMDynamicObjectPointerCast >> typeObject [
+SLVMDynamicObjectCompositeCast >> typeObject [
 	^ parameters second
 ]
 
 { #category : #accessing }
-SLVMDynamicObjectPointerCast >> unchecked [
+SLVMDynamicObjectCompositeCast >> unchecked [
 	^ unchecked
 ]
 
 { #category : #accessing }
-SLVMDynamicObjectPointerCast >> unchecked: anObject [
+SLVMDynamicObjectCompositeCast >> unchecked: anObject [
 	unchecked := anObject
 ]

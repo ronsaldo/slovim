@@ -311,6 +311,16 @@ SLVMBuilder >> dynamicObjectToPointerCast: source target: targetType typeObject:
 	^ self addInstruction: (SLVMDynamicObjectToPointerCast source: source targetType: targetType typeObject: typeObject) name: resultName
 ]
 
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToStructureCast: source target: targetType typeObject: typeObject [
+	^ self dynamicObjectToStructureCast: source target: targetType typeObject: typeObject name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToStructureCast: source target: targetType typeObject: typeObject name: resultName [
+	^ self addInstruction: (SLVMDynamicObjectToStructureCast source: source targetType: targetType typeObject: typeObject) name: resultName
+]
+
 { #category : #accessing }
 SLVMBuilder >> dynamicObjectType [
 	^ self compilationTarget dynamicObjectType
@@ -948,6 +958,16 @@ SLVMBuilder >> store: value in: variable [
 { #category : #instructions }
 SLVMBuilder >> store: value in: variable name: resultName [
 	^ self addInstruction: (SLVMStoreInstruction value: value variable: variable) name: resultName
+]
+
+{ #category : #casting }
+SLVMBuilder >> structureToDynamicObjectCast: source target: targetType typeObject: typeObject [
+	^ self structureToDynamicObjectCast: source target: targetType typeObject: typeObject name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> structureToDynamicObjectCast: source target: targetType typeObject: typeObject name: resultName [
+	^ self addInstruction: (SLVMStructureToDynamicObjectCast source: source targetType: targetType typeObject: typeObject) name: resultName
 ]
 
 { #category : #arithmetic }

@@ -81,5 +81,5 @@ SLVMPrimitiveType >> size: anObject [
 
 { #category : #writing }
 SLVMPrimitiveType >> write: value intoPointer: pointer [
-	^ pointer perform: self selectorForStoringIntoPointer with: value
+	^ value perform: self selectorForStoringIntoPointer with: pointer
 ]
