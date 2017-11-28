@@ -798,8 +798,7 @@ SLVMPharoFunctionCodeGenerator >> visitStore: anInstruction [
 		^ self storeAndPopValueIntoPointer: anInstruction
 	].
 
-	self visitExpression: anInstruction value.
-	self storeAndPopStackTopIntoVariable: variable.
+	variable storeAndPopValue: anInstruction value with: self
 ]
 
 { #category : #visiting }

@@ -50,3 +50,21 @@ SLVMPharoObjectSlot >> slotIndex [
 SLVMPharoObjectSlot >> slotIndex: anObject [
 	slotIndex := anObject
 ]
+
+{ #category : #'as yet unclassified' }
+SLVMPharoObjectSlot >> storeAndPopValue: value with: functionCodeGenerator [
+	self isReceiverSlot ifTrue: [ 
+		functionCodeGenerator
+			visitExpression: value;
+			storeInstVar: slotIndex + 1;
+			popTop
+	] ifFalse: [
+		functionCodeGenerator
+			visitExpression: pointer;
+			pushLiteral: slotIndex + 1;
+			visitExpression: value;
+			send: #instVarAt:put:;
+			popTop
+	].
+
+]

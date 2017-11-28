@@ -30,6 +30,12 @@ SLVMPharoVariable >> emitStoreStackTopWith: aCodeGenerator [
 	self subclassResponsibility
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMPharoVariable >> storeAndPopValue: value with: functionCodeGenerator [
+	functionCodeGenerator visitExpression: value.
+	functionCodeGenerator storeAndPopStackTopIntoVariable: self.
+]
+
 { #category : #accessing }
 SLVMPharoVariable >> type [
 	^ type
