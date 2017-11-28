@@ -127,6 +127,12 @@ SLVMStructureType >> memberAt: constantValue [
 	^ types at: constantValue value + 1
 ]
 
+{ #category : #private }
+SLVMStructureType >> minimalAlignment: anAlignment [
+	alignment := alignment max: anAlignment.
+	size := size alignedTo: alignment.
+]
+
 { #category : #accessing }
 SLVMStructureType >> name [
 	^ name
@@ -167,6 +173,12 @@ SLVMStructureType >> printOn: aStream [
 	].
 	aStream nextPutAll: '}'.
 	
+]
+
+{ #category : #'pointer accessing' }
+SLVMStructureType >> readFromPointer: pointer [
+	behavior ifNil: [ ^ super readFromPointer: pointer ].
+	^ pointer _slvm_loadStructureValue: behavior
 ]
 
 { #category : #accessing }
