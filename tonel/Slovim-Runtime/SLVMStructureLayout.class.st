@@ -94,6 +94,12 @@ SLVMStructureLayout >> isCustomLayout [
 ]
 
 { #category : #accessing }
+SLVMStructureLayout >> minimalAlignment: anAlignment [
+	structureAlignment := structureAlignment max: anAlignment.
+	structureSize := structureSize alignedTo: structureAlignment.
+]
+
+{ #category : #accessing }
 SLVMStructureLayout >> size [
 	^ 0
 ]
