@@ -11,13 +11,18 @@ Class {
 }
 
 { #category : #construction }
+SLVMSAsmCompilationTarget class >> forTarget: aSAsmCompilationTarget [
+	^ self basicNew target: aSAsmCompilationTarget; initialize.
+]
+
+{ #category : #construction }
 SLVMSAsmCompilationTarget class >> x86 [
-	^ self new target: SAsmCompilationTargetX86 new
+	^ self forTarget: SAsmCompilationTargetX86 new
 ]
 
 { #category : #construction }
 SLVMSAsmCompilationTarget class >> x86_64 [
-	^ self new target: SAsmCompilationTargetX86_64 new
+	^ self forTarget: SAsmCompilationTargetX86_64 new
 ]
 
 { #category : #accessing }
@@ -35,9 +40,9 @@ SLVMSAsmCompilationTarget >> canonicalName [
 	^ target canonicalName
 ]
 
-{ #category : #'operating systems' }
-SLVMSAsmCompilationTarget >> double [
-	^ self isWin32 ifTrue: [ self doubleAlign8 ] ifFalse: [ self doubleAlign4 ]
+{ #category : #initialization }
+SLVMSAsmCompilationTarget >> createTargetTypes [
+	^ SLVMSAsmCompilationTargetTypes new target: target
 ]
 
 { #category : #'operating systems' }
@@ -98,16 +103,6 @@ SLVMSAsmCompilationTarget >> pic [
 { #category : #'position indepence code' }
 SLVMSAsmCompilationTarget >> pie [
 	target positionIndependentCode: true; executable: true
-]
-
-{ #category : #accessing }
-SLVMSAsmCompilationTarget >> pointerAlignment [
-	^ target pointerAlignment
-]
-
-{ #category : #accessing }
-SLVMSAsmCompilationTarget >> pointerSize [
-	^ target pointerSize
 ]
 
 { #category : #accessing }
