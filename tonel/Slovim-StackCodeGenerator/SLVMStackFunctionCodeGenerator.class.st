@@ -318,6 +318,11 @@ SLVMStackFunctionCodeGenerator >> visitUnaryOperation: anInstruction [
 ]
 
 { #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitUnreachable: anInstruction [
+	^ SLVMETreeUnreachable new type: anInstruction type
+]
+
+{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitZeroExtend: anInstruction [
 	^ self addParametersOf: anInstruction
 		into: (SLVMETreeZeroExtend new type: anInstruction type)

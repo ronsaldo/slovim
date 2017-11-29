@@ -813,6 +813,12 @@ SLVMPharoFunctionCodeGenerator >> visitUnaryExpression: anUnaryExpression [
 	self send: (UnaryOperationMessageMap at: anUnaryExpression operation)
 ]
 
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitUnreachable: anInstruction [
+	self pushReceiver;
+	 send: #_slvm_unreachable
+]
+
 { #category : #'as yet unclassified' }
 SLVMPharoFunctionCodeGenerator >> withDebugSourceLocation: newSourceLocation do: aBlock [
 	| oldSourceLocation |
