@@ -641,12 +641,14 @@ SLVMPharoFunctionCodeGenerator >> visitDynamicObjectToBoolCast: cast [
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitDynamicObjectToFloatCast: cast [
-	self visitExpression: cast source
+	self visitExpression: cast source.
+	self send: #asFloat.
 ]
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitDynamicObjectToIntCast: cast [
-	self visitExpression: cast source
+	self visitExpression: cast source.
+	self send: #asInteger.
 ]
 
 { #category : #visiting }

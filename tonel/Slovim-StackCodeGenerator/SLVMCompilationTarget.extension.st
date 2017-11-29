@@ -2,13 +2,20 @@ Extension { #name : #SLVMCompilationTarget }
 
 { #category : #'*Slovim-StackCodeGenerator' }
 SLVMCompilationTarget class >> forCurrentImage [
-	^ (Smalltalk wordSize = 4 ifTrue: [ self pharo32 ] ifFalse: [ self pharo64 ])
-		currentImage: true
+	^ self forCurrentImageWithoutLowcode
 ]
 
 { #category : #'*Slovim-StackCodeGenerator' }
 SLVMCompilationTarget class >> forCurrentImageWithLowcode [
 	^ (Smalltalk wordSize = 4 ifTrue: [ self pharoLowcode32 ] ifFalse: [ self pharoLowcode64 ])
+		types: SLVMCompilationTargetTypes forCurrentImage;
+		currentImage: true
+]
+
+{ #category : #'*Slovim-StackCodeGenerator' }
+SLVMCompilationTarget class >> forCurrentImageWithoutLowcode [
+	^ (Smalltalk wordSize = 4 ifTrue: [ self pharo32 ] ifFalse: [ self pharo64 ])
+		types: SLVMCompilationTargetTypes forCurrentImage;
 		currentImage: true
 ]
 
