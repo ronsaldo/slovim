@@ -95,6 +95,15 @@ SLVMArrayType >> size [
 	^ self isBounded ifTrue: [ baseType size * elements ] ifFalse: [ 0 ]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMArrayType >> storeAndPopValueIntoPointerWith: irBuilder [
+	^ irBuilder
+		pushLiteral: self;
+		send: #_slvm_storeArrayValueInto:type:;
+		popTop
+	
+]
+
 { #category : #'element accessing' }
 SLVMArrayType >> strideWithIndex: index [
 	^ index isConstantValue ifTrue: [ 0 ] ifFalse: [ baseType size ]
