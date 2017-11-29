@@ -2,9 +2,7 @@ Class {
 	#name : #SLVMCompilationTarget,
 	#superclass : #SLVMObject,
 	#instVars : [
-		'dynamicObjectType',
-		'voidPointerType',
-		'objectModel',
+		'types',
 		'emittingDebugInformation'
 	],
 	#category : #'Slovim-Core-Type'
@@ -12,7 +10,7 @@ Class {
 
 { #category : #types }
 SLVMCompilationTarget >> bool [
-	^ SLVMType boolType
+	^ types bool
 ]
 
 { #category : #accessing }
@@ -27,27 +25,32 @@ SLVMCompilationTarget >> canonicalName [
 
 { #category : #types }
 SLVMCompilationTarget >> char [
-	^ SLVMType charType
+	^ types char
+]
+
+{ #category : #initialization }
+SLVMCompilationTarget >> createTargetTypes [
+	self subclassResponsibility
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> double [
-	^ self subclassResponsibility
+	^ types double
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> doubleAlign4 [
-	^ SLVMType doubleAlign4Type
+	^ types doubleAlign4
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> doubleAlign8 [
-	^ SLVMType doubleAlign8Type
+	^ types doubleAlign8
 ]
 
-{ #category : #accessing }
+{ #category : #types }
 SLVMCompilationTarget >> dynamicObjectType [
-	^ dynamicObjectType ifNil: [ dynamicObjectType := SLVMDynamicObjectType new size: self pointerSize ]
+	^ types dynamicObjectType
 ]
 
 { #category : #accessing }
@@ -62,7 +65,7 @@ SLVMCompilationTarget >> emittingDebugInformation: anObject [
 
 { #category : #types }
 SLVMCompilationTarget >> float [
-	^ SLVMType floatType
+	^ types float
 ]
 
 { #category : #convenience }
@@ -73,13 +76,13 @@ SLVMCompilationTarget >> generateLowLevelModule: aModule [
 { #category : #initialization }
 SLVMCompilationTarget >> initialize [
 	super initialize.
-	objectModel := SLVMNativeRuntimeObjectModel new target: self.
 	emittingDebugInformation := false.
+	types := self createTargetTypes
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> int [
-	^ SLVMType intType
+	^ types int
 ]
 
 { #category : #testing }
@@ -120,78 +123,87 @@ SLVMCompilationTarget >> objectHeaderSize [
 
 { #category : #accessing }
 SLVMCompilationTarget >> objectModel [
-	^ objectModel
+	^ types objectModel
 ]
 
 { #category : #accessing }
 SLVMCompilationTarget >> objectModel: anObject [
-	objectModel := anObject.
-	objectModel target: self
+	types objectModel: anObject
 ]
 
 { #category : #accessing }
 SLVMCompilationTarget >> pointerAlignment [
-	self subclassResponsibility
+	^ types pointerAlignment
 ]
 
 { #category : #accessing }
 SLVMCompilationTarget >> pointerSize [
-	self subclassResponsibility
+	^ types pointerSize
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> pointerTo: baseType [
-	^ self pointerTo: baseType storage: SLVMType genericStorage
+	^ types pointerTo: baseType
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> pointerTo: baseType storage: storageClass [
-	^ SLVMPointerType size: self pointerSize baseType: baseType storage: storageClass
+	^ types pointerTo: baseType storage: storageClass
 ]
 
 { #category : #accessing }
 SLVMCompilationTarget >> referenceAlignment [
-	^ self pointerAlignment
+	^ types referenceAlignment
 ]
 
 { #category : #accessing }
 SLVMCompilationTarget >> referenceSize [
-	^ self pointerSize
+	^ types referenceSize
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> short [
-	^ SLVMType shortType
+	^ types short
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> types [
+	^ types
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> types: aSetOfTypes [
+	types := aSetOfTypes
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> uchar [
-	^ SLVMType ucharType
+	^ types uchar
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> uint [
-	^ SLVMType uintType
+	^ types uint
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> ulong [
-	^ SLVMType ulongType
+	^ types ulong
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> ushort [
-	^ SLVMType ushortType
+	^ types ushort
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> void [
-	^ SLVMType voidType
+	^ types void
 ]
 
 { #category : #types }
 SLVMCompilationTarget >> voidPointerType [
-	^ voidPointerType ifNil: [ voidPointerType := self pointerTo: self void ]
+	^ types voidPointerType
 ]
 
 { #category : #initialization }

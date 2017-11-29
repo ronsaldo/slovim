@@ -345,6 +345,11 @@ SLVMType >> alignment [
 ]
 
 { #category : #testing }
+SLVMType >> asSLVMType [
+	^ self
+]
+
+{ #category : #testing }
 SLVMType >> asSlovimType: compilationTarget [
 	^ self
 ]

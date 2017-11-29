@@ -9,17 +9,7 @@ SLVM64BitsPointerCompilationTarget >> canonicalName [
 	^ #'generic-64'
 ]
 
-{ #category : #types }
-SLVM64BitsPointerCompilationTarget >> double [
-	^ SLVMType doubleAlign8Type
-]
-
-{ #category : #accessing }
-SLVM64BitsPointerCompilationTarget >> pointerAlignment [
-	^ 8
-]
-
-{ #category : #accessing }
-SLVM64BitsPointerCompilationTarget >> pointerSize [
-	^ 8
+{ #category : #initialization }
+SLVM64BitsPointerCompilationTarget >> createTargetTypes [
+	^ SLVM64BitsPointerCompilationTargetTypes new
 ]

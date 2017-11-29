@@ -9,17 +9,7 @@ SLVM32BitsPointerCompilationTarget >> canonicalName [
 	^ #'generic-32'
 ]
 
-{ #category : #types }
-SLVM32BitsPointerCompilationTarget >> double [
-	^ self doubleAlign4
-]
-
-{ #category : #accessing }
-SLVM32BitsPointerCompilationTarget >> pointerAlignment [
-	^ 4
-]
-
-{ #category : #accessing }
-SLVM32BitsPointerCompilationTarget >> pointerSize [
-	^ 4
+{ #category : #initialization }
+SLVM32BitsPointerCompilationTarget >> createTargetTypes [
+	^ SLVM32BitsPointerCompilationTargetTypes new
 ]
