@@ -125,7 +125,8 @@ SLVMInternalObjectPointer >> _slvm_int8Value: anInteger [
 { #category : #'value accessors' }
 SLVMInternalObjectPointer >> _slvm_loadStructureValue: internalStructureType [
 	| result |
-	offset = 0 ifTrue: [ ^ object _slvm_loadStructureValue: internalStructureType ].
+	(offset = 0 and: [object class == internalStructureType]) ifTrue:[ ^ object _slvm_loadStructureValue: internalStructureType ].
+
 	result := internalStructureType new.
 	1 to: internalStructureType structureSize do: [ :i |
 		result byteAt: i put: (object byteAt: i + offset)
@@ -136,6 +137,15 @@ SLVMInternalObjectPointer >> _slvm_loadStructureValue: internalStructureType [
 { #category : #arithmetic }
 SLVMInternalObjectPointer >> _slvm_pointerAddOffset: extraOffset [
 	^ self class object: object offset: offset + extraOffset
+]
+
+{ #category : #'value accessors' }
+SLVMInternalObjectPointer >> _slvm_storeBytes: bytes count: aCount [
+	1 to: aCount do: [ :i |
+		object
+			basicAt: offset + i put: (bytes at: i)
+	].
+
 ]
 
 { #category : #'value accessors' }

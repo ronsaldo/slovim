@@ -15,12 +15,17 @@ Class {
 
 { #category : #'instance creation' }
 SLVMNativeOrderedCollection class >> for: type [
-	^ self new type: type asLowcodeType
+	^ self new type: type asSLVMType
 ]
 
 { #category : #'instance creation' }
 SLVMNativeOrderedCollection class >> for: type new: initialCapacity [
-	^ self new type: type asLowcodeType; capacity: initialCapacity; yourself
+	^ self new type: type asSLVMType; capacity: initialCapacity; yourself
+]
+
+{ #category : #'as yet unclassified' }
+SLVMNativeOrderedCollection >> _slvm_storeArrayValueInto: target type: arrayType [
+	target _slvm_storeBytes: data count: arrayType size
 ]
 
 { #category : #adding }
@@ -132,13 +137,6 @@ SLVMNativeOrderedCollection >> initialize [
 	capacity := 0.
 ]
 
-{ #category : #'type checking' }
-SLVMNativeOrderedCollection >> lowcodeCheckArrayArgument: expectedElementType elements: expectedNumberOfElements [
-	(expectedElementType withoutAliases ~= type withoutAliases or: [ self size < expectedNumberOfElements ]) ifTrue: [
-		super lowcodeCheckArrayArgument: expectedElementType elements: expectedNumberOfElements
- ]
-]
-
 { #category : #copying }
 SLVMNativeOrderedCollection >> postCopy [
 	data := data copy.
@@ -181,12 +179,12 @@ SLVMNativeOrderedCollection >> type: anObject [
 
 { #category : #private }
 SLVMNativeOrderedCollection >> uncheckedAt: index [
-	^ type fromStructure: data offset: (self computeElementOffset: index).
+	^ type readFromPointer: (SLVMInternalObjectPointer object: data offset: (self computeElementOffset: index))
 ]
 
 { #category : #private }
 SLVMNativeOrderedCollection >> uncheckedAt: index put: anElement [
-	type write: anElement toStructure: data offset: (self computeElementOffset: index).
+	type write: anElement intoPointer: (SLVMInternalObjectPointer object: data offset: (self computeElementOffset: index)).
 	^ anElement
 ]
 

@@ -1,8 +1,26 @@
 Class {
 	#name : #SLVMInternalStructure,
 	#superclass : #Object,
+	#classInstVars : [
+		'_slvm_type'
+	],
 	#category : #'Slovim-Runtime-Slots'
 }
+
+{ #category : #accessing }
+SLVMInternalStructure class >> _slvm_type [
+	^ _slvm_type
+]
+
+{ #category : #accessing }
+SLVMInternalStructure class >> _slvm_type: aType [
+	_slvm_type :=  aType
+]
+
+{ #category : #accessing }
+SLVMInternalStructure class >> asSLVMType [
+	^ _slvm_type
+]
 
 { #category : #'instance creation' }
 SLVMInternalStructure class >> basicNew [
@@ -237,4 +255,18 @@ SLVMInternalStructure >> gtInspectorVariableNodesIn: aCollection [
 	aCollection
 		addAll: ((self class allSlots collect: [ :slot | 
 			GTInspectorSlotNode hostObject: self slot: slot ]))
+]
+
+{ #category : #'as yet unclassified' }
+SLVMInternalStructure >> storeBytesIn: aByteArray [
+	self storeBytesIn: aByteArray position: 1
+]
+
+{ #category : #'as yet unclassified' }
+SLVMInternalStructure >> storeBytesIn: aByteArray position: byteArrayPosition [
+	| layoutSize |
+	layoutSize := self class structureSize.
+	1 to: layoutSize do: [ :i |
+		aByteArray byteAt: byteArrayPosition + i - 1 put: (self basicAt: i)
+	]
 ]

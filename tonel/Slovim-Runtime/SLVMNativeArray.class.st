@@ -27,6 +27,11 @@ SLVMNativeArray class >> new: aSize [
 	self error: 'A type is required'
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMNativeArray >> _slvm_storeArrayValueInto: target type: arrayType [
+	target _slvm_storeBytes: data count: arrayType size
+]
+
 { #category : #converting }
 SLVMNativeArray >> asByteArray [
 	^ data
@@ -61,7 +66,7 @@ SLVMNativeArray >> elementType [
 
 { #category : #private }
 SLVMNativeArray >> initFor: newType size: newSize [
-	type := newType asLowcodeType.
+	type := newType asSLVMType.
 	size := newSize.
 	data := ByteArray new: self rawDataSize.
 ]
@@ -98,13 +103,13 @@ SLVMNativeArray >> species [
 	^ Array
 ]
 
-{ #category : #private }
+{ #category : #accessing }
 SLVMNativeArray >> uncheckedAt: index [
-	^ type fromStructure: data offset: (self computeElementOffset: index).
+	^ type readFromPointer: (SLVMInternalObjectPointer object: data offset: (self computeElementOffset: index))
 ]
 
 { #category : #private }
 SLVMNativeArray >> uncheckedAt: index put: anElement [
-	type write: anElement toStructure: data offset: (self computeElementOffset: index).
+	type write: anElement intoPointer: (SLVMInternalObjectPointer object: data offset: (self computeElementOffset: index)).
 	^ anElement
 ]
