@@ -122,6 +122,14 @@ SLVMInternalObjectPointer >> _slvm_int8Value: anInteger [
 		basicAt: offset + 1 put: anInteger & 16rff
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMInternalObjectPointer >> _slvm_loadBytesInto: target count: aCount [
+	1 to: aCount do: [ :i |
+		target byteAt: i put: (object basicAt: offset + i)
+	].
+
+]
+
 { #category : #'value accessors' }
 SLVMInternalObjectPointer >> _slvm_loadStructureValue: internalStructureType [
 	| result |
