@@ -90,6 +90,15 @@ SLVMArrayType >> printOn: aStream [
 	aStream nextPut: $]
 ]
 
+{ #category : #writing }
+SLVMArrayType >> readFromPointer: pointer [
+	| result |
+	self isBounded ifFalse: [ ^ #() ].
+	result := SLVMNativeArray for: baseType new: elements.
+	pointer _slvm_loadBytesInto: result rawData count: self size.
+	^ result
+]
+
 { #category : #accessing }
 SLVMArrayType >> size [
 	^ self isBounded ifTrue: [ baseType size * elements ] ifFalse: [ 0 ]
@@ -112,4 +121,9 @@ SLVMArrayType >> strideWithIndex: index [
 { #category : #accessing }
 SLVMArrayType >> typeOfMemberAt: index [
 	^ self memberAt: index
+]
+
+{ #category : #writing }
+SLVMArrayType >> write: value intoPointer: pointer [
+	pointer _slvm_storeBytes: value count: self size
 ]

@@ -225,3 +225,9 @@ SLVMStructureType >> types: anObject [
 	types := anObject.
 	self computeLayout.
 ]
+
+{ #category : #'pointer accessing' }
+SLVMStructureType >> write: value intoPointer: pointer [
+	behavior ifNil: [ pointer _slvm_storeBytes: value count: self size ].
+	^ pointer _slvm_storeStructureValue: value behavior: behavior
+]

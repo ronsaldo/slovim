@@ -71,7 +71,7 @@ SLVMIntegerType >> registerClass [
 
 { #category : #'as yet unclassified' }
 SLVMIntegerType >> selectorForLoadingFromPointer [
-	^ ('_slvm_', (signed ifTrue: [ 'u' ] ifFalse: [ '' ]) , 'int' , (size * 8) asString , 'Value') asSymbol
+	^ ('_slvm_', (signed ifTrue: [ '' ] ifFalse: [ 'u' ]) , 'int' , (size * 8) asString , 'Value') asSymbol
 ]
 
 { #category : #accessing }
