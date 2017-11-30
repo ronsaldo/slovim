@@ -94,6 +94,7 @@ SLVMPharoFunctionCodeGenerator class >> initialize [
 	UnaryOperationMessageMap := Dictionary newFromPairs: #(
 		neg negated
 		not bitInvert
+		lnot not
 		
 		fneg negated
 		fsqrt sqrt
