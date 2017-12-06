@@ -1,6 +1,8 @@
 Class {
 	#name : #SLVMInternalObjectPointer,
 	#superclass : #Object,
+	#traits : 'TSLVMInternalStructureAccessingPrimitives',
+	#classTraits : 'TSLVMInternalStructureAccessingPrimitives classTrait',
 	#instVars : [
 		'object',
 		'offset'
@@ -19,126 +21,94 @@ SLVMInternalObjectPointer class >> object: object offset: offset [
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_boolValue [
-	^ (object basicAt: offset + 1) ~~ 0
+SLVMInternalObjectPointer >> _slvm_boolValueAt: extraOffset [
+	^ object _slvm_boolValueAt: offset + extraOffset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_boolValue: aBoolean [
-	^ object basicAt: offset + 1 put: (aBoolean ifTrue: [1] ifFalse: [0])
+SLVMInternalObjectPointer >> _slvm_boolValueAt: extraOffset put: value [
+	^ object _slvm_boolValueAt: offset + extraOffset put: value
+]
+
+{ #category : #'aggregate accessors' }
+SLVMInternalObjectPointer >> _slvm_copySource [
+	^ object
+]
+
+{ #category : #'aggregate accessors' }
+SLVMInternalObjectPointer >> _slvm_copySourceOffset [
+	^ 1 + offset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_float32Value [
-	^ Float fromIEEE32Bit: self _slvm_uint32Value
+SLVMInternalObjectPointer >> _slvm_float32ValueAt: extraOffset [
+	^ object _slvm_float32ValueAt: offset + extraOffset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_float32Value: aFloat [
-	^ self _slvm_uint32Value: aFloat asIEEE32BitWord
+SLVMInternalObjectPointer >> _slvm_float32ValueAt: extraOffset put: value [
+	^ object _slvm_float32ValueAt: offset + extraOffset put: value
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_float64Value [
-	^ Float fromIEEE64Bit: self _slvm_uint64Value
+SLVMInternalObjectPointer >> _slvm_float64ValueAt: extraOffset [
+	^ object _slvm_float64ValueAt: offset + extraOffset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_float64Value: aValue [
-	^ self _slvm_uint64Value: ((aValue basicAt: 1) << 32) | (aValue basicAt: 2)
+SLVMInternalObjectPointer >> _slvm_float64ValueAt: extraOffset put: value [
+	^ object _slvm_float64ValueAt: offset + extraOffset put: value
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_int16Value [
-	| result |
-	result := (object basicAt: offset + 1) |
-		((object basicAt: offset + 2) << 8).
-	^ (result & 16r7FFF) - (result & 16r8000)
+SLVMInternalObjectPointer >> _slvm_int16ValueAt: extraOffset [
+	^ object _slvm_int16ValueAt: offset + extraOffset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_int16Value: anInteger [
-	object
-		basicAt: offset + 1 put: anInteger & 16rff;
-		basicAt: offset + 2 put: (anInteger >> 8) & 16rff
+SLVMInternalObjectPointer >> _slvm_int16ValueAt: extraOffset put: value [
+	^ object _slvm_int16ValueAt: offset + extraOffset put: value
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_int32Value [
-	| result |
-	result := (object basicAt: offset + 1) |
-		((object basicAt: offset + 2) << 8) |
-		((object basicAt: offset + 3) << 16) |
-		((object basicAt: offset + 4) << 24).
-	^ (result & 16r7FFFFFFF) - (result & 16r80000000)
+SLVMInternalObjectPointer >> _slvm_int32ValueAt: extraOffset [
+	^ object _slvm_int32ValueAt: offset + extraOffset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_int32Value: anInteger [
-	object
-		basicAt: offset + 1 put: anInteger & 16rff;
-		basicAt: offset + 2 put: (anInteger >> 8) & 16rff;
-		basicAt: offset + 3 put: (anInteger >> 16) & 16rff;
-		basicAt: offset + 4 put: (anInteger >> 24) & 16rff
+SLVMInternalObjectPointer >> _slvm_int32ValueAt: extraOffset put: value [
+	^ object _slvm_int32ValueAt: offset + extraOffset put: value
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_int64Value [
-	| result |
-	result := (object basicAt: offset + 1) |
-		((object basicAt: offset + 2) << 8) |
-		((object basicAt: offset + 3) << 16) |
-		((object basicAt: offset + 4) << 24) |
-		((object basicAt: offset + 5) << 32) |
-		((object basicAt: offset + 6) << 40) |
-		((object basicAt: offset + 7) << 48) |
-		((object basicAt: offset + 8) << 56).
-	^ (result & 16r7FFFFFFFFFFFFFFF) - (result & 16r8000000000000000)
+SLVMInternalObjectPointer >> _slvm_int64ValueAt: extraOffset [
+	^ object _slvm_int64ValueAt: offset + extraOffset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_int64Value: anInteger [
-	object
-		basicAt: offset + 1 put: anInteger & 16rff;
-		basicAt: offset + 2 put: (anInteger >> 8) & 16rff;
-		basicAt: offset + 3 put: (anInteger >> 16) & 16rff;
-		basicAt: offset + 4 put: (anInteger >> 24) & 16rff;
-		basicAt: offset + 5 put: (anInteger >> 32) & 16rff;
-		basicAt: offset + 6 put: (anInteger >> 40) & 16rff;
-		basicAt: offset + 7 put: (anInteger >> 48) & 16rff;
-		basicAt: offset + 8 put: (anInteger >> 56) & 16rff
+SLVMInternalObjectPointer >> _slvm_int64ValueAt: extraOffset put: value [
+	^ object _slvm_int64ValueAt: offset + extraOffset put: value
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_int8Value [
-	| result |
-	result := (object basicAt: offset + 1).
-	^ (result & 16r7F) - (result & 16r80)
+SLVMInternalObjectPointer >> _slvm_int8ValueAt: extraOffset [
+	^ object _slvm_int8ValueAt: offset + extraOffset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_int8Value: anInteger [
-	object
-		basicAt: offset + 1 put: anInteger & 16rff
-]
-
-{ #category : #'as yet unclassified' }
-SLVMInternalObjectPointer >> _slvm_loadBytesInto: target count: aCount [
-	1 to: aCount do: [ :i |
-		target byteAt: i put: (object basicAt: offset + i)
-	].
-
+SLVMInternalObjectPointer >> _slvm_int8ValueAt: extraOffset put: value [
+	^ object _slvm_int8ValueAt: offset + extraOffset put: value
 ]
 
 { #category : #'value accessors' }
 SLVMInternalObjectPointer >> _slvm_loadStructureValue: internalStructureType [
 	| result |
-	(offset = 0 and: [object class == internalStructureType]) ifTrue:[ ^ object _slvm_loadStructureValue: internalStructureType ].
+	(offset = 0 and: [object class == internalStructureType]) ifTrue:[
+		^ object _slvm_loadStructureValue: internalStructureType
+	].
 
 	result := internalStructureType new.
-	1 to: internalStructureType structureSize do: [ :i |
-		result byteAt: i put: (object byteAt: i + offset)
-	].
+	result _slvm_replaceBytesFrom: 1 to: internalStructureType structureSize with: object startingAt: offset + 1.
 	^ result
 ]
 
@@ -148,86 +118,58 @@ SLVMInternalObjectPointer >> _slvm_pointerAddOffset: extraOffset [
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_storeBytes: bytes count: aCount [
-	1 to: aCount do: [ :i |
-		object
-			basicAt: offset + i put: (bytes at: i)
-	].
-
+SLVMInternalObjectPointer >> _slvm_replaceBytesFrom: start to: stop with: replacement startingAt: repStart [
+	^ object _slvm_replaceBytesFrom: offset + start to: offset + stop with: replacement startingAt: repStart
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_storeStructureValue: value behavior: behavior [
-	1 to: behavior structureSize do: [ :i |
-		object byteAt: i + offset put: (value byteAt: i)
-	].
+SLVMInternalObjectPointer >> _slvm_uint16ValueAt: extraOffset [
+	^ object _slvm_uint16ValueAt: offset + extraOffset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_uint16Value [
-	^ (object basicAt: offset + 1) |
-		((object basicAt: offset + 2) << 8)
+SLVMInternalObjectPointer >> _slvm_uint16ValueAt: extraOffset put: value [
+	^ object _slvm_uint16ValueAt: offset + extraOffset put: value
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_uint16Value: anInteger [
-	object
-		basicAt: offset + 1 put: anInteger & 16rff;
-		basicAt: offset + 2 put: (anInteger >> 8) & 16rff
+SLVMInternalObjectPointer >> _slvm_uint32ValueAt: extraOffset [
+	^ object _slvm_uint32ValueAt: offset + extraOffset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_uint32Value [
-	^ (object basicAt: offset + 1) |
-		((object basicAt: offset + 2) << 8) |
-		((object basicAt: offset + 3) << 16) |
-		((object basicAt: offset + 4) << 24)
+SLVMInternalObjectPointer >> _slvm_uint32ValueAt: extraOffset put: value [
+	^ object _slvm_uint32ValueAt: offset + extraOffset put: value
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_uint32Value: anInteger [
-	object
-		basicAt: offset + 1 put: anInteger & 16rff;
-		basicAt: offset + 2 put: (anInteger >> 8) & 16rff;
-		basicAt: offset + 3 put: (anInteger >> 16) & 16rff;
-		basicAt: offset + 4 put: (anInteger >> 24) & 16rff
-
+SLVMInternalObjectPointer >> _slvm_uint64ValueAt: extraOffset [
+	^ object _slvm_uint64ValueAt: offset + extraOffset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_uint64Value [
-	^ (object basicAt: offset + 1) |
-		((object basicAt: offset + 2) << 8) |
-		((object basicAt: offset + 3) << 16) |
-		((object basicAt: offset + 4) << 24) |
-		((object basicAt: offset + 5) << 32) |
-		((object basicAt: offset + 6) << 40) |
-		((object basicAt: offset + 7) << 48) |
-		((object basicAt: offset + 8) << 56)
+SLVMInternalObjectPointer >> _slvm_uint64ValueAt: extraOffset put: value [
+	^ object _slvm_uint64ValueAt: offset + extraOffset put: value
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_uint64Value: anInteger [
-	object
-		basicAt: offset + 1 put: anInteger & 16rff;
-		basicAt: offset + 2 put: (anInteger >> 8) & 16rff;
-		basicAt: offset + 3 put: (anInteger >> 16) & 16rff;
-		basicAt: offset + 4 put: (anInteger >> 24) & 16rff;
-		basicAt: offset + 5 put: (anInteger >> 32) & 16rff;
-		basicAt: offset + 6 put: (anInteger >> 40) & 16rff;
-		basicAt: offset + 7 put: (anInteger >> 48) & 16rff;
-		basicAt: offset + 8 put: (anInteger >> 56) & 16rff
+SLVMInternalObjectPointer >> _slvm_uint8ValueAt: extraOffset [
+	^ object _slvm_uint8ValueAt: offset + extraOffset
 ]
 
 { #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_uint8Value [
-	^ (object basicAt: offset + 1)
+SLVMInternalObjectPointer >> _slvm_uint8ValueAt: extraOffset put: value [
+	^ object _slvm_uint8ValueAt: offset + extraOffset put: value
 ]
 
-{ #category : #'value accessors' }
-SLVMInternalObjectPointer >> _slvm_uint8Value: anInteger [
-	object
-		basicAt: offset + 1 put: anInteger & 16rff
+{ #category : #accessing }
+SLVMInternalObjectPointer >> byteAt: index [
+	^ object byteAt: offset + index
+]
+
+{ #category : #accessing }
+SLVMInternalObjectPointer >> byteAt: index put: value [
+	^ object byteAt: offset + index put: value
 ]
 
 { #category : #accessing }

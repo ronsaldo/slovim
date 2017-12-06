@@ -1,6 +1,8 @@
 Class {
 	#name : #SLVMInternalStructure,
 	#superclass : #Object,
+	#traits : 'TSLVMInternalStructureAccessingPrimitives',
+	#classTraits : 'TSLVMInternalStructureAccessingPrimitives classTrait',
 	#classInstVars : [
 		'_slvm_type'
 	],
@@ -43,118 +45,104 @@ SLVMInternalStructure class >> structureSize [
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_boolValue [
-	^ (self basicAt: 1) ~~ 0
+SLVMInternalStructure >> _slvm_boolValueAt: offset [
+	"Booleans are just integers in C word"
+	^ (self _slvm_integerAt: offset + 1 size: 1 signed: false) == true
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_boolValue: aBoolean [
-	^ self basicAt: 1 put: (aBoolean ifTrue: [1] ifFalse: [0])
+SLVMInternalStructure >> _slvm_boolValueAt: offset put: value [
+	"Booleans are just integers in C word"
+	^ self integerAt: offset + 1 put: (value ifTrue:[1] ifFalse:[0]) size: 1 signed: false
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_float32Value [
-	^ Float fromIEEE32Bit: self _slvm_uint32Value
+SLVMInternalStructure >> _slvm_float32ValueAt: extraOffset [
+	^ self _slvm_primitiveFloatAt: extraOffset + 1
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_float32Value: aFloat [
-	^ self _slvm_uint32Value: aFloat asIEEE32BitWord
+SLVMInternalStructure >> _slvm_float32ValueAt: extraOffset put: value [
+	^ self _slvm_primitiveFloatAt: extraOffset + 1 put: value
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_float64Value [
-	^ Float fromIEEE64Bit: self _slvm_uint64Value
+SLVMInternalStructure >> _slvm_float64ValueAt: extraOffset [
+	^ self _slvm_primitiveDoubleAt: extraOffset + 1
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_float64Value: aValue [
-	^ self _slvm_uint64Value: ((aValue basicAt: 1) << 32) | (aValue basicAt: 2)
+SLVMInternalStructure >> _slvm_float64ValueAt: extraOffset put: value [
+	^ self _slvm_primitiveDoubleAt: extraOffset + 1 put: value
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_int16Value [
-	| result |
-	result := (self basicAt: 1) |
-		((self basicAt: 2) << 8).
-	^ (result & 16r7FFF) - (result & 16r8000)
+SLVMInternalStructure >> _slvm_int16ValueAt: extraOffset [
+	"Return a 16-bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 size: 2 signed: true
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_int16Value: anInteger [
-	self
-		basicAt: 1 put: anInteger & 16rff;
-		basicAt: 2 put: (anInteger >> 8) & 16rff
+SLVMInternalStructure >> _slvm_int16ValueAt: extraOffset put: value [
+	"Return a 16-bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 put: value size: 2 signed: true
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_int32Value [
-	| result |
-	result := (self basicAt: 1) |
-		((self basicAt: 2) << 8) |
-		((self basicAt: 3) << 16) |
-		((self basicAt: 4) << 24).
-	^ (result & 16r7FFFFFFF) - (result & 16r80000000)
+SLVMInternalStructure >> _slvm_int32ValueAt: extraOffset [
+	"Return a 32-bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 size: 4 signed: true
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_int32Value: anInteger [
-	self
-		basicAt: 1 put: anInteger & 16rff;
-		basicAt: 2 put: (anInteger >> 8) & 16rff;
-		basicAt: 3 put: (anInteger >> 16) & 16rff;
-		basicAt: 4 put: (anInteger >> 24) & 16rff
+SLVMInternalStructure >> _slvm_int32ValueAt: extraOffset put: value [
+	"Return a 32-bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 put: value size: 4 signed: true
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_int64Value [
-	| result |
-	result := (self basicAt: 1) |
-		((self basicAt: 2) << 8) |
-		((self basicAt: 3) << 16) |
-		((self basicAt: 4) << 24) |
-		((self basicAt: 5) << 32) |
-		((self basicAt: 6) << 40) |
-		((self basicAt: 7) << 48) |
-		((self basicAt: 8) << 56).
-	^ (result & 16r7FFFFFFFFFFFFFFF) - (result & 16r8000000000000000)
+SLVMInternalStructure >> _slvm_int64ValueAt: extraOffset [
+	"Return a 16bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 size: 8 signed: true
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_int64Value: anInteger [
-	self
-		basicAt: 1 put: anInteger & 16rff;
-		basicAt: 2 put: (anInteger >> 8) & 16rff;
-		basicAt: 3 put: (anInteger >> 16) & 16rff;
-		basicAt: 4 put: (anInteger >> 24) & 16rff;
-		basicAt: 5 put: (anInteger >> 32) & 16rff;
-		basicAt: 6 put: (anInteger >> 40) & 16rff;
-		basicAt: 7 put: (anInteger >> 48) & 16rff;
-		basicAt: 8 put: (anInteger >> 56) & 16rff
+SLVMInternalStructure >> _slvm_int64ValueAt: extraOffset put: value [
+	"Return a 64-bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 put: value size: 8 signed: true
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_int8Value [
-	| result |
-	result := (self basicAt: 1).
-	^ (result & 16r7F) - (result & 16r80)
+SLVMInternalStructure >> _slvm_int8ValueAt: extraOffset [
+	"Return a 8-bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 size: 1 signed: true
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_int8Value: anInteger [
-	self
-		basicAt: 1 put: anInteger & 16rff
+SLVMInternalStructure >> _slvm_int8ValueAt: extraOffset put: value [
+	"Return a 8-bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 put: value size: 1 signed: true
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_loadStructureValue: internalStructureType [
-	| result |
-	internalStructureType == self class ifTrue: [ ^ self copy ].
-	result := internalStructureType new.
-	1 to: internalStructureType structureSize do: [ :i |
-		result byteAt: i put: (self byteAt: i)
-	].
-	^ result
+SLVMInternalStructure >> _slvm_integerAt: byteOffset put: value size: nBytes signed: aBoolean [
+	"Primitive. Store the given value as integer of nBytes size
+	in the receiver. Fail if the value is out of range.
+	Note: This primitive will access memory in the outer space if
+	invoked from ExternalAddress."
+	<primitive: 'primitiveFFIIntegerAtPut' module:'SqueakFFIPrims'>
+	^self primitiveFailed
+]
+
+{ #category : #'value accessors' }
+SLVMInternalStructure >> _slvm_integerAt: byteOffset size: nBytes signed: aBoolean [
+	"We are just reusing the FFI primitives here."
+	
+	"Primitive. Return an integer of nBytes size from the receiver.
+	Note: This primitive will access memory in the outer space if
+	invoked from ExternalAddress."
+	<primitive: 'primitiveFFIIntegerAt' module:'SqueakFFIPrims'>
+	^self primitiveFailed
 ]
 
 { #category : #arithmetic }
@@ -163,77 +151,75 @@ SLVMInternalStructure >> _slvm_pointerAddOffset: extraOffset [
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_storeStructureValue: value behavior: behavior [
-	1 to: behavior structureSize do: [ :i |
-		self byteAt: i put: (value byteAt: i)
-	].
+SLVMInternalStructure >> _slvm_primitiveDoubleAt: byteOffset [
+	<primitive:'primitiveFFIDoubleAt' module:'SqueakFFIPrims'>
+	^self primitiveFailed
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_uint16Value [
-	^ (self basicAt: 1) |
-		((self basicAt: 2) << 8)
+SLVMInternalStructure >> _slvm_primitiveDoubleAt: byteOffset put: value [
+	<primitive:'primitiveFFIDoubleAtPut' module:'SqueakFFIPrims'>
+	^self primitiveFailed
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_uint16Value: anInteger [
-	self
-		basicAt: 1 put: anInteger & 16rff;
-		basicAt: 2 put: (anInteger >> 8) & 16rff
+SLVMInternalStructure >> _slvm_primitiveFloatAt: byteOffset [
+	<primitive:'primitiveFFIFloatAt' module:'SqueakFFIPrims'>
+	^self primitiveFailed
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_uint32Value [
-	^ (self basicAt: 1) |
-		((self basicAt: 2) << 8) |
-		((self basicAt: 3) << 16) |
-		((self basicAt: 4) << 24)
+SLVMInternalStructure >> _slvm_primitiveFloatAt: byteOffset put: value [
+	<primitive:'primitiveFFIFloatAtPut' module:'SqueakFFIPrims'>
+	^self primitiveFailed
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_uint32Value: anInteger [
-	self
-		basicAt: 1 put: anInteger & 16rff;
-		basicAt: 2 put: (anInteger >> 8) & 16rff;
-		basicAt: 3 put: (anInteger >> 16) & 16rff;
-		basicAt: 4 put: (anInteger >> 24) & 16rff
-
+SLVMInternalStructure >> _slvm_uint16ValueAt: extraOffset [
+	"Return a 16-bit unsigned integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 size: 2 signed: false
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_uint64Value [
-	^ (self basicAt: 1) |
-		((self basicAt: 2) << 8) |
-		((self basicAt: 3) << 16) |
-		((self basicAt: 4) << 24) |
-		((self basicAt: 5) << 32) |
-		((self basicAt: 6) << 40) |
-		((self basicAt: 7) << 48) |
-		((self basicAt: 8) << 56)
+SLVMInternalStructure >> _slvm_uint16ValueAt: extraOffset put: value [
+	"Return a 16-bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 put: value size: 2 signed: false
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_uint64Value: anInteger [
-	self
-		basicAt: 1 put: anInteger & 16rff;
-		basicAt: 2 put: (anInteger >> 8) & 16rff;
-		basicAt: 3 put: (anInteger >> 16) & 16rff;
-		basicAt: 4 put: (anInteger >> 24) & 16rff;
-		basicAt: 5 put: (anInteger >> 32) & 16rff;
-		basicAt: 6 put: (anInteger >> 40) & 16rff;
-		basicAt: 7 put: (anInteger >> 48) & 16rff;
-		basicAt: 8 put: (anInteger >> 56) & 16rff
+SLVMInternalStructure >> _slvm_uint32ValueAt: extraOffset [
+	"Return a 32-bit unsigned integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 size: 4 signed: false
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_uint8Value [
-	^ (self basicAt: 1)
+SLVMInternalStructure >> _slvm_uint32ValueAt: extraOffset put: value [
+	"Return a 32-bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 put: value size: 4 signed: false
 ]
 
 { #category : #'value accessors' }
-SLVMInternalStructure >> _slvm_uint8Value: anInteger [
-	self
-		basicAt: 1 put: anInteger & 16rff
+SLVMInternalStructure >> _slvm_uint64ValueAt: extraOffset [
+	"Return a 64-bit unsigned integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 size: 8 signed: false
+]
+
+{ #category : #'value accessors' }
+SLVMInternalStructure >> _slvm_uint64ValueAt: extraOffset put: value [
+	"Return a 64-bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 put: value size: 8 signed: false
+]
+
+{ #category : #'value accessors' }
+SLVMInternalStructure >> _slvm_uint8ValueAt: extraOffset [
+	"Return a 8-bit unsigned integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 size: 1 signed: false
+]
+
+{ #category : #'value accessors' }
+SLVMInternalStructure >> _slvm_uint8ValueAt: extraOffset put: value [
+	"Return a 8-bit signed integer starting at the given byte offset"
+	^self _slvm_integerAt: extraOffset + 1 put: value size: 1 signed: false
 ]
 
 { #category : #accessing }
@@ -280,18 +266,9 @@ SLVMInternalStructure >> readBytesFrom: aByteArray size: readSize position: byte
 
 { #category : #'memory access' }
 SLVMInternalStructure >> replaceFrom: start to: stop with: replacement startingAt: repStart [
-	"This destructively replaces elements from start to stop in the receiver 
-	starting at index, repStart, in the sequenceable collection, 
-	replacementCollection. Answer the receiver. No range checks are 
-	performed."
+	"This method is required by Fuel."
+	^ self _slvm_replaceBytesFrom: start to: stop with: replacement startingAt: repStart
 
-	"This method is required by Fuel"
-
-	| index repOff |
-	repOff := repStart - start.
-	index := start - 1.
-	[(index := index + 1) <= stop]
-		whileTrue: [self byteAt: index put: (replacement at: repOff + index)]
 ]
 
 { #category : #'memory access' }
