@@ -794,6 +794,11 @@ SLVMPharoFunctionCodeGenerator >> visitReturn: anInstruction [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitSignExtend: cast [
+	self visitExpression: cast source
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitStore: anInstruction [
 	| variable |
 	variable := self convertPointerIntoVariable: anInstruction variable.
@@ -820,6 +825,11 @@ SLVMPharoFunctionCodeGenerator >> visitUnaryExpression: anUnaryExpression [
 SLVMPharoFunctionCodeGenerator >> visitUnreachable: anInstruction [
 	self pushReceiver;
 	 send: #_slvm_unreachable
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitZeroExtend: cast [
+	self visitExpression: cast source
 ]
 
 { #category : #'as yet unclassified' }

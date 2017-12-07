@@ -2015,7 +2015,19 @@ SLVMPharoLowcodeFunctionCodeGenerator >> visitIntToFloatCast: cast [
 ]
 
 { #category : #visiting }
+SLVMPharoLowcodeFunctionCodeGenerator >> visitSignExtend: cast [
+	self visitExpression: cast source.
+	self halt
+]
+
+{ #category : #visiting }
 SLVMPharoLowcodeFunctionCodeGenerator >> visitStructureToDynamicObjectCast: cast [
+	self visitExpression: cast source.
+	self halt
+]
+
+{ #category : #visiting }
+SLVMPharoLowcodeFunctionCodeGenerator >> visitZeroExtend: cast [
 	self visitExpression: cast source.
 	self halt
 ]
