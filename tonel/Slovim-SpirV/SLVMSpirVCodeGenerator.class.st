@@ -967,6 +967,40 @@ SLVMSpirVCodeGenerator >> visitReturnVoid: returnVoidInstruction [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitSampleDepthRefImplicitLod: ssaInstruction [
+	| sampledTexture texcoord resultType depthReference requiredCoordinates providedCoordinates combinedTexcoordDepthRef combinedTexcoordDepthRefType |
+	^ self instructionTranslation: ssaInstruction do: [ :id |
+		sampledTexture := self translateValue: ssaInstruction sampledTexture.
+		texcoord := self translateValue: ssaInstruction texcoord.
+		depthReference := self translateValue: ssaInstruction depthReference.
+		
+		"This is a hack for a NVIDIA bug."
+		requiredCoordinates := ssaInstruction sampledTexture type texture requiredCoordinates.
+		providedCoordinates := ssaInstruction texcoord type elements.
+		(requiredCoordinates < 4 and: [ providedCoordinates = requiredCoordinates ]) ifTrue: [
+			
+			combinedTexcoordDepthRef := builder newId.
+			combinedTexcoordDepthRefType := SLVMType floatVectorTypes at: providedCoordinates + 1.
+			
+			builder addFunctionInstruction: (SpirVInstruction
+				opcode: SpvOpCompositeConstruct
+				type: (self translateValue: combinedTexcoordDepthRefType)
+				result: combinedTexcoordDepthRef
+				operands: { texcoord . depthReference }).
+			
+			texcoord := combinedTexcoordDepthRef.
+		].
+	
+		resultType := self translateValue: ssaInstruction type.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpImageSampleDrefImplicitLod
+			type: resultType
+			result: id
+			operands: { sampledTexture . texcoord . depthReference })
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitSampleImplicitLod: sampleImplicitLod [
 	| sampledTexture texcoord resultType |
 	^ self instructionTranslation: sampleImplicitLod do: [ :id |
