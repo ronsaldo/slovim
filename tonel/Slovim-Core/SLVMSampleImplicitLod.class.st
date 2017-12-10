@@ -1,9 +1,6 @@
 Class {
 	#name : #SLVMSampleImplicitLod,
-	#superclass : #SLVMInstruction,
-	#instVars : [
-		'type'
-	],
+	#superclass : #SLVMSampleInstruction,
 	#category : #'Slovim-Core-SSA'
 }
 
@@ -22,11 +19,6 @@ SLVMSampleImplicitLod >> mnemonic [
 	^ #sampleImplicitLOD
 ]
 
-{ #category : #accessing }
-SLVMSampleImplicitLod >> sampledTexture [
-	^ parameters first
-]
-
 { #category : #construction }
 SLVMSampleImplicitLod >> sampledTexture: sampledTexture texcoord: texcoord [
 	| sampledTextureType |
@@ -34,14 +26,4 @@ SLVMSampleImplicitLod >> sampledTexture: sampledTexture texcoord: texcoord [
 	sampledTextureType := sampledTexture type.
 	self assert: sampledTextureType isSampledTextureType.
 	type := SLVMVectorType baseType: sampledTextureType texture sampledType elements: 4
-]
-
-{ #category : #accessing }
-SLVMSampleImplicitLod >> texcoord [
-	^ parameters second
-]
-
-{ #category : #accessing }
-SLVMSampleImplicitLod >> type [
-	^ type
 ]

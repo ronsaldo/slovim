@@ -927,6 +927,16 @@ SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord [
 ]
 
 { #category : #instructions }
+SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord depthReference: depthReference [
+	^ self sample: combinedSampler implicitLodAtCoord: texcoord depthReference: depthReference name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord depthReference: depthReference name: resultName [
+	^ self addInstruction: (SLVMSampleDepthRefImplicitLod sampledTexture: combinedSampler texcoord: texcoord depthReference: depthReference) name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord name: resultName [
 	^ self addInstruction: (SLVMSampleImplicitLod sampledTexture: combinedSampler texcoord: texcoord) name: resultName
 ]

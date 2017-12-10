@@ -83,6 +83,11 @@ SLVMTextureType >> multisample: anObject [
 ]
 
 { #category : #accessing }
+SLVMTextureType >> requiredCoordinates [
+	^ dimensions + (array asBit)
+]
+
+{ #category : #accessing }
 SLVMTextureType >> sampled [
 	^ sampled
 ]

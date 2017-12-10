@@ -76,6 +76,10 @@ SLVMValueVisitor >> visitReturnVoid: instruction [
 ]
 
 { #category : #visiting }
+SLVMValueVisitor >> visitSampleDepthRefImplicitLod: instruction [
+]
+
+{ #category : #visiting }
 SLVMValueVisitor >> visitSampleImplicitLod: instruction [
 ]
 
