@@ -258,6 +258,27 @@ SLVMHighLevelLanguageCodeGenerator >> addSuccessorsPhi: instruction [
 SLVMHighLevelLanguageCodeGenerator >> applyFunctionMetadata: function to: functionNode [
 ]
 
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> convertTextureSample: sampledTexture texcoord: texcoord [
+	| texcoordValue textureType |
+	texcoordValue := self translateValue: texcoord.
+	textureType := sampledTexture type texture.
+	(textureType array and: [ self needTextureArrayLayerAsSeparateCoordinate ]) ifTrue: [
+		^ { SLVMHLVectorSwizzle new vector: texcoordValue; members: (0 to: textureType dimensions - 1) asArray.
+		    SLVMHLVectorSwizzle new vector: texcoordValue; members: {textureType dimensions}}
+	] ifFalse: [
+		^ {texcoordValue}
+	]
+
+]
+
+{ #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> convertTextureSample: sampledTexture texcoord: texcoord depthRef: depthReference [
+	| actualTexcoord |
+	actualTexcoord := self convertTextureSample: sampledTexture texcoord: texcoord.
+	^ actualTexcoord , { self translateValue: depthReference }
+]
+
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> decreaseIndentationLevel [
 	indentationLevel := indentationLevel - 1.
@@ -586,6 +607,11 @@ SLVMHighLevelLanguageCodeGenerator >> mapSpecialVariableLocation: location [
 { #category : #testing }
 SLVMHighLevelLanguageCodeGenerator >> needStructuredControlFlow [
 	^ true
+]
+
+{ #category : #testing }
+SLVMHighLevelLanguageCodeGenerator >> needTextureArrayLayerAsSeparateCoordinate [
+	^ false
 ]
 
 { #category : #'code generation' }
@@ -1595,8 +1621,8 @@ SLVMHighLevelLanguageCodeGenerator >> visitReturnVoid: instruction [
 SLVMHighLevelLanguageCodeGenerator >> visitSampleDepthRefImplicitLod: instruction [
 	^ self pureInstructionTranslation: instruction allocate: [ SLVMHLBuiltInCallStatement new ] do: [ :node |
 		node
-			function: #'sample.depth_ref_implicit_lod';
-			arguments: { self translateValue: instruction sampledTexture . self translateValue: instruction texcoord . self translateValue: instruction depthReference }
+				function: #'sample.depth_ref_implicit_lod';
+				arguments: { self translateValue: instruction sampledTexture } , (self convertTextureSample: instruction sampledTexture texcoord: instruction texcoord depthRef: instruction depthReference).
 	]
 ]
 
@@ -1605,7 +1631,7 @@ SLVMHighLevelLanguageCodeGenerator >> visitSampleImplicitLod: instruction [
 	^ self pureInstructionTranslation: instruction allocate: [ SLVMHLBuiltInCallStatement new ] do: [ :node |
 		node
 			function: #'sample.implicit_lod';
-			arguments: { self translateValue: instruction sampledTexture . self translateValue: instruction texcoord}
+			arguments: { self translateValue: instruction sampledTexture } , (self convertTextureSample: instruction sampledTexture texcoord: instruction texcoord)
 	]
 ]
 

@@ -504,6 +504,11 @@ SLVMMetalCodeGenerator >> mapSpecialVariableLocation: location [
 ]
 
 { #category : #testing }
+SLVMMetalCodeGenerator >> needTextureArrayLayerAsSeparateCoordinate [
+	^ true
+]
+
+{ #category : #testing }
 SLVMMetalCodeGenerator >> passGlobalsAsParameters [
 	^ true
 ]
