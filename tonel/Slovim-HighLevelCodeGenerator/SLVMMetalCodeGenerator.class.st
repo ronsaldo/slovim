@@ -208,6 +208,9 @@ SLVMMetalCodeGenerator class >> initializeTargetBuiltInMappings [
 
 		'sample.implicit_lod' (sample patternCall
 			(('${sampleFunction}' sample) ))
+
+		'sample.depth_ref_implicit_lod' (sample_compare patternCall
+			(('${sampleFunction}' sample_compare)))
 		
 		#'math.acos'	(#'metal::acos' call)
 		#'math.acosh'	(#'metal::acosh' call)
@@ -294,14 +297,34 @@ SLVMMetalCodeGenerator class >> initializeTypeMappings [
 		ushort3 'metal::ushort3'
 		ushort4 'metal::ushort4'
 		
+		texture1D 'metal::texture1d<float>'
+		texture1DArray 'metal::texture1d_array<float>'
 		texture2D 'metal::texture2d<float>'
+		texture2DArray 'metal::texture2d_array<float>'
 		textureCube 'metal::texturecube<float>'
+		textureCubeArray 'metal::texturecube_array<float>'
+
+		depthTexture2D 'metal::depth2d<float>'
+		depthTexture2DArray 'metal::depth2d_array<float>'
+		depthTextureCube 'metal::depthcube<float>'
+		depthTextureCubeArray 'metal::depthcube_array<float>'
+
 		sampler 'metal::sampler'
 	).
 	
 	SamplerTypeMapping := #(
+		texture1D sampler1D
+		texture1DArray sampler1DArray
 		texture2D sampler2D
+		texture2DArray sampler2DArray
 		textureCube samplerCube
+		textureCubeArray samplerCubeArray
+
+		depthTexture2D samplerDepth2D
+		depthTexture2DArray samplerDepth2DArray
+		depthTextureCube samplerDepthCube
+		depthTextureCubeArray samplerDepthCubeArray
+
 	).
 	
 	TypeDictionary := Dictionary new.

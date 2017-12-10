@@ -1592,6 +1592,15 @@ SLVMHighLevelLanguageCodeGenerator >> visitReturnVoid: instruction [
 ]
 
 { #category : #visitor }
+SLVMHighLevelLanguageCodeGenerator >> visitSampleDepthRefImplicitLod: instruction [
+	^ self pureInstructionTranslation: instruction allocate: [ SLVMHLBuiltInCallStatement new ] do: [ :node |
+		node
+			function: #'sample.depth_ref_implicit_lod';
+			arguments: { self translateValue: instruction sampledTexture . self translateValue: instruction texcoord . self translateValue: instruction depthReference }
+	]
+]
+
+{ #category : #visitor }
 SLVMHighLevelLanguageCodeGenerator >> visitSampleImplicitLod: instruction [
 	^ self pureInstructionTranslation: instruction allocate: [ SLVMHLBuiltInCallStatement new ] do: [ :node |
 		node
