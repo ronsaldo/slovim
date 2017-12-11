@@ -942,6 +942,16 @@ SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord name: result
 ]
 
 { #category : #instructions }
+SLVMBuilder >> sampleDepth: combinedSampler implicitLodAtCoord: texcoord [
+	^ self sampleDepth: combinedSampler implicitLodAtCoord: texcoord name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> sampleDepth: combinedSampler implicitLodAtCoord: texcoord name: resultName [
+	^ self addInstruction: (SLVMSampleDepthImplicitLod sampledTexture: combinedSampler texcoord: texcoord) name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> send: selector returnType: returnType receiver: receiver arguments: arguments [
 	^ self send: selector returnType: returnType receiver: receiver arguments: arguments name: function generateSymbol
 ]
