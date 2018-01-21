@@ -61,8 +61,43 @@ SLVMCompilationTargetTypes >> float [
 ]
 
 { #category : #types }
+SLVMCompilationTargetTypes >> float32 [
+	^ self float
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> float64 [
+	^ self double
+]
+
+{ #category : #types }
 SLVMCompilationTargetTypes >> int [
 	^ SLVMType intType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> int16 [
+	^ self short
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> int32 [
+	^ self int
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> int64 [
+	^ self long
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> int8 [
+	^ self char
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> long [
+	^ SLVMType longType
 ]
 
 { #category : #accessing }
@@ -119,6 +154,26 @@ SLVMCompilationTargetTypes >> uchar [
 { #category : #types }
 SLVMCompilationTargetTypes >> uint [
 	^ SLVMType uintType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> uint16 [
+	^ self ushort
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> uint32 [
+	^ self uint
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> uint64 [
+	^ self ulong
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> uint8 [
+	^ self uchar
 ]
 
 { #category : #types }

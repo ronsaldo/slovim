@@ -68,6 +68,16 @@ SLVMCompilationTarget >> float [
 	^ types float
 ]
 
+{ #category : #types }
+SLVMCompilationTarget >> float32 [
+	^ types float32
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> float64 [
+	^ types float64
+]
+
 { #category : #convenience }
 SLVMCompilationTarget >> generateLowLevelModule: aModule [
 	^ self lowLevelCodeGeneratorClass translateModule: aModule
@@ -83,6 +93,26 @@ SLVMCompilationTarget >> initialize [
 { #category : #types }
 SLVMCompilationTarget >> int [
 	^ types int
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> int16 [
+	^ types int16
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> int32 [
+	^ types int32
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> int64 [
+	^ types int64
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> int8 [
+	^ types int8
 ]
 
 { #category : #testing }
@@ -184,6 +214,26 @@ SLVMCompilationTarget >> uchar [
 { #category : #types }
 SLVMCompilationTarget >> uint [
 	^ types uint
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> uint16 [
+	^ types uint16
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> uint32 [
+	^ types uint32
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> uint64 [
+	^ types uint64
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> uint8 [
+	^ types uint8
 ]
 
 { #category : #types }
