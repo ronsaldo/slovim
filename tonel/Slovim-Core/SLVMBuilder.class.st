@@ -982,6 +982,11 @@ SLVMBuilder >> shuffleVector: firstVector with: secondVector components: compone
 ]
 
 { #category : #casting }
+SLVMBuilder >> signExtend: source target: targetType [
+	^ self signExtend: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
 SLVMBuilder >> signExtend: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMSignExtend source: source targetType: targetType) name: resultName
 ]
