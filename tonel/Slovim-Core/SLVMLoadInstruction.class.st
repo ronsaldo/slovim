@@ -2,7 +2,8 @@ Class {
 	#name : #SLVMLoadInstruction,
 	#superclass : #SLVMInstruction,
 	#instVars : [
-		'type'
+		'type',
+		'volatile'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -26,6 +27,12 @@ SLVMLoadInstruction >> foldConstant [
 	].
 	
 	^ super foldConstant
+]
+
+{ #category : #initialization }
+SLVMLoadInstruction >> initialize [
+	super initialize.
+	volatile := false.
 ]
 
 { #category : #testing }
@@ -55,4 +62,14 @@ SLVMLoadInstruction >> variable: variableReference [
 	refType := variableReference type.
 	self assert: refType isPointerType.
 	type := refType baseType.
+]
+
+{ #category : #accessing }
+SLVMLoadInstruction >> volatile [
+	^ volatile
+]
+
+{ #category : #accessing }
+SLVMLoadInstruction >> volatile: anObject [
+	volatile := anObject
 ]

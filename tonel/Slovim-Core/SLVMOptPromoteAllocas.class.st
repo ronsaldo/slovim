@@ -59,9 +59,10 @@ SLVMOptPromoteAllocas >> addUndefinedTo: definitionsPerNode allocaInstruction: a
 	^ undefinedInstruction
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
 SLVMOptPromoteAllocas >> canBePromoted: allocaInstruction [
 	allocaInstruction instructionReferences do: [ :ref |
+		((ref isLoad or: [ ref isStore ]) and: [ ref volatile ]) ifTrue: [ ^ false ].
 		(ref isLoad not and: [ ref isStore not ]) ifTrue: [ ^ false ]
 	].
 

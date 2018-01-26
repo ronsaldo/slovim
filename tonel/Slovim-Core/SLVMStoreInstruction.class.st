@@ -1,6 +1,9 @@
 Class {
 	#name : #SLVMStoreInstruction,
 	#superclass : #SLVMInstruction,
+	#instVars : [
+		'volatile'
+	],
 	#category : #'Slovim-Core-SSA'
 }
 
@@ -17,6 +20,12 @@ SLVMStoreInstruction >> accept: aVisitor [
 { #category : #testing }
 SLVMStoreInstruction >> hasOutputs [
 	^ false
+]
+
+{ #category : #initialization }
+SLVMStoreInstruction >> initialize [
+	super initialize.
+	volatile := false.
 ]
 
 { #category : #testing }
@@ -47,4 +56,14 @@ SLVMStoreInstruction >> value: value variable: variable [
 { #category : #accessing }
 SLVMStoreInstruction >> variable [
 	^ parameters second
+]
+
+{ #category : #accessing }
+SLVMStoreInstruction >> volatile [
+	^ volatile
+]
+
+{ #category : #accessing }
+SLVMStoreInstruction >> volatile: anObject [
+	volatile := anObject
 ]
