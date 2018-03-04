@@ -416,7 +416,9 @@ SLVMSpirVCodeGenerator >> translateModule: ssaModule exportList: exportList [
 { #category : #'code generation' }
 SLVMSpirVCodeGenerator >> translateValue: aValue [
 	valueReplacements at: aValue ifPresent: [ :replacementBlock | ^ replacementBlock value ].
-	^ translatedValues at: aValue ifAbsent: [
+	^ translatedValues at: aValue ifPresent: [ :existing |
+		existing ifNil: [ translatedValues at: aValue put: builder newId ]
+	] ifAbsent: [
 		aValue isInstruction ifTrue: [ ^ self generateLazyInstructionId: aValue ].
 		aValue accept: self
 	]
@@ -429,6 +431,20 @@ SLVMSpirVCodeGenerator >> valueTranslation: aValue do: aBlock [
 	valueId := builder newId.
 	translatedValues at: aValue put: valueId.
 	aBlock value: valueId.
+	^ valueId.
+]
+
+{ #category : #'as yet unclassified' }
+SLVMSpirVCodeGenerator >> valueTranslation: aValue prepare: aPrepareBlock do: aBlock [
+	| valueId preparationResult |
+	(aValue isType not and: [aValue isInstruction]) ifTrue: [ ^ instructionDictionary at: aValue ifAbsentPut: [ builder newId ]].
+	translatedValues at: aValue put: nil.
+	preparationResult := aPrepareBlock value.
+	
+	valueId := (translatedValues at: aValue) ifNil: [
+		translatedValues at: aValue put: builder newId
+	].
+	aBlock value: valueId value: preparationResult.
 	^ valueId.
 ]
 
@@ -939,9 +955,10 @@ SLVMSpirVCodeGenerator >> visitPhi: phiInstruction [
 
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitPointerType: pointerType [
-	| baseType storage |
-	^ self valueTranslation: pointerType do: [ :id |
-		baseType := self translateValue: pointerType baseType.
+	| storage |
+	^ self valueTranslation: pointerType
+		prepare: [ self translateValue: pointerType baseType ]
+		do: [ :id :baseType |
 		storage := StorageClassMap at: pointerType storage.
 		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypePointer result: id operands: { storage . baseType })
 	]
@@ -1066,11 +1083,11 @@ SLVMSpirVCodeGenerator >> visitStore: storeInstruction [
 	]
 ]
 
-{ #category : #visiting }
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitStructureType: structureType [
-	| types |
-	^ self valueTranslation: structureType do: [ :id |
-		types := structureType types collect: [:type | self translateValue: type ].
+	^ self valueTranslation: structureType
+		prepare: [ structureType types collect: [:type | self translateValue: type ] ]
+		do: [ :id :types |
 		builder addTypeInstruction: (SpirVInstruction
 			opcode: SpvOpTypeStruct
 			result: id
