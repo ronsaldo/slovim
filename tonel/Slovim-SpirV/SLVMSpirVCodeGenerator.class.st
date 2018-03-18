@@ -898,6 +898,7 @@ SLVMSpirVCodeGenerator >> visitMakeMatrix: makeMatrixInstruction [
 	^ self instructionTranslation: makeMatrixInstruction do: [ :id |
 		resultType := self translateValue: makeMatrixInstruction type.
 		arguments := makeMatrixInstruction parameters collect: [ :arg | self translateValue: arg ].
+		self assert: arguments size > 1.
 		builder addFunctionInstruction: (SpirVInstruction
 			opcode: SpvOpCompositeConstruct
 			type: resultType
@@ -912,6 +913,7 @@ SLVMSpirVCodeGenerator >> visitMakeVector: makeVectorInstruction [
 	^ self instructionTranslation: makeVectorInstruction do: [ :id |
 		resultType := self translateValue: makeVectorInstruction type.
 		arguments := makeVectorInstruction parameters collect: [ :arg | self translateValue: arg ].
+		self assert: arguments size > 1.
 		builder addFunctionInstruction: (SpirVInstruction
 			opcode: SpvOpCompositeConstruct
 			type: resultType
