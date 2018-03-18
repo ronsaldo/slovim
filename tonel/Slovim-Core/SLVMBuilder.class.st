@@ -675,6 +675,7 @@ SLVMBuilder >> makeMatrix: matrixType arguments: arguments [
 
 { #category : #instructions }
 SLVMBuilder >> makeMatrix: matrixType arguments: arguments name: resultName [
+	self assert: arguments size > 1.
 	^ self addInstruction: (SLVMMakeMatrix type: matrixType parameters: arguments) name: resultName
 ]
 
@@ -685,6 +686,7 @@ SLVMBuilder >> makeVector: vectorType arguments: arguments [
 
 { #category : #instructions }
 SLVMBuilder >> makeVector: vectorType arguments: arguments name: resultName [
+	self assert: arguments size > 1.
 	^ self addInstruction: (SLVMMakeVector type: vectorType parameters: arguments) name: resultName
 ]
 
