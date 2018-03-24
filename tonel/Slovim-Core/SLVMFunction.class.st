@@ -475,8 +475,10 @@ SLVMFunction >> gcStrategy: aGCStrategyName [
 
 { #category : #private }
 SLVMFunction >> generateSymbol [
+	| result |
+	result := gensymCount asString asSymbol.
 	gensymCount := gensymCount + 1.
-	^ (#g , gensymCount printString) asSymbol
+	^ result
 ]
 
 { #category : #'gt inspector extensions' }

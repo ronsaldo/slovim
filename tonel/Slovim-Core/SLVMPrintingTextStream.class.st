@@ -1,28 +1,49 @@
 Class {
 	#name : #SLVMPrintingTextStream,
 	#superclass : #SLVMPrintingStream,
+	#instVars : [
+		'runs'
+	],
 	#classVars : [
-		'IdentifierColor',
-		'KeywordColor'
+		'IdentifierAttributes',
+		'KeywordAttributes'
 	],
 	#category : #'Slovim-Core-Printing'
 }
 
-{ #category : #initialization }
+{ #category : #'as yet unclassified' }
 SLVMPrintingTextStream class >> fullPrintString: anObject [
-	^ Text streamContents: [ :out | anObject fullPrintOn: (self on: out) ]
+	| stream resultString |
+	resultString := ByteString streamContents: [ :out |
+		stream := self on: out.
+		anObject fullPrintOn: stream.
+	].
+	stream fillWithDefaultAttributes.
+	self assert: resultString size = stream runs size.
+	^ Text string: resultString runs: stream runs
 ]
 
 { #category : #initialization }
 SLVMPrintingTextStream class >> initialize [
 	super initialize.
-	IdentifierColor := TextColor color: Color orange.
-	KeywordColor := TextColor blue.
+	IdentifierAttributes := {TextColor color: Color orange}.
+	KeywordAttributes := {TextColor blue}.
+]
+
+{ #category : #'syntax highlighting' }
+SLVMPrintingTextStream >> fillWithDefaultAttributes [
+	runs add: #() withOccurrences: decoratedStream position - runs size
+]
+
+{ #category : #initialization }
+SLVMPrintingTextStream >> initialize [
+	super initialize.
+	runs := RunArray new.
 ]
 
 { #category : #'syntax highlighting' }
 SLVMPrintingTextStream >> putIdentifier: aString [
-	decoratedStream withAttribute: IdentifierColor do: [
+	self withAttributes: IdentifierAttributes do: [
 		self nextPutAll: aString
 	]
 	
@@ -30,8 +51,25 @@ SLVMPrintingTextStream >> putIdentifier: aString [
 
 { #category : #'syntax highlighting' }
 SLVMPrintingTextStream >> putKeyword: aString [
-	decoratedStream withAttribute: KeywordColor do: [
+	self withAttributes: KeywordAttributes do: [
 		self nextPutAll: aString
 	]
 	
+]
+
+{ #category : #accessing }
+SLVMPrintingTextStream >> runs [
+	^ runs
+]
+
+{ #category : #'syntax highlighting' }
+SLVMPrintingTextStream >> withAttributes: attributes do: aBlock [
+	| startPosition endPosition usedCount |
+	self fillWithDefaultAttributes.
+	startPosition := decoratedStream position.
+	aBlock value.
+	endPosition := decoratedStream position.
+	
+	usedCount := endPosition - startPosition.
+	runs add: attributes withOccurrences: usedCount
 ]
