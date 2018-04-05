@@ -18,6 +18,11 @@ SLVMNativeArray class >> for: type new: size [
 ]
 
 { #category : #'instance creation' }
+SLVMNativeArray class >> for: type withBytes: size [
+	^ self basicNew initFor: type withBytes: size
+]
+
+{ #category : #'instance creation' }
 SLVMNativeArray class >> new [
 	self error: 'A type is required'
 ]
@@ -69,6 +74,13 @@ SLVMNativeArray >> initFor: newType size: newSize [
 	type := newType asSLVMType.
 	size := newSize.
 	data := ByteArray new: self rawDataSize.
+]
+
+{ #category : #private }
+SLVMNativeArray >> initFor: newType withBytes: newData [
+	type := newType asSLVMType.
+	size := newData size // newType size.
+	data := newData
 ]
 
 { #category : #'type checking' }
