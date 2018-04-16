@@ -79,6 +79,31 @@ SLVMStructureType >> computeLayout [
 	size := currentOffset alignedTo: alignment.
 ]
 
+{ #category : #printing }
+SLVMStructureType >> fullPrintOn: aStream [
+	self fullPrintOn: aStream fromPrint: false
+]
+
+{ #category : #printing }
+SLVMStructureType >> fullPrintOn: aStream fromPrint: aBoolean [
+	types ifNil: [
+		aStream nextPutAll: 'opaque struct'.
+		name ifNotNil: [
+			aStream nextPutAll: name.
+		].
+		^ self
+	].
+
+	aStream nextPutAll: 'struct {'.
+	types doWithIndex: [ :type :index |
+		index > 1 ifTrue: [ aStream nextPutAll: ', ' ].
+		aStream print: type
+	].
+	aStream nextPutAll: '}'.
+	aBoolean ifFalse: [ aStream cr ]
+	
+]
+
 { #category : #comparing }
 SLVMStructureType >> hash [
 	^ self identityHash
@@ -166,13 +191,11 @@ SLVMStructureType >> offsets [
 
 { #category : #printing }
 SLVMStructureType >> printOn: aStream [
-	aStream nextPutAll: 'struct {'.
-	types doWithIndex: [ :type :index |
-		index > 1 ifTrue: [ aStream nextPutAll: ', ' ].
-		aStream print: type
+	name ifNotNil: [
+		aStream nextPutAll: name.
+		^ self
 	].
-	aStream nextPutAll: '}'.
-	
+	self fullPrintOn: aStream fromPrint: true
 ]
 
 { #category : #'pointer accessing' }

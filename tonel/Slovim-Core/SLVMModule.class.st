@@ -10,7 +10,8 @@ Class {
 		'anonymousGlobals',
 		'packages',
 		'classVariableClassMap',
-		'debugInformation'
+		'debugInformation',
+		'structures'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -37,6 +38,11 @@ SLVMModule >> addPackageElement: element topoSortResult: result topoSortAdded: a
 	].
 
 	result add: element.
+]
+
+{ #category : #adding }
+SLVMModule >> addStructure: aStructure [
+	structures add: aStructure
 ]
 
 { #category : #accessing }
@@ -120,6 +126,7 @@ SLVMModule >> debugInformation: anObject [
 
 { #category : #printing }
 SLVMModule >> fullPrintOn: aStream [
+	structures do: [ :struct | struct fullPrintOn: aStream ].
 	anonymousGlobals do: [ :val | val fullPrintOn: aStream ].
 	globalValues values do: [ :val | val fullPrintOn: aStream ].
 
@@ -246,6 +253,7 @@ SLVMModule >> gtTreeViewIn: composite [
 
 { #category : #initialization }
 SLVMModule >> initialize [
+	structures := OrderedCollection new.
 	anonymousGlobals := OrderedCollection new.
 	globalValues := OrderedDictionary new.
 	packages := OrderedCollection new.
@@ -302,4 +310,9 @@ SLVMModule >> sortPackageElements [
 	].
 	
 	^ result
+]
+
+{ #category : #accessing }
+SLVMModule >> structures [
+	^ structures
 ]

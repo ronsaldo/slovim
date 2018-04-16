@@ -203,6 +203,11 @@ SLVMBuilder >> compilationTarget [
 ]
 
 { #category : #constants }
+SLVMBuilder >> const: aValue type: aType [
+	^ SLVMConstant type: aType value: aValue
+]
+
+{ #category : #constants }
 SLVMBuilder >> constBool: aValue [
 	^ SLVMConstant bool: aValue
 ]
