@@ -620,6 +620,17 @@ SLVMSAsmFunctionCodeGenerator >> loadFrom: pointer scalarType: type into: result
 	self error: 'Unsupported scalar type loading.'.
 ]
 
+{ #category : #memory }
+SLVMSAsmFunctionCodeGenerator >> loadFromPointer: pointer type: type into: targetValue [
+	type isScalarType ifTrue: [
+		^ self loadFrom: pointer scalarType: type into: targetValue
+	].
+
+	"Aggregate type. We have to copy."
+	self assert: targetValue isAggregate.
+	blockBuilder tacCopy: pointer to: targetValue size: type size alignment: type alignment.
+]
+
 { #category : #accessing }
 SLVMSAsmFunctionCodeGenerator >> moduleTranslator [
 	^ moduleTranslator
@@ -1041,6 +1052,25 @@ SLVMSAsmFunctionCodeGenerator >> visitDynamicObjectToPointerCast: instruction [
 		into: result convention: (sasmTarget callingConventionNamed: convertionFunction callingConvention)
 ]
 
+{ #category : #memory }
+SLVMSAsmFunctionCodeGenerator >> visitExtractValue: instruction [
+	| aggregate result offset type indexConstant fieldPointer |
+	offset := 0.
+	type := instruction aggregate type.
+	instruction indices do: [ :index |
+		indexConstant := SLVMConstant int: index.
+		offset := type offsetWithIndex: indexConstant.
+		type := type typeOfMemberAt: indexConstant
+	].
+
+	aggregate := self translateValue: instruction aggregate.
+	result := self translateValue: instruction.
+	
+	fieldPointer := blockBuilder tacIntRegister.
+	blockBuilder tacAdd: aggregate with: offset into: fieldPointer.
+	self loadFromPointer: fieldPointer type: type into: result	
+]
+
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitFloatAdd: instruction [
 	self binaryFloat: instruction arithmetic: TacFloatAdd
@@ -1446,20 +1476,13 @@ SLVMSAsmFunctionCodeGenerator >> visitJump: instruction [
 
 { #category : #memory }
 SLVMSAsmFunctionCodeGenerator >> visitLoad: instruction [
-	| result variable type |
+	| result variable |
 	(allocaToVariableMap includesKey: instruction variable) ifTrue: [ ^ self ].
 	variable := self translateValue: instruction variable.
 	self assert: variable isRegisterScalarValue.
 
 	result := self translateValue: instruction.
-	type := instruction type.
-	type isScalarType ifTrue: [
-		^ self loadFrom: variable scalarType: type into: result
-	].
-
-	"Aggregate type. We have to copy."
-	self assert: result isAggregate.
-	blockBuilder tacCopy: variable to: result size: type size alignment: type alignment.
+	self loadFromPointer: variable type: instruction type into: result
 ]
 
 { #category : #'bitwise operations' }
