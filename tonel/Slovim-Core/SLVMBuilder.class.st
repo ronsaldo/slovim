@@ -343,6 +343,16 @@ SLVMBuilder >> dynamicObjectType [
 ]
 
 { #category : #instructions }
+SLVMBuilder >> extractValue: anAggregateValue indices: indicesValue [
+	^ self extractValue: anAggregateValue indices: indicesValue name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> extractValue: anAggregateValue indices: indicesValue name: resultName [
+	^ self addInstruction: (SLVMExtractValue aggregate: anAggregateValue indices: indicesValue) name: resultName
+]
+
+{ #category : #instructions }
 SLVMBuilder >> extractVector: aVectorValue element: indexValue [
 	^ self extractVector: aVectorValue element: indexValue name: function generateSymbol
 ]
