@@ -38,6 +38,11 @@ SLVMLLVMCodeGenerator >> convertName: aName [
 	]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLLVMCodeGenerator >> convertStructureContent: slvmStructure into: llvmStructure [
+	llvmStructure elements: (slvmStructure types collect: [:type | self translateType: type])
+]
+
 { #category : #initialization }
 SLVMLLVMCodeGenerator >> initialize [
 	super initialize.
@@ -88,6 +93,10 @@ SLVMLLVMCodeGenerator >> translateConstant: aConstant [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
+	module structures do: [ :structures |
+		self translateNamedStructure: structures
+	].
+
 	exportList do: [ :value |
 		self translateModuleElement: value
 	].
@@ -98,6 +107,19 @@ SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
 SLVMLLVMCodeGenerator >> translateModuleElement: value [
 	translatedModuleElements at: value ifPresent: [ :existent | ^ existent ].
 	^ value accept: self
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMCodeGenerator >> translateNamedStructure: aNamedStructure [
+	| convertedStructure |
+	convertedStructure := LLVMStructType new
+		context: self context;
+		name: ('%' , aNamedStructure name);
+		yourself.
+	translatedTypes at: aNamedStructure put: convertedStructure.
+	self llvmModule addNamedStructure: convertedStructure.
+	self convertStructureContent: aNamedStructure into: convertedStructure
+	
 ]
 
 { #category : #visiting }
@@ -172,6 +194,14 @@ SLVMLLVMCodeGenerator >> visitConstantValue: aConstantValue [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitFloatType: type [
+	type size = 2 ifTrue: [ ^ self context halfTy ].
+	type size = 4 ifTrue: [ ^ self context floatTy ].
+	type size = 8 ifTrue: [ ^ self context doubleTy ].
+	self error: 'Unsupported float type'
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitFunction: aFunction [
 	| functionType function |
 	functionType := self translateType: aFunction functionType.
@@ -207,4 +237,9 @@ SLVMLLVMCodeGenerator >> visitPointerType: type [
 	^ self recursiveType: type translationDo: [
 		LLVMPointerType getUnqual: (self translateType: type baseType)
 	]
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> visitStructureType: functionType [
+	self halt.
 ]

@@ -282,6 +282,33 @@ SLVMLLVMFunctionCodeGenerator >> visitCall: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitExtractValue: instruction [
+	^ LLVMExtractValueInst new
+		name: (self convertName: instruction name);
+		type: (self translateType: instruction type);
+		aggregate: (self translateValue: instruction aggregate);
+		indices: instruction indices;
+		yourself
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitFloatingPointCast: instruction [
+	instruction source type size < instruction type size ifTrue: [ 
+		^ LLVMFPExtInst new
+			type: (self translateType: instruction type);
+			name: (self convertName: instruction name);
+			source: (self translateValue: instruction source);
+			yourself
+	].
+	^ LLVMFPTruncInst new
+			type: (self translateType: instruction type);
+			name: (self convertName: instruction name);
+			source: (self translateValue: instruction source);
+			yourself
+
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitGetElementPointer: instruction [
 	^ LLVMGetElementPtrInst new
 		type: (self translateType: instruction type);
