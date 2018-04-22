@@ -23,6 +23,12 @@ SLVMArrayType >> accept: aVisitor [
 	^ aVisitor visitArrayType: self
 ]
 
+{ #category : #adding }
+SLVMArrayType >> addCount: extraElements [
+	extraElements = 0 ifTrue: [ ^ self ].
+	^ self class baseType: baseType elements: elements + extraElements
+]
+
 { #category : #accessing }
 SLVMArrayType >> alignment [
 	^ baseType alignment

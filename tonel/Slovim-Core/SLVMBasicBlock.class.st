@@ -22,6 +22,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #visiting }
+SLVMBasicBlock >> accept: aVisitor [
+	^ aVisitor visitBasicBlock: self
+]
+
 { #category : #adding }
 SLVMBasicBlock >> add: anInstruction [ 
 	self addQuiet: anInstruction.
