@@ -1,5 +1,5 @@
 Class {
 	#name : #LLVMCleanupReturnInst,
 	#superclass : #LLVMTerminatorInst,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Instructions'
 }

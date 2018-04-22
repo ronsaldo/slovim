@@ -9,7 +9,7 @@ Class {
 		'symbolGenerationCount',
 		'hasArgumentNames'
 	],
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-GlobalValues'
 }
 
 { #category : #'as yet unclassified' }
@@ -34,10 +34,7 @@ LLVMFunction >> addBasicBlock: basicBlock [
 
 { #category : #adding }
 LLVMFunction >> addBasicBlock: basicBlock before: previousBasicBlock [
-	self ensureArgumentNames.
-
 	basicBlock parent: self.
-	basicBlock name ifNil: [ basicBlock name: self generateSymbol ].
 	basicBlocks add: basicBlock
 
 ]
@@ -52,19 +49,9 @@ LLVMFunction >> basicBlocks [
 	^ basicBlocks
 ]
 
-{ #category : #adding }
-LLVMFunction >> ensureArgumentNames [
-	hasArgumentNames ifTrue: [ ^ self ].
-	hasArgumentNames := true.
-
-	arguments do: [ :arg |
-		arg name ifNil: [ arg name: self generateSymbol ]
-	].
-
-]
-
 { #category : #printing }
 LLVMFunction >> fullPrintOn: aStream [
+	self sanitizeNames.
 	basicBlocks ifEmpty: [
 		aStream << 'declare ' << linkage second << ' ' << visibility second << ' ' << dllStorageClass  second << callingConvenction << ' ' <<
 		functionType returnType name << ' @' << self name << ' ( '.
@@ -72,6 +59,11 @@ LLVMFunction >> fullPrintOn: aStream [
 		arguments doWithIndex: [ :arg :index |
 			index > 1 ifTrue: [ aStream << ', ' ].
 			arg printOnDeclaration: aStream
+		].
+	
+		functionType isVarArg ifTrue: [ 
+			arguments ifNotEmpty: [ aStream nextPutAll: ', ' ].
+			aStream nextPutAll: '...' .
 		].
 		
 		aStream << ' )'; lf.
@@ -85,6 +77,12 @@ LLVMFunction >> fullPrintOn: aStream [
 			index > 1 ifTrue: [ aStream << ', ' ].
 			arg printOnDefinition: aStream
 	].
+
+	functionType isVarArg ifTrue: [ 
+		arguments ifNotEmpty: [ aStream nextPutAll: ', ' ].
+		aStream nextPutAll: '...' .
+	].
+
 	aStream << ' ) {'; lf.
 	basicBlocks do: [ :bb | bb fullPrintOn: aStream ].
 	aStream << '}'; lf.
@@ -134,4 +132,19 @@ LLVMFunction >> initializeWithType: theFunctionType linkage: theLinkage name: th
 			yourself
 	].
 
+]
+
+{ #category : #printing }
+LLVMFunction >> sanitizeNames [
+	arguments do: [ :arg | arg name ifNil: [ arg name: self generateSymbol ] ].
+	basicBlocks do: [ :bb |
+		bb name ifNil: [ bb name: self generateSymbol ].
+		bb instructionsDo: [ :instruction  |
+			instruction name ifNil: [
+				instruction type isVoidTy ifFalse: [ 
+					instruction name: self generateSymbol
+				]
+			]
+		]
+	]
 ]

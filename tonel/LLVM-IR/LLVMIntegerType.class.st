@@ -4,7 +4,7 @@ Class {
 	#instVars : [
 		'bits'
 	],
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Types'
 }
 
 { #category : #'as yet unclassified' }
@@ -17,6 +17,14 @@ LLVMIntegerType class >> get: context bits: bits [
 	bits = 128 ifTrue: [ ^ self getInt128Ty: context ].
 
 	^ context typeAt: { self . bits } ifAbsentPut: [ self new bits: bits ]
+]
+
+{ #category : #'as yet unclassified' }
+LLVMIntegerType >> allOnesConstant [
+	^ LLVMConstantInt new
+		type: self;
+		value: (1 << bits) - 1;
+		yourself
 ]
 
 { #category : #accessing }
@@ -33,4 +41,20 @@ LLVMIntegerType >> bits: anObject [
 { #category : #testing }
 LLVMIntegerType >> isIntegerTy [
 	^ true
+]
+
+{ #category : #'as yet unclassified' }
+LLVMIntegerType >> oneConstant [
+	^ LLVMConstantInt new
+		type: self;
+		value: 1;
+		yourself
+]
+
+{ #category : #'as yet unclassified' }
+LLVMIntegerType >> zeroConstant [
+	^ LLVMConstantInt new
+		type: self;
+		value: 0;
+		yourself
 ]

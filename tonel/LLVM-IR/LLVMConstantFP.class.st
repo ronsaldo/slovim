@@ -1,5 +1,23 @@
 Class {
 	#name : #LLVMConstantFP,
 	#superclass : #LLVMConstantData,
-	#category : #'LLVM-IR'
+	#instVars : [
+		'value'
+	],
+	#category : #'LLVM-IR-Constants'
 }
+
+{ #category : #printing }
+LLVMConstantFP >> printOn: aStream [
+	aStream print: value
+]
+
+{ #category : #accessing }
+LLVMConstantFP >> value [
+	^ value
+]
+
+{ #category : #accessing }
+LLVMConstantFP >> value: anObject [
+	value := anObject
+]

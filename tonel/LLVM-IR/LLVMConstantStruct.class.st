@@ -1,5 +1,5 @@
 Class {
 	#name : #LLVMConstantStruct,
 	#superclass : #LLVMConstantAggregate,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Constants'
 }

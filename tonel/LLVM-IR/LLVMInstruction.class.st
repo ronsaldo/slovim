@@ -4,7 +4,7 @@ Class {
 	#instVars : [
 		'parent'
 	],
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Instructions'
 }
 
 { #category : #printing }

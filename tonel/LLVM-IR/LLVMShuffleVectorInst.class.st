@@ -1,5 +1,5 @@
 Class {
 	#name : #LLVMShuffleVectorInst,
 	#superclass : #LLVMInstruction,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Instructions'
 }

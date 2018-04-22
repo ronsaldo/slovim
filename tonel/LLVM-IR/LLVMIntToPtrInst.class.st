@@ -1,5 +1,5 @@
 Class {
 	#name : #LLVMIntToPtrInst,
 	#superclass : #LLVMCastInst,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Instructions'
 }

@@ -6,7 +6,7 @@ Class {
 		'params',
 		'isVarArg'
 	],
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Types'
 }
 
 { #category : #'as yet unclassified' }

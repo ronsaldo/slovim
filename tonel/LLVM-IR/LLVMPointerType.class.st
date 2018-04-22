@@ -5,7 +5,7 @@ Class {
 		'elementType',
 		'addressSpace'
 	],
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Types'
 }
 
 { #category : #'as yet unclassified' }
@@ -34,7 +34,7 @@ LLVMPointerType >> addressSpace: anObject [
 { #category : #accessing }
 LLVMPointerType >> createName [
 	addressSpace ~= 0 ifTrue: [ ^ '{1} addrspace ({2})*' format: { elementType name . addressSpace asString } ].
-	^ elementType name , ' *'
+	^ elementType name , '*'
 ]
 
 { #category : #accessing }

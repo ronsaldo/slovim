@@ -5,7 +5,7 @@ Class {
 		'context',
 		'name'
 	],
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Types'
 }
 
 { #category : #'as yet unclassified' }

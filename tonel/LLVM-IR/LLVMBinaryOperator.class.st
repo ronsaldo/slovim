@@ -6,7 +6,7 @@ Class {
 		'left',
 		'right'
 	],
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Instructions'
 }
 
 { #category : #accessing }

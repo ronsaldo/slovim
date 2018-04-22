@@ -1,5 +1,5 @@
 Class {
 	#name : #LLVMSequentialType,
 	#superclass : #LLVMCompositeType,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Types'
 }

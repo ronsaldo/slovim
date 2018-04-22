@@ -1,7 +1,7 @@
 Class {
 	#name : #LLVMMetadataType,
 	#superclass : #LLVMOpaqueType,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Types'
 }
 
 { #category : #'as yet unclassified' }

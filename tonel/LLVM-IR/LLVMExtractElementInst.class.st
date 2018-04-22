@@ -1,5 +1,5 @@
 Class {
 	#name : #LLVMExtractElementInst,
 	#superclass : #LLVMInstruction,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Instructions'
 }

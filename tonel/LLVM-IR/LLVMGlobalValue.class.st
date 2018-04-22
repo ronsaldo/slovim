@@ -31,7 +31,7 @@ Class {
 		'WeakAnyLinkage',
 		'WeakODRLinkage'
 	],
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-GlobalValues'
 }
 
 { #category : #linkage }
@@ -250,6 +250,11 @@ LLVMGlobalValue >> linkage [
 { #category : #accessing }
 LLVMGlobalValue >> linkage: anObject [
 	linkage := anObject
+]
+
+{ #category : #visibility }
+LLVMGlobalValue >> makePrivate [
+	self linkage: PrivateLinkage
 ]
 
 { #category : #printing }

@@ -1,5 +1,5 @@
 Class {
 	#name : #LLVMCatchSwitchInst,
 	#superclass : #LLVMTerminatorInst,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Instructions'
 }

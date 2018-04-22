@@ -1,7 +1,7 @@
 Class {
 	#name : #LLVMUnreachableInst,
 	#superclass : #LLVMTerminatorInst,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Instructions'
 }
 
 { #category : #printing }

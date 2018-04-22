@@ -4,7 +4,7 @@ Class {
 	#instVars : [
 		'bits'
 	],
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Types'
 }
 
 { #category : #accessing }
@@ -36,4 +36,20 @@ LLVMFloatingPointType >> isFloatingPointTy [
 { #category : #testing }
 LLVMFloatingPointType >> isHalfTy [
 	^ bits == 16
+]
+
+{ #category : #'as yet unclassified' }
+LLVMFloatingPointType >> oneConstant [
+	^ LLVMConstantFP new
+		type: self;
+		value: 1.0;
+		yourself
+]
+
+{ #category : #'as yet unclassified' }
+LLVMFloatingPointType >> zeroConstant [
+	^ LLVMConstantFP new
+		type: self;
+		value: 0.0;
+		yourself
 ]

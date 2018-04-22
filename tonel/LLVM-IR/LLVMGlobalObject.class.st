@@ -1,5 +1,5 @@
 Class {
 	#name : #LLVMGlobalObject,
 	#superclass : #LLVMGlobalValue,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-GlobalValues'
 }

@@ -1,5 +1,5 @@
 Class {
 	#name : #LLVMFPExtInst,
 	#superclass : #LLVMCastInst,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-Instructions'
 }

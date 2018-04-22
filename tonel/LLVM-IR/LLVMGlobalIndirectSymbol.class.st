@@ -1,5 +1,5 @@
 Class {
 	#name : #LLVMGlobalIndirectSymbol,
 	#superclass : #LLVMGlobalValue,
-	#category : #'LLVM-IR'
+	#category : #'LLVM-IR-GlobalValues'
 }
