@@ -14,8 +14,7 @@ LLVMFloatingPointType >> bits [
 
 { #category : #accessing }
 LLVMFloatingPointType >> bits: anObject [
-	bits := anObject.
-	name := ('i' , bits asString) asSymbol
+	bits := anObject
 ]
 
 { #category : #testing }

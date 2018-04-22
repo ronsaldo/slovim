@@ -5,7 +5,8 @@ Class {
 		'valueSymbolTable',
 		'name',
 		'context',
-		'symbolGenerationCount'
+		'symbolGenerationCount',
+		'structureSymbolTable'
 	],
 	#category : #'LLVM-IR'
 }
@@ -23,6 +24,11 @@ LLVMModule >> addGlobalValue: aGlobalValue [
 	] ifAbsentPut: [ aGlobalValue ]
 ]
 
+{ #category : #adding }
+LLVMModule >> addNamedStructure: aStructureType [
+	structureSymbolTable at: aStructureType name ifAbsentPut: [ aStructureType ]
+]
+
 { #category : #printing }
 LLVMModule >> asString [
 	^ ByteString streamContents: [ :out | self fullPrintOn: out ]
@@ -36,7 +42,8 @@ LLVMModule >> context [
 { #category : #printing }
 LLVMModule >> fullPrintOn: aStream [
 	aStream << '; Module ' << name; lf.
-	valueSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ]
+	structureSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ].
+	valueSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ].
 ]
 
 { #category : #initialization }
@@ -55,6 +62,7 @@ LLVMModule >> getNamedValue: name [
 { #category : #initialization }
 LLVMModule >> initialize [
 	super initialize.
+	structureSymbolTable := LLVMOrderedDictionary new.
 	valueSymbolTable := LLVMOrderedDictionary new.
 	symbolGenerationCount := 0.
 	
