@@ -184,12 +184,28 @@ SLVMLLVMCodeGenerator >> visitConstantPointer: constant [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantStructureValue: constantStructureValue [
+	| type slots |
+	type := self translateType: constantStructureValue type.
+	slots := constantStructureValue slots collect: [ :slot | self translateValue: slot ].
+	^ LLVMConstantStruct new
+		type: type;
+		elements: slots;
+		yourself
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitConstantValue: aConstantValue [
 	| type |
 	type := self translateType: aConstantValue type.
 	aConstantValue type isBooleanType ifTrue: [ ^ LLVMConstantInt new type: type; value: aConstantValue asBit ].
 	type isIntegerTy ifTrue: [ ^ LLVMConstantInt new type: type; value: aConstantValue value ].
 	type isFloatingPointTy ifTrue: [ ^ LLVMConstantFP new type: type; value: aConstantValue value ].
+	type isPointerTy ifTrue: [ 
+		(aConstantValue value = 0 or: [ aConstantValue value isNil ]) ifTrue: [ 
+			^ LLVMConstantPointerNull new type: type
+		].
+	].
 	self error: 'Unsupported constant value type'
 ]
 

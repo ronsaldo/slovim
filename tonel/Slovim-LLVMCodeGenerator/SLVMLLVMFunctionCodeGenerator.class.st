@@ -319,6 +319,23 @@ SLVMLLVMFunctionCodeGenerator >> visitGetElementPointer: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitIntToFloatCast: instruction [
+	instruction source type isSigned ifTrue: [ 
+		^ LLVMSIToFPInst new
+				type: (self translateType: instruction type);
+				name: (self convertName: instruction name);
+				source: (self translateValue: instruction source);
+				yourself
+	].
+	^ LLVMUIToFPInst new
+			type: (self translateType: instruction type);
+			name: (self convertName: instruction name);
+			source: (self translateValue: instruction source);
+			yourself
+
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitJump: instruction [
 	| destination |
 	destination := self translateValue: instruction destination.
