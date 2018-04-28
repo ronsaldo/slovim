@@ -86,6 +86,29 @@ LLVMModule >> valueSymbolTable [
 ]
 
 { #category : #printing }
+LLVMModule >> writeAssemblyToFileNamed: aFileName [
+	aFileName asFileReference writeStreamDo: [ :out |
+		out text truncate.
+		self fullPrintOn: out
+	]
+]
+
+{ #category : #writing }
+LLVMModule >> writeExecutableToFileNamed: aFileName [
+	self error: 'llvm to executable not yet implemented'
+]
+
+{ #category : #writing }
+LLVMModule >> writeObjectToFileNamed: outputFileName [
+	self error: 'llvm to object not yet implemented'
+]
+
+{ #category : #writing }
+LLVMModule >> writeSharedToFileNamed: aFileName [
+	self error: 'llvm to shared library not yet implemented'
+]
+
+{ #category : #printing }
 LLVMModule >> writeTextToFileNamed: aFileName [
 	aFileName asFileReference writeStreamDo: [ :out |
 		out text truncate.
