@@ -33,8 +33,12 @@ LLVMPointerType >> addressSpace: anObject [
 
 { #category : #accessing }
 LLVMPointerType >> createName [
-	addressSpace ~= 0 ifTrue: [ ^ '{1} addrspace ({2})*' format: { elementType name . addressSpace asString } ].
-	^ elementType name , '*'
+	| validElementType |
+	validElementType := elementType.
+	validElementType isVoidTy ifTrue: [ validElementType := self context int8Ty ].
+	
+	addressSpace ~= 0 ifTrue: [ ^ '{1} addrspace ({2})*' format: { validElementType name . addressSpace asString } ].
+	^ validElementType name , '*'
 ]
 
 { #category : #accessing }
