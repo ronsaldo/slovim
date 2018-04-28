@@ -48,6 +48,14 @@ SLVMLLVMCompilationTarget >> generateLowLevelModule: aModule [
 	^ SLVMLLVMCodeGenerator new target: self; translateModule: aModule
 ]
 
+{ #category : #convenience }
+SLVMLLVMCompilationTarget >> generateLowLevelModule: aModule optimizationLevel: anOptimizationLevel [
+	^ SLVMLLVMCodeGenerator new
+		target: self;
+		optimizationLevel: anOptimizationLevel;
+		translateModule: aModule
+]
+
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> pointerSize [
 	^ pointerSize
