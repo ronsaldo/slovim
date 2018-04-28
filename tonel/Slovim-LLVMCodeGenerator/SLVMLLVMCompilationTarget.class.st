@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMCompilationTarget,
 	#instVars : [
 		'architecture',
-		'pointerSize'
+		'pointerSize',
+		'operatingSystemName'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
@@ -54,6 +55,22 @@ SLVMLLVMCompilationTarget >> generateLowLevelModule: aModule optimizationLevel: 
 		target: self;
 		optimizationLevel: anOptimizationLevel;
 		translateModule: aModule
+]
+
+{ #category : #initialization }
+SLVMLLVMCompilationTarget >> initialize [
+	super initialize.
+	operatingSystemName := #linux
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> operatingSystemName [
+	^ operatingSystemName
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> operatingSystemName: anObject [
+	operatingSystemName := anObject
 ]
 
 { #category : #accessing }

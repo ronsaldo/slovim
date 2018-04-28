@@ -259,3 +259,8 @@ SLVMLLVMCodeGenerator >> visitPointerType: type [
 SLVMLLVMCodeGenerator >> visitStructureType: functionType [
 	self halt.
 ]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> visitVoidType: type [
+	^ self context voidTy
+]
