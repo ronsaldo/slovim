@@ -257,6 +257,26 @@ SLVMBuilder >> currentBlock: anObject [
 	currentBlock := anObject
 ]
 
+{ #category : #'debug information' }
+SLVMBuilder >> debugDeclareVariable: variable [
+	^ self debugDeclareVariable: variable name: function generateSymbol
+]
+
+{ #category : #'debug information' }
+SLVMBuilder >> debugDeclareVariable: variable name: resultName [
+	^ self addInstruction: (SLVMDebugInstructionDeclareVariable variable: variable) name: resultName
+]
+
+{ #category : #'debug information' }
+SLVMBuilder >> debugSetVariable: variable value: value [
+	^ self debugSetVariable: variable value: value name: function generateSymbol
+]
+
+{ #category : #'debug information' }
+SLVMBuilder >> debugSetVariable: variable value: value name: resultName [
+	^ self addInstruction: (SLVMDebugInstructionSetVariableValue variable: variable value: value) name: resultName
+]
+
 { #category : #arithmetic }
 SLVMBuilder >> div: left with: right [
 	^ self div: left with: right name: function generateSymbol

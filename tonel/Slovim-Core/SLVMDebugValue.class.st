@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMDebugInformation,
 	#instVars : [
 		'scope',
-		'name'
+		'name',
+		'type'
 	],
 	#category : #'Slovim-Core-Debug'
 }
@@ -36,4 +37,14 @@ SLVMDebugValue >> scope [
 { #category : #accessing }
 SLVMDebugValue >> scope: anObject [
 	scope := anObject
+]
+
+{ #category : #accessing }
+SLVMDebugValue >> type [
+	^ type
+]
+
+{ #category : #accessing }
+SLVMDebugValue >> type: anObject [
+	type := anObject
 ]
