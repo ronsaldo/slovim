@@ -8,14 +8,134 @@ Class {
 		'translatedModuleElements',
 		'translatedTypes',
 		'usedNames',
-		'translatedConstants'
+		'translatedConstants',
+		'debugCompileUnit',
+		'unknownDebugFile',
+		'convertedDebugFiles',
+		'convertedDebugSourceLocations',
+		'debugTranslator',
+		'translatedDebugTypes',
+		'translatedDebugElements',
+		'convertedDebugVariables',
+		'emptyDebugExpression'
+	],
+	#pools : [
+		'SAsmDWConstants'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
 
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmfunction [
+	| subprogram debugFile |
+	(self isEmittingDebugInformation not or: [slvmFunction hasProperty: #omitDebugInformation]) ifTrue: [ ^ nil ].
+	slvmFunction isEmpty ifTrue: [ ^ nil ].
+	
+	subprogram := (LLVMDISubprogram for: llvmModule)
+		distinct;
+		scope: debugCompileUnit;
+		unit: debugCompileUnit;
+		isLocal: (slvmFunction isPublic or: [ slvmFunction isExternal ]) not;
+		isDefinition: true;
+		type: (self translateDebugType: slvmFunction functionType);
+		variables: (LLVMMDDynamicTuple for: llvmModule)
+		yourself.
+	
+	slvmFunction debugSourceLocation ifNotNil: [ :sourceLocation |
+		debugFile := self convertDebugFile: sourceLocation sourceFile.
+		subprogram
+			file: debugFile;
+			line: sourceLocation startLine;
+			scopeLine: sourceLocation startLine.
+			
+		subprogram scope == debugCompileUnit ifTrue: [ 
+			subprogram scope: debugFile
+		].
+	].
+	
+	slvmFunction name ifNotNil: [ 
+		(slvmFunction unmangledName isNotNil and: [slvmFunction unmangledName ~= slvmFunction name]) ifTrue: [
+			subprogram
+				"linkageName: slvmFunction name;"
+				name: (slvmFunction unmangledName)
+		] ifFalse: [
+			subprogram name: (slvmFunction name)
+		].
+	] ifNil: [ 
+		slvmFunction unmangledName ifNotNil: [
+			subprogram name: (slvmFunction unmangledName)
+		] ifNil: [
+			self flag: 'This could be a closure'.
+			subprogram name: (self generateDebugAnonymousName).
+		]
+	].
+
+	llvmfunction addDebugMetadata: subprogram.
+	
+	"slvmFunction arguments doWithIndex: [ :arg :index |
+		arg debugInformation ifNotNil: [
+			self createArgument: arg index: index debugInformationInto: subprogram.
+		].
+	]."
+
+	^ subprogram
+]
+
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> context [
 	^ llvmContext ifNil: [ llvmContext := LLVMContext new ]
+]
+
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> convertDebugFile: debugFile [
+	^ self convertedDebugFiles at: debugFile ifAbsentPut: [
+		(LLVMDIFile for: self llvmModule)
+			filename: debugFile name;
+			directory: debugFile directory;
+			yourself
+	]
+]
+
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> convertDebugScope: scope fallbackTo: fallbackScope [
+	scope ifNil: [ ^ fallbackScope ].
+	self halt
+]
+
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> convertDebugScope: debugScope withFile: debugFile [
+	debugScope file == debugFile ifTrue: [ ^ debugScope ].
+	self halt
+]
+
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> convertDebugSourceLocation: debugSourceLocation withScope: debugScope [
+	| debugFile usedScope |
+	debugFile := self convertDebugFile: debugSourceLocation sourceFile.
+	usedScope := self convertDebugScope: debugScope withFile: debugFile.
+	
+	^ self convertedDebugSourceLocations at: { debugSourceLocation startLine . debugSourceLocation startColumn . usedScope } ifAbsentPut: [
+		(LLVMDILocation for: self llvmModule)
+			line: debugSourceLocation startLine;
+			column: debugSourceLocation startColumn;
+			scope: usedScope;
+			yourself
+	]
+]
+
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> convertDebugVariable: debugVariable fallbackScopeInto: fallbackScope [
+	| scope |
+	^ self convertedDebugVariables at: { debugVariable . fallbackScope } ifAbsentPut: [ 
+		scope := self convertDebugScope: debugVariable scope fallbackTo: fallbackScope.
+	
+		(LLVMDILocalVariable for: llvmModule)
+			name: debugVariable name;
+			arg: debugVariable argumentIndex;
+			scope: scope;
+			type: (self translateDebugType: debugVariable type);
+			yourself.
+	]
 ]
 
 { #category : #visiting }
@@ -43,6 +163,36 @@ SLVMLLVMCodeGenerator >> convertStructureContent: slvmStructure into: llvmStruct
 	llvmStructure elements: (slvmStructure types collect: [:type | self translateType: type])
 ]
 
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> convertedDebugFiles [
+	^ convertedDebugFiles ifNil: [ convertedDebugFiles := Dictionary new ]
+]
+
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> convertedDebugSourceLocations [
+	^ convertedDebugSourceLocations ifNil: [ convertedDebugSourceLocations := Dictionary new ]
+]
+
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> convertedDebugVariables [
+	^ convertedDebugVariables ifNil: [ convertedDebugVariables := Dictionary new ]
+]
+
+{ #category : #accessing }
+SLVMLLVMCodeGenerator >> debugCompileUnit [
+	^ debugCompileUnit
+]
+
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> debugTranslator [
+	 ^ debugTranslator ifNil: [debugTranslator := SLVMLLVMDebugTranslator new moduleTranslator: self]
+]
+
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> emptyDebugExpression [
+	^ emptyDebugExpression ifNil: [ emptyDebugExpression := LLVMDIExpression for: self llvmModule ]
+]
+
 { #category : #initialization }
 SLVMLLVMCodeGenerator >> initialize [
 	super initialize.
@@ -50,6 +200,11 @@ SLVMLLVMCodeGenerator >> initialize [
 	translatedTypes := IdentityDictionary new.
 	translatedConstants := IdentityDictionary new.
 	usedNames := Set new.
+]
+
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> isEmittingDebugInformation [
+	^ target emittingDebugInformation
 ]
 
 { #category : #'code generation' }
@@ -76,6 +231,11 @@ SLVMLLVMCodeGenerator >> recursiveType: type translationDo: aBlock [
 	^ result
 ]
 
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> register: value debugElement: debugElement [
+	self translatedDebugElements at: value put: debugElement
+]
+
 { #category : #accessing }
 SLVMLLVMCodeGenerator >> target [
 	^ target
@@ -91,8 +251,17 @@ SLVMLLVMCodeGenerator >> translateConstant: aConstant [
 	^ translatedConstants at: aConstant ifAbsentPut: [ aConstant accept: self ]
 ]
 
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> translateDebugType: type [
+	self translatedDebugElements at: type ifPresent: [ :existent | ^ existent ].
+	^ self debugTranslator translate: type
+
+]
+
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
+	self translateModuleDebugInformation: module.
+
 	module structures do: [ :structures |
 		self translateNamedStructure: structures
 	].
@@ -101,6 +270,28 @@ SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
 		self translateModuleElement: value
 	].
 	^ self llvmModule
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> translateModuleDebugInformation: module [
+	| cuMetadata int32Ty |
+	target emittingDebugInformation ifFalse: [ ^ self ].
+	
+	cuMetadata := LLVMMDTuple named: #'llvm.dbg.cu' for: self llvmModule.
+	int32Ty := self context int32Ty.
+	self llvmModule
+		addModuleFlag: 'Dwarf Version' value: (int32Ty constant: 4) behaviorOnCollision: (int32Ty constant: 2);
+		addModuleFlag: 'Debug Info Version' value: (int32Ty constant: 3) behaviorOnCollision: (int32Ty constant: 2).
+	
+	debugCompileUnit := (LLVMDICompileUnit for: self llvmModule)
+		distinct;
+		language: DW_LANG_lo_user value;
+		producer: 'SLVM to LLVM';
+		file: (self unknownDebugFile)
+		yourself.
+
+	cuMetadata elements: { debugCompileUnit }.
+		
 ]
 
 { #category : #'code generation' }
@@ -135,12 +326,25 @@ SLVMLLVMCodeGenerator >> translateValue: aValue [
 	self error: 'Cannot translate value ', aValue printString
 ]
 
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> translatedDebugElements [
+	^ translatedDebugElements ifNil: [ translatedDebugElements := Dictionary new ]
+]
+
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> type: type translationDo: aBlock [
 	| result |
 	result := aBlock value.
 	translatedTypes at: type put: result.
 	^ result
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> unknownDebugFile [
+	^ unknownDebugFile ifNil: [ unknownDebugFile := (LLVMDIFile for: self llvmModule)
+			filename: 'unknown';
+			directory: '';
+			yourself ]
 ]
 
 { #category : #visiting }
@@ -219,13 +423,16 @@ SLVMLLVMCodeGenerator >> visitFloatType: type [
 
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> visitFunction: aFunction [
-	| functionType function |
+	| functionType function debugScope |
 	functionType := self translateType: aFunction functionType.
 	function := LLVMFunction createWithType: functionType linkage: (self convertLinkage: aFunction) name: (self convertName: aFunction name) module: self llvmModule.
 	translatedModuleElements at: aFunction put: function.
+	debugScope := self buildFunction: aFunction debugInformationInto: function.
 	
 	aFunction isEmpty ifFalse: [ 
-		self newFunctionCodeGenerator generateFunction: aFunction into: function
+		self newFunctionCodeGenerator
+			functionDebugScope: debugScope;
+			generateFunction: aFunction into: function
 	].
 	
 	^ function

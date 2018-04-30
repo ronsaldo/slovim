@@ -7,7 +7,8 @@ Class {
 		'function',
 		'llvmFunction',
 		'valueDictionary',
-		'usedNames'
+		'usedNames',
+		'functionDebugScope'
 	],
 	#classVars : [
 		'BinaryFloatComparisonOperationMap',
@@ -92,6 +93,34 @@ SLVMLLVMFunctionCodeGenerator >> context [
 	^ moduleTranslator context
 ]
 
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> convertDebugLocationFrom: slvmInstruction into: llvmInstruction [
+	functionDebugScope ifNil: [ ^ self ].
+	(self convertDebugSourceLocation: slvmInstruction debugSourceLocation debugInformation: slvmInstruction debugInformation) ifNotNil: [ :convertedLocation |
+		llvmInstruction addDebugMetadata: convertedLocation
+	]
+]
+
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> convertDebugScope: debugScope [
+	debugScope ifNil: [ ^ functionDebugScope ].
+	self halt
+]
+
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> convertDebugSourceLocation: debugSourceLocation debugInformation: debugInformation [
+	| debugScope |
+	debugSourceLocation ifNil: [ ^ nil ].
+	debugScope := self convertDebugScope: (debugInformation ifNotNil: #scope).
+	
+	^ moduleTranslator convertDebugSourceLocation: debugSourceLocation withScope: debugScope
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> convertDebugVariable: debugInformation [
+	^ moduleTranslator convertDebugVariable: debugInformation fallbackScopeInto: functionDebugScope
+]
+
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> convertName: aName [
 	^ aName ifNotNil: [
@@ -119,6 +148,16 @@ SLVMLLVMFunctionCodeGenerator >> createProxyValues [
 			llvmBasicBlock addNext: proxy
 		]
 	].
+]
+
+{ #category : #accessing }
+SLVMLLVMFunctionCodeGenerator >> functionDebugScope [
+	^ functionDebugScope
+]
+
+{ #category : #accessing }
+SLVMLLVMFunctionCodeGenerator >> functionDebugScope: aDebugScope [
+	functionDebugScope := aDebugScope
 ]
 
 { #category : #'code generation' }
@@ -187,8 +226,14 @@ SLVMLLVMFunctionCodeGenerator >> translateProxyInstruction: proxyInstruction [
 	original := proxyInstruction sourceValue.
 	replacement := original accept: self.
 	replacement isCollection ifTrue: [ 
-		valueDictionary at: proxyInstruction sourceValue put: replacement first
-	] ifFalse: [ 
+		replacement ifEmpty: [ 
+			valueDictionary at: proxyInstruction sourceValue put: nil
+		] ifNotEmpty: [ 
+			self convertDebugLocationFrom: original into: replacement first.
+			valueDictionary at: proxyInstruction sourceValue put: replacement first
+		].
+	] ifFalse: [
+		self convertDebugLocationFrom: original into: replacement.
 		valueDictionary at: proxyInstruction sourceValue put: replacement
 	].
 
@@ -278,6 +323,41 @@ SLVMLLVMFunctionCodeGenerator >> visitCall: instruction [
 		calledFunction: calledFunction;
 		arguments: arguments;
 		type: type;
+		yourself
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitDebugInstructionDeclareVariable: instruction [
+	| debugDeclareIntrinsic address localVariable expression |
+	debugDeclareIntrinsic := moduleTranslator llvmModule getDebugDeclareIntrinsic.
+
+	address := (self translateValue: instruction variable) asLLVMMetadata asLLVMValueFor: self context.
+	localVariable := (self convertDebugVariable: instruction debugInformation) asLLVMValueFor: self context.
+	expression := moduleTranslator emptyDebugExpression asLLVMValueFor: self context.
+
+	^ LLVMCallInst new
+		name: (self convertName: instruction name);
+		calledFunction: debugDeclareIntrinsic;
+		arguments: {address . localVariable . expression };
+		type: debugDeclareIntrinsic returnType;
+		yourself
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitDebugInstructionSetVariableValue: instruction [
+	| debugValueIntrinsic localVariable expression newValue offset |
+	debugValueIntrinsic := moduleTranslator llvmModule getDebugValueIntrinsic.
+	newValue := (self translateValue: instruction value) asLLVMMetadata asLLVMValueFor: self context.
+	offset := self context int64Ty constant: 0.
+
+	localVariable := (self convertDebugVariable: instruction variable) asLLVMValueFor: self context.
+	expression := moduleTranslator emptyDebugExpression asLLVMValueFor: self context.
+	
+	^ LLVMCallInst new
+		name: (self convertName: instruction name);
+		calledFunction: debugValueIntrinsic;
+		arguments: {newValue . offset . localVariable . expression };
+		type: debugValueIntrinsic returnType;
 		yourself
 ]
 
