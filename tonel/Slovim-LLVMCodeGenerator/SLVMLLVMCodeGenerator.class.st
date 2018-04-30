@@ -140,6 +140,13 @@ SLVMLLVMCodeGenerator >> convertDebugVariable: debugVariable fallbackScopeInto: 
 
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> convertLinkage: element [
+	element isLinkOnceODR ifTrue: [ 
+		^ LLVMGlobalValue linkOnceODRLinkage
+	].
+	element isPrivate ifTrue: [ 
+		^ LLVMGlobalValue privateLinkage
+	].
+
 	self flag: 'TODO: Implement myself'.
 	^ LLVMGlobalValue externalLinkage
 ]
