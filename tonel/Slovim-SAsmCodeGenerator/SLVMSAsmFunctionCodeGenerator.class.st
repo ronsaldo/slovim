@@ -990,6 +990,14 @@ SLVMSAsmFunctionCodeGenerator >> visitClosureToDynamicObject: anInstruction [
 	blockBuilder tacMove: closure into: result
 ]
 
+{ #category : #'debug instructions' }
+SLVMSAsmFunctionCodeGenerator >> visitDebugInstructionDeclareVariable: instruction [
+]
+
+{ #category : #'debug instructions' }
+SLVMSAsmFunctionCodeGenerator >> visitDebugInstructionSetVariableValue: instruction [
+]
+
 { #category : #arithmetic }
 SLVMSAsmFunctionCodeGenerator >> visitDiv: instruction [
 	self binaryInteger: instruction arithmetic: TacDivide
