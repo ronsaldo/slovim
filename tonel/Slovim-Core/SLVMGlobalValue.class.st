@@ -71,6 +71,11 @@ SLVMGlobalValue >> isInternal [
 ]
 
 { #category : #visibility }
+SLVMGlobalValue >> isLinkOnceODR [
+	^ visibility == #linkonceODR
+]
+
+{ #category : #visibility }
 SLVMGlobalValue >> isPrivate [
 	^ visibility == #private
 ]
@@ -93,6 +98,11 @@ SLVMGlobalValue >> makeExternal [
 { #category : #visibility }
 SLVMGlobalValue >> makeInternal [
 	visibility := #internal
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> makeLinkOnceODR [
+	visibility := #linkonceODR
 ]
 
 { #category : #visibility }
