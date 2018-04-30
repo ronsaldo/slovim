@@ -5,7 +5,8 @@ Class {
 		'linkage',
 		'visibility',
 		'dllStorageClass',
-		'threadLocalMode'
+		'threadLocalMode',
+		'metadata'
 	],
 	#classVars : [
 		'AppendingLinkage',
@@ -127,6 +128,17 @@ LLVMGlobalValue class >> weakODRLinkage [
 	^ WeakODRLinkage
 ]
 
+{ #category : #adding }
+LLVMGlobalValue >> addDebugMetadata: metadataValue [
+	^ self addNamed: #dbg metadata: metadataValue
+]
+
+{ #category : #adding }
+LLVMGlobalValue >> addNamed: metadataName metadata: metadataValue [
+	metadata := metadata copyWith: { metadataName . metadataValue}.
+	^ metadataValue
+]
+
 { #category : #accessing }
 LLVMGlobalValue >> dllStorageClass [
 	^ dllStorageClass
@@ -234,6 +246,7 @@ LLVMGlobalValue >> initialize [
 	visibility := DefaultVisibility.
 	dllStorageClass := DefaultStorageClass.
 	threadLocalMode := NotThreadLocal.
+	metadata := #().
 	
 ]
 
@@ -255,6 +268,18 @@ LLVMGlobalValue >> linkage: anObject [
 { #category : #visibility }
 LLVMGlobalValue >> makePrivate [
 	self linkage: PrivateLinkage
+]
+
+{ #category : #printing }
+LLVMGlobalValue >> printMetadataOn: aStream [
+	| metadataName metadataValue |
+	metadata doWithIndex: [ :metadataNamePair :index |
+		index > 1 ifTrue: [ aStream nextPutAll: ', ' ].
+		
+		metadataName := metadataNamePair first.
+		metadataValue := metadataNamePair second.
+		aStream nextPut: $!; nextPutAll: metadataName; space; print: metadataValue
+	]
 ]
 
 { #category : #printing }

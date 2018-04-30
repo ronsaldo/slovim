@@ -38,6 +38,14 @@ LLVMIntegerType >> bits: anObject [
 	name := ('i' , bits asString) asSymbol
 ]
 
+{ #category : #accessing }
+LLVMIntegerType >> constant: aValue [
+	^ LLVMConstantInt new
+		type: self;
+		value: aValue;
+		yourself
+]
+
 { #category : #testing }
 LLVMIntegerType >> isIntegerTy [
 	^ true

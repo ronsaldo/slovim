@@ -33,17 +33,8 @@ LLVMConstantDataArray >> printOn: aStream [
 	| elementType |		
 	elementType := type elementType.
 	(elements isString and: [ elementType isIntegerTy and: [ elementType bits = 8 ] ]) ifTrue: [ 
-		aStream nextPutAll: 'c"'.
-		elements do: [ :element |
-			(Character space <= element and: [ element <= $~ and: [element ~~ $\]]) ifTrue: [ 
-				aStream nextPut: element
-			] ifFalse: [
-				aStream nextPut: $\; nextPutAll: (element asInteger printStringBase: 16 length: 2 padded: true)
-			]
-		].
-	
-		addNull ifTrue: [ aStream nextPutAll: '\00' ].
-		aStream nextPut: $".
+		aStream nextPut: $c.
+		elements llvmPrintEscapedStringOn: aStream addNull: addNull.
 		^ self
 	].
 

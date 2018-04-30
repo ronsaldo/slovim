@@ -2,10 +2,22 @@ Class {
 	#name : #LLVMInstruction,
 	#superclass : #LLVMUser,
 	#instVars : [
-		'parent'
+		'parent',
+		'metadata'
 	],
 	#category : #'LLVM-IR-Instructions'
 }
+
+{ #category : #adding }
+LLVMInstruction >> addDebugMetadata: metadataValue [
+	^ self addNamed: #dbg metadata: metadataValue
+]
+
+{ #category : #adding }
+LLVMInstruction >> addNamed: metadataName metadata: metadataValue [
+	metadata := metadata copyWith: { metadataName . metadataValue}.
+	^ metadataValue
+]
 
 { #category : #printing }
 LLVMInstruction >> fullPrintOn: aStream [
@@ -14,7 +26,15 @@ LLVMInstruction >> fullPrintOn: aStream [
 		aStream << ' = '.
 	].
 	aStream nextPutAll: self mnemonic.
-	self printParametersOn: aStream
+	self printParametersOn: aStream.
+	self printMetadataOn: aStream
+]
+
+{ #category : #initialization }
+LLVMInstruction >> initialize [
+	super initialize.
+	metadata := #().
+	
 ]
 
 { #category : #printing }
@@ -30,6 +50,16 @@ LLVMInstruction >> parent [
 { #category : #accessing }
 LLVMInstruction >> parent: anObject [
 	parent := anObject
+]
+
+{ #category : #printing }
+LLVMInstruction >> printMetadataOn: aStream [
+	| metadataName metadataValue |
+	metadata do: [ :metadataNamePair |
+		metadataName := metadataNamePair first.
+		metadataValue := metadataNamePair second.
+		aStream nextPutAll: ', !'; nextPutAll: metadataName; space; print: metadataValue
+	]
 ]
 
 { #category : #printing }

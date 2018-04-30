@@ -8,6 +8,17 @@ Class {
 	#category : #'LLVM-IR'
 }
 
+{ #category : #converting }
+LLVMValue >> asLLVMMetadata [
+	^ LLVMLocalAsMetadata new value: self
+]
+
+{ #category : #converting }
+LLVMValue >> asLLVMValueFor: aContext [
+	self assert: type context == aContext.
+	^ self
+]
+
 { #category : #accessing }
 LLVMValue >> context [
 	^ type context

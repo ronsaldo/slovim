@@ -66,7 +66,7 @@ LLVMFunction >> fullPrintOn: aStream [
 			aStream nextPutAll: '...' .
 		].
 		
-		aStream << ' )'; lf.
+		aStream << ' )'.
 		^ self
 	].
 
@@ -83,7 +83,9 @@ LLVMFunction >> fullPrintOn: aStream [
 		aStream nextPutAll: '...' .
 	].
 
-	aStream << ' ) {'; lf.
+	aStream << ' )'.
+	self printMetadataOn: aStream.
+	aStream nextPutAll: ' {'; lf.
 	basicBlocks do: [ :bb | bb fullPrintOn: aStream ].
 	aStream << '}'; lf.
 
@@ -132,6 +134,21 @@ LLVMFunction >> initializeWithType: theFunctionType linkage: theLinkage name: th
 			yourself
 	].
 
+]
+
+{ #category : #printing }
+LLVMFunction >> printMetadataOn: aStream [
+	| metadataName metadataValue |
+	metadata doWithIndex: [ :metadataNamePair :index |
+		metadataName := metadataNamePair first.
+		metadataValue := metadataNamePair second.
+		aStream space; nextPut: $!; nextPutAll: metadataName; space; print: metadataValue
+	]
+]
+
+{ #category : #accessing }
+LLVMFunction >> returnType [
+	^ functionType returnType
 ]
 
 { #category : #printing }
