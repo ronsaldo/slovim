@@ -194,6 +194,8 @@ SLVMSpirVCodeGenerator class >> initialize [
 		'math.fmix' (glsl450 GLSLstd450FMix)
 		
 		'matrix.transpose' (SpirV SpvOpTranspose)
+		
+		'texture.query.size' (SpirV SpvOpImageQuerySize)
 	) pairsDo: [ :k :v |
 		value := (SpirVConstants bindingOf: v second) value.
 		self assert: value isNotNil.
