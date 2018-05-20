@@ -105,7 +105,12 @@ SLVMLLVMCodeGenerator >> convertDebugScope: scope fallbackTo: fallbackScope [
 { #category : #'debug information' }
 SLVMLLVMCodeGenerator >> convertDebugScope: debugScope withFile: debugFile [
 	debugScope file == debugFile ifTrue: [ ^ debugScope ].
-	self halt
+	^ self convertedDebugFiles at: {debugScope . debugFile} ifAbsentPut: [
+		(LLVMDILexicalBlockFile for: self llvmModule)
+			scope: debugScope;
+			file: debugFile;
+			yourself
+	]
 ]
 
 { #category : #'debug information' }
