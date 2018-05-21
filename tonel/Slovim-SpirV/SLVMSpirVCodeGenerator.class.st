@@ -7,12 +7,14 @@ Class {
 		'basicBlockDictionary',
 		'instructionDictionary',
 		'currentFunction',
-		'interfaceList',
 		'compilationTarget',
 		'outputStageBlockVariable',
 		'valueReplacements',
 		'inputStageBlockVariable',
-		'emittedNames'
+		'emittedNames',
+		'logicalAddressMode',
+		'globalInterfaceList',
+		'perFunctionInterfaceList'
 	],
 	#classVars : [
 		'BinaryOperationMap',
@@ -194,8 +196,6 @@ SLVMSpirVCodeGenerator class >> initialize [
 		'math.fmix' (glsl450 GLSLstd450FMix)
 		
 		'matrix.transpose' (SpirV SpvOpTranspose)
-		
-		'texture.query.size' (SpirV SpvOpImageQuerySize)
 	) pairsDo: [ :k :v |
 		value := (SpirVConstants bindingOf: v second) value.
 		self assert: value isNotNil.
@@ -227,6 +227,32 @@ SLVMSpirVCodeGenerator >> addBuiltIn: builtIn replacementStructure: structureVar
 			operands: { structureVariable . self translateValue: memberConstant}).
 		result
 	]
+]
+
+{ #category : #'code generation' }
+SLVMSpirVCodeGenerator >> addStructure: structureId member: memberIndex annotations: annotations [
+	annotations pairsDo: [ :annotation :value |
+		annotation == #location ifTrue: [
+			value >= 0 ifTrue: [ 
+				builder addAnnotationInstruction: (SpirVInstruction
+					opcode: SpvOpMemberDecorate
+					operands: { structureId . memberIndex . SpvDecorationLocation . value  }
+				).
+			] ifFalse: [
+				builder addAnnotationInstruction: (SpirVInstruction
+					opcode: SpvOpMemberDecorate
+					operands: { structureId . memberIndex . SpvDecorationBuiltIn . -1 - value  }
+				).
+			]
+		].
+	].
+]
+
+{ #category : #'code generation' }
+SLVMSpirVCodeGenerator >> addStructure: structureId memberAnnotations: memberAnnotations [
+	memberAnnotations doWithIndex: [ :annotations :memberIndex |
+		self addStructure: structureId member: memberIndex - 1 annotations: annotations
+	].
 ]
 
 { #category : #'code generation' }
@@ -271,7 +297,7 @@ SLVMSpirVCodeGenerator >> createInputBuiltInBlock: builtIns [
 	
 	"Declare the input block variable"
 	inputStageBlockVariable := builder newId.
-	interfaceList add: inputStageBlockVariable.
+	globalInterfaceList add: inputStageBlockVariable.
 
 	"Create the input block variable"
 	builder addGlobalInstruction: (SpirVInstruction
@@ -303,7 +329,7 @@ SLVMSpirVCodeGenerator >> createOutputBuiltInBlock: builtIns [
 	
 	"Declare the output block variable"
 	outputStageBlockVariable := builder newId.
-	interfaceList add: outputStageBlockVariable.
+	globalInterfaceList add: outputStageBlockVariable.
 
 	"Create the output block variable"
 	builder addGlobalInstruction: (SpirVInstruction
@@ -352,6 +378,31 @@ SLVMSpirVCodeGenerator >> generateLazyInstructionId: aValue [
 
 ]
 
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> getFunctionInterfaceList: function [
+	| interfaceList |
+	self perFunctionInterfaceList at: function ifPresent: [ :result | ^ result ].
+	self perFunctionInterfaceList at: function put: #().
+	interfaceList := SLVMOrderedInsertionSet new.
+	function allInstructionsDo: [ :instruction |
+		instruction allParametersDo: [ :param |
+			"Process the functions recursively"
+			param isFunction ifTrue: [
+				interfaceList addAll: (self getFunctionInterfaceList: param).
+			].
+
+			"Process the global variables."
+			param isGlobalVariable ifTrue: [
+				((param hasProperty: #location) or: [ param hasProperty: #shaderInterface]) ifTrue: [
+					interfaceList add: (self translateValue: param)
+				].
+			].
+		]
+	].
+	
+	^ self perFunctionInterfaceList at: function put: interfaceList asArray.
+]
+
 { #category : #initialization }
 SLVMSpirVCodeGenerator >> initialize [
 	super initialize.
@@ -359,7 +410,7 @@ SLVMSpirVCodeGenerator >> initialize [
 	basicBlockDictionary := Dictionary new.
 	instructionDictionary := Dictionary new.
 	valueReplacements := Dictionary new.
-	interfaceList := OrderedCollection new.
+	globalInterfaceList := OrderedCollection new.
 	emittedNames := Set new.
 ]
 
@@ -379,6 +430,16 @@ SLVMSpirVCodeGenerator >> isEntryPointFunction: aGlobalValue [
 	^ false.
 ]
 
+{ #category : #accessing }
+SLVMSpirVCodeGenerator >> logicalAddressMode [
+	^ logicalAddressMode
+]
+
+{ #category : #accessing }
+SLVMSpirVCodeGenerator >> logicalAddressMode: aBoolean [
+	logicalAddressMode := aBoolean
+]
+
 { #category : #'code generation' }
 SLVMSpirVCodeGenerator >> moveBuiltInsToInterfaceBlock: ssaModule [
 	| builtIns |
@@ -390,6 +451,16 @@ SLVMSpirVCodeGenerator >> moveBuiltInsToInterfaceBlock: ssaModule [
 
 	self createInputBuiltInBlock: (builtIns select: [:var | var type storage == #input]).
 	self createOutputBuiltInBlock: (builtIns select: [:var | var type storage == #output]).
+]
+
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> perFunctionInterfaceList [
+	^ perFunctionInterfaceList ifNil: [ perFunctionInterfaceList := IdentityDictionary new ]
+]
+
+{ #category : #initialization }
+SLVMSpirVCodeGenerator >> target: aCompilationTarget [
+	compilationTarget := aCompilationTarget
 ]
 
 { #category : #'as yet unclassified' }
@@ -407,7 +478,7 @@ SLVMSpirVCodeGenerator >> translateModule: ssaModule [
 
 { #category : #'code generation' }
 SLVMSpirVCodeGenerator >> translateModule: ssaModule exportList: exportList [
-	compilationTarget := ssaModule compilationTarget.
+	compilationTarget ifNil: [compilationTarget := ssaModule compilationTarget].
 	^ SpirVModuleBuilder build: [ :builderArg |
 		builder := builderArg.
 		self moveBuiltInsToInterfaceBlock: ssaModule.
@@ -697,7 +768,6 @@ SLVMSpirVCodeGenerator >> visitFunction: function [
 			operands: { SpvFunctionControlNone . functionType }
 		).
 		
-		
 		currentFunction arguments do: [ :arg | self translateValue: arg ].
 		
 		function dominanceTopoSort do: [ :basicBlock | self translateBasicBlock: basicBlock ].
@@ -707,13 +777,13 @@ SLVMSpirVCodeGenerator >> visitFunction: function [
 		function propertyAt: #vertex ifPresent: [ :dummy |
 			builder addEntryPointInstruction: (SpirVInstruction
 				opcode: SpvOpEntryPoint
-				operands: { SpvExecutionModelVertex . id . } , function name asSpirVStringLiteral , interfaceList
+				operands: { SpvExecutionModelVertex . id . } , function name asSpirVStringLiteral , (self getFunctionInterfaceList: function)
 			).
 		].
 		function propertyAt: #fragment ifPresent: [ :dummy |
 			builder addEntryPointInstruction: (SpirVInstruction
 				opcode: SpvOpEntryPoint
-				operands: { SpvExecutionModelFragment . id . } , function name asSpirVStringLiteral , interfaceList
+				operands: { SpvExecutionModelFragment . id . } , function name asSpirVStringLiteral , (self getFunctionInterfaceList: function)
 			).
 			
 			builder addExecutionModeInstruction: (SpirVInstruction
@@ -816,7 +886,7 @@ SLVMSpirVCodeGenerator >> visitGlobalVariable: globalVariable [
 		
 		self emitValue: id name: globalVariable name.
 		globalVariable propertyAt: #location ifPresent: [ :location |
-			interfaceList add: id.
+			globalInterfaceList add: id.
 			location >= 0 ifTrue: [ 
 				builder addAnnotationInstruction: (SpirVInstruction
 					opcode: SpvOpDecorate
@@ -1087,7 +1157,7 @@ SLVMSpirVCodeGenerator >> visitStore: storeInstruction [
 	]
 ]
 
-{ #category : #visitor }
+{ #category : #visiting }
 SLVMSpirVCodeGenerator >> visitStructureType: structureType [
 	^ self valueTranslation: structureType
 		prepare: [ structureType types collect: [:type | self translateValue: type ] ]
@@ -1132,6 +1202,10 @@ SLVMSpirVCodeGenerator >> visitStructureType: structureType [
 				)
 			].
 		].
+
+		structureType memberAnnotations ifNotNil: [
+			self addStructure: id memberAnnotations: structureType memberAnnotations
+		].
 	
 		(structureType kind = SLVMStructureType blockKind or: 
 		[ structureType kind = SLVMStructureType builtInBlockKind ]) ifTrue: [ 
@@ -1147,7 +1221,6 @@ SLVMSpirVCodeGenerator >> visitStructureType: structureType [
 				operands: { id . SpvDecorationBufferBlock }
 			)
 		].
-	
 	]
 ]
 
