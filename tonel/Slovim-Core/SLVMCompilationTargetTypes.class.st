@@ -187,6 +187,11 @@ SLVMCompilationTargetTypes >> ushort [
 ]
 
 { #category : #types }
+SLVMCompilationTargetTypes >> vector: baseType elements: elements [
+	^ SLVMVectorType baseType: baseType elements: elements
+]
+
+{ #category : #types }
 SLVMCompilationTargetTypes >> void [
 	^ SLVMType voidType
 ]

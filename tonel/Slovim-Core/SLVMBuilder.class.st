@@ -1078,26 +1078,6 @@ SLVMBuilder >> unreachable: resultName [
 	^ self addInstruction: SLVMUnreacheable new name: resultName
 ]
 
-{ #category : #casting }
-SLVMBuilder >> vectorCastFrom: source into: targetVectorType [
-	^ self vectorCastFrom: source into: targetVectorType name: function generateSymbol
-]
-
-{ #category : #casting }
-SLVMBuilder >> vectorCastFrom: source into: targetVectorType name: name [
-	| sourceType targetType |
-	self assert: source type isVectorType.
-	self assert: targetVectorType isVectorType.
-	self assert: source type elements = targetVectorType elements.
-	sourceType := source type baseType.
-	targetType := targetVectorType baseType.
-	(sourceType isIntegerType and: [targetType isFloatType]) ifTrue: [ 
-		^ self intToFloatCast: source target: targetVectorType name: name
-	].
-
-	self halt
-]
-
 { #category : #'as yet unclassified' }
 SLVMBuilder >> withBasicBlock: aBasicBlock do: aBlock [
 	| oldCurrentBlock |

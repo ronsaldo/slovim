@@ -9,7 +9,8 @@ Class {
 		'alignment',
 		'size',
 		'offsets',
-		'behavior'
+		'behavior',
+		'memberAnnotations'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -144,6 +145,16 @@ SLVMStructureType >> loadValueFromPointerWith: irBuilder [
 
 	self halt
 	
+]
+
+{ #category : #accessing }
+SLVMStructureType >> memberAnnotations [
+	^ memberAnnotations
+]
+
+{ #category : #accessing }
+SLVMStructureType >> memberAnnotations: anObject [
+	memberAnnotations := anObject
 ]
 
 { #category : #accessing }

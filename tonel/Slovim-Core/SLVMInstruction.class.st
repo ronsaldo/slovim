@@ -31,6 +31,11 @@ SLVMInstruction >> allInstructionsDo: aBlock [
 	aBlock value: self
 ]
 
+{ #category : #enumerating }
+SLVMInstruction >> allParametersDo: aBlock [
+	parameters do: [ :param | param withAllParametersDo: aBlock ]
+]
+
 { #category : #'as yet unclassified' }
 SLVMInstruction >> applySubstitutions: substitutionDictionary [
 	parameters doWithIndex: [ :param :index |

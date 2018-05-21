@@ -10,6 +10,11 @@ SLVMFloatType >> accept: aVisitor [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMFloatType >> defaultConstant [
+	^ SLVMConstant type: self value: 0.0
+]
+
+{ #category : #'as yet unclassified' }
 SLVMFloatType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stream [
 	| integerData |
 	size = 4 ifTrue: [

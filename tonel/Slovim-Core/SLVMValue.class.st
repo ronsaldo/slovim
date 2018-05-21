@@ -18,6 +18,10 @@ SLVMValue >> addInstructionReference: anInstruction [
 ]
 
 { #category : #accessing }
+SLVMValue >> allParametersDo: aBlock [
+]
+
+{ #category : #accessing }
 SLVMValue >> childrenNodes [
 	^ #()
 ]
@@ -103,6 +107,11 @@ SLVMValue >> isGlobalValue [
 ]
 
 { #category : #testing }
+SLVMValue >> isGlobalVariable [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isInstruction [
 	^ false
 ]
@@ -150,4 +159,11 @@ SLVMValue >> removeInstructionReference: anInstruction [
 { #category : #accessing }
 SLVMValue >> type [
 	self subclassResponsibility
+]
+
+{ #category : #accessing }
+SLVMValue >> withAllParametersDo: aBlock [
+	aBlock value: self.
+	self allParametersDo: aBlock
+	
 ]

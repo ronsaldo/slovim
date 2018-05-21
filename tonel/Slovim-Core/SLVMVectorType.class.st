@@ -82,16 +82,6 @@ SLVMVectorType >> isScalarType [
 ]
 
 { #category : #testing }
-SLVMVectorType >> isSigned [
-	^ baseType isSigned
-]
-
-{ #category : #testing }
-SLVMVectorType >> isUnsigned [
-	^ baseType isUnsigned
-]
-
-{ #category : #testing }
 SLVMVectorType >> isVectorType [
 	^ true
 ]

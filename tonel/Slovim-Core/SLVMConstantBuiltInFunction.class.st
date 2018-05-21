@@ -66,9 +66,6 @@ SLVMConstantBuiltInFunction class >> initialize [
 		
 		"Matrix functions"
 		'matrix.transpose'
-		
-		"Texture"
-		'texture.query.size'
 	) collect: #asSymbol).
 ]
 

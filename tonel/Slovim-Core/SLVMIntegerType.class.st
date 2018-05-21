@@ -23,6 +23,11 @@ SLVMIntegerType >> accept: aVisitor [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMIntegerType >> defaultConstant [
+	^ SLVMConstant type: self value: 0
+]
+
+{ #category : #'as yet unclassified' }
 SLVMIntegerType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stream [
 	| integerData |
 	integerData := value.

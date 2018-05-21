@@ -9,6 +9,11 @@ SLVMBoolType >> accept: aVisitor [
 	^ aVisitor visitBoolType: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMBoolType >> defaultConstant [
+	^ SLVMConstant type: self value: false
+]
+
 { #category : #'constant encoding' }
 SLVMBoolType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stream [
 	value ifFalse: [ 
