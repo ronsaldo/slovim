@@ -14,7 +14,8 @@ Class {
 		'emittedNames',
 		'logicalAddressMode',
 		'globalInterfaceList',
-		'perFunctionInterfaceList'
+		'perFunctionInterfaceList',
+		'useGlobalInterfaceList'
 	],
 	#classVars : [
 		'BinaryOperationMap',
@@ -381,9 +382,11 @@ SLVMSpirVCodeGenerator >> generateLazyInstructionId: aValue [
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> getFunctionInterfaceList: function [
 	| interfaceList |
+	useGlobalInterfaceList ifTrue: [^ globalInterfaceList]. 
 	self perFunctionInterfaceList at: function ifPresent: [ :result | ^ result ].
 	self perFunctionInterfaceList at: function put: #().
 	interfaceList := SLVMOrderedInsertionSet new.
+	 
 	function allInstructionsDo: [ :instruction |
 		instruction allParametersDo: [ :param |
 			"Process the functions recursively"
@@ -412,6 +415,7 @@ SLVMSpirVCodeGenerator >> initialize [
 	valueReplacements := Dictionary new.
 	globalInterfaceList := OrderedCollection new.
 	emittedNames := Set new.
+	useGlobalInterfaceList := true.
 ]
 
 { #category : #'as yet unclassified' }
@@ -495,6 +499,16 @@ SLVMSpirVCodeGenerator >> translateValue: aValue [
 		aValue isInstruction ifTrue: [ ^ self generateLazyInstructionId: aValue ].
 		aValue accept: self
 	]
+]
+
+{ #category : #accessing }
+SLVMSpirVCodeGenerator >> useGlobalInterfaceList [
+	^ useGlobalInterfaceList
+]
+
+{ #category : #accessing }
+SLVMSpirVCodeGenerator >> useGlobalInterfaceList: aBoolean [
+	useGlobalInterfaceList := aBoolean
 ]
 
 { #category : #'as yet unclassified' }
