@@ -222,6 +222,15 @@ SLVMInternalStructure >> _slvm_uint8ValueAt: extraOffset put: value [
 	^self _slvm_integerAt: extraOffset + 1 put: value size: 1 signed: false
 ]
 
+{ #category : #'memory access' }
+SLVMInternalStructure >> asByteArray [
+	| layoutSize result |
+	layoutSize := self class structureSize.
+	result := ByteArray new: layoutSize.
+	result replaceFrom: 1 to: layoutSize with: self startingAt: 1.
+	^ result
+]
+
 { #category : #accessing }
 SLVMInternalStructure >> byteAt: index [
 	<primitive: 60>
