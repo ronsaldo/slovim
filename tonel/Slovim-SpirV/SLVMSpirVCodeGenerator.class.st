@@ -14,8 +14,7 @@ Class {
 		'emittedNames',
 		'logicalAddressMode',
 		'globalInterfaceList',
-		'perFunctionInterfaceList',
-		'useGlobalInterfaceList'
+		'perFunctionInterfaceList'
 	],
 	#classVars : [
 		'BinaryOperationMap',
@@ -267,88 +266,6 @@ SLVMSpirVCodeGenerator >> basicBlockLabelId: basicBlock [
 ]
 
 { #category : #'code generation' }
-SLVMSpirVCodeGenerator >> createBuiltInBlockType: builtIns name: structureTypeName [
-	| structType structSpirVType |
-	structType := SLVMStructureType name: structureTypeName types: (builtIns collect: #valueType) kind:  SLVMStructureType builtInBlockKind names: (builtIns collect: #name).
-	structSpirVType := self translateValue: structType.
-	
-	builtIns doWithIndex: [ :builtIn :index |
-		| location |
-		location := builtIn propertyAt: #location.
-		builder addAnnotationInstruction: (SpirVInstruction
-			opcode: SpvOpMemberDecorate
-			operands: { structSpirVType . index - 1 . SpvDecorationBuiltIn . -1 - location  }
-		).
-	].
-
-	^ { structType . structSpirVType }
-]
-
-{ #category : #'code generation' }
-SLVMSpirVCodeGenerator >> createInputBuiltInBlock: builtIns [
-	| blockType blockTypeAndSpirVBlockType spirBlockType variableType spirVariableType |
-	builtIns ifEmpty: [ ^ self ].
-	blockTypeAndSpirVBlockType := self createBuiltInBlockType: builtIns name: #_SLVM_SpirV_StageIn.
-	blockType := blockTypeAndSpirVBlockType first.
-	spirBlockType := blockTypeAndSpirVBlockType second.
-	
-	"Declare the input block variable type"
-	variableType := compilationTarget pointerTo: blockType storage: SLVMType inputStorage.
-	spirVariableType := self translateValue: variableType.
-	
-	"Declare the input block variable"
-	inputStageBlockVariable := builder newId.
-	globalInterfaceList add: inputStageBlockVariable.
-
-	"Create the input block variable"
-	builder addGlobalInstruction: (SpirVInstruction
-			opcode: SpvOpVariable
-			type: spirVariableType 
-			result: inputStageBlockVariable
-			operands: { SpvStorageClassInput }
-		).
-		
-	self emitValue: inputStageBlockVariable name: #_SLVM_SpirV_StageInVar.
-	builtIns doWithIndex: [ :builtIn :index |
-		self addBuiltIn: builtIn replacementStructure: inputStageBlockVariable member: index - 1
-	].
-
-	
-]
-
-{ #category : #'code generation' }
-SLVMSpirVCodeGenerator >> createOutputBuiltInBlock: builtIns [
-	| blockType blockTypeAndSpirVBlockType spirBlockType variableType spirVariableType |
-	builtIns ifEmpty: [ ^ self ].
-	blockTypeAndSpirVBlockType := self createBuiltInBlockType: builtIns name: #_SLVM_SpirV_StageOut.
-	blockType := blockTypeAndSpirVBlockType first.
-	spirBlockType := blockTypeAndSpirVBlockType second.
-	
-	"Declare the output block variable type"
-	variableType := compilationTarget pointerTo: blockType storage: SLVMType outputStorage.
-	spirVariableType := self translateValue: variableType.
-	
-	"Declare the output block variable"
-	outputStageBlockVariable := builder newId.
-	globalInterfaceList add: outputStageBlockVariable.
-
-	"Create the output block variable"
-	builder addGlobalInstruction: (SpirVInstruction
-			opcode: SpvOpVariable
-			type: spirVariableType 
-			result: outputStageBlockVariable
-			operands: { SpvStorageClassOutput }
-		).
-		
-	self emitValue: outputStageBlockVariable name: #_SLVM_SpirV_StageOutVar.
-	builtIns doWithIndex: [ :builtIn :index |
-		self addBuiltIn: builtIn replacementStructure: outputStageBlockVariable member: index - 1
-	].
-
-	
-]
-
-{ #category : #'code generation' }
 SLVMSpirVCodeGenerator >> emitValue: value name: name [
 	"Do not emit duplicated names. This crashes the NVIDIA driver."
 	(emittedNames includes: name) ifTrue: [ ^ self ].
@@ -382,7 +299,6 @@ SLVMSpirVCodeGenerator >> generateLazyInstructionId: aValue [
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> getFunctionInterfaceList: function [
 	| interfaceList |
-	useGlobalInterfaceList ifTrue: [^ globalInterfaceList]. 
 	self perFunctionInterfaceList at: function ifPresent: [ :result | ^ result ].
 	self perFunctionInterfaceList at: function put: #().
 	interfaceList := SLVMOrderedInsertionSet new.
@@ -415,7 +331,6 @@ SLVMSpirVCodeGenerator >> initialize [
 	valueReplacements := Dictionary new.
 	globalInterfaceList := OrderedCollection new.
 	emittedNames := Set new.
-	useGlobalInterfaceList := true.
 ]
 
 { #category : #'as yet unclassified' }
@@ -442,19 +357,6 @@ SLVMSpirVCodeGenerator >> logicalAddressMode [
 { #category : #accessing }
 SLVMSpirVCodeGenerator >> logicalAddressMode: aBoolean [
 	logicalAddressMode := aBoolean
-]
-
-{ #category : #'code generation' }
-SLVMSpirVCodeGenerator >> moveBuiltInsToInterfaceBlock: ssaModule [
-	| builtIns |
-	builtIns := ssaModule globalValues values select: [ :globalValue |
-		globalValue isGlobalVariable and:
-		[ (#(input output) includes: globalValue type storage) and:
-		[ BlockBuiltIns includes: (globalValue propertyAt: #location ifAbsent: [ 0 ])] ]
-	].
-
-	self createInputBuiltInBlock: (builtIns select: [:var | var type storage == #input]).
-	self createOutputBuiltInBlock: (builtIns select: [:var | var type storage == #output]).
 ]
 
 { #category : #visitor }
@@ -485,7 +387,6 @@ SLVMSpirVCodeGenerator >> translateModule: ssaModule exportList: exportList [
 	compilationTarget ifNil: [compilationTarget := ssaModule compilationTarget].
 	^ SpirVModuleBuilder build: [ :builderArg |
 		builder := builderArg.
-		self moveBuiltInsToInterfaceBlock: ssaModule.
 		exportList do: [ :value | self translateValue: value ]
 	]
 ]
