@@ -230,7 +230,7 @@ SLVMLLVMFunctionCodeGenerator >> translateProxyInstruction: proxyInstruction [
 			valueDictionary at: proxyInstruction sourceValue put: nil
 		] ifNotEmpty: [ 
 			self convertDebugLocationFrom: original into: replacement first.
-			valueDictionary at: proxyInstruction sourceValue put: replacement first
+			valueDictionary at: proxyInstruction sourceValue put: replacement last
 		].
 	] ifFalse: [
 		self convertDebugLocationFrom: original into: replacement.
@@ -249,6 +249,16 @@ SLVMLLVMFunctionCodeGenerator >> translateType: aType [
 SLVMLLVMFunctionCodeGenerator >> translateValue: aValue [
 	valueDictionary at: aValue ifPresent: [ :existent | ^ existent ].
 	^ moduleTranslator translateValue: aValue
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> vector: sourceVector insertElement: element at: destIndex [
+	^ LLVMInsertElementInst new
+		type: sourceVector type;
+		vector: sourceVector;
+		element: element;
+		elementIndex: (self context int32Ty constant: destIndex);
+		yourself
 ]
 
 { #category : #visiting }
@@ -437,6 +447,26 @@ SLVMLLVMFunctionCodeGenerator >> visitLoad: instruction [
 		pointer: pointer;
 		type: type;
 		yourself
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitMakeVector: instruction [
+	| vectorType resultInstruction destIndex |
+	vectorType := self translateType: instruction type.
+	resultInstruction := vectorType zeroConstant.
+	destIndex := 0.
+	^ Array streamContents: [ :out |
+		instruction parameters do: [ :param |
+			param type isVectorType ifTrue: [
+				self halt.
+			] ifFalse: [
+				resultInstruction := self vector: resultInstruction
+					insertElement: (self translateValue: param) at: destIndex.
+				out nextPut: resultInstruction.
+				destIndex := destIndex + 1.
+			]
+		]
+	].
 ]
 
 { #category : #visiting }

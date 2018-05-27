@@ -106,6 +106,22 @@ SLVMLLVMDebugTranslator >> visitStructureType: type [
 ]
 
 { #category : #visiting }
+SLVMLLVMDebugTranslator >> visitVectorType: type [
+	| compositeType |
+	compositeType := (LLVMDICompositeType for: self llvmModule)
+		distinct;
+		name: type name;
+		tag: DW_TAG_structure_type;
+		file: moduleTranslator unknownDebugFile;
+		size: type size*8;
+		align: type alignment*8;
+		elements: (LLVMMDTuple for: self llvmModule);
+		yourself.
+	moduleTranslator register: type debugElement: compositeType.
+	^ compositeType
+]
+
+{ #category : #visiting }
 SLVMLLVMDebugTranslator >> visitVoidType: type [
 	moduleTranslator register: type debugElement: nil.
 	^ nil

@@ -475,8 +475,15 @@ SLVMLLVMCodeGenerator >> visitPointerType: type [
 ]
 
 { #category : #visiting }
-SLVMLLVMCodeGenerator >> visitStructureType: functionType [
+SLVMLLVMCodeGenerator >> visitStructureType: structureType [
 	self halt.
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> visitVectorType: type [
+	^ self type: type translationDo: [
+		LLVMVectorType get: (self translateType: type baseType) elements: type elements
+	]
 ]
 
 { #category : #visiting }
