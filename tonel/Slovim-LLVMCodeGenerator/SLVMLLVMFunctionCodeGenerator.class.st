@@ -382,6 +382,16 @@ SLVMLLVMFunctionCodeGenerator >> visitExtractValue: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitExtractVectorElement: instruction [
+	^ LLVMExtractElementInst new
+		name: (self convertName: instruction name);
+		type: (self translateType: instruction type);
+		vector: (self translateValue: instruction vector);
+		index: (self translateValue: instruction index);
+		yourself
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitFloatingPointCast: instruction [
 	instruction source type size < instruction type size ifTrue: [ 
 		^ LLVMFPExtInst new
