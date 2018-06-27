@@ -662,9 +662,33 @@ SLVMBuilder >> intToFloatCast: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMIntToFloatCast source: source targetType: targetType) name: resultName
 ]
 
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> isFloatingPointVector: vector [
+	| type |
+	type := vector type.
+	self assert: type isVectorType.
+	^ type baseType isFloatType
+]
+
 { #category : #testing }
 SLVMBuilder >> isLastTerminator [
 	^ currentBlock isLastTerminator
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> isSignedVector: vector [
+	| type |
+	type := vector type.
+	self assert: type isVectorType.
+	^ type baseType isIntegerType and: [ type baseType isSigned ]
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> isUnsignedVector: vector [
+	| type |
+	type := vector type.
+	self assert: type isVectorType.
+	^ type baseType isIntegerType and: [ type baseType isUnsigned ]
 ]
 
 { #category : #instructions }
@@ -1063,6 +1087,16 @@ SLVMBuilder >> truncate: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMTruncate source: source targetType: targetType) name: resultName
 ]
 
+{ #category : #arithmetic }
+SLVMBuilder >> udiv: left with: right [
+	^ self udiv: left with: right name: function generateSymbol
+]
+
+{ #category : #arithmetic }
+SLVMBuilder >> udiv: left with: right name: resultName [
+	^ self addOperation: #udiv left: left right: right name: resultName
+]
+
 { #category : #comparisons }
 SLVMBuilder >> ufeq: left with: right name: resultName [
 	^ self addOperation: #ufeq left: left right: right name: resultName
@@ -1076,6 +1110,94 @@ SLVMBuilder >> unreachable [
 { #category : #instructions }
 SLVMBuilder >> unreachable: resultName [
 	^ self addInstruction: SLVMUnreacheable new name: resultName
+]
+
+{ #category : #arithmetic }
+SLVMBuilder >> urem: left with: right [
+	^ self urem: left with: right name: function generateSymbol
+]
+
+{ #category : #arithmetic }
+SLVMBuilder >> urem: left with: right name: resultName [
+	^ self addOperation: #urem left: left right: right name: resultName
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> vectorAdd: left with: right [
+	^ self vectorAdd: left with: right name: function generateSymbol
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> vectorAdd: left with: right name: name [
+	(self isFloatingPointVector: left) ifTrue: [
+		^ self fadd: left with: right name: name
+	] ifFalse: [ 
+		^ self add: left with: right name: name
+	]
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> vectorDiv: left with: right [
+	^ self vectorDiv: left with: right name: function generateSymbol
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> vectorDiv: left with: right name: name [
+	(self isFloatingPointVector: left) ifTrue: [
+		^ self fdiv: left with: right name: name
+	] ifFalse: [
+		(self isSignedVector: left) ifTrue: [ 
+			^ self div: left with: right name: name
+		] ifFalse: [
+			^ self udiv: left with: right name: name
+		]
+	]
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> vectorMul: left with: right [
+	^ self vectorMul: left with: right name: function generateSymbol
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> vectorMul: left with: right name: name [
+	(self isFloatingPointVector: left) ifTrue: [
+		^ self fsub: left with: right name: name
+	] ifFalse: [ 
+		^ self sub: left with: right name: name
+	]
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> vectorRem: left with: right [
+	^ self vectorRem: left with: right name: function generateSymbol
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> vectorRem: left with: right name: name [
+	(self isFloatingPointVector: left) ifTrue: [
+		^ self frem: left with: right name: name
+	] ifFalse: [
+		(self isSignedVector: left) ifTrue: [ 
+			^ self rem: left with: right name: name
+		] ifFalse: [
+			^ self urem: left with: right name: name
+		]
+	]
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> vectorSub: left with: right [
+	^ self vectorSub: left with: right name: function generateSymbol
+]
+
+{ #category : #'vector arithmetic' }
+SLVMBuilder >> vectorSub: left with: right name: name [
+	(self isFloatingPointVector: left) ifTrue: [
+		^ self fsub: left with: right name: name
+	] ifFalse: [ 
+		^ self sub: left with: right name: name
+	]
 ]
 
 { #category : #'as yet unclassified' }
