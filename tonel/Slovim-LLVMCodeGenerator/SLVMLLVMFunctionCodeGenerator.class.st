@@ -270,6 +270,7 @@ SLVMLLVMFunctionCodeGenerator >> visitAlloca: instruction [
 		name: (self convertName: instruction name);
 		type: resultType;
 		valueType: valueType;
+		alignment: instruction valueType alignment;
 		yourself
 ]
 

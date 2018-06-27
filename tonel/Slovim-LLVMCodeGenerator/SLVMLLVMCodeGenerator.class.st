@@ -388,7 +388,9 @@ SLVMLLVMCodeGenerator >> visitConstantPointer: constant [
 	pointedValue := self translateConstant: constant constant.
 	
 	variable := LLVMGlobalVariable createWithType: pointedValue type module: self llvmModule isConstant: true linkage: LLVMGlobalValue privateLinkage.
-	variable initialValue: pointedValue.
+	variable
+		alignment: constant constant type alignment;
+		initialValue: pointedValue.
 	
 	indexType := type context int32Ty.
 	^ LLVMGetElementPtrConstantExpr new
