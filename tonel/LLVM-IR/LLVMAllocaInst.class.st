@@ -2,10 +2,21 @@ Class {
 	#name : #LLVMAllocaInst,
 	#superclass : #LLVMUnaryInstruction,
 	#instVars : [
-		'valueType'
+		'valueType',
+		'alignment'
 	],
 	#category : #'LLVM-IR-Instructions'
 }
+
+{ #category : #accessing }
+LLVMAllocaInst >> alignment [
+	^ alignment
+]
+
+{ #category : #accessing }
+LLVMAllocaInst >> alignment: anObject [
+	alignment := anObject
+]
 
 { #category : #printing }
 LLVMAllocaInst >> mnemonic [
@@ -14,7 +25,8 @@ LLVMAllocaInst >> mnemonic [
 
 { #category : #printing }
 LLVMAllocaInst >> printParametersOn: aStream [
-	aStream space; print: valueType
+	aStream space; print: valueType.
+	alignment ifNotNil: [ aStream nextPutAll: ', align '; print: alignment ]
 ]
 
 { #category : #accessing }

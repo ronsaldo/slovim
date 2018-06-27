@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'valueType',
 		'isConstant',
-		'initialValue'
+		'initialValue',
+		'alignment'
 	],
 	#category : #'LLVM-IR-GlobalValues'
 }
@@ -24,6 +25,16 @@ LLVMGlobalVariable class >> createWithType: valueType module: module isConstant:
 	^ self new initializeWithType: valueType module: module isConstant: isConstant linkage: linkage  name: aName threadLocalMode: threadLocalMode addressSpace: addressSpace
 ]
 
+{ #category : #accessing }
+LLVMGlobalVariable >> alignment [
+	^ alignment
+]
+
+{ #category : #accessing }
+LLVMGlobalVariable >> alignment: anObject [
+	alignment := anObject
+]
+
 { #category : #printing }
 LLVMGlobalVariable >> fullPrintOn: aStream [
 	aStream print: self; nextPutAll: ' = '.
@@ -34,8 +45,8 @@ LLVMGlobalVariable >> fullPrintOn: aStream [
 
 	aStream space; nextPutAll: (isConstant ifTrue: [ 'constant' ] ifFalse: [ 'global' ]);
 		space; print: valueType.
-	initialValue ifNotNil: [ aStream space; print: initialValue ]
-	
+	initialValue ifNotNil: [ aStream space; print: initialValue ].
+	alignment ifNotNil: [ aStream nextPutAll: ', align '; print: alignment ]
 ]
 
 { #category : #accessing }
