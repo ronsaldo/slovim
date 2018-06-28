@@ -7,6 +7,27 @@ Class {
 	#category : #'LLVM-IR-Types'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMStructType class >> context: context elements: elements [
+	^ context typeAt: { self . elements }
+		ifAbsentPut: [ self new
+				context: context;
+				elements: elements;
+				yourself ]
+]
+
+{ #category : #printing }
+LLVMStructType >> createName [
+	^ ByteString streamContents: [ :out |
+		out nextPutAll: '{'.
+		elements doWithIndex: [ :element :index |
+			index > 1 ifTrue: [ out nextPutAll: ', ' ].
+			out print: element
+		].
+		out nextPut: $}
+	]
+]
+
 { #category : #accessing }
 LLVMStructType >> elements [
 	^ elements
@@ -23,6 +44,11 @@ LLVMStructType >> fullPrintOn: aStream [
 	self printDefinitionOn: aStream
 ]
 
+{ #category : #accessing }
+LLVMStructType >> name [
+	^ name ifNil: [ name := self createName ]
+]
+
 { #category : #printing }
 LLVMStructType >> printDefinitionOn: aStream [
 	elements ifNil: [ 
@@ -36,4 +62,12 @@ LLVMStructType >> printDefinitionOn: aStream [
 		aStream print: element
 	].
 	aStream nextPut: $}
+]
+
+{ #category : #'as yet unclassified' }
+LLVMStructType >> zeroConstant [
+	^ LLVMConstantStruct new
+		type: self;
+		elements: (elements collect: [:elementType | elementType zeroConstant]);
+		yourself
 ]

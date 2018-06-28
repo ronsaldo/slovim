@@ -10,3 +10,13 @@ LLVMArrayType >> createName [
 		out nextPut: $[; print: elements; nextPutAll: ' x ' ; print: elementType; nextPut: $]
 	]
 ]
+
+{ #category : #'as yet unclassified' }
+LLVMArrayType >> zeroConstant [
+	| zeroElement |
+	zeroElement := elementType zeroConstant.
+	^ LLVMConstantArray new
+		type: self;
+		elements: ((1 to: elements) collect: [:i | zeroElement]);
+		yourself
+]
