@@ -100,6 +100,11 @@ SLVMCompilationTargetTypes >> long [
 	^ SLVMType longType
 ]
 
+{ #category : #types }
+SLVMCompilationTargetTypes >> matrix: aBaseType rows: numRows columns: numColumns [
+	^ SLVMMatrixType baseType: aBaseType rows: numRows columns: numColumns
+]
+
 { #category : #accessing }
 SLVMCompilationTargetTypes >> objectModel [
 	^ objectModel ifNil: [objectModel := SLVMNativeRuntimeObjectModel new target: self.]

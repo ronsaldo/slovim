@@ -135,6 +135,11 @@ SLVMCompilationTarget >> lowLevelCodeGeneratorClass [
 	self subclassResponsibility
 ]
 
+{ #category : #types }
+SLVMCompilationTarget >> matrix: aBaseType rows: numRows columns: numColumns [
+	^ types matrix: aBaseType rows: numRows columns: numColumns
+]
+
 { #category : #testing }
 SLVMCompilationTarget >> needsSlotForGOTPointer [
 	<compileTime>
