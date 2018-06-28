@@ -470,6 +470,15 @@ SLVMLLVMCodeGenerator >> visitIntegerType: type [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitMatrixType: type [
+	| columnType |
+	^ self type: type translationDo: [
+		columnType := self translateType: type columnType.
+		LLVMStructType context: self context elements: ((1 to: type rows) collect: [:i | columnType])
+	]
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitPointerType: type [
 	^ self recursiveType: type translationDo: [
 		LLVMPointerType getUnqual: (self translateType: type baseType)

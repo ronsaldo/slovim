@@ -88,6 +88,16 @@ SLVMLLVMFunctionCodeGenerator class >> initialize [
 	).
 ]
 
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> aggregate: sourceAggregate insertValue: value at: destIndex [
+	^ LLVMInsertValueInst new
+		type: sourceAggregate type;
+		aggregate: sourceAggregate;
+		element: value;
+		indices: {destIndex};
+		yourself
+]
+
 { #category : #accessing }
 SLVMLLVMFunctionCodeGenerator >> context [
 	^ moduleTranslator context
@@ -458,6 +468,23 @@ SLVMLLVMFunctionCodeGenerator >> visitLoad: instruction [
 		pointer: pointer;
 		type: type;
 		yourself
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitMakeMatrix: instruction [
+	| matrixType resultInstruction destIndex |
+	matrixType := self translateType: instruction type.
+	resultInstruction := matrixType zeroConstant.
+	destIndex := 0.
+	^ Array streamContents: [ :out |
+		instruction parameters do: [ :param |
+			resultInstruction := self aggregate: resultInstruction
+					insertValue: (self translateValue: param) at: destIndex.
+				out nextPut: resultInstruction.
+				destIndex := destIndex + 1.
+		]
+	]
+	
 ]
 
 { #category : #visiting }
