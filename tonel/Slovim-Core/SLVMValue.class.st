@@ -57,7 +57,17 @@ SLVMValue >> isConstant [
 ]
 
 { #category : #testing }
+SLVMValue >> isConstantAggregateValue [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isConstantArrayBlob [
+	^ false
+]
+
+{ #category : #testing }
+SLVMValue >> isConstantArrayValue [
 	^ false
 ]
 
@@ -72,12 +82,27 @@ SLVMValue >> isConstantExpressionBitCast [
 ]
 
 { #category : #testing }
+SLVMValue >> isConstantMatrixValue [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isConstantPointer [
 	^ false
 ]
 
 { #category : #testing }
+SLVMValue >> isConstantStructureValue [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isConstantValue [
+	^ false
+]
+
+{ #category : #testing }
+SLVMValue >> isConstantVectorValue [
 	^ false
 ]
 

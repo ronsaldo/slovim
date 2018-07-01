@@ -1,10 +1,6 @@
 Class {
 	#name : #SLVMConstantStructureValue,
-	#superclass : #SLVMConstant,
-	#instVars : [
-		'type',
-		'slots'
-	],
+	#superclass : #SLVMConstantAggregateValue,
 	#category : #'Slovim-Core-SSA'
 }
 
@@ -16,24 +12,4 @@ SLVMConstantStructureValue >> accept: aVisitor [
 { #category : #testing }
 SLVMConstantStructureValue >> isConstantStructureValue [
 	^ true
-]
-
-{ #category : #accessing }
-SLVMConstantStructureValue >> slots [
-	^ slots
-]
-
-{ #category : #accessing }
-SLVMConstantStructureValue >> slots: anObject [
-	slots := anObject
-]
-
-{ #category : #accessing }
-SLVMConstantStructureValue >> type [
-	^ type
-]
-
-{ #category : #accessing }
-SLVMConstantStructureValue >> type: anObject [
-	type := anObject
 ]

@@ -77,6 +77,16 @@ SLVMVectorType >> internalHash [
 ]
 
 { #category : #testing }
+SLVMVectorType >> isFloatVectorType [
+	^ baseType isFloatType
+]
+
+{ #category : #testing }
+SLVMVectorType >> isIntegerVectorType [
+	^ baseType isIntegerType
+]
+
+{ #category : #testing }
 SLVMVectorType >> isScalarType [
 	^ false
 ]

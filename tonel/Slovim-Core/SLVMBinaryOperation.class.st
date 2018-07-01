@@ -126,7 +126,7 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 	leftType ~= rightType ifTrue: [ self error: 'Unsupported binary operation whose operands have a different type.' ].
 	
 	((operationType == #integer) or: [ operationType == #integerComp ]) ifTrue: [ 
-		(leftType isIntegerType or: [leftType isVectorType and: [leftType baseType isIntegerType ] ]) ifFalse: [
+		(leftType isIntegerType or: [leftType isIntegerVectorType or: [leftType isIntegerMatrixType ] ]) ifFalse: [
 			(operationType == #integerComp and: [ leftType isPointerType ]) ifFalse: [ 
 				self error: 'Binary operation ' , anOperation , ' requires integer operands.'
 			]
@@ -135,7 +135,7 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 	].
 
 	((operationType == #float) or: [ operationType == #floatComp ]) ifTrue: [ 
-		(leftType isFloatType or: [leftType isVectorType and: [leftType baseType isFloatType ] ]) ifFalse: [ self error: 'Binary operation ' , anOperation , ' requires floating point operands.' ].
+		(leftType isFloatType or: [leftType isFloatVectorType or: [leftType isFloatMatrixType ] ]) ifFalse: [ self error: 'Binary operation ' , anOperation , ' requires floating point operands.' ].
 		^ operationType == #floatComp ifTrue: [ SLVMType boolType ] ifFalse: [ leftType ]
 	].
 

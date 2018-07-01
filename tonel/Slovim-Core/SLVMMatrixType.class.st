@@ -86,8 +86,28 @@ SLVMMatrixType >> internalHash [
 ]
 
 { #category : #testing }
+SLVMMatrixType >> isColumnMajor [
+	^ true
+]
+
+{ #category : #testing }
+SLVMMatrixType >> isFloatMatrixType [
+	^ baseType isFloatType
+]
+
+{ #category : #testing }
+SLVMMatrixType >> isIntegerMatrixType [
+	^ baseType isIntegerType
+]
+
+{ #category : #testing }
 SLVMMatrixType >> isMatrixType [
 	^ true
+]
+
+{ #category : #testing }
+SLVMMatrixType >> isRowMajor [
+	^ false
 ]
 
 { #category : #testing }
@@ -108,6 +128,11 @@ SLVMMatrixType >> name [
 { #category : #printing }
 SLVMMatrixType >> printOn: aStream [
 	aStream print: baseType; print: rows; nextPut: $x; print: columns
+]
+
+{ #category : #accessing }
+SLVMMatrixType >> rowType [
+	^ SLVMVectorType baseType: baseType elements: columns
 ]
 
 { #category : #accessing }

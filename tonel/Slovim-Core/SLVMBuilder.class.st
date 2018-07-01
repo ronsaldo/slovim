@@ -86,6 +86,12 @@ SLVMBuilder >> allocaBuilder: anObject [
 	allocaBuilder := anObject
 ]
 
+{ #category : #testing }
+SLVMBuilder >> areAllConstants: values [
+	values do: [ :value | value isConstant ifFalse: [ ^ false ]].
+	^ true
+]
+
 { #category : #'logical operations' }
 SLVMBuilder >> ashiftRight: operand name: resultName [
 	^ self addOperation: #ashiftright operand: operand name: resultName
@@ -662,6 +668,14 @@ SLVMBuilder >> intToFloatCast: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMIntToFloatCast source: source targetType: targetType) name: resultName
 ]
 
+{ #category : #'matrix operations' }
+SLVMBuilder >> isFloatingPointMatrix: matrix [
+	| type |
+	type := matrix type.
+	self assert: type isMatrixType.
+	^ type baseType isFloatType
+]
+
 { #category : #'vector arithmetic' }
 SLVMBuilder >> isFloatingPointVector: vector [
 	| type |
@@ -675,12 +689,28 @@ SLVMBuilder >> isLastTerminator [
 	^ currentBlock isLastTerminator
 ]
 
+{ #category : #'matrix operations' }
+SLVMBuilder >> isSignedMatrix: matrix [
+	| type |
+	type := matrix type.
+	self assert: type isMatrixType.
+	^ type baseType isIntegerType and: [ type baseType isSigned ]
+]
+
 { #category : #'vector arithmetic' }
 SLVMBuilder >> isSignedVector: vector [
 	| type |
 	type := vector type.
 	self assert: type isVectorType.
 	^ type baseType isIntegerType and: [ type baseType isSigned ]
+]
+
+{ #category : #'matrix operations' }
+SLVMBuilder >> isUnsignedMatrix: matrix [
+	| type |
+	type := matrix type.
+	self assert: type isMatrixType.
+	^ type baseType isIntegerType and: [ type baseType isUnsigned ]
 ]
 
 { #category : #'vector arithmetic' }
@@ -735,6 +765,10 @@ SLVMBuilder >> makeMatrix: matrixType arguments: arguments [
 { #category : #instructions }
 SLVMBuilder >> makeMatrix: matrixType arguments: arguments name: resultName [
 	self assert: arguments size > 1.
+	(self areAllConstants: arguments) ifTrue: [ 
+		^ SLVMConstantMatrixValue new type: matrixType; slots: arguments
+	].
+
 	^ self addInstruction: (SLVMMakeMatrix type: matrixType parameters: arguments) name: resultName
 ]
 
@@ -746,7 +780,88 @@ SLVMBuilder >> makeVector: vectorType arguments: arguments [
 { #category : #instructions }
 SLVMBuilder >> makeVector: vectorType arguments: arguments name: resultName [
 	self assert: arguments size > 1.
+	(self areAllConstants: arguments) ifTrue: [ 
+		^ SLVMConstantVectorValue new type: vectorType; slots: arguments
+	].
 	^ self addInstruction: (SLVMMakeVector type: vectorType parameters: arguments) name: resultName
+]
+
+{ #category : #'matrix operations' }
+SLVMBuilder >> matrixAdd: left with: right [
+	^ self matrixAdd: left with: right name: function generateSymbol
+]
+
+{ #category : #'matrix operations' }
+SLVMBuilder >> matrixAdd: left with: right name: name [
+	(self isFloatingPointMatrix: left) ifTrue: [
+		^ self fadd: left with: right name: name
+	] ifFalse: [ 
+		^ self add: left with: right name: name
+	]
+]
+
+{ #category : #'matrix operations' }
+SLVMBuilder >> matrixDiv: left with: right [
+	^ self matrixDiv: left with: right name: function generateSymbol
+]
+
+{ #category : #'matrix operations' }
+SLVMBuilder >> matrixDiv: left with: right name: name [
+	(self isFloatingPointMatrix: left) ifTrue: [
+		^ self fdiv: left with: right name: name
+	] ifFalse: [
+		(self isSignedMatrix: left) ifTrue: [ 
+			^ self div: left with: right name: name
+		] ifFalse: [
+			^ self udiv: left with: right name: name
+		]
+	]
+]
+
+{ #category : #'matrix operations' }
+SLVMBuilder >> matrixMul: left with: right [
+	^ self matrixMul: left with: right name: function generateSymbol
+]
+
+{ #category : #'matrix operations' }
+SLVMBuilder >> matrixMul: left with: right name: name [
+	(self isFloatingPointMatrix: left) ifTrue: [
+		^ self fmul: left with: right name: name
+	] ifFalse: [ 
+		^ self mul: left with: right name: name
+	]
+]
+
+{ #category : #'matrix operations' }
+SLVMBuilder >> matrixRem: left with: right [
+	^ self matrixRem: left with: right name: function generateSymbol
+]
+
+{ #category : #'matrix operations' }
+SLVMBuilder >> matrixRem: left with: right name: name [
+	(self isFloatingPointMatrix: left) ifTrue: [
+		^ self frem: left with: right name: name
+	] ifFalse: [
+		(self isSignedMatrix: left) ifTrue: [ 
+			^ self rem: left with: right name: name
+		] ifFalse: [
+			^ self urem: left with: right name: name
+		]
+	]
+]
+
+{ #category : #'matrix operations' }
+SLVMBuilder >> matrixSub: left with: right [
+	^ self matrixSub: left with: right name: function generateSymbol
+]
+
+{ #category : #'matrix operations' }
+SLVMBuilder >> matrixSub: left with: right name: name [
+	(self isFloatingPointMatrix: left) ifTrue: [
+		^ self fsub: left with: right name: name
+	] ifFalse: [ 
+		^ self sub: left with: right name: name
+	]
 ]
 
 { #category : #arithmetic }

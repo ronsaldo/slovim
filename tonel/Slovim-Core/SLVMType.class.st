@@ -431,7 +431,17 @@ SLVMType >> isDynamicObjectType [
 ]
 
 { #category : #testing }
+SLVMType >> isFloatMatrixType [
+	^ false
+]
+
+{ #category : #testing }
 SLVMType >> isFloatType [
+	^ false
+]
+
+{ #category : #testing }
+SLVMType >> isFloatVectorType [
 	^ false
 ]
 
@@ -446,7 +456,17 @@ SLVMType >> isInstruction [
 ]
 
 { #category : #testing }
+SLVMType >> isIntegerMatrixType [
+	^ false
+]
+
+{ #category : #testing }
 SLVMType >> isIntegerType [
+	^ false
+]
+
+{ #category : #testing }
+SLVMType >> isIntegerVectorType [
 	^ false
 ]
 
