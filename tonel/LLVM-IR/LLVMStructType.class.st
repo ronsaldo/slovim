@@ -45,6 +45,11 @@ LLVMStructType >> fullPrintOn: aStream [
 ]
 
 { #category : #accessing }
+LLVMStructType >> memberAt: sourceIndex [
+	^ elements at: sourceIndex + 1
+]
+
+{ #category : #accessing }
 LLVMStructType >> name [
 	^ name ifNil: [ name := self createName ]
 ]

@@ -5,6 +5,15 @@ Class {
 }
 
 { #category : #accessing }
+LLVMVectorType >> constant: constantElements [
+	self assert: constantElements size = elements.
+	^ LLVMConstantVector new
+		type: self;
+		elements: constantElements;
+		yourself
+]
+
+{ #category : #accessing }
 LLVMVectorType >> createName [
 	^ ByteString streamContents: [ :out |
 		out nextPut: $<; print: elements; nextPutAll: ' x ' ; print: elementType; nextPut: $>

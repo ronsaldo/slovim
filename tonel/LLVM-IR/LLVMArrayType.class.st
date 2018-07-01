@@ -5,6 +5,15 @@ Class {
 }
 
 { #category : #accessing }
+LLVMArrayType >> constant: constantElements [
+	self assert: constantElements size = elements.
+	^ LLVMConstantArray new
+		type: self;
+		elements: constantElements;
+		yourself
+]
+
+{ #category : #accessing }
 LLVMArrayType >> createName [
 	^ ByteString streamContents: [ :out |
 		out nextPut: $[; print: elements; nextPutAll: ' x ' ; print: elementType; nextPut: $]
