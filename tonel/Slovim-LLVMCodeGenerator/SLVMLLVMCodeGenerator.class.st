@@ -382,6 +382,17 @@ SLVMLLVMCodeGenerator >> visitConstantArrayBlob: constant [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantMatrixValue: constantMatrixValue [
+	| type slots |
+	type := self translateType: constantMatrixValue type.
+	slots := constantMatrixValue slots collect: [ :slot | self translateValue: slot ].
+	^ LLVMConstantStruct new
+		type: type;
+		elements: slots;
+		yourself
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitConstantPointer: constant [
 	| type variable pointedValue indexType |
 	type := self translateType: constant type.
@@ -425,6 +436,17 @@ SLVMLLVMCodeGenerator >> visitConstantValue: aConstantValue [
 		].
 	].
 	self error: 'Unsupported constant value type'
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantVectorValue: constantVectorValue [
+	| type slots |
+	type := self translateType: constantVectorValue type.
+	slots := constantVectorValue slots collect: [ :slot | self translateValue: slot ].
+	^ LLVMConstantVector new
+		type: type;
+		elements: slots;
+		yourself
 ]
 
 { #category : #visiting }
