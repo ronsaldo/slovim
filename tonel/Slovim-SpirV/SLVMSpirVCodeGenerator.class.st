@@ -585,6 +585,54 @@ SLVMSpirVCodeGenerator >> visitCombineSamplerWithTexture: combineSampler [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitConstantArrayValue: constantVectorValue [
+	| slots type |
+	^ self valueTranslation: constantVectorValue do: [ :id |
+		type := self translateValue: constantVectorValue type.
+		slots := constantVectorValue slots collect: [:slot | self translateValue: slot].
+		
+		builder addConstantInstruction: (SpirVInstruction
+			opcode: SpvOpConstantComposite
+			type: type
+			result: id
+			operands: slots
+		) 
+	]
+]
+
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> visitConstantMatrixValue: constantVectorValue [
+	| slots type |
+	^ self valueTranslation: constantVectorValue do: [ :id |
+		type := self translateValue: constantVectorValue type.
+		slots := constantVectorValue slots collect: [:slot | self translateValue: slot].
+		
+		builder addConstantInstruction: (SpirVInstruction
+			opcode: SpvOpConstantComposite
+			type: type
+			result: id
+			operands: slots
+		) 
+	]
+]
+
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> visitConstantStructureValue: constantVectorValue [
+	| slots type |
+	^ self valueTranslation: constantVectorValue do: [ :id |
+		type := self translateValue: constantVectorValue type.
+		slots := constantVectorValue slots collect: [:slot | self translateValue: slot].
+		
+		builder addConstantInstruction: (SpirVInstruction
+			opcode: SpvOpConstantComposite
+			type: type
+			result: id
+			operands: slots
+		) 
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitConstantValue: constantValue [
 	| value type encodedValue |
 	^ self valueTranslation: constantValue do: [ :id |
@@ -619,6 +667,22 @@ SLVMSpirVCodeGenerator >> visitConstantValue: constantValue [
 				result: id
 				operands: encodedValue)
 		]
+	]
+]
+
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> visitConstantVectorValue: constantVectorValue [
+	| slots type |
+	^ self valueTranslation: constantVectorValue do: [ :id |
+		type := self translateValue: constantVectorValue type.
+		slots := constantVectorValue slots collect: [:slot | self translateValue: slot].
+		
+		builder addConstantInstruction: (SpirVInstruction
+			opcode: SpvOpConstantComposite
+			type: type
+			result: id
+			operands: slots
+		) 
 	]
 ]
 
