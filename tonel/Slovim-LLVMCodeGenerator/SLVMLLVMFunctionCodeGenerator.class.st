@@ -414,6 +414,64 @@ void matrixMultiply(float left[4][4], float right[4][4], float dest[4][4])
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> generateMatrixTimesVector: instruction [
+"
+void matrixMultiply(float matrix[4][4], float vector[4], float result[4])
+	for(int k = 0; k < 4; ++k) // Add columns
+		for(int i = 0; i < 4; ++i)
+			result[i] += matrix[i][k]*vector[k]
+"
+	| multiplyOperation additionOperation matrixType vectorType resultType matrix vector result multiply resultLLVMType column |
+	matrixType := instruction left type.
+	vectorType := instruction right type.
+	resultType := instruction type.
+	resultLLVMType := self translateType: resultType.
+
+	self assert: resultType isVectorType.
+	self assert: vectorType isVectorType.
+	self assert: matrixType columns = vectorType elements.
+	self assert: matrixType rows = resultType elements.
+	
+	matrixType isFloatMatrixType ifTrue: [ 
+		multiplyOperation := #fmul.
+		additionOperation := #fadd.
+	] ifFalse: [ 
+		self assert: matrixType isIntegerMatrixType.
+		multiplyOperation := #mul.
+		additionOperation := #add.
+	].
+
+	matrix := self translateValue: instruction left.
+	vector := self translateValue: instruction right.
+	^ Array streamContents: [ :out |
+		column := self aggregate: matrix extractValueAt: 0.
+		out nextPut: column.
+		result := self generateScalarVectorBinaryOperation: multiplyOperation
+			resultType: resultLLVMType
+			left: column
+			right: vector name: nil.
+		out nextPut: result.
+		
+		2 to: matrixType columns do: [ :i |
+			column := self aggregate: matrix extractValueAt: i - 1.
+			out nextPut: column.
+			multiply := self generateScalarVectorBinaryOperation: multiplyOperation
+				resultType: resultLLVMType
+				left: column
+				right: vector name: nil.
+			out nextPut: multiply.
+
+			result := self generateScalarVectorBinaryOperation: additionOperation
+				resultType: resultLLVMType
+				left: result
+				right: multiply name: nil.
+			out nextPut: result.
+		]
+	]
+
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> generateScalarVectorBinaryOperation: operation resultType: resultType left: left right: right name: name [
 	BinaryOperationMap at: operation ifPresent: [ :mappedOperation |
 		^ LLVMBinaryOperator new
@@ -578,7 +636,7 @@ SLVMLLVMFunctionCodeGenerator >> visitAlloca: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitBinaryOperation: instruction [
-	instruction type isMatrixType ifTrue: [ ^ self generateMatrixBinaryOperation: instruction ].
+	instruction isMatrixOperation ifTrue: [ ^ self generateMatrixBinaryOperation: instruction ].
 	^ self generateScalarVectorBinaryOperation: instruction operation
 		resultType: (self translateType: instruction type)
 		left: (self translateValue: instruction left)
