@@ -20,6 +20,11 @@ LLVMVectorType >> createName [
 	]
 ]
 
+{ #category : #testing }
+LLVMVectorType >> isVectorTy [
+	^ true
+]
+
 { #category : #'as yet unclassified' }
 LLVMVectorType >> zeroConstant [
 	| zeroElement |
