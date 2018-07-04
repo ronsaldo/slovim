@@ -46,6 +46,19 @@ SLVMLLVMBuiltInFunctionGenerator class >> matrixBuiltIn [
 	
 ]
 
+{ #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> vectorBuiltIn [
+	<builtInFunctions>
+	self
+		addBuiltIn: #'vector.dot' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVectorDot: callInstruction arguments first with: callInstruction arguments second
+		];
+		addBuiltIn: #'vector.cross' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVector: builtInFunction functionType returnType cross: callInstruction arguments first with: callInstruction arguments second
+		];
+		yourself
+]
+
 { #category : #'as yet unclassified' }
 SLVMLLVMBuiltInFunctionGenerator >> generateWith: functionCodeGenerator builtInFunction: builtInFunction callInstruction: instruction [
 	self subclassResponsibility

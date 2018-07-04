@@ -284,6 +284,16 @@ SLVMLLVMFunctionCodeGenerator >> generateBuiltInFunction: builtInFunction call: 
 	^ generator generateWith: self builtInFunction: builtInFunction callInstruction: instruction
 ]
 
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> generateDot: left with: right mul: multiplyOperation add: additionOperation into: out [
+	| multiplication |
+	self assert: left type = right type.
+	multiplication := self generateScalarVectorBinaryOperation: multiplyOperation resultType: left type left: left right: right name: nil.
+	out nextPut: multiplication.
+	
+	^ self generateVectorFold: multiplication with: additionOperation into: out
+]
+
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> generateFunction: slvmFunction into: newLLVMFunction [
 	slvmFunction isEmpty ifTrue: [ ^ newLLVMFunction ].
@@ -504,6 +514,158 @@ SLVMLLVMFunctionCodeGenerator >> generateScalarVectorBinaryOperation: operation 
 	].
 
 	self error: 'Unsupported binary operation.'
+
+]
+
+{ #category : #'vector intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateVector: vectorType cross: leftVector with: rightVector [
+	"
+	https://en.wikipedia.org/wiki/Cross_product#Computing_the_cross_product [ 2018-07-04 23:08 ]
+	s1 = u2v3 - u3v2
+	s2 = u3v1 - u1v3
+	s3 = u1v2 - u2v1
+	"
+	| leftVectorValue rightVectorValue multiplyOperation subtractionOperation lu lv lm ru rv rm result resultType |
+	self assert: leftVector type = rightVector type.
+	self assert: leftVector type = vectorType.
+	self assert: vectorType elements = 3.
+	
+	resultType := self translateType: vectorType.
+	leftVectorValue := self translateValue: leftVector.
+	rightVectorValue := self translateValue: rightVector.
+	
+	vectorType isFloatVectorType ifTrue: [ 
+		multiplyOperation := #fmul.
+		subtractionOperation := #fsub.
+	] ifFalse: [ 
+		self assert: vectorType isIntegerVectorType.
+		multiplyOperation := #mul.
+		subtractionOperation := #sub.
+	].
+
+	^ Array streamContents: [ :out |
+		"Left multiply"
+		lu := self vector: leftVectorValue shuffleWith: leftVectorValue mask: #(1 2 0). out nextPut: lu.
+		lv := self vector: rightVectorValue shuffleWith: rightVectorValue mask: #(2 0 1). out nextPut: lv.
+		
+		lm := self generateScalarVectorBinaryOperation: multiplyOperation resultType: resultType left: lu right: lv name: nil. out nextPut: lm.
+		
+		"Right multiply"
+		ru := self vector: leftVectorValue shuffleWith: leftVectorValue mask: #(2 0 1). out nextPut: ru.
+		rv := self vector: rightVectorValue shuffleWith: rightVectorValue mask: #(1 2 0). out nextPut: rv.
+		
+		rm := self generateScalarVectorBinaryOperation: multiplyOperation resultType: resultType left: ru right: rv name: nil. out nextPut: rm.
+		
+		"Subtraction"
+		result := self generateScalarVectorBinaryOperation: subtractionOperation resultType: resultType left: lm right: rm name: nil. out nextPut: result.
+	]
+]
+
+{ #category : #'vector intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateVectorDot: leftVector with: rightVector [
+	| vectorType leftVectorValue rightVectorValue multiplyOperation additionOperation |
+	self assert: leftVector type = rightVector type.
+	vectorType := leftVector type.
+	
+	leftVectorValue := self translateValue: leftVector.
+	rightVectorValue := self translateValue: rightVector.
+	
+	vectorType isFloatVectorType ifTrue: [ 
+		multiplyOperation := #fmul.
+		additionOperation := #fadd.
+	] ifFalse: [ 
+		self assert: vectorType isIntegerVectorType.
+		multiplyOperation := #mul.
+		additionOperation := #add.
+	].
+
+	^ Array streamContents: [ :out |
+		self generateDot: leftVectorValue with: rightVectorValue mul: multiplyOperation add: additionOperation into: out
+	]
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> generateVectorFold: vectorOrScalar with: operation into: out [
+	| vectorType firstShuffleVector secondShuffleVector halfVectorSize halfVectorType leftIndices rightIndices leftVector rightVector result leftValue rightValue |
+	vectorType := vectorOrScalar type.
+	vectorOrScalar type isVectorTy ifFalse: [ ^ vectorOrScalar ].
+	
+	firstShuffleVector := vectorOrScalar.
+	secondShuffleVector := vectorType elements even ifTrue: [ vectorOrScalar ] ifFalse: [ vectorType zeroConstant ].
+	
+	halfVectorSize := (vectorType elements + 1) // 2.
+	halfVectorSize = 1 ifTrue: [
+		leftValue := self vector: vectorOrScalar extractElementAt: 0.
+		out nextPut: leftValue.
+
+		rightValue := self vector: vectorOrScalar extractElementAt: 1.
+		out nextPut: rightValue.
+
+		result := self generateScalarVectorBinaryOperation: operation resultType: vectorType elementType left: leftValue right: rightValue name: nil.
+		out nextPut: result.
+		^ result
+	].
+
+	halfVectorType := LLVMVectorType get: vectorType elementType elements: halfVectorSize.
+	
+	leftIndices := (0 to: halfVectorSize - 1) collect: [ :i | i*2 ].
+	rightIndices := (0 to: halfVectorSize - 1) collect: [ :i | i*2 + 1 ].
+	
+	leftVector := self vector: firstShuffleVector shuffleWith: secondShuffleVector mask: leftIndices.
+	out nextPut: leftVector.
+
+	rightVector := self vector: firstShuffleVector shuffleWith: secondShuffleVector mask: rightIndices.
+	out nextPut: rightVector.
+	
+	result := self generateScalarVectorBinaryOperation: operation resultType: halfVectorType left: leftVector right: rightVector name: nil.
+	out nextPut: result.
+	
+	^ self generateVectorFold: result with: operation into: out
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> generateVectorTimesMatrix: instruction [
+"
+void matrixMultiply(float vector[4], float matrix[4][4], float result[4])
+	for(int k = 0; k < 4; ++k) // Add columns
+		for(int i = 0; i < 4; ++i)
+			result[k] += vector[i]*matrix[i][k]
+
+"
+	| multiplyOperation additionOperation matrixType vectorType resultType matrix vector result resultLLVMType column resultElement |
+	vectorType := instruction left type.
+	matrixType := instruction right type.
+	resultType := instruction type.
+	resultLLVMType := self translateType: resultType.
+
+	self assert: resultType isVectorType.
+	self assert: vectorType isVectorType.
+	self assert: vectorType elements = matrixType rows.
+	self assert: matrixType columns = resultType elements.
+	
+	matrixType isFloatMatrixType ifTrue: [ 
+		multiplyOperation := #fmul.
+		additionOperation := #fadd.
+	] ifFalse: [ 
+		self assert: matrixType isIntegerMatrixType.
+		multiplyOperation := #mul.
+		additionOperation := #add.
+	].
+
+	vector := self translateValue: instruction left.
+	matrix := self translateValue: instruction right.
+
+	^ Array streamContents: [ :out |
+		result := resultLLVMType zeroConstant.
+		1 to: resultType elements do: [ :i |
+			column := self aggregate: matrix extractValueAt: i - 1.
+			out nextPut: column.
+			
+			resultElement := self generateDot: vector with: column mul: multiplyOperation add: additionOperation into: out.
+			result := self vector: result insertElement: resultElement at: i - 1.
+			out nextPut: result
+		].
+	]
 
 ]
 
