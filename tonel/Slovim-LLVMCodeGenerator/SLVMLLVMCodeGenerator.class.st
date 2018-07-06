@@ -200,6 +200,18 @@ SLVMLLVMCodeGenerator >> debugTranslator [
 	 ^ debugTranslator ifNil: [debugTranslator := SLVMLLVMDebugTranslator new moduleTranslator: self]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLLVMCodeGenerator >> declareNamedStructure: aNamedStructure [
+	| convertedStructure |
+	convertedStructure := LLVMStructType new
+		context: self context;
+		name: ('%' , aNamedStructure name);
+		yourself.
+	translatedTypes at: aNamedStructure put: convertedStructure.
+	self llvmModule addNamedStructure: convertedStructure
+	
+]
+
 { #category : #'debug information' }
 SLVMLLVMCodeGenerator >> emptyDebugExpression [
 	^ emptyDebugExpression ifNil: [ emptyDebugExpression := LLVMDIExpression for: self llvmModule ]
@@ -275,6 +287,10 @@ SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
 	self translateModuleDebugInformation: module.
 
 	module structures do: [ :structures |
+		self declareNamedStructure: structures
+	].
+
+	module structures do: [ :structures |
 		self translateNamedStructure: structures
 	].
 
@@ -315,12 +331,7 @@ SLVMLLVMCodeGenerator >> translateModuleElement: value [
 { #category : #'as yet unclassified' }
 SLVMLLVMCodeGenerator >> translateNamedStructure: aNamedStructure [
 	| convertedStructure |
-	convertedStructure := LLVMStructType new
-		context: self context;
-		name: ('%' , aNamedStructure name);
-		yourself.
-	translatedTypes at: aNamedStructure put: convertedStructure.
-	self llvmModule addNamedStructure: convertedStructure.
+	convertedStructure := translatedTypes at: aNamedStructure.
 	self convertStructureContent: aNamedStructure into: convertedStructure
 	
 ]
