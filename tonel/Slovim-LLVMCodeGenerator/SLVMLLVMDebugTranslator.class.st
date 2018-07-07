@@ -31,6 +31,20 @@ SLVMLLVMDebugTranslator >> translate: aDebugElement [
 ]
 
 { #category : #visiting }
+SLVMLLVMDebugTranslator >> visitBoolType: type [
+	| basicType |
+	basicType := (LLVMDIBasicType for: self llvmModule)
+		name: type name;
+		size: type size*8;
+		align: type alignment*8;
+		encoding: DW_ATE_boolean;
+		yourself.
+	moduleTranslator register: type debugElement: basicType.
+	
+	^ basicType
+]
+
+{ #category : #visiting }
 SLVMLLVMDebugTranslator >> visitFloatType: type [
 	| basicType |
 	basicType := (LLVMDIBasicType for: self llvmModule)
