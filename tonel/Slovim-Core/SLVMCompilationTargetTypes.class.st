@@ -26,6 +26,11 @@ SLVMCompilationTargetTypes class >> forCurrentImage [
 ]
 
 { #category : #types }
+SLVMCompilationTargetTypes >> arrayOf: elementType size: size [
+	^ SLVMArrayType baseType: elementType elements: size
+]
+
+{ #category : #types }
 SLVMCompilationTargetTypes >> bool [
 	^ SLVMType boolType
 ]

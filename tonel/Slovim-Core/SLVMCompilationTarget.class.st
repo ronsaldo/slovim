@@ -9,6 +9,11 @@ Class {
 }
 
 { #category : #types }
+SLVMCompilationTarget >> arrayOf: elementType size: size [
+	^ types arrayOf: elementType size: size
+]
+
+{ #category : #types }
 SLVMCompilationTarget >> bool [
 	^ types bool
 ]
