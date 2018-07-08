@@ -38,7 +38,10 @@ LLVMGlobalVariable >> alignment: anObject [
 { #category : #printing }
 LLVMGlobalVariable >> fullPrintOn: aStream [
 	aStream print: self; nextPutAll: ' = '.
-	aStream << linkage second << ' ' << visibility second.
+	(linkage second ~= #external or: [ initialValue isNil ]) ifTrue: [
+		aStream << linkage second
+	].
+	aStream << ' ' << visibility second.
 	type addressSpace ~= 0 ifTrue: [ 
 		aStream << 'addrspace(' << type addressSpace << ')'
 	].

@@ -113,6 +113,11 @@ LLVMGlobalValue class >> linkOnceODRLinkage [
 	^ LinkOnceODRLinkage
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMGlobalValue class >> notThreadLocal [
+	^ NotThreadLocal
+]
+
 { #category : #linkage }
 LLVMGlobalValue class >> privateLinkage [
 	^ PrivateLinkage
