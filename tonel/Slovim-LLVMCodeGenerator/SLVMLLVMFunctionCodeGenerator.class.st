@@ -808,6 +808,16 @@ SLVMLLVMFunctionCodeGenerator >> visitBinaryOperation: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitBitCast: instruction [
+	^ LLVMBitCastInst new
+			type: (self translateType: instruction type);
+			name: (self convertName: instruction name);
+			source: (self translateValue: instruction source);
+			yourself
+
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitBranch: instruction [
 	^ LLVMBranchInst new
 		name: (self convertName: instruction name);

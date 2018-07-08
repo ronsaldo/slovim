@@ -393,6 +393,14 @@ SLVMLLVMCodeGenerator >> visitConstantArrayBlob: constant [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantExpressionBitCast: constantBitCast [
+	^ LLVMBitCastConstantExpr new
+		type: (self translateType: constantBitCast type);
+		source: (self translateValue: constantBitCast source);
+		yourself
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitConstantMatrixValue: constantMatrixValue [
 	| type slots |
 	type := self translateType: constantMatrixValue type.
@@ -493,6 +501,20 @@ SLVMLLVMCodeGenerator >> visitFunctionType: functionType [
 		arguments := functionType arguments collect: [ :arg | self translateType: arg ].
 		LLVMFunctionType get: returnType params: arguments isVarArg: functionType variadic
 	]
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> visitGlobalVariable: aGlobalVariable [
+	| variableType variable |
+	variableType := self translateType: aGlobalVariable valueType.
+	variable := LLVMGlobalVariable createWithType: variableType module: self llvmModule isConstant: aGlobalVariable readOnly linkage: (self convertLinkage: aGlobalVariable) name: (self convertName: aGlobalVariable name) threadLocalMode: LLVMGlobalValue notThreadLocal addressSpace: 0.
+	translatedModuleElements at: aGlobalVariable put: variable.
+	
+	aGlobalVariable initialValue ifNotNil: [ :constant |
+		variable initialValue: (self translateValue: constant)
+	].
+
+	^ variable
 ]
 
 { #category : #visiting }
