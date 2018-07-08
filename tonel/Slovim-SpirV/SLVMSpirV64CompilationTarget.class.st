@@ -40,3 +40,8 @@ SLVMSpirV64CompilationTarget >> logicalAddressMode: anObject [
 SLVMSpirV64CompilationTarget >> lowLevelCodeGeneratorClass [
 	^ SLVMSpirVCodeGenerator new logicalAddressMode: logicalAddressMode
 ]
+
+{ #category : #accessing }
+SLVMSpirV64CompilationTarget >> operatingSystemName [
+	^ #gpu
+]
