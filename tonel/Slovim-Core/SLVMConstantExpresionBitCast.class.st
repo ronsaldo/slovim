@@ -1,6 +1,6 @@
 Class {
 	#name : #SLVMConstantExpresionBitCast,
-	#superclass : #SLVMConstantExpresion,
+	#superclass : #SLVMConstantExpresionCast,
 	#category : #'Slovim-Core-SSA'
 }
 
@@ -17,15 +17,4 @@ SLVMConstantExpresionBitCast >> isConstantExpressionBitCast [
 { #category : #printing }
 SLVMConstantExpresionBitCast >> mnemonic [
 	^ #const_bitcast
-]
-
-{ #category : #accessing }
-SLVMConstantExpresionBitCast >> value [
-	^ parameters first
-]
-
-{ #category : #'as yet unclassified' }
-SLVMConstantExpresionBitCast >> value: aValue targetType: aTargetType [
-	self parameters: { aValue }.
-	type := aTargetType
 ]
