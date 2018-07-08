@@ -111,7 +111,7 @@ SLVMLLVMDebugTranslator >> visitPointerType: type [
 		yourself.
 	moduleTranslator register: type debugElement: derivedType.
 	type baseType isVoidType ifTrue: [
-		self halt
+		derivedType baseType: (moduleTranslator translateDebugType: SLVMType ucharType).
 	] ifFalse: [ 
 		derivedType baseType: (moduleTranslator translateDebugType: type baseType).
 	].
