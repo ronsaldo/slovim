@@ -7,7 +7,8 @@ Class {
 		'callingConvenction',
 		'arguments',
 		'symbolGenerationCount',
-		'hasArgumentNames'
+		'hasArgumentNames',
+		'labelSymbolGenerationCount'
 	],
 	#category : #'LLVM-IR-GlobalValues'
 }
@@ -92,6 +93,19 @@ LLVMFunction >> fullPrintOn: aStream [
 	
 ]
 
+{ #category : #accessing }
+LLVMFunction >> functionType [
+	^ functionType
+]
+
+{ #category : #initialization }
+LLVMFunction >> generateLabelSymbol [
+	| result |
+	result := '__al' , labelSymbolGenerationCount asString.
+	labelSymbolGenerationCount := labelSymbolGenerationCount + 1.
+	^ result
+]
+
 { #category : #initialization }
 LLVMFunction >> generateSymbol [
 	| result |
@@ -111,6 +125,7 @@ LLVMFunction >> initialize [
 	basicBlocks := OrderedCollection new.
 	callingConvenction := #ccc.
 	symbolGenerationCount := 0.
+	labelSymbolGenerationCount := 0.
 	hasArgumentNames := false.
 	
 ]
@@ -155,7 +170,7 @@ LLVMFunction >> returnType [
 LLVMFunction >> sanitizeNames [
 	arguments do: [ :arg | arg name ifNil: [ arg name: self generateSymbol ] ].
 	basicBlocks do: [ :bb |
-		bb name ifNil: [ bb name: self generateSymbol ].
+		bb name ifNil: [ bb name: self generateLabelSymbol ].
 		bb instructionsDo: [ :instruction  |
 			instruction name ifNil: [
 				instruction type isVoidTy ifFalse: [ 

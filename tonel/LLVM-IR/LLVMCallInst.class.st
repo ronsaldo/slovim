@@ -3,7 +3,8 @@ Class {
 	#superclass : #LLVMInstruction,
 	#instVars : [
 		'calledFunction',
-		'arguments'
+		'arguments',
+		'callingConvention'
 	],
 	#category : #'LLVM-IR-Instructions'
 }
@@ -28,6 +29,16 @@ LLVMCallInst >> calledFunction: anObject [
 	calledFunction := anObject
 ]
 
+{ #category : #accessing }
+LLVMCallInst >> callingConvention [
+	^ callingConvention
+]
+
+{ #category : #accessing }
+LLVMCallInst >> callingConvention: anObject [
+	callingConvention := anObject
+]
+
 { #category : #printing }
 LLVMCallInst >> mnemonic [
 	^ #call
@@ -36,6 +47,7 @@ LLVMCallInst >> mnemonic [
 { #category : #printing }
 LLVMCallInst >> printParametersOn: aStream [
 	| calledFunctionType |
+	callingConvention ifNotNil: [ aStream nextPutAll: callingConvention; space ].
 	calledFunctionType := calledFunction type elementType.
 	aStream space; print: calledFunctionType; space; print: calledFunction; nextPut: $(.
 	arguments doWithIndex: [ :arg :index |

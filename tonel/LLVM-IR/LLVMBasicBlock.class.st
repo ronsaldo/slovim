@@ -61,25 +61,20 @@ LLVMBasicBlock >> instructions [
 	^ instructions
 ]
 
+{ #category : #accessing }
+LLVMBasicBlock >> instructions: anObject [
+	instructions := anObject
+]
+
 { #category : #enumerating }
 LLVMBasicBlock >> instructionsDo: aBlock [
 	^ instructions do: aBlock
 ]
 
-{ #category : #'as yet unclassified' }
-LLVMBasicBlock >> instructionsReplaceWith: aBlock [
-	| newInstructions replacement |
-	newInstructions := OrderedCollection new.
-	instructions do: [ :instruction |
-		replacement := aBlock value: instruction.
-		replacement isCollection ifTrue: [
-			newInstructions addAll: replacement
-		] ifFalse: [
-			newInstructions add: replacement
-		]
-	].
+{ #category : #'instance creation' }
+LLVMBasicBlock >> newReplacer [
+	^ LLVMBasicBlockInstructionReplacer new block: self
 
-	instructions := newInstructions
 ]
 
 { #category : #accessing }
