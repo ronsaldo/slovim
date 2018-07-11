@@ -681,7 +681,7 @@ SLVMHighLevelLanguageCodeGenerator >> translateBasicBlock: aBasicBlock [
 { #category : #'code generation' }
 SLVMHighLevelLanguageCodeGenerator >> translateBasicType: aType [
 	(aType isVectorType or: [aType isMatrixType]) ifTrue: [ linearAlgebraRequired := true ].
-	aType isDynamicObjectType ifTrue: [ dynamicRuntimeRequired := true ].
+	aType isDynamicObjectPointerType ifTrue: [ dynamicRuntimeRequired := true ].
 	^ SLVMHLBasicTypeNode new name: (self translateBasicTypeName: aType); type: aType
 ]
 
