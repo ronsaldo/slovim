@@ -102,7 +102,7 @@ SLVMSAsmConstantCodeGenerator >> translateImmediateConstantValue: value [
 	integerImmediate := 0.
 	valueType := value type.
 	(valueType isScalarIntegerType) ifTrue: [
-		valueType isDynamicObjectType ifTrue: [
+		valueType isDynamicObjectPointerType ifTrue: [
 			^ self translateImmediateObjectLiteral: value
 		] ifFalse: [
 			integerImmediate := value value.
@@ -122,7 +122,7 @@ SLVMSAsmConstantCodeGenerator >> translateImmediateConstantValue: value [
 { #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> translateImmediateObjectLiteral: constantValue [
 	| value |
-	self assert: constantValue type isDynamicObjectType.
+	self assert: constantValue type isDynamicObjectPointerType.
 	value := constantValue value.
 	value isCharacter ifTrue: [ 
 		^ SLVMSAsmValue operand: (target objectModel encodeCharacter: value)

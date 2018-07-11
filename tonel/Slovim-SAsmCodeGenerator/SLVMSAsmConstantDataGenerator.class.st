@@ -117,7 +117,7 @@ SLVMSAsmConstantDataGenerator >> visitConstantValue: constant [
 				yourself.
 		].
 	
-		type isDynamicObjectType ifTrue: [ 
+		type isDynamicObjectPointerType ifTrue: [ 
 			^ self emitImmediateLiteralObject: constant
 		]
 	].

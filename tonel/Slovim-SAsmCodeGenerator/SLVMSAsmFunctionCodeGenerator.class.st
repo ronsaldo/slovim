@@ -233,7 +233,7 @@ SLVMSAsmFunctionCodeGenerator >> createAllocaVariables [
 				ref isLoad ifTrue: [ valueVariableMap at: ref put: registers ].
 			].
 		
-			alloca valueType isDynamicObjectType ifTrue: [
+			alloca valueType isDynamicObjectPointerType ifTrue: [
 				dynamicObjectVariableRegisters add: registers
 			] 
 		]
@@ -350,7 +350,7 @@ SLVMSAsmFunctionCodeGenerator >> createVirtualRegisters [
 SLVMSAsmFunctionCodeGenerator >> createVirtualRegistersForType: type [
 	type isScalarType ifTrue: [ 
 		type isScalarIntegerType ifTrue: [
-			^ SLVMSAsmValue registers: (sasmFunction addVirtualRegisters: (sasmTarget newIntegerVirtualRegistersForSize: type size dynamicRoot: type isDynamicObjectType))
+			^ SLVMSAsmValue registers: (sasmFunction addVirtualRegisters: (sasmTarget newIntegerVirtualRegistersForSize: type size dynamicRoot: type isDynamicObjectPointerType))
 		].
 		type isFloatType ifTrue: [
 			^ SLVMSAsmValue registers: (sasmFunction addVirtualRegisters: (sasmTarget newFloatVirtualRegistersForSize: type size))
@@ -562,7 +562,7 @@ SLVMSAsmFunctionCodeGenerator >> loadFrom: pointer scalarType: type into: result
 	| temp |
 	self assert: type isScalarType.
 	
-	(type isPointerType or: [ type isDynamicObjectType ]) ifTrue: [
+	(type isPointerType or: [ type isDynamicObjectPointerType ]) ifTrue: [
 		self assert: result isRegisterScalarValue.
 		^ blockBuilder tacLoad: pointer into: result
 	].
@@ -686,7 +686,7 @@ SLVMSAsmFunctionCodeGenerator >> store: ssaValue intoPointerRegister: variable [
 SLVMSAsmFunctionCodeGenerator >> store: value scalarType: type into: pointer [
 	| temp |
 	self assert: type isScalarType.
-	(type isPointerType or: [ type isDynamicObjectType ]) ifTrue: [
+	(type isPointerType or: [ type isDynamicObjectPointerType ]) ifTrue: [
 		self assert: value isRegisterScalarValue.
 		^ blockBuilder tacStore: value into: pointer.
 	].
@@ -862,7 +862,7 @@ SLVMSAsmFunctionCodeGenerator >> visitAlloca: instruction [
 	valueType := instruction valueType.
 	result := self translateValue: instruction.
 	instruction block == function basicBlocks first ifTrue: [ 
-		variable := sasmFunction newLocal: valueType size alignment: valueType alignment dynamicRoot: valueType isDynamicObjectType.
+		variable := sasmFunction newLocal: valueType size alignment: valueType alignment dynamicRoot: valueType isDynamicObjectPointerType.
 		variable explicitLocalVariable: true.
 		self createVariable: variable debugVariable: instruction type: valueType.
 		blockBuilder tacLoadLocalAddress: variable into: result
@@ -1040,7 +1040,7 @@ SLVMSAsmFunctionCodeGenerator >> visitDynamicObjectToIntCast: instruction [
 
 	sourceValue := self translateValue: source.
 	result := self translateValue: instruction.
-	self assert: source type isDynamicObjectType.
+	self assert: source type isDynamicObjectPointerType.
 
 	self flag: 'Check for overflows'.
 	blockBuilder tacArithmeticShiftRight: sourceValue with: target objectModel smallIntegerShift into: result
@@ -1206,7 +1206,7 @@ SLVMSAsmFunctionCodeGenerator >> visitGetElementPointer: instruction [
 	constantDisplacement := 0.
 	indicesWithStrides := OrderedCollection new.
 	
-	instruction pointer type isDynamicObjectType ifTrue: [
+	instruction pointer type isDynamicObjectPointerType ifTrue: [
 		constantDisplacement := target objectModel objectHeaderSize
 	].
 
@@ -1286,7 +1286,7 @@ SLVMSAsmFunctionCodeGenerator >> visitInstantiateClosure: anInstruction [
 	
 	dynamicCaptureCount := 0.
 	capturedEnvironmentType types do: [ :type |
-		type isDynamicObjectType ifTrue: [ dynamicCaptureCount := dynamicCaptureCount + 1 ]
+		type isDynamicObjectPointerType ifTrue: [ dynamicCaptureCount := dynamicCaptureCount + 1 ]
 	].
 
 	result := self translateValue: anInstruction.
@@ -1323,7 +1323,7 @@ SLVMSAsmFunctionCodeGenerator >> visitInstantiateClosure: anInstruction [
 	dynamicCaptureIndex := 0.
 	normalCaptureIndex := 0.
 	anInstruction captures do: [ :cap |
-		cap type isDynamicObjectType ifTrue: [ 
+		cap type isDynamicObjectPointerType ifTrue: [ 
 			self increaseReferenceOf: cap.
 			captureIndex := dynamicCaptureIndex.
 			dynamicCaptureIndex := dynamicCaptureIndex + 1
@@ -1750,7 +1750,7 @@ SLVMSAsmFunctionCodeGenerator >> visitUnaryOperation: instruction [
 SLVMSAsmFunctionCodeGenerator >> visitUndefinedInstruction: instruction [
 	| result |
 	result := self translateValue: instruction.
-	instruction type isDynamicObjectType ifTrue: [
+	instruction type isDynamicObjectPointerType ifTrue: [
 		^ blockBuilder tacMove: 0 into: result
 	]
 ]
