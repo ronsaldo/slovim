@@ -45,6 +45,19 @@ SLVMLLVMDebugTranslator >> visitBoolType: type [
 ]
 
 { #category : #visiting }
+SLVMLLVMDebugTranslator >> visitDynamicObjectType: type [
+	| derivedType |
+	derivedType := (LLVMDIDerivedType for: self llvmModule)
+		tag: DW_TAG_pointer_type;
+		size: type size*8;
+		align: type alignment*8;
+		yourself.
+	moduleTranslator register: type debugElement: derivedType.
+	derivedType baseType: (moduleTranslator translateDebugType: SLVMType ucharType).
+	^ derivedType
+]
+
+{ #category : #visiting }
 SLVMLLVMDebugTranslator >> visitFloatType: type [
 	| basicType |
 	basicType := (LLVMDIBasicType for: self llvmModule)

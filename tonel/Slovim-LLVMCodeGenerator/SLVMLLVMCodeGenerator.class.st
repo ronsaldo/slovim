@@ -17,7 +17,9 @@ Class {
 		'translatedDebugTypes',
 		'translatedDebugElements',
 		'convertedDebugVariables',
-		'emptyDebugExpression'
+		'emptyDebugExpression',
+		'doesNotUnderstandTrampolines',
+		'debugAnonymousCount'
 	],
 	#pools : [
 		'SAsmDWConstants'
@@ -190,6 +192,13 @@ SLVMLLVMCodeGenerator >> convertedDebugVariables [
 	^ convertedDebugVariables ifNil: [ convertedDebugVariables := Dictionary new ]
 ]
 
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> createDoesNotUnderstandTrampolineWithType: functionType [
+	| slvmFunction |
+	slvmFunction := target objectModel createDoesNotUnderstandTrampolineWithType: functionType.
+	^ self translateValue: slvmFunction
+]
+
 { #category : #accessing }
 SLVMLLVMCodeGenerator >> debugCompileUnit [
 	^ debugCompileUnit
@@ -212,9 +221,29 @@ SLVMLLVMCodeGenerator >> declareNamedStructure: aNamedStructure [
 	
 ]
 
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> doesNotUnderstandTrampolineWithType: trampolineFunctionType [
+	^ doesNotUnderstandTrampolines at: trampolineFunctionType ifAbsentPut: [ self createDoesNotUnderstandTrampolineWithType: trampolineFunctionType]
+]
+
 { #category : #'debug information' }
 SLVMLLVMCodeGenerator >> emptyDebugExpression [
 	^ emptyDebugExpression ifNil: [ emptyDebugExpression := LLVMDIExpression for: self llvmModule ]
+]
+
+{ #category : #initialization }
+SLVMLLVMCodeGenerator >> generateDebugAnonymousName [
+	debugAnonymousCount := debugAnonymousCount + 1.
+	^ '__anonymous' , debugAnonymousCount asString
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> getOrCreateRuntimeFunction: runtimeFunctionOrSymbol type: typeDefinition [
+	runtimeFunctionOrSymbol isSymbol ifTrue: [ 
+		self halt.
+	].
+
+	^ self translateValue: runtimeFunctionOrSymbol
 ]
 
 { #category : #initialization }
@@ -223,7 +252,9 @@ SLVMLLVMCodeGenerator >> initialize [
 	translatedModuleElements := IdentityDictionary new.
 	translatedTypes := IdentityDictionary new.
 	translatedConstants := IdentityDictionary new.
+	doesNotUnderstandTrampolines := Dictionary new.
 	usedNames := Set new.
+	debugAnonymousCount := 0.
 ]
 
 { #category : #'debug information' }
@@ -466,6 +497,14 @@ SLVMLLVMCodeGenerator >> visitConstantVectorValue: constantVectorValue [
 		type: type;
 		elements: slots;
 		yourself
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> visitDynamicObjectType: type [
+	^ self recursiveType: type translationDo: [
+		self flag: 'TODO: Change this for a pointer into an object header.'.
+		LLVMPointerType getUnqual: self context int8Ty
+	]
 ]
 
 { #category : #visiting }

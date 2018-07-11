@@ -8,7 +8,8 @@ Class {
 		'llvmFunction',
 		'valueDictionary',
 		'usedNames',
-		'functionDebugScope'
+		'functionDebugScope',
+		'currentBlockBuilder'
 	],
 	#classVars : [
 		'BinaryFloatComparisonOperationMap',
@@ -88,32 +89,125 @@ SLVMLLVMFunctionCodeGenerator class >> initialize [
 	).
 ]
 
-{ #category : #visiting }
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> addInstruction: anInstruction [
+	^ currentBlockBuilder add: anInstruction
+]
+
+{ #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> aggregate: sourceAggregate extractValueAt: sourceIndex [
-	^ LLVMExtractValueInst new
+	^ self addInstruction: (LLVMExtractValueInst new
 		type: (sourceAggregate type memberAt: sourceIndex);
 		aggregate: sourceAggregate;
 		indices: {sourceIndex};
-		yourself
+		yourself)
 ]
 
-{ #category : #visiting }
+{ #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> aggregate: sourceAggregate insertValue: value at: destIndex [
-	^ LLVMInsertValueInst new
+	^ self addInstruction: (LLVMInsertValueInst new
 		type: sourceAggregate type;
 		aggregate: sourceAggregate;
 		element: value;
 		indices: {destIndex};
-		yourself
+		yourself)
+]
+
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> bitCast: source target: targetType name: name [
+	^ self addInstruction: (LLVMBitCastInst new
+			type: targetType;
+			name: name;
+			source: source;
+			yourself)
+]
+
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> call: calledFunction arguments: arguments returnType: returnType name: name [
+	^ self call: calledFunction convention: nil arguments: arguments returnType: returnType name: name
+]
+
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> call: calledFunction convention: callingConvention arguments: arguments returnType: returnType name: name [
+	^ self addInstruction: (LLVMCallInst new
+		name: name;
+		calledFunction: calledFunction;
+		arguments: arguments;
+		type: returnType;
+		callingConvention: callingConvention;
+		yourself)
+]
+
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> callRuntimeFunction: runtimeFunctionOrSymbol arguments: arguments type: typeDefinition [
+	| runtimeFunction expectedTypes expectedType castedArguments |
+	runtimeFunction := moduleTranslator getOrCreateRuntimeFunction: runtimeFunctionOrSymbol type: typeDefinition.
+	
+	"We may need to cast the arguments."
+	expectedTypes := runtimeFunction functionType params.
+	(runtimeFunction functionType isVarArg and: [ arguments size < expectedTypes size ]) ifTrue: [ 
+		self error: 'Missing required arguments for runtime function call.'.
+	] ifFalse: [ 
+		expectedTypes size ~= arguments size ifTrue: [ 
+			self error: 'Runtime function call argument count mismatch'.
+		].
+	].
+
+	castedArguments := arguments collectWithIndex: [ :arg :index |
+		expectedType := expectedTypes at: index.
+		self castRuntimeCallArgument: arg into: expectedType
+	].
+
+	self halt.
+]
+
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> callRuntimeFunction: runtimeFunctionOrSymbol arguments: arguments type: typeDefinition name: name [
+	| runtimeFunction expectedTypes expectedType castedArguments |
+	runtimeFunction := moduleTranslator getOrCreateRuntimeFunction: runtimeFunctionOrSymbol type: typeDefinition.
+	
+	"We may need to cast the arguments."
+	expectedTypes := runtimeFunction functionType params.
+	(runtimeFunction functionType isVarArg and: [ arguments size < expectedTypes size ]) ifTrue: [ 
+		self error: 'Missing required arguments for runtime function call.'.
+	] ifFalse: [ 
+		expectedTypes size ~= arguments size ifTrue: [ 
+			self error: 'Runtime function call argument count mismatch'.
+		].
+	].
+
+	castedArguments := arguments collectWithIndex: [ :arg :index |
+		expectedType := expectedTypes at: index.
+		self castRuntimeCallArgument: arg into: expectedType
+	].
+
+	^ self call: runtimeFunction
+		arguments: castedArguments
+		returnType: runtimeFunction returnType
+		name: name
+]
+
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> castRuntimeCallArgument: value into: targetType [
+	| sourceType |
+	sourceType := value type.
+	sourceType == targetType ifTrue: [ ^ value ].
+	
+	(sourceType isPointerTy and: [ targetType isPointerTy ]) ifTrue: [ 
+		^ self bitCast: value target: targetType name: nil
+	].
+	
+	self error: 'Cannot cast runtime argument.'
+
 ]
 
 { #category : #visiting }
-SLVMLLVMFunctionCodeGenerator >> constructVectorOfType: resultVectorType byLoading: sourceIndices from: sourceVectors outputStream: out [
-	^ self constructVectorOfType: resultVectorType byLoading: sourceIndices withResultSize: sourceVectors size from: sourceVectors outputStream: out
+SLVMLLVMFunctionCodeGenerator >> constructVectorOfType: resultVectorType byLoading: sourceIndices from: sourceVectors [
+	^ self constructVectorOfType: resultVectorType byLoading: sourceIndices withResultSize: sourceVectors size from: sourceVectors
 ]
 
 { #category : #visiting }
-SLVMLLVMFunctionCodeGenerator >> constructVectorOfType: resultVectorType byLoading: sourceIndices withResultSize: resultSize from: sourceVectors outputStream: out [
+SLVMLLVMFunctionCodeGenerator >> constructVectorOfType: resultVectorType byLoading: sourceIndices withResultSize: resultSize from: sourceVectors [
 	| firstIndex result secondIndex middlePoint leftIndices rightIndices partitionVectorSize partitionVectorType leftPartitionVector rightPartitionVector joinShuffleMask destIndex firstVector secondVector |
 	self assert: sourceIndices size >= 1.
 	
@@ -128,7 +222,6 @@ SLVMLLVMFunctionCodeGenerator >> constructVectorOfType: resultVectorType byLoadi
 			result := self vector: (sourceVectors at: firstIndex first + 1) extractElementAt: firstIndex second.
 		].
 
-		out nextPut: result.
 		^ result
 	].
 
@@ -141,7 +234,6 @@ SLVMLLVMFunctionCodeGenerator >> constructVectorOfType: resultVectorType byLoadi
 		self assert: firstVector type = secondVector type.
 		result := self vector: firstVector shuffleWith: secondVector
 			mask: { firstIndex second . firstVector type elements + secondIndex second }.
-		out nextPut: result.
 		^ result.
 	].
 
@@ -152,8 +244,8 @@ SLVMLLVMFunctionCodeGenerator >> constructVectorOfType: resultVectorType byLoadi
 
 	partitionVectorSize := leftIndices size max: rightIndices size.
 	partitionVectorType := LLVMVectorType get: resultVectorType elementType elements: partitionVectorSize.
-	leftPartitionVector := self constructVectorOfType: partitionVectorType byLoading: leftIndices withResultSize: partitionVectorSize from: sourceVectors outputStream: out.
-	rightPartitionVector := self constructVectorOfType: partitionVectorType byLoading: rightIndices withResultSize: partitionVectorSize from: sourceVectors outputStream: out.
+	leftPartitionVector := self constructVectorOfType: partitionVectorType byLoading: leftIndices withResultSize: partitionVectorSize from: sourceVectors.
+	rightPartitionVector := self constructVectorOfType: partitionVectorType byLoading: rightIndices withResultSize: partitionVectorSize from: sourceVectors.
 	
 	joinShuffleMask := Array new: resultSize withAll: 0.
 	destIndex := 1.
@@ -167,13 +259,17 @@ SLVMLLVMFunctionCodeGenerator >> constructVectorOfType: resultVectorType byLoadi
 	].
 	
 	result := self vector: leftPartitionVector shuffleWith: rightPartitionVector mask: joinShuffleMask.
-	out nextPut: result.
 	^ result
 ]
 
 { #category : #accessing }
 SLVMLLVMFunctionCodeGenerator >> context [
 	^ moduleTranslator context
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> convertCallingConvention: callingConvention [
+	^ nil
 ]
 
 { #category : #'code generation' }
@@ -233,20 +329,30 @@ SLVMLLVMFunctionCodeGenerator >> createProxyValues [
 	].
 ]
 
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> doesNotUnderstandTrampolineFor: instruction [
+	instruction isDoesNotUnderstandMessage ifTrue: [ 
+		^ self nullVoidPointer
+	].
+
+	instruction isSuperSend ifTrue: [ self halt ].
+	
+	^ moduleTranslator doesNotUnderstandTrampolineWithType: instruction doesNotUnderstandTrampolineFunctionType
+]
+
 { #category : #visiting }
-SLVMLLVMFunctionCodeGenerator >> extractMatrixColumns: sourceMatrixValue into: out [
+SLVMLLVMFunctionCodeGenerator >> extractMatrixColumns: sourceMatrixValue [
 	| sourceValue sourceColumnType columns column |
 	sourceValue := self translateValue: sourceMatrixValue.
 	sourceColumnType := self translateType: sourceMatrixValue type columnType.
 	columns := sourceMatrixValue type columns.
 	^ 	(1 to: columns) collect: [ :i |
 		column := self aggregate: sourceValue extractValueAt: i - 1.
-		out nextPut: column
 	].
 ]
 
 { #category : #visiting }
-SLVMLLVMFunctionCodeGenerator >> extractMatrixRows: sourceMatrixValue into: out [
+SLVMLLVMFunctionCodeGenerator >> extractMatrixRows: sourceMatrixValue [
 	| sourceValue sourceColumnType columns rows sourceColumns sourceIndices rowType |
 	sourceValue := self translateValue: sourceMatrixValue.
 	sourceColumnType := self translateType: sourceMatrixValue type columnType.
@@ -254,14 +360,14 @@ SLVMLLVMFunctionCodeGenerator >> extractMatrixRows: sourceMatrixValue into: out 
 	columns := sourceMatrixValue type columns.
 	rows := sourceMatrixValue type rows.
 
-	sourceColumns := self extractMatrixColumns: sourceMatrixValue into: out.
+	sourceColumns := self extractMatrixColumns: sourceMatrixValue.
 	
 	^ (1 to: rows) collect: [ :rowIndex |
 		sourceIndices := (1 to: columns) collect: [ :columnIndex |
 			{ columnIndex - 1 . rowIndex - 1 }
 		].
 
-		self constructVectorOfType: rowType byLoading: sourceIndices from: sourceColumns outputStream: out
+		self constructVectorOfType: rowType byLoading: sourceIndices from: sourceColumns
 	].
 ]
 
@@ -285,13 +391,12 @@ SLVMLLVMFunctionCodeGenerator >> generateBuiltInFunction: builtInFunction call: 
 ]
 
 { #category : #visiting }
-SLVMLLVMFunctionCodeGenerator >> generateDot: left with: right mul: multiplyOperation add: additionOperation into: out [
+SLVMLLVMFunctionCodeGenerator >> generateDot: left with: right mul: multiplyOperation add: additionOperation [
 	| multiplication |
 	self assert: left type = right type.
 	multiplication := self generateScalarVectorBinaryOperation: multiplyOperation resultType: left type left: left right: right name: nil.
-	out nextPut: multiplication.
 	
-	^ self generateVectorFold: multiplication with: additionOperation into: out
+	^ self generateVectorFold: multiplication with: additionOperation
 ]
 
 { #category : #'code generation' }
@@ -319,18 +424,18 @@ SLVMLLVMFunctionCodeGenerator >> generateMatrix: transposedMatrixType byTranspos
 	self assert: transposedMatrixType columns = rows.
 	
 	result := resultType zeroConstant.
-	^ Array streamContents: [ :out |
-		majorComponents := transposedMatrixType isColumnMajor ifTrue: [
-			self extractMatrixRows: sourceMatrixValue into: out
-		] ifFalse: [
-			self extractMatrixColumns: sourceMatrixValue into: out
-		].
+
+	majorComponents := transposedMatrixType isColumnMajor ifTrue: [
+		self extractMatrixRows: sourceMatrixValue
+	] ifFalse: [
+		self extractMatrixColumns: sourceMatrixValue
+	].
 	
-		majorComponents doWithIndex: [ :majorComponent :index |
-			result := self aggregate: result insertValue: majorComponent at: index - 1.
-			out nextPut: result.
-		].
-	]
+	majorComponents doWithIndex: [ :majorComponent :index |
+		result := self aggregate: result insertValue: majorComponent at: index - 1.
+	].
+
+	^ result 
 ]
 
 { #category : #visiting }
@@ -345,21 +450,17 @@ SLVMLLVMFunctionCodeGenerator >> generateMatrixBinaryOperation: instruction [
 	leftMatrix := self translateValue: instruction left.
 	rightMatrix := self translateValue: instruction right.
 	result := resultType zeroConstant.
-	^ Array streamContents: [ :out |
-		1 to: instruction type columns do: [ :i |
-			leftColumn := self aggregate: leftMatrix extractValueAt: i - 1.
-			out nextPut: leftColumn.
+
+	1 to: instruction type columns do: [ :i |
+		leftColumn := self aggregate: leftMatrix extractValueAt: i - 1.
+		rightColumn := self aggregate: rightMatrix extractValueAt: i - 1.
 			
-			rightColumn := self aggregate: rightMatrix extractValueAt: i - 1.
-			out nextPut: rightColumn.
+		resultColumn := self generateScalarVectorBinaryOperation: instruction operation resultType: columnType left: leftColumn right: rightColumn name: nil.
 			
-			resultColumn := self generateScalarVectorBinaryOperation: instruction operation resultType: columnType left: leftColumn right: rightColumn name: nil.
-			out nextPut: resultColumn.
-			
-			result := self aggregate: result insertValue: resultColumn at: i -1.
-			out nextPut: result.
-		]
+		result := self aggregate: result insertValue: resultColumn at: i -1.
 	].
+
+	^ result
 ]
 
 { #category : #visiting }
@@ -392,35 +493,30 @@ void matrixMultiply(float left[4][4], float right[4][4], float dest[4][4])
 	columns := instruction type columns.
 	ksize := instruction left type columns.
 	
-	^ Array streamContents: [ :out |
+	leftColumns := self extractMatrixColumns: instruction left.
+	rightColumns := self extractMatrixColumns: instruction right.
 		
-		leftColumns := self extractMatrixColumns: instruction left into: out.
-		rightColumns := self extractMatrixColumns: instruction right into: out.
-		
-		result := resultType zeroConstant.
-		1 to: columns do: [ :j |
-			rightColumn := rightColumns at: j.
-			resultColumn := nil.
-			1 to: ksize do: [ :k |
-				rightScalar := self vector: rightColumn shuffleWith: rightColumn mask: (Array new: rows withAll: k - 1).
-				out nextPut: rightScalar.
+	result := resultType zeroConstant.
+	1 to: columns do: [ :j |
+		rightColumn := rightColumns at: j.
+		resultColumn := nil.
+		1 to: ksize do: [ :k |
+			rightScalar := self vector: rightColumn shuffleWith: rightColumn mask: (Array new: rows withAll: k - 1).
 				
-				leftColumn := leftColumns at: k.
-				columnMultiply := self generateScalarVectorBinaryOperation: multiplyOperation resultType: resultColumnType left: leftColumn right: rightScalar name: nil.
-				out nextPut: columnMultiply.
+			leftColumn := leftColumns at: k.
+			columnMultiply := self generateScalarVectorBinaryOperation: multiplyOperation resultType: resultColumnType left: leftColumn right: rightScalar name: nil.
 				
-				resultColumn ifNil: [ 
-					resultColumn := columnMultiply
-				] ifNotNil: [
-					resultColumn := self generateScalarVectorBinaryOperation: additionOperation resultType: resultColumnType left: resultColumn right: columnMultiply name: nil.
-					out nextPut: resultColumn.
-				].
+			resultColumn ifNil: [ 
+				resultColumn := columnMultiply
+			] ifNotNil: [
+				resultColumn := self generateScalarVectorBinaryOperation: additionOperation resultType: resultColumnType left: resultColumn right: columnMultiply name: nil.
 			].
-		
-			result := self aggregate: result insertValue: resultColumn at: j - 1.
-			out nextPut: result
 		].
-	]
+		
+		result := self aggregate: result insertValue: resultColumn at: j - 1.
+	].
+
+	^ result
 ]
 
 { #category : #visiting }
@@ -453,68 +549,70 @@ void matrixMultiply(float matrix[4][4], float vector[4], float result[4])
 
 	matrix := self translateValue: instruction left.
 	vector := self translateValue: instruction right.
-	^ Array streamContents: [ :out |
-		column := self aggregate: matrix extractValueAt: 0.
-		out nextPut: column.
-		result := self generateScalarVectorBinaryOperation: multiplyOperation
+	
+	column := self aggregate: matrix extractValueAt: 0.
+
+	result := self generateScalarVectorBinaryOperation: multiplyOperation
+		resultType: resultLLVMType
+		left: column
+		right: vector name: nil.
+		
+	2 to: matrixType columns do: [ :i |
+		column := self aggregate: matrix extractValueAt: i - 1.
+		multiply := self generateScalarVectorBinaryOperation: multiplyOperation
 			resultType: resultLLVMType
 			left: column
 			right: vector name: nil.
-		out nextPut: result.
-		
-		2 to: matrixType columns do: [ :i |
-			column := self aggregate: matrix extractValueAt: i - 1.
-			out nextPut: column.
-			multiply := self generateScalarVectorBinaryOperation: multiplyOperation
-				resultType: resultLLVMType
-				left: column
-				right: vector name: nil.
-			out nextPut: multiply.
 
-			result := self generateScalarVectorBinaryOperation: additionOperation
-				resultType: resultLLVMType
-				left: result
-				right: multiply name: nil.
-			out nextPut: result.
-		]
-	]
+		result := self generateScalarVectorBinaryOperation: additionOperation
+			resultType: resultLLVMType
+			left: result
+			right: multiply name: nil.
+	].
+
+	^ result
 
 ]
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> generateScalarVectorBinaryOperation: operation resultType: resultType left: left right: right name: name [
 	BinaryOperationMap at: operation ifPresent: [ :mappedOperation |
-		^ LLVMBinaryOperator new
+		^ self addInstruction: (LLVMBinaryOperator new
 			name: name;
 			operation: mappedOperation;
 			type: resultType;
 			left: left;
 			right: right;
-			yourself
+			yourself)
 	].
 
 	BinaryIntegerComparisonOperationMap at: operation ifPresent: [ :mappedOperation |
-		^ LLVMICmpInst new
+		^ self addInstruction: (LLVMICmpInst new
 			name: name;
 			operation: mappedOperation;
 			type: resultType;
 			left: left;
 			right: right;
-			yourself
+			yourself)
 	].
 
 	BinaryFloatComparisonOperationMap at: operation ifPresent: [ :mappedOperation |
-		^ LLVMFCmpInst new
+		^ self addInstruction: (LLVMFCmpInst new
 			name: name;
 			operation: mappedOperation;
 			type: resultType;
 			left: left;
 			right: right;
-			yourself
+			yourself)
 	].
 
 	self error: 'Unsupported binary operation.'
 
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> generateSuperMessageSend: instruction [
+	self halt
 ]
 
 { #category : #'vector intrinsics' }
@@ -579,13 +677,11 @@ SLVMLLVMFunctionCodeGenerator >> generateVectorDot: leftVector with: rightVector
 		additionOperation := #add.
 	].
 
-	^ Array streamContents: [ :out |
-		self generateDot: leftVectorValue with: rightVectorValue mul: multiplyOperation add: additionOperation into: out
-	]
+	^ self generateDot: leftVectorValue with: rightVectorValue mul: multiplyOperation add: additionOperation
 ]
 
 { #category : #visiting }
-SLVMLLVMFunctionCodeGenerator >> generateVectorFold: vectorOrScalar with: operation into: out [
+SLVMLLVMFunctionCodeGenerator >> generateVectorFold: vectorOrScalar with: operation [
 	| vectorType firstShuffleVector secondShuffleVector halfVectorSize halfVectorType leftIndices rightIndices leftVector rightVector result leftValue rightValue |
 	vectorType := vectorOrScalar type.
 	vectorOrScalar type isVectorTy ifFalse: [ ^ vectorOrScalar ].
@@ -596,14 +692,9 @@ SLVMLLVMFunctionCodeGenerator >> generateVectorFold: vectorOrScalar with: operat
 	halfVectorSize := (vectorType elements + 1) // 2.
 	halfVectorSize = 1 ifTrue: [
 		leftValue := self vector: vectorOrScalar extractElementAt: 0.
-		out nextPut: leftValue.
-
 		rightValue := self vector: vectorOrScalar extractElementAt: 1.
-		out nextPut: rightValue.
 
-		result := self generateScalarVectorBinaryOperation: operation resultType: vectorType elementType left: leftValue right: rightValue name: nil.
-		out nextPut: result.
-		^ result
+		^ self generateScalarVectorBinaryOperation: operation resultType: vectorType elementType left: leftValue right: rightValue name: nil
 	].
 
 	halfVectorType := LLVMVectorType get: vectorType elementType elements: halfVectorSize.
@@ -612,15 +703,12 @@ SLVMLLVMFunctionCodeGenerator >> generateVectorFold: vectorOrScalar with: operat
 	rightIndices := (0 to: halfVectorSize - 1) collect: [ :i | i*2 + 1 ].
 	
 	leftVector := self vector: firstShuffleVector shuffleWith: secondShuffleVector mask: leftIndices.
-	out nextPut: leftVector.
 
 	rightVector := self vector: firstShuffleVector shuffleWith: secondShuffleVector mask: rightIndices.
-	out nextPut: rightVector.
 	
 	result := self generateScalarVectorBinaryOperation: operation resultType: halfVectorType left: leftVector right: rightVector name: nil.
-	out nextPut: result.
 	
-	^ self generateVectorFold: result with: operation into: out
+	^ self generateVectorFold: result with: operation
 ]
 
 { #category : #visiting }
@@ -655,18 +743,15 @@ void matrixMultiply(float vector[4], float matrix[4][4], float result[4])
 	vector := self translateValue: instruction left.
 	matrix := self translateValue: instruction right.
 
-	^ Array streamContents: [ :out |
-		result := resultLLVMType zeroConstant.
-		1 to: resultType elements do: [ :i |
-			column := self aggregate: matrix extractValueAt: i - 1.
-			out nextPut: column.
+	result := resultLLVMType zeroConstant.
+	1 to: resultType elements do: [ :i |
+		column := self aggregate: matrix extractValueAt: i - 1.
 			
-			resultElement := self generateDot: vector with: column mul: multiplyOperation add: additionOperation into: out.
-			result := self vector: result insertElement: resultElement at: i - 1.
-			out nextPut: result
-		].
-	]
+		resultElement := self generateDot: vector with: column mul: multiplyOperation add: additionOperation.
+		result := self vector: result insertElement: resultElement at: i - 1.
+	].
 
+	^ result
 ]
 
 { #category : #'code generation' }
@@ -699,6 +784,11 @@ SLVMLLVMFunctionCodeGenerator >> moduleTranslator: anObject [
 	moduleTranslator := anObject
 ]
 
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> nullVoidPointer [
+	^ LLVMConstantPointerNull new type: (self translateType: (target pointerTo: target void))
+]
+
 { #category : #accessing }
 SLVMLLVMFunctionCodeGenerator >> target [
 	^ target
@@ -712,8 +802,14 @@ SLVMLLVMFunctionCodeGenerator >> target: anObject [
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> translateBasicBlocks [
 	llvmFunction basicBlocks do: [ :bb |
-		bb instructionsReplaceWith: [ :instruction | self translateProxyInstruction: instruction ]
+		currentBlockBuilder := bb newReplacer.
+		currentBlockBuilder replaceWith: [ :instruction | self translateProxyInstruction: instruction ]
 	]
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> translateConstantDynamicLiteral: aConstantLiteral [
+	^ LLVMConstantPointerNull new type: (self translateType: aConstantLiteral type)
 ]
 
 { #category : #'code generation' }
@@ -744,29 +840,30 @@ SLVMLLVMFunctionCodeGenerator >> translateType: aType [
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> translateValue: aValue [
 	valueDictionary at: aValue ifPresent: [ :existent | ^ existent ].
+	aValue isConstantDynamicLiteral ifTrue: [ ^ self translateConstantDynamicLiteral: aValue ].
 	^ moduleTranslator translateValue: aValue
 ]
 
-{ #category : #visiting }
+{ #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> vector: sourceVector extractElementAt: sourceIndex [
-	^ LLVMExtractElementInst new
+	^ self addInstruction: (LLVMExtractElementInst new
 		type: sourceVector type elementType;
 		vector: sourceVector;
 		index: (self context int32Ty constant: sourceIndex);
-		yourself
+		yourself)
 ]
 
-{ #category : #visiting }
+{ #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> vector: sourceVector insertElement: element at: destIndex [
-	^ LLVMInsertElementInst new
+	^ self addInstruction: (LLVMInsertElementInst new
 		type: sourceVector type;
 		vector: sourceVector;
 		element: element;
 		elementIndex: (self context int32Ty constant: destIndex);
-		yourself
+		yourself)
 ]
 
-{ #category : #visiting }
+{ #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> vector: firstVector shuffleWith: secondVector mask: shufleMask [
 	| vectorSize vectorType maskValueType maskType mask |
 	vectorSize := shufleMask size.
@@ -775,12 +872,12 @@ SLVMLLVMFunctionCodeGenerator >> vector: firstVector shuffleWith: secondVector m
 	maskType := (LLVMVectorType get: maskValueType elements: vectorSize).
 	mask := maskType constant: (shufleMask collect: [:maskElement | self context int32Ty constant: maskElement]).
 	
-	^ LLVMShuffleVectorInst new
+	^ self addInstruction: (LLVMShuffleVectorInst new
 		type: vectorType;
 		firstVector: firstVector;
 		secondVector: secondVector;
 		mask: mask;
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
@@ -788,12 +885,12 @@ SLVMLLVMFunctionCodeGenerator >> visitAlloca: instruction [
 	| valueType resultType |
 	valueType := self translateType: instruction valueType.
 	resultType := self translateType: instruction type.
-	^ LLVMAllocaInst new
+	^ self addInstruction: (LLVMAllocaInst new
 		name: (self convertName: instruction name);
 		type: resultType;
 		valueType: valueType;
 		alignment: instruction valueType alignment;
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
@@ -809,23 +906,20 @@ SLVMLLVMFunctionCodeGenerator >> visitBinaryOperation: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitBitCast: instruction [
-	^ LLVMBitCastInst new
-			type: (self translateType: instruction type);
-			name: (self convertName: instruction name);
-			source: (self translateValue: instruction source);
-			yourself
-
+	^ self bitCast: (self translateValue: instruction source)
+		target: (self translateType: instruction type)
+		name: (self convertName: instruction name)
 ]
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitBranch: instruction [
-	^ LLVMBranchInst new
+	^ self addInstruction: (LLVMBranchInst new
 		name: (self convertName: instruction name);
 		type: self context voidTy;
 		condition: (self translateValue: instruction condition);
 		trueDestination: (self translateValue: instruction trueBlock);
 		falseDestination: (self translateValue: instruction falseBlock);
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
@@ -839,12 +933,7 @@ SLVMLLVMFunctionCodeGenerator >> visitCall: instruction [
 	
 	calledFunction := self translateValue: instruction functionValue.
 	arguments := instruction arguments collect: [ :arg | self translateValue: arg ].
-	^ LLVMCallInst new
-		name: (self convertName: instruction name);
-		calledFunction: calledFunction;
-		arguments: arguments;
-		type: type;
-		yourself
+	^ self call: calledFunction arguments: arguments returnType: type name: (self convertName: instruction name)
 ]
 
 { #category : #visiting }
@@ -856,12 +945,12 @@ SLVMLLVMFunctionCodeGenerator >> visitDebugInstructionDeclareVariable: instructi
 	localVariable := (self convertDebugVariable: instruction debugInformation) asLLVMValueFor: self context.
 	expression := moduleTranslator emptyDebugExpression asLLVMValueFor: self context.
 
-	^ LLVMCallInst new
+	^ self addInstruction: (LLVMCallInst new
 		name: (self convertName: instruction name);
 		calledFunction: debugDeclareIntrinsic;
 		arguments: {address . localVariable . expression };
 		type: debugDeclareIntrinsic returnType;
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
@@ -874,75 +963,75 @@ SLVMLLVMFunctionCodeGenerator >> visitDebugInstructionSetVariableValue: instruct
 	localVariable := (self convertDebugVariable: instruction variable) asLLVMValueFor: self context.
 	expression := moduleTranslator emptyDebugExpression asLLVMValueFor: self context.
 	
-	^ LLVMCallInst new
+	^ self addInstruction: (LLVMCallInst new
 		name: (self convertName: instruction name);
 		calledFunction: debugValueIntrinsic;
 		arguments: {newValue . offset . localVariable . expression };
 		type: debugValueIntrinsic returnType;
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitExtractValue: instruction [
-	^ LLVMExtractValueInst new
+	^ self addInstruction: (LLVMExtractValueInst new
 		name: (self convertName: instruction name);
 		type: (self translateType: instruction type);
 		aggregate: (self translateValue: instruction aggregate);
 		indices: instruction indices;
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitExtractVectorElement: instruction [
-	^ LLVMExtractElementInst new
+	^ self addInstruction: (LLVMExtractElementInst new
 		name: (self convertName: instruction name);
 		type: (self translateType: instruction type);
 		vector: (self translateValue: instruction vector);
 		index: (self translateValue: instruction index);
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitFloatingPointCast: instruction [
 	instruction source type size < instruction type size ifTrue: [ 
-		^ LLVMFPExtInst new
+		^ self addInstruction: (LLVMFPExtInst new
 			type: (self translateType: instruction type);
 			name: (self convertName: instruction name);
 			source: (self translateValue: instruction source);
-			yourself
+			yourself)
 	].
-	^ LLVMFPTruncInst new
+	^ self addInstruction: (LLVMFPTruncInst new
 			type: (self translateType: instruction type);
 			name: (self convertName: instruction name);
 			source: (self translateValue: instruction source);
-			yourself
+			yourself)
 
 ]
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitGetElementPointer: instruction [
-	^ LLVMGetElementPtrInst new
+	^ self addInstruction: (LLVMGetElementPtrInst new
 		type: (self translateType: instruction type);
 		name: (self convertName: instruction name);
 		pointer: (self translateValue: instruction pointer);
 		indices: (instruction indices collect: [ :index | self translateValue: index ]);
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitIntToFloatCast: instruction [
 	instruction source type isSigned ifTrue: [ 
-		^ LLVMSIToFPInst new
+		^ self addInstruction: (LLVMSIToFPInst new
 				type: (self translateType: instruction type);
 				name: (self convertName: instruction name);
 				source: (self translateValue: instruction source);
-				yourself
+				yourself)
 	].
-	^ LLVMUIToFPInst new
+	^ self addInstruction: (LLVMUIToFPInst new
 			type: (self translateType: instruction type);
 			name: (self convertName: instruction name);
 			source: (self translateValue: instruction source);
-			yourself
+			yourself)
 
 ]
 
@@ -950,11 +1039,11 @@ SLVMLLVMFunctionCodeGenerator >> visitIntToFloatCast: instruction [
 SLVMLLVMFunctionCodeGenerator >> visitJump: instruction [
 	| destination |
 	destination := self translateValue: instruction destination.
-	^ LLVMBranchInst new
+	^ self addInstruction: (LLVMBranchInst new
 		name: (self convertName: instruction name);
 		type: self context voidTy;
 		trueDestination: destination;
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
@@ -962,12 +1051,12 @@ SLVMLLVMFunctionCodeGenerator >> visitLoad: instruction [
 	| pointer type |
 	type := self translateType: instruction type.
 	pointer := self translateValue: instruction variable.
-	^ LLVMLoadInst new
+	^ self addInstruction: (LLVMLoadInst new
 		name: (self convertName: instruction name);
 		volatile: instruction volatile;
 		pointer: pointer;
 		type: type;
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
@@ -1008,12 +1097,41 @@ SLVMLLVMFunctionCodeGenerator >> visitMakeVector: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitMessageSend: instruction [
+	| returnType receiver arguments selector lookupResult calledFunctionType calledType functionPointer |
+	instruction isSuperSend ifTrue: [ ^ self generateSuperMessageSend: instruction ].
+
+	returnType := self translateType: instruction type.	
+	receiver := self translateValue: instruction receiver.
+	arguments := instruction arguments collect: [ :arg | self translateValue: arg ].
+	selector := self translateValue: instruction selector.
+	
+	"Lookup the message"
+	lookupResult := self callRuntimeFunction: target objectModel messageLookupFunction
+		arguments: { receiver . selector . self doesNotUnderstandTrampolineFor: instruction }
+		type: [ self halt ]
+		name: (self convertName: instruction name).
+	self convertDebugLocationFrom: instruction into: lookupResult.
+	
+	"Cast the found message"
+	self flag: 'TODO: Support the smalltalk calling conventions'.
+	calledFunctionType := SLVMFunctionType callingConvention: SLVMFunctionType stdcallCallingConvention arguments: (instruction arguments collect: #type) returnType: instruction type.
+	calledType := self translateType: (target pointerTo: calledFunctionType).
+
+	functionPointer := self bitCast: lookupResult target: calledType name: nil.
+	^ self call: functionPointer
+		convention: (self convertCallingConvention: calledFunctionType callingConvention)
+		arguments: arguments returnType: returnType name: nil.
+	
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitPhi: instruction [
 	| result |
-	result := LLVMPHINode new
+	result := self addInstruction: (LLVMPHINode new
 			name: (self convertName: instruction name);
 		type: (self translateType: instruction type);
-		yourself.
+		yourself).
 	instruction valuesAndParentsDo: [ :value :parent |
 		result addValue: (self translateValue: value) incomingFrom: (self translateValue: parent)
 	].
@@ -1023,19 +1141,19 @@ SLVMLLVMFunctionCodeGenerator >> visitPhi: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitReturn: instruction [
-	^ LLVMReturnInst new
+	^ self addInstruction: (LLVMReturnInst new
 		name: (self convertName: instruction name);
 		type: self context voidTy;
 		value: (self translateValue: instruction value);
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitReturnVoid: instruction [
-	^ LLVMReturnInst new
+	^ self addInstruction: (LLVMReturnInst new
 		name: (self convertName: instruction name);
 		type: self context voidTy;
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
@@ -1043,13 +1161,13 @@ SLVMLLVMFunctionCodeGenerator >> visitStore: instruction [
 	| pointer value |
 	pointer := self translateValue: instruction variable.
 	value := self translateValue: instruction value.
-	^ LLVMStoreInst new
+	^ self addInstruction: (LLVMStoreInst new
 		name: (self convertName: instruction name);
 		volatile: instruction volatile;
 		pointer: pointer;
 		value: value;
 		type: self context voidTy;
-		yourself
+		yourself)
 ]
 
 { #category : #visiting }
@@ -1057,13 +1175,13 @@ SLVMLLVMFunctionCodeGenerator >> visitUnaryFloatNegation: instruction [
 	| resultType |
 	resultType := self translateType: instruction type.
 	self assert: resultType isFloatingPointTy.
-	^ LLVMBinaryOperator new
+	^ self addInstruction: (LLVMBinaryOperator new
 			name: (self convertName: instruction name);
 			operation: #fsub;
 			type: resultType;
 			left: resultType zeroConstant;
 			right: (self translateValue: instruction operand);
-			yourself
+			yourself)
 ]
 
 { #category : #visiting }
@@ -1077,13 +1195,13 @@ SLVMLLVMFunctionCodeGenerator >> visitUnaryNegation: instruction [
 	| resultType |
 	resultType := self translateType: instruction type.
 	self assert: resultType isIntegerTy.
-	^ LLVMBinaryOperator new
+	^ self addInstruction: (LLVMBinaryOperator new
 			name: (self convertName: instruction name);
 			operation: #sub;
 			type: resultType;
 			left: resultType zeroConstant;
 			right: (self translateValue: instruction operand);
-			yourself
+			yourself)
 ]
 
 { #category : #visiting }
@@ -1091,13 +1209,13 @@ SLVMLLVMFunctionCodeGenerator >> visitUnaryNot: instruction [
 	| resultType |
 	resultType := self translateType: instruction type.
 	self assert: resultType isIntegerTy.
-	^ LLVMBinaryOperator new
+	^ self addInstruction: (LLVMBinaryOperator new
 			name: (self convertName: instruction name);
 			operation: #xor;
 			type: resultType;
 			left: resultType allOnesConstant;
 			right: (self translateValue: instruction operand);
-			yourself
+			yourself)
 ]
 
 { #category : #visiting }
