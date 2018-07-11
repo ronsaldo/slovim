@@ -16,6 +16,7 @@ Class {
 		'DepthTextureCubeType',
 		'DoubleAlign4Type',
 		'DoubleAlign8Type',
+		'DynobjectStorage',
 		'Float2Type',
 		'Float3Type',
 		'Float4Type',
@@ -87,6 +88,11 @@ SLVMType class >> doubleAlign8Type [
 	^ DoubleAlign8Type
 ]
 
+{ #category : #'storage classes' }
+SLVMType class >> dynobjectStorage [
+	^ DynobjectStorage
+]
+
 { #category : #'built in types' }
 SLVMType class >> float3Type [
 	^ Float3Type
@@ -142,6 +148,7 @@ SLVMType class >> initialize [
 	PushConstantStorage := #pushConstant.
 	AtomicCounterStorage := #atomicCounter.
 	ImageStorage := #image.
+	DynobjectStorage := #gc.
 	
 	BuiltInTypes := IdentityDictionary new.
 	(
@@ -380,6 +387,11 @@ SLVMType >> alignment [
 	self subclassResponsibility
 ]
 
+{ #category : #accessing }
+SLVMType >> asGenericMessageType [
+	^ self
+]
+
 { #category : #testing }
 SLVMType >> asSLVMType [
 	^ self
@@ -422,6 +434,11 @@ SLVMType >> isBooleanType [
 
 { #category : #testing }
 SLVMType >> isClosureType [
+	^ false
+]
+
+{ #category : #testing }
+SLVMType >> isDynamicObjectPointerType [
 	^ false
 ]
 

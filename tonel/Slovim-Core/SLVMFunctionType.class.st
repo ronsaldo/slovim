@@ -96,7 +96,7 @@ SLVMFunctionType >> argumentsDescriptorWithTarget: aCompilationTarget [
 	nativeArgumentSize := 0.
 	nativeArgumentAlignment := aCompilationTarget pointerSize.
 	arguments doWithIndex: [:arg :index |
-		(arg isDynamicObjectType or: [self argumentAt: index hasAttribute: #dynobject]) ifTrue: [ 
+		(arg isDynamicObjectPointerType or: [self argumentAt: index hasAttribute: #dynobject]) ifTrue: [ 
 			dynObjectCount := dynObjectCount + 1.
 		] ifFalse: [ 
 			nativeArgumentSize := nativeArgumentSize alignedTo: (arg alignment max: aCompilationTarget pointerSize).

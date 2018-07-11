@@ -101,7 +101,7 @@ SLVMClosureType >> sortedCapturedTypes [
 	dynamicCaptures := OrderedCollection new.
 	normalCaptures := OrderedCollection new.
 	captures do: [ :cap |
-		cap isDynamicObjectType ifTrue: [
+		cap isDynamicObjectPointerType ifTrue: [
 			dynamicCaptures add: cap
 		] ifFalse: [
 			normalCaptures add: cap

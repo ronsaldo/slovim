@@ -61,7 +61,7 @@ SLVMFunction >> addDynamicLiteral: literal [
 { #category : #adding }
 SLVMFunction >> addRequiredDynamicLiteral: literal [
 	| result |
-	result := SLVMConstantDynamicLiteral new value: literal; index: dynamicLiterals size + 1; type: 	compilationTarget dynamicObjectType.
+	result := SLVMConstantDynamicLiteral new value: literal; index: dynamicLiterals size + 1; type: compilationTarget dynamicObjectType.
 	dynamicLiterals add: result.
 	^ result
 ]

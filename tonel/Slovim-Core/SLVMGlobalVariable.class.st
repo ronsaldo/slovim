@@ -51,7 +51,7 @@ SLVMGlobalVariable >> fullPrintOn: aStream [
 
 { #category : #'as yet unclassified' }
 SLVMGlobalVariable >> headerReferenceOfType: aType [
-	self assert: (aType isPointerType or: [ aType isDynamicObjectType ]).
+	self assert: (aType isPointerType or: [ aType isDynamicObjectPointerType ]).
 	^ SLVMConstantGlobalVariableHeaderReference new
 		type: aType;
 		globalVariable: self

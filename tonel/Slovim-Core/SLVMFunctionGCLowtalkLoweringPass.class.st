@@ -37,7 +37,7 @@ SLVMFunctionGCLowtalkLoweringPass >> emitAutomaticReferenceCountingOn: aFunction
 	afterLastAlloca := aFunction basicBlocks first firstInstruction.
 	aFunction basicBlocks first allocaInstructionsDo: [ :ins |
 		afterLastAlloca := ins nextInstruction.
-		ins valueType isDynamicObjectType ifTrue: [
+		ins valueType isDynamicObjectPointerType ifTrue: [
 			objectVariables add: ins.
 		].
 	].
@@ -46,7 +46,7 @@ SLVMFunctionGCLowtalkLoweringPass >> emitAutomaticReferenceCountingOn: aFunction
 
 	aFunction basicBlocks do: [ :bb |
 		bb instructionsDo: [ :ins |
-			(ins isStore and: [ins value type isDynamicObjectType]) ifTrue: [
+			(ins isStore and: [ins value type isDynamicObjectPointerType]) ifTrue: [
 				self replaceStoreWithRefcountedWriteBarrier: ins
 			].
 	
@@ -56,7 +56,7 @@ SLVMFunctionGCLowtalkLoweringPass >> emitAutomaticReferenceCountingOn: aFunction
 				]
 			].
 					
-			(ins type isDynamicObjectType and:
+			(ins type isDynamicObjectPointerType and:
 			[ins isDynamicObjectReferenceCreator]) ifTrue: [
 				ins instructionReferences ifEmpty: [
 					self releaseValue: ins
@@ -65,7 +65,7 @@ SLVMFunctionGCLowtalkLoweringPass >> emitAutomaticReferenceCountingOn: aFunction
 				]
 			].
 
-			((ins isReturn or: [ins isReturnFromContext ]) and: [ ins value type isDynamicObjectType ]) ifTrue: [ 
+			((ins isReturn or: [ins isReturnFromContext ]) and: [ ins value type isDynamicObjectPointerType ]) ifTrue: [ 
 				self increaseReference: ins value beforeReturn: ins.
 			].
 		
@@ -116,10 +116,10 @@ SLVMFunctionGCLowtalkLoweringPass >> emitAutomaticReferenceCountingOn: aFunction
 SLVMFunctionGCLowtalkLoweringPass >> emitReadAndWriteBarriersOn: aFunction [
 	aFunction basicBlocks do: [ :bb |
 		bb instructionsDo: [ :ins |
-			(ins isStore and: [ins value type isDynamicObjectType]) ifTrue: [
+			(ins isStore and: [ins value type isDynamicObjectPointerType]) ifTrue: [
 				self replaceStoreWithWriteBarrier: ins
 			].
-			(ins isLoad and: [ins value type isDynamicObjectType]) ifTrue: [
+			(ins isLoad and: [ins value type isDynamicObjectPointerType]) ifTrue: [
 				self replaceLoadWithReadBarrier: ins
 			].
 		]

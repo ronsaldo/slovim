@@ -44,6 +44,11 @@ SLVMDynamicObjectType >> internalHash [
 ]
 
 { #category : #testing }
+SLVMDynamicObjectType >> isDynamicObjectPointerType [
+	^ true
+]
+
+{ #category : #testing }
 SLVMDynamicObjectType >> isDynamicObjectType [
 	^ true
 ]

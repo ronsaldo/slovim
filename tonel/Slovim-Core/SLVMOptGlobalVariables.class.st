@@ -10,7 +10,7 @@ SLVMOptGlobalVariables >> passOnModule: aModule [
 	potentialConstants := IdentitySet new.
 	aModule allGlobalValuesDo: [ :global |
 		(global isGlobalVariable and: [ global isPrivate and: [ global readOnly not ]]) ifTrue: [
-			(global valueType isDynamicObjectType not and: [global customSection isNil and: [global headerValue isNil]]) ifTrue: [
+			(global valueType isDynamicObjectPointerType not and: [global customSection isNil and: [global headerValue isNil]]) ifTrue: [
 				potentialConstants add: global
 			]
 		]

@@ -53,7 +53,7 @@ SLVMClosureDefinition >> asNormalFunction [
 	"Map the captures"	
 	dynamicCaptureCount := 0.
 	captures do: [ :cap |
-		cap type isDynamicObjectType ifTrue: [ 
+		cap type isDynamicObjectPointerType ifTrue: [ 
 			dynamicCaptureCount := dynamicCaptureCount + 1
 		]
 	].
@@ -61,7 +61,7 @@ SLVMClosureDefinition >> asNormalFunction [
 	dynamicCaptureIndex := 0.
 	normalCaptureIndex := 0.
 	captures do: [ :cap |
-		cap type isDynamicObjectType ifTrue: [
+		cap type isDynamicObjectPointerType ifTrue: [
 			captureIndex := dynamicCaptureIndex.
 			dynamicCaptureIndex := dynamicCaptureIndex + 1.
 		] ifFalse: [

@@ -29,6 +29,17 @@ SLVMSendMessage >> arguments [
 	^ parameters allButFirst: 2
 ]
 
+{ #category : #accessing }
+SLVMSendMessage >> callingConvention [
+	^ SLVMFunctionType smalltalkCallingConvention
+]
+
+{ #category : #accessing }
+SLVMSendMessage >> doesNotUnderstandTrampolineFunctionType [
+	^ SLVMFunctionType callingConvention: self callingConvention
+		arguments: {self receiver type asGenericMessageType} , (self arguments collect: [:arg | arg type asGenericMessageType]) returnType: type asGenericMessageType
+]
+
 { #category : #testing }
 SLVMSendMessage >> hasFlag: flag [
 	^ flags includes: flag
@@ -40,6 +51,11 @@ SLVMSendMessage >> initialize [
 	super initialize.
 	flags := #().
 	
+]
+
+{ #category : #testing }
+SLVMSendMessage >> isDoesNotUnderstandMessage [
+	^ self selector isConstantDynamicLiteral and: [ self selector value == #doesNotUnderstand: ]
 ]
 
 { #category : #testing }
@@ -70,8 +86,8 @@ SLVMSendMessage >> receiver [
 { #category : #'instance creation' }
 SLVMSendMessage >> returnType: returnType receiver: receiver selector: selector arguments: arguments [
 	self parameters: { receiver . selector } , arguments.
-	self assert: receiver type isDynamicObjectType.
-	self assert: selector type isDynamicObjectType.
+	self assert: receiver type isDynamicObjectPointerType.
+	self assert: selector type isDynamicObjectPointerType.
 	type := returnType.
 ]
 

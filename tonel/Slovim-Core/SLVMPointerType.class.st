@@ -29,6 +29,13 @@ SLVMPointerType >> alignment [
 	^ size
 ]
 
+{ #category : #converting }
+SLVMPointerType >> asGenericMessageType [
+	self flag: 'TODO: Use a singleton for the dynobject type.'.
+	self isDynamicObjectPointerType ifTrue: [ ^ SLVMDynamicObjectType new size: self size  ].
+	^ self
+]
+
 { #category : #accessing }
 SLVMPointerType >> baseType [
 	^ baseType
@@ -64,6 +71,11 @@ SLVMPointerType >> encodeConstant: value bigEndian: bigEndian intoByteStream: st
 { #category : #comparing }
 SLVMPointerType >> internalHash [
 	^ (self class hash bitXor: (baseType hash)) bitXor: storage hash
+]
+
+{ #category : #testing }
+SLVMPointerType >> isDynamicObjectPointerType [
+	^ storage == SLVMType dynobjectStorage
 ]
 
 { #category : #testing }
