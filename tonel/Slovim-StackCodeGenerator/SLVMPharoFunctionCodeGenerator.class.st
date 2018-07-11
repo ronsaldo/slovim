@@ -290,12 +290,12 @@ SLVMPharoFunctionCodeGenerator >> initialize [
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> isObjectConstantSlotPointer: expression [
-	^ expression isGetElementPointer and: [ expression pointer type isDynamicObjectType and: [expression indexCount = 2] ]
+	^ expression isGetElementPointer and: [ expression pointer type isDynamicObjectPointerType and: [expression indexCount = 2] ]
 ]
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> isObjectElementPointer: expression [
-	^ expression isGetElementPointer and: [ expression pointer type isDynamicObjectType ]
+	^ expression isGetElementPointer and: [ expression pointer type isDynamicObjectPointerType ]
 ]
 
 { #category : #visiting }
@@ -726,7 +726,7 @@ SLVMPharoFunctionCodeGenerator >> visitFunctionArgument: anArgument [
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitGetElementPointer: anInstruction [
-	self assert: anInstruction type isDynamicObjectType not.
+	self assert: anInstruction type isDynamicObjectPointerType not.
 
 	self visitExpression: anInstruction pointer.
 	self emitGetElementPointerOffsets: anInstruction.

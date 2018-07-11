@@ -9,7 +9,7 @@ Class {
 
 { #category : #'code generation' }
 SLVMPharoVariable >> emitPushUsingLowcodeWith: aCodeGenerator [
-	self assert: type isDynamicObjectType.
+	self assert: type isDynamicObjectPointerType.
 	^ self emitPushWith: aCodeGenerator
 ]
 
@@ -20,7 +20,7 @@ SLVMPharoVariable >> emitPushWith: aCodeGenerator [
 
 { #category : #'code generation' }
 SLVMPharoVariable >> emitStoreAndPopStackTopUsingLowcodeWith: aCodeGenerator [
-	self assert: type isDynamicObjectType.
+	self assert: type isDynamicObjectPointerType.
 	self emitStoreStackTopWith: aCodeGenerator.
 	aCodeGenerator popTop
 ]

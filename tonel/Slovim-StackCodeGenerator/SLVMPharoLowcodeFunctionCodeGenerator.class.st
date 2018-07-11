@@ -101,7 +101,7 @@ SLVMPharoLowcodeFunctionCodeGenerator >> convertBooleanValueToOop: value [
 
 { #category : #'code generation' }
 SLVMPharoLowcodeFunctionCodeGenerator >> createArgumentTemporary: rawName type: type [
-	type isDynamicObjectType ifTrue: [ ^ self createObjectTemporary: rawName type: type ].
+	type isDynamicObjectPointerType ifTrue: [ ^ self createObjectTemporary: rawName type: type ].
 	self halt
 ]
 
@@ -125,7 +125,7 @@ SLVMPharoLowcodeFunctionCodeGenerator >> createPrelude [
 { #category : #'code generation' }
 SLVMPharoLowcodeFunctionCodeGenerator >> createTemporary: rawName type: type [
 	| location |
-	type isDynamicObjectType ifTrue: [ ^ super createTemporary: rawName type: type ].
+	type isDynamicObjectPointerType ifTrue: [ ^ super createTemporary: rawName type: type ].
 	location := self allocateTemporarySize: type size alignment: type alignment.
 	^ SLVMPharoFunctionLocal new name: rawName; type: type; location: location; yourself.
 ]
@@ -326,7 +326,7 @@ SLVMPharoLowcodeFunctionCodeGenerator >> emitMultiply: binary [
 { #category : #operations }
 SLVMPharoLowcodeFunctionCodeGenerator >> emitObjectBinaryExpression: binary [
 	self assert: binary left type = binary right type.
-	self assert: binary left type isDynamicObjectType.
+	self assert: binary left type isDynamicObjectPointerType.
 	self visitExpression: binary left.
 	self visitExpression: binary right.
 	self send: (BinaryOperationMessageMap at: binary operation).
@@ -437,7 +437,7 @@ SLVMPharoLowcodeFunctionCodeGenerator >> initialize [
 
 { #category : #operations }
 SLVMPharoLowcodeFunctionCodeGenerator >> isObjectBinaryExpression: binaryExpression [
-	^ binaryExpression left type isDynamicObjectType
+	^ binaryExpression left type isDynamicObjectPointerType
 ]
 
 { #category : #variables }
