@@ -93,8 +93,13 @@ SLVMBuilder >> areAllConstants: values [
 ]
 
 { #category : #'logical operations' }
-SLVMBuilder >> ashiftRight: operand name: resultName [
-	^ self addOperation: #ashiftright operand: operand name: resultName
+SLVMBuilder >> arithmeticShiftRight: left with: right [
+	^ self arithmeticShiftRight: left with: right name: function generateSymbol
+]
+
+{ #category : #'logical operations' }
+SLVMBuilder >> arithmeticShiftRight: left with: right name: resultName [
+	^ self addOperation: #ashiftright left: left right: right name: resultName
 ]
 
 { #category : #'instance creation' }
@@ -116,6 +121,16 @@ SLVMBuilder >> basicBlockNamed: basicBlockName do: aBlock [
 	^ bb
 ]
 
+{ #category : #'logical operations' }
+SLVMBuilder >> bitAnd: left with: right [
+	^ self bitAnd: left with: right name: function generateSymbol
+]
+
+{ #category : #'logical operations' }
+SLVMBuilder >> bitAnd: left with: right name: resultName [
+	^ self addOperation: #bitand left: left right: right name: resultName
+]
+
 { #category : #casting }
 SLVMBuilder >> bitCast: source target: targetType [
 	^ self bitCast: source target: targetType name: function generateSymbol
@@ -128,18 +143,23 @@ SLVMBuilder >> bitCast: source target: targetType name: resultName [
 ]
 
 { #category : #'logical operations' }
-SLVMBuilder >> bitand: operand name: resultName [
-	^ self addOperation: #bitand operand: operand name: resultName
+SLVMBuilder >> bitOr: left with: right [
+	^ self bitOr: left with: right name: function generateSymbol
 ]
 
 { #category : #'logical operations' }
-SLVMBuilder >> bitor: operand name: resultName [
-	^ self addOperation: #bitor operand: operand name: resultName
+SLVMBuilder >> bitOr: left with: right name: resultName [
+	^ self addOperation: #bitor left: left right: right name: resultName
 ]
 
 { #category : #'logical operations' }
-SLVMBuilder >> bitxor: operand name: resultName [
-	^ self addOperation: #bitxor operand: operand name: resultName
+SLVMBuilder >> bitXor: left with: right [
+	^ self bitXor: left with: right name: function generateSymbol
+]
+
+{ #category : #'logical operations' }
+SLVMBuilder >> bitXor: left with: right name: resultName [
+	^ self addOperation: #bitxor left: left right: right name: resultName
 ]
 
 { #category : #casting }
@@ -1138,13 +1158,23 @@ SLVMBuilder >> send: selector returnType: returnType receiver: receiver argument
 ]
 
 { #category : #'logical operations' }
-SLVMBuilder >> shiftLeft: operand name: resultName [
-	^ self addOperation: #shiftleft operand: operand name: resultName
+SLVMBuilder >> shiftLeft: left with: right [
+	^ self shiftLeft: left with: right name: function generateSymbol
 ]
 
 { #category : #'logical operations' }
-SLVMBuilder >> shiftRight: operand name: resultName [
-	^ self addOperation: #shiftright operand: operand name: resultName
+SLVMBuilder >> shiftLeft: left with: right name: resultName [
+	^ self addOperation: #shiftleft left: left right: right name: resultName
+]
+
+{ #category : #'logical operations' }
+SLVMBuilder >> shiftRight: left with: right [
+	^ self shiftRight: left with: right name: function generateSymbol
+]
+
+{ #category : #'logical operations' }
+SLVMBuilder >> shiftRight: left with: right name: resultName [
+	^ self addOperation: #shiftright left: left right: right name: resultName
 ]
 
 { #category : #instructions }
