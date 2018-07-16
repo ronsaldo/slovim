@@ -809,7 +809,14 @@ SLVMLLVMFunctionCodeGenerator >> translateBasicBlocks [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> translateConstantDynamicLiteral: aConstantLiteral [
-	^ LLVMConstantPointerNull new type: (self translateType: aConstantLiteral type)
+	| constantValue |
+	self flag: 'TODO: Support the compiled method meta object data.'.
+	constantValue := moduleTranslator translateDynamicLiteral: aConstantLiteral value.
+	^ LLVMBitCastConstantExpr new
+		type: (self translateType: aConstantLiteral type);
+		source: constantValue;
+		yourself
+	"^ LLVMConstantPointerNull new type: (self translateType: aConstantLiteral type)"
 ]
 
 { #category : #'code generation' }
@@ -1115,13 +1122,13 @@ SLVMLLVMFunctionCodeGenerator >> visitMessageSend: instruction [
 	
 	"Cast the found message"
 	self flag: 'TODO: Support the smalltalk calling conventions'.
-	calledFunctionType := SLVMFunctionType callingConvention: SLVMFunctionType stdcallCallingConvention arguments: (instruction arguments collect: #type) returnType: instruction type.
+	calledFunctionType := SLVMFunctionType callingConvention: SLVMFunctionType stdcallCallingConvention arguments: {instruction receiver type} , (instruction arguments collect: #type) returnType: instruction type.
 	calledType := self translateType: (target pointerTo: calledFunctionType).
 
 	functionPointer := self bitCast: lookupResult target: calledType name: nil.
 	^ self call: functionPointer
 		convention: (self convertCallingConvention: calledFunctionType callingConvention)
-		arguments: arguments returnType: returnType name: nil.
+		arguments: {receiver}, arguments returnType: returnType name: nil.
 	
 ]
 

@@ -19,7 +19,8 @@ Class {
 		'convertedDebugVariables',
 		'emptyDebugExpression',
 		'doesNotUnderstandTrampolines',
-		'debugAnonymousCount'
+		'debugAnonymousCount',
+		'translatedLiterals'
 	],
 	#pools : [
 		'SAsmDWConstants'
@@ -252,6 +253,7 @@ SLVMLLVMCodeGenerator >> initialize [
 	translatedModuleElements := IdentityDictionary new.
 	translatedTypes := IdentityDictionary new.
 	translatedConstants := IdentityDictionary new.
+	translatedLiterals := IdentityDictionary new.
 	doesNotUnderstandTrampolines := Dictionary new.
 	usedNames := Set new.
 	debugAnonymousCount := 0.
@@ -310,6 +312,26 @@ SLVMLLVMCodeGenerator >> translateConstant: aConstant [
 SLVMLLVMCodeGenerator >> translateDebugType: type [
 	self translatedDebugElements at: type ifPresent: [ :existent | ^ existent ].
 	^ self debugTranslator translate: type
+
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> translateDynamicLiteral: aLiteral [
+	| literalConstantValue type llvmConstant variable |
+	self assert: (target objectModel isInlineLiteral: aLiteral) not.
+	translatedLiterals at: aLiteral ifPresent: [ :existent | ^ existent ].
+	
+	literalConstantValue := target objectModel createNonInlineLiteralConstant: aLiteral withCodeGenerator: self.
+	
+	llvmConstant := self translateConstant: literalConstantValue.
+
+	variable := LLVMGlobalVariable createWithType: llvmConstant type module: self llvmModule isConstant: true linkage: LLVMGlobalValue privateLinkage.
+	variable
+		alignment: target objectModel objectAlignment;
+		initialValue: llvmConstant.
+	
+	translatedLiterals at: aLiteral put: variable.
+	^ variable
 
 ]
 
@@ -581,7 +603,10 @@ SLVMLLVMCodeGenerator >> visitPointerType: type [
 
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> visitStructureType: structureType [
-	self halt.
+	structureType name ifNotNil: [ self halt ].
+	^ self recursiveType: structureType translationDo: [
+		LLVMStructType context: llvmContext elements: (structureType types collect: [:type | self translateType: type])
+	]
 ]
 
 { #category : #visiting }
