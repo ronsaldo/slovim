@@ -146,6 +146,11 @@ SLVMObjectModel >> messageSuperSendTrampoline [
 	self subclassResponsibility
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMObjectModel >> objectAlignment [
+	^ 16
+]
+
 { #category : #'immediate literals' }
 SLVMObjectModel >> rotate64Left1: bits [
 	^ ((bits << 1) | ((bits >> 63) & 1)) & 16rFFFFFFFFFFFFFFFF

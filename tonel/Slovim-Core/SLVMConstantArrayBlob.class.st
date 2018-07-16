@@ -29,6 +29,11 @@ SLVMConstantArrayBlob >> data: anObject [
 ]
 
 { #category : #testing }
+SLVMConstantArrayBlob >> hasExtraNullCharacter [
+	^ false
+]
+
+{ #category : #testing }
 SLVMConstantArrayBlob >> isConstantArrayBlob [
 	^ true
 ]
