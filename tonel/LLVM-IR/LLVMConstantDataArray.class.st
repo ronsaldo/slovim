@@ -38,7 +38,11 @@ LLVMConstantDataArray >> printOn: aStream [
 		^ self
 	].
 
-	aStream nextPut: $[.
-	aStream nextPut: $].
-	self halt
+	aStream nextPutAll: '[ '.
+	elements doWithIndex: [ :el :index |
+		index > 1 ifTrue: [ aStream nextPutAll: ', ' ].
+		elementType printOn: aStream.
+		aStream space; print: el
+	].
+	aStream nextPutAll: ' ]'.
 ]
