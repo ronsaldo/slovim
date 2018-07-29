@@ -42,6 +42,11 @@ SLVMNativeArray >> asByteArray [
 	^ data
 ]
 
+{ #category : #converting }
+SLVMNativeArray >> asNativeArray [
+	^ self
+]
+
 { #category : #accessing }
 SLVMNativeArray >> at: index [
 	(index < 1 or: [ index > size ]) ifTrue: [ self errorSubscriptBounds: index ].

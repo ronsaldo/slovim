@@ -50,6 +50,11 @@ SLVMNativeOrderedCollection >> asByteArray [
 	^ result
 ]
 
+{ #category : #converting }
+SLVMNativeOrderedCollection >> asNativeArray [
+	^ SLVMNativeArray for: type withBytes: self asByteArray
+]
+
 { #category : #accessing }
 SLVMNativeOrderedCollection >> at: index [
 	(index < 1 or: [ index > size ]) ifTrue: [ self errorSubscriptBounds: index ].
