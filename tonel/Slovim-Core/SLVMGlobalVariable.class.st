@@ -44,7 +44,7 @@ SLVMGlobalVariable >> customSection: aSectionName [
 
 { #category : #printing }
 SLVMGlobalVariable >> fullPrintOn: aStream [
-	aStream nextPutAll: 'global @'; print: type; space; nextPutAll: name; space.
+	aStream nextPutAll: 'global @'; print: type; space; nextPutAll: (name ifNil: [#anonymous]); space.
 	self printPropertiesOn: aStream.
 	aStream cr
 ]
