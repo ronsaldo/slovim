@@ -108,6 +108,7 @@ SLVMOptInline >> inlineFunction: aFunction [
 	].
 
 	self validateFunction: aFunction.
+	"(aFunction hasSelectorAndClassBinding and: [aFunction selectorValue = #computeTransformationInto:]) ifTrue: [ self halt ]."
 	postInlineOptimizations do: [ :optimization | optimization passOnFunction: aFunction ].
 ]
 

@@ -52,13 +52,13 @@ SLVMBasicBlock >> add: anInstruction after: instructionPoint [
 	anInstruction previousInstruction: instructionPoint.
 	instructionPoint nextInstruction: anInstruction.
 	
-	numberOfInstructions := numberOfInstructions + 1.
+	numberOfInstructions ifNotNil: [ numberOfInstructions := numberOfInstructions + 1 ].
 	self instructionAdded: anInstruction
 ]
 
 { #category : #adding }
 SLVMBasicBlock >> add: anInstruction before: instructionPoint [
-	instructionPoint ifNil: [ ^ self addFirst: instructionPoint ].
+	instructionPoint ifNil: [ ^ self addLast: instructionPoint ].
 	
 	self assert: anInstruction previousInstruction isNil.
 	self assert: anInstruction nextInstruction isNil.
@@ -75,7 +75,7 @@ SLVMBasicBlock >> add: anInstruction before: instructionPoint [
 	anInstruction nextInstruction: instructionPoint.
 	instructionPoint previousInstruction: anInstruction.
 	
-	numberOfInstructions := numberOfInstructions + 1.
+	numberOfInstructions ifNotNil: [ numberOfInstructions := numberOfInstructions + 1].
 	self instructionAdded: anInstruction
 ]
 
@@ -315,6 +315,16 @@ SLVMBasicBlock >> instructionAdded: anInstruction [
 	anInstruction isTerminator ifTrue: [
 		self computeSuccessors
 	].
+]
+
+{ #category : #enumerating }
+SLVMBasicBlock >> instructionAfterAllocas [
+	| result |
+	result := firstInstruction.
+	[result isNotNil and: [result isAlloca]] whileTrue: [ 
+		result := result nextInstruction
+	].
+	^ result
 ]
 
 { #category : #'successor sequences' }

@@ -80,6 +80,11 @@ SLVMInstruction >> function [
 ]
 
 { #category : #testing }
+SLVMInstruction >> hasAnonName [
+	^ name isNotNil or: [ name detect: [:c | c isDigit not] ifFound: [false] ifNone: [ true ] ]
+]
+
+{ #category : #testing }
 SLVMInstruction >> hasInputs [
 	^ parameters isNotEmpty
 ]
@@ -296,6 +301,12 @@ SLVMInstruction >> removeFromBlock [
 	self assert: instructionReferences isEmpty.
 	parameters do: [ :param | param removeInstructionReference: self ].
 	block remove: self.
+]
+
+{ #category : #modifying }
+SLVMInstruction >> removeFromBlockWithAllReferences [
+	instructionReferences copy do: #removeFromBlockWithAllReferences.
+	self removeFromBlock
 ]
 
 { #category : #adding }

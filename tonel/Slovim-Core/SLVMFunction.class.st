@@ -66,6 +66,13 @@ SLVMFunction >> addRequiredDynamicLiteral: literal [
 	^ result
 ]
 
+{ #category : #adding }
+SLVMFunction >> addRuntimeLiterals: literals [
+	"Update the index of the literal"
+	literals doWithIndex: [ :literal :i | literal index: dynamicLiterals size + i ].
+	dynamicLiterals addAll: literals
+]
+
 { #category : #enumerating }
 SLVMFunction >> allInstructionsDo: aBlock [
 	basicBlocks do: [ :bb |
@@ -281,11 +288,12 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap [
 
 { #category : #copying }
 SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation: continuationBlock [
-	| newBlocks newBlock substitutionDictionary newInstruction resultPhi return result movedAllocas sourceFirstBlock targetFirstBlock sourceFunction newDynamicLiteral |
+	| newBlocks newBlock substitutionDictionary newInstruction resultPhi return result movedAllocas sourceFirstBlock targetFirstBlock sourceFunction newDynamicLiteral allocaInsertionPoint runtimeLiterals |
 	newBlocks := OrderedCollection new.
 	movedAllocas := OrderedCollection new.
 	substitutionDictionary := valueMap copy.
 	
+	runtimeLiterals := targetFunction removeRuntimeLiterals.
 	dynamicLiterals isNotEmpty ifTrue: [
 		targetFunction dynamicLiterals ifEmpty: [ 
 			dynamicLiterals do: [ :lit |
@@ -300,10 +308,13 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 		]
 	].
 
+	targetFunction addRuntimeLiterals: runtimeLiterals.
+
 	"Copy the vertices of the graph"
 	sourceFunction := self.
 	sourceFirstBlock := sourceFunction basicBlocks first.
 	targetFirstBlock := targetFunction basicBlocks ifEmpty: [nil] ifNotEmpty: [targetFunction basicBlocks first].
+	allocaInsertionPoint := nil.
 	
 	self basicBlocks do: [ :bb |
 		newBlock := SLVMBasicBlock new name: bb name.
@@ -311,12 +322,15 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 		targetFunction addBasicBlock: newBlock.
 		substitutionDictionary at: bb put: newBlock.
 		targetFirstBlock ifNil: [ targetFirstBlock := newBlock ].
+		allocaInsertionPoint := targetFirstBlock instructionAfterAllocas.
 		
 		bb instructionsDo: [ :instr |
 			newInstruction := instr copy.
+			newInstruction hasAnonName ifTrue: [ newInstruction name: targetFunction generateSymbol ].
+			
 			substitutionDictionary at: instr put: newInstruction.
 			(newInstruction isAlloca and: [ bb == sourceFirstBlock ]) ifTrue: [
-				targetFirstBlock addFirst: newInstruction.
+				targetFirstBlock add: newInstruction before: allocaInsertionPoint.
 				movedAllocas add: newInstruction.
 			] ifFalse: [ 
 				newBlock addQuiet: newInstruction
@@ -640,6 +654,21 @@ SLVMFunction >> removeBasicBlock: aBasicBlock [
 	aBasicBlock function: nil.
 	self invalidateControlFlowCaches.
 	basicBlocks doWithIndex: [ :bb :index | bb index: index ]
+]
+
+{ #category : #removing }
+SLVMFunction >> removeRuntimeLiterals [
+	| result |
+	dynamicLiterals ifEmpty: [ ^ #() ].
+	
+	result := dynamicLiterals last: 2.
+	dynamicLiterals := dynamicLiterals allButLast: 2.
+	^ result
+]
+
+{ #category : #testing }
+SLVMFunction >> selectorValue [
+	^ (dynamicLiterals at: dynamicLiterals size - 1) value
 ]
 
 { #category : #accessing }

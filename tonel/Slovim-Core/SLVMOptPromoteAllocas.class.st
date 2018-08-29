@@ -4,6 +4,33 @@ Class {
 	#category : #'Slovim-Core-Optimizations'
 }
 
+{ #category : #'aggregate promotion' }
+SLVMOptPromoteAllocas >> addAggregatesThatUse: instruction except: toExclude intoPendingWorkList: pendingWork [
+	| pointer variable |
+	instruction instructionReferences do: [ :ref |
+		(ref isStore and: [ ref value == instruction and: [ ref variable isInstruction ] ]) ifTrue: [ 
+			"self halt."
+			variable := nil.
+			
+			(ref variable isAlloca and: [ ref variable valueType isAggregateType ]) ifTrue: [
+				variable := ref variable
+			].
+		
+			ref variable isGetElementPointer ifTrue: [
+				pointer := ref variable pointer.
+				(pointer isInstruction and: [pointer isAlloca and: [pointer valueType isAggregateType ]]) ifTrue: [
+					variable := pointer
+				]
+			].
+		
+			(variable ~~ nil and: [ variable ~~ toExclude ]) ifTrue: [
+				pendingWork add: variable
+			]
+		]
+	].
+
+]
+
 { #category : #'as yet unclassified' }
 SLVMOptPromoteAllocas >> addPhi: phi previousDefinitions: definitionsPerNode allocaInstruction: alloca [
 	| value shouldBeRemoved definitions phiBlock |
@@ -53,7 +80,7 @@ SLVMOptPromoteAllocas >> addUndefinedTo: definitionsPerNode allocaInstruction: a
 	| function entryBlock undefinedInstruction |
 	function := allocaInstruction block function.
 	entryBlock := function basicBlocks first.
-	undefinedInstruction := self undefinedFor: allocaInstruction valueType name: (allocaInstruction name , function generateSymbol) asSymbol.
+	undefinedInstruction := self undefinedFor: allocaInstruction valueType name: (function generateSymbol, allocaInstruction name) asSymbol.
 	entryBlock addFirst: undefinedInstruction.
 	definitionsPerNode at: entryBlock put: { undefinedInstruction }.
 	^ undefinedInstruction
@@ -67,6 +94,41 @@ SLVMOptPromoteAllocas >> canBePromoted: allocaInstruction [
 	].
 
 	^ true
+]
+
+{ #category : #'aggregate promotion' }
+SLVMOptPromoteAllocas >> doPromoteAggregateConstant: alloca affected: affectedInstructions in: basicBlock pendingWork: pendingWork [
+	| currentValue |
+	currentValue := nil.
+	basicBlock instructionsDo: [ :instruction | 
+		affectedInstructions ifEmpty: [ ^ self ].
+		(affectedInstructions includes: instruction) ifTrue: [
+			affectedInstructions remove: instruction.
+			instruction variable == alloca ifTrue: [
+				instruction isLoad ifTrue: [
+					self assert: currentValue isNotNil.
+					self addAggregatesThatUse: instruction except: alloca intoPendingWorkList: pendingWork.
+					instruction replaceWith: currentValue.
+				].
+				instruction isStore ifTrue: [
+					currentValue := instruction value.
+					self assert: currentValue isConstantStructureValue
+				]
+			] ifFalse: [
+				self assert: instruction variable isGetElementPointer.
+				instruction isLoad ifTrue: [
+					self assert: currentValue isNotNil.
+					self addAggregatesThatUse: instruction except: alloca intoPendingWorkList: pendingWork.
+					instruction replaceWith: (currentValue slots at: instruction variable indices second value + 1)
+				].
+				instruction isStore ifTrue: [
+					self assert: currentValue isConstantStructureValue.
+					currentValue := currentValue copy.
+					currentValue slots at: instruction variable indices second value + 1 put: instruction value
+				]
+			]
+		]
+	]
 ]
 
 { #category : #'as yet unclassified' }
@@ -112,21 +174,56 @@ SLVMOptPromoteAllocas >> firstDefinitionValueAt: node for: definitionsPerNode al
 
 ]
 
-{ #category : #'aggregate element loading' }
-SLVMOptPromoteAllocas >> isAllocaUsedForLoadingAggregateField: alloca [
-	| references loadingPlaces |
-	alloca valueType isAggregateType ifFalse: [ ^ false ].
-	
-	references := alloca instructionReferences.
-	references size ~= 2 ifTrue: [ ^ false ].
-	(references first isStore and: [ references second isGetElementPointer ]) ifFalse: [ ^ false ].
-	(references second hasConstantIndices and: [ references second indices first value = 0 ]) ifFalse: [ ^ false ].
-
-	references first nextInstruction == references second ifFalse: [ ^ false ].
-	
-	loadingPlaces := references second instructionReferences.
+{ #category : #'aggregate promotion' }
+SLVMOptPromoteAllocas >> isAggregateReferenceUsedForLoadingField: reference [
+	| loadingPlaces |
+	(reference hasConstantIndices and: [ reference indices first value = 0 ]) ifFalse: [ ^ false ].
+		
+	loadingPlaces := reference instructionReferences.
 	loadingPlaces do: [ :p | p isLoad ifFalse: [^ false ] ].
 	^ true
+]
+
+{ #category : #'aggregate promotion' }
+SLVMOptPromoteAllocas >> isAllocaUsedForLoadingAggregateField: alloca [
+	| references expectedPreviousInstruction |
+	references := alloca instructionReferences.
+	references size < 2 ifTrue: [ ^ false ].
+	(references first isStore and: [ references second isGetElementPointer ]) ifFalse: [ ^ false ].
+
+	expectedPreviousInstruction := references first.
+	references allButFirstDo: [ :ref |
+		ref previousInstruction == expectedPreviousInstruction ifFalse: [ ^ false ].
+		(self isAggregateReferenceUsedForLoadingField: ref) ifFalse: [ ^ false ].
+		expectedPreviousInstruction := ref
+	].
+
+	^ true
+]
+
+{ #category : #'aggregate promotion' }
+SLVMOptPromoteAllocas >> isValidActionForAggregateConstant: instruction of: aggregate [
+	| indices |
+	instruction isStore ifTrue: [ ^ instruction value isConstantStructureValue ].
+	instruction isLoad ifTrue: [ ^ true ].
+	instruction isGetElementPointer ifTrue: [
+		indices := instruction indices.
+		indices size ~= 2 ifTrue: [ ^ false ].
+		indices first isConstantValue ifFalse: [ ^ false ].
+		indices first value = 0 ifFalse: [ ^ false ].
+		indices second isConstantValue ifFalse: [ ^ false ].
+		
+		instruction instructionReferences do: [ :ref |
+			(ref isLoad or: [ref isStore]) ifFalse: [ ^ false ].
+			ref isStore ifTrue: [
+				(ref value isConstant or:
+				[ref value isInstruction and: [ ref value isLoad and: [ aggregate instructionReferences includes: (ref value variable) ] ] ]) ifFalse: [ ^ false ] ].
+		].
+	
+		^ true
+	].
+
+	^ false
 ]
 
 { #category : #'as yet unclassified' }
@@ -171,7 +268,7 @@ SLVMOptPromoteAllocas >> lastDefinitionValueAtLoad: loadInstruction for: definit
 SLVMOptPromoteAllocas >> passOnFunction: aFunction [
 	| toBePromoted |
 	aFunction isEmpty ifTrue: [ ^ self ].
-	self promoteAggregateLoadsOn: aFunction.
+	self promoteAggregatesOn: aFunction.
 	
 	toBePromoted := OrderedCollection new.
 	aFunction basicBlocks first instructionsDo: [ :ins |
@@ -231,7 +328,7 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 		
 		workNode dominanceFrontier do: [ :frontierNode |
 			phiNodeDictionary at: frontierNode ifAbsentPut: [
-				phiNode := (SLVMPhi type: allocaInstruction valueType) name: (allocaInstruction name , allocaInstruction block function generateSymbol) asSymbol.
+				phiNode := (SLVMPhi type: allocaInstruction valueType) name: (allocaInstruction block function generateSymbol, allocaInstruction name) asSymbol.
 				frontierNode addFirst: phiNode.
 				(definitionsPerNode at: frontierNode ifAbsentPut: [ OrderedCollection new. ])
 					add: phiNode.
@@ -268,41 +365,93 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 
 ]
 
-{ #category : #applying }
-SLVMOptPromoteAllocas >> promoteAggregateLoadsOn: aFunction [
-	aFunction basicBlocks first allocaInstructionsDo: [ :alloca |
-		(self isAllocaUsedForLoadingAggregateField: alloca) ifTrue: [
-			self promoteAllocaForLoadingAggregateField: alloca
+{ #category : #'aggregate promotion' }
+SLVMOptPromoteAllocas >> promoteAggregate: alloca pendingWork: pendingWork [
+	alloca valueType isAggregateType ifFalse: [ ^ self ].
+	alloca instructionReferences ifEmpty: [ ^ self ].
+	
+	(self promoteAggregateConstant: alloca pendingWork: pendingWork) ifTrue: [ ^ self ].
+	(self tryToSplitLocalOnlyAggregate: alloca) ifTrue: [ ^ self ].
+
+	(self isAllocaUsedForLoadingAggregateField: alloca) ifTrue: [
+		^ self promoteAllocaForLoadingAggregateField: alloca
+	].
+
+]
+
+{ #category : #'aggregate promotion' }
+SLVMOptPromoteAllocas >> promoteAggregateConstant: alloca pendingWork: pendingWork [
+	| references basicBlock affectedInstructions |
+	references := alloca instructionReferences.
+	references first isStore ifFalse: [ ^ false ].
+
+	basicBlock := references first block.
+	references do: [ :ref | 
+		self flag: 'TODO: Support multiple basic blocks.'.
+		ref block ~~ basicBlock ifTrue: [ ^ false ].
+		(self isValidActionForAggregateConstant: ref of: alloca) ifFalse: [ ^ false ]
+	].
+
+	"(alloca function hasSelectorAndClassBinding and: [alloca function selectorValue = #computeTransformationInto:]) ifTrue: [ self halt ]."
+
+	"Compute the set of affected instructions."
+	affectedInstructions := IdentitySet new.
+	references do: [ :ref | 
+		ref isGetElementPointer ifTrue: [
+			affectedInstructions addAll: ref instructionReferences
+		] ifFalse: [
+			affectedInstructions add: ref.
 		]
+	].
+
+	self doPromoteAggregateConstant: alloca affected: affectedInstructions in: basicBlock pendingWork: pendingWork.
+
+	alloca removeFromBlockWithAllReferences.
+	^ true
+]
+
+{ #category : #'aggregate promotion' }
+SLVMOptPromoteAllocas >> promoteAggregatesOn: aFunction [
+	| pendingWork toProcess |
+	pendingWork := IdentitySet new.
+	
+	aFunction basicBlocks first allocaInstructionsDo: [ :alloca |
+		alloca valueType isAggregateType ifTrue: [ pendingWork add: alloca ]
+	].
+
+	[ pendingWork isNotEmpty ] whileTrue: [ 
+		toProcess := pendingWork anyOne.
+		pendingWork remove: toProcess.
+		self promoteAggregate: toProcess pendingWork: pendingWork
 	]
 ]
 
-{ #category : #'aggregate element loading' }
+{ #category : #'aggregate promotion' }
 SLVMOptPromoteAllocas >> promoteAllocaForLoadingAggregateField: alloca [
-	| references loadingPlaces aggregateValue gep indices fieldValue store |
+	| references loadingPlaces aggregateValue indices fieldValue store |
 	references := alloca instructionReferences.
 	store := references first.
 	self assert: store isStore.
 	aggregateValue := references first value.
 	
-	gep := references second.
-	self assert: gep isGetElementPointer.
-	indices := gep indices allButFirst collect: #value.
+	references allButFirstDo: [ :gep |
+		self assert: gep isGetElementPointer.
+		indices := gep indices allButFirst collect: #value.
 	
-	loadingPlaces := references second instructionReferences.
-	loadingPlaces do: [ :fieldLoadPlace | 
-		self assert: fieldLoadPlace isLoad.
-		fieldValue := SLVMExtractValue aggregate: aggregateValue indices: indices.
-		fieldValue name: fieldLoadPlace name. 
-		fieldLoadPlace block add: fieldValue before: fieldLoadPlace.
-		fieldLoadPlace replaceWith: fieldValue
+		loadingPlaces := references second instructionReferences.
+		loadingPlaces do: [ :fieldLoadPlace | 
+			self assert: fieldLoadPlace isLoad.
+			fieldValue := SLVMExtractValue aggregate: aggregateValue indices: indices.
+			fieldValue name: fieldLoadPlace name. 
+			fieldLoadPlace block add: fieldValue before: fieldLoadPlace.
+			fieldLoadPlace replaceWith: fieldValue
+		].
+
+		gep removeFromBlock.
 	].
 
-	gep removeFromBlock.
 	store removeFromBlock.
 	alloca removeFromBlock
-	
-
 ]
 
 { #category : #'as yet unclassified' }
@@ -323,6 +472,29 @@ SLVMOptPromoteAllocas >> sortNode: node definitions: definitions allocaInstructi
 	self assert: lastStore isNotNil.
 	
 	definitions swap: (definitions indexOf: lastStore) with: definitions size.
+]
+
+{ #category : #'aggregate promotion' }
+SLVMOptPromoteAllocas >> tryToSplitLocalOnlyAggregate: alloca [
+	| references refIndices |
+	references := alloca instructionReferences.
+	
+	references do: [ :ref |
+		ref isGetElementPointer ifFalse: [ ^ false ].
+		
+		refIndices := ref indices.
+		refIndices first isConstantValue ifFalse: [ ^ false ].
+		refIndices first value = 0 ifFalse: [ ^ false ].
+		refIndices second isConstantValue ifFalse: [ ^ false ].
+
+		ref instructionReferences do: [ :loadOrStore |
+			(loadOrStore isLoad or: [loadOrStore isStore]) ifFalse: [ ^ false ]
+		]
+	].
+
+	self halt.
+
+	^ true
 ]
 
 { #category : #'as yet unclassified' }

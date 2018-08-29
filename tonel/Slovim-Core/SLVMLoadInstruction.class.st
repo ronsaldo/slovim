@@ -40,6 +40,12 @@ SLVMLoadInstruction >> isLoad [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMLoadInstruction >> isPureInstruction [
+	"Remove non-volatile loads without references."
+	^ volatile not and: [self hasReferences not]
+]
+
 { #category : #printing }
 SLVMLoadInstruction >> mnemonic [
 	^ 'load'

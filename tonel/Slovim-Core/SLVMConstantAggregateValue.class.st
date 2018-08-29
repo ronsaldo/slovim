@@ -13,6 +13,11 @@ SLVMConstantAggregateValue >> isConstantAggregateValue [
 	^ true
 ]
 
+{ #category : #copying }
+SLVMConstantAggregateValue >> postCopy [
+	slots := slots copy
+]
+
 { #category : #accessing }
 SLVMConstantAggregateValue >> slots [
 	^ slots

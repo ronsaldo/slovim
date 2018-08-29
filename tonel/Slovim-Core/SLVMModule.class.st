@@ -83,7 +83,7 @@ SLVMModule >> asLowLevelModuleWithOptimizationLevel: anOptimizationLevel [
 
 { #category : #accessing }
 SLVMModule >> childrenNodes [
-	^ anonymousGlobals , globalValues values
+	^ (anonymousGlobals , globalValues values) sorted: [ :a :b | a printString <= b printString ]
 ]
 
 { #category : #accessing }
