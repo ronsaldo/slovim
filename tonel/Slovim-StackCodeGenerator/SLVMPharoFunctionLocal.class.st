@@ -9,8 +9,12 @@ SLVMPharoFunctionLocal >> emitPushUsingLowcodeWith: aCodeGenerator [
 	type pushLocal: location usingLowcodeWith: aCodeGenerator
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'code generation' }
 SLVMPharoFunctionLocal >> emitPushWith: aCodeGenerator [
+	vectorName ifNotNil: [ 
+		^ aCodeGenerator pushRemoteTemp: name inVector: vectorName
+	].
+
 	^ aCodeGenerator pushTemp: name
 ]
 
@@ -19,7 +23,11 @@ SLVMPharoFunctionLocal >> emitStoreAndPopStackTopUsingLowcodeWith: aCodeGenerato
 	type storeAndPopStackTopIntoLocal: location usingLowcodeWith: aCodeGenerator
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'code generation' }
 SLVMPharoFunctionLocal >> emitStoreStackTopWith: aCodeGenerator [
+	vectorName ifNotNil: [ 
+		^ aCodeGenerator storeRemoteTemp: name inVector: vectorName
+	].
+
 	^ aCodeGenerator storeTemp: name
 ]

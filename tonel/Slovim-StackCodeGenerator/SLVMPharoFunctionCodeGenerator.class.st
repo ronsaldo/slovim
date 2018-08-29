@@ -19,10 +19,12 @@ Class {
 		'elseSequences',
 		'currentBasicBlock',
 		'moduleTranslator',
-		'thenSequences'
+		'thenSequences',
+		'methodTempVectorInstruction'
 	],
 	#classVars : [
 		'BinaryOperationMessageMap',
+		'MaxNumberOfNormalTemps',
 		'UnaryOperationMessageMap'
 	],
 	#category : #'Slovim-StackCodeGenerator-Pharo'
@@ -31,6 +33,8 @@ Class {
 { #category : #initialization }
 SLVMPharoFunctionCodeGenerator class >> initialize [
 	super initialize.
+	
+	MaxNumberOfNormalTemps := 30.
 	
 	BinaryOperationMessageMap := Dictionary newFromPairs: #(
 		add		+
@@ -207,20 +211,54 @@ SLVMPharoFunctionCodeGenerator >> createObjectTemporary: rawName [
 
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> createObjectTemporary: rawName type: type [
-	| tempMap tempName index temp name |
+	| tempMap tempName index name vectorName |
+	methodTempVectorInstruction name ifNotNil: [
+		vectorName := methodTempVectorInstruction name.
+		name := (vectorName , methodTempVectorInstruction vars size asString) asSymbol.
+		methodTempVectorInstruction vars add: name.
+		^ SLVMPharoFunctionLocal new
+			name: name;
+			location: name;
+			vectorName: vectorName;
+			type: type;
+			yourself
+	].
+
 	tempMap := self currentScope tempMap.
 	name := rawName asSymbol.
 	tempName := tempMap at: name ifPresent: [('<temp:' , tempMap size asString, '>') asSymbol] ifAbsent: [ name ].
 	
 	index := tempMap size + 1.
-	temp := SLVMPharoFunctionLocal new name: name; location: name; type: type; yourself.
+
+	"Did we exceed the max number of temps? use a temporary vector."
+	index = MaxNumberOfNormalTemps ifTrue: [
+		tempName := #'<mainTempVector>'.
+		methodTempVectorInstruction name: tempName; vars: OrderedCollection new.
+		tempMap at: tempName put: index.
+		^ self createObjectTemporary: rawName type: type
+	].
+
 	tempMap at: tempName put: index.
-	^ temp
+
+	^ SLVMPharoFunctionLocal new
+		name: name;
+		location: name;
+		type: type;
+		yourself
 ]
 
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> createPrelude [
-	"Nothing required here."
+	methodTempVectorInstruction := SLVMPharoIRTempVector new
+		name: nil;
+		vars: nil;
+		yourself..
+]
+
+{ #category : #instructions }
+SLVMPharoFunctionCodeGenerator >> createTempVectorNamed: name withVars: anArray [
+	self add: (IRInstruction createTempVectorNamed: name withVars: anArray).
+
 ]
 
 { #category : #'code generation' }
@@ -247,7 +285,10 @@ SLVMPharoFunctionCodeGenerator >> currentScope [
 
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> emitBasicBlockPrelude: aPrelude [
-	"Nothing required"
+	methodTempVectorInstruction sequence ifNil: [ 
+		self add: methodTempVectorInstruction.
+	]
+
 ]
 
 { #category : #visiting }
@@ -342,7 +383,11 @@ SLVMPharoFunctionCodeGenerator >> popTopOfType: aType [
 
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> postProcessTranslation [
-	"Nothing required here"
+	"Removed the unused method temp vector instruction."
+	methodTempVectorInstruction name ifNil: [
+		methodTempVectorInstruction sequence remove: methodTempVectorInstruction.
+		methodTempVectorInstruction := nil.
+	]
 ]
 
 { #category : #instructions }
@@ -373,6 +418,12 @@ SLVMPharoFunctionCodeGenerator >> pushLiteralVariable: object [
 SLVMPharoFunctionCodeGenerator >> pushReceiver [
 
 	self add: (IRInstruction pushReceiver)
+]
+
+{ #category : #instructions }
+SLVMPharoFunctionCodeGenerator >> pushRemoteTemp: name inVector: nameOfVector [
+
+	^self add: (IRInstruction pushRemoteTemp: name inVectorAt: nameOfVector)
 ]
 
 { #category : #instructions }
@@ -425,6 +476,12 @@ SLVMPharoFunctionCodeGenerator >> storeAndPopValueIntoPointer: anInstruction [
 SLVMPharoFunctionCodeGenerator >> storeInstVar: name [
 
 	^self add: (IRInstruction storeInstVar: name).
+]
+
+{ #category : #instructions }
+SLVMPharoFunctionCodeGenerator >> storeRemoteTemp: name inVector: nameOfVector [
+
+	^self add: (IRInstruction storeRemoteTemp: name inVectorAt: nameOfVector)
 ]
 
 { #category : #instructions }

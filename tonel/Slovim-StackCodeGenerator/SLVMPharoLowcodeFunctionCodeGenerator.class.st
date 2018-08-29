@@ -119,7 +119,8 @@ SLVMPharoLowcodeFunctionCodeGenerator >> createBasicBlocksAndTemporaries [
 { #category : #'code generation' }
 SLVMPharoLowcodeFunctionCodeGenerator >> createPrelude [
 	"Make sure this is always this special instruction."
-	localFrameInstruction := IRInstruction lowcodeInstruction: 1126 extendA: 0
+	localFrameInstruction := IRInstruction lowcodeInstruction: 1126 extendA: 0.
+	super createPrelude.
 ]
 
 { #category : #'code generation' }
@@ -151,7 +152,8 @@ SLVMPharoLowcodeFunctionCodeGenerator >> emitBasicBlockPrelude: basicBlock [
 	basicBlock index = 1 ifTrue: [
 		self add: localFrameInstruction.
 		lowcodeUsed := false
-	]
+	].
+	super emitBasicBlockPrelude: basicBlock
 ]
 
 { #category : #operations }
@@ -1864,6 +1866,7 @@ SLVMPharoLowcodeFunctionCodeGenerator >> popTopOfType: type [
 
 { #category : #'code generation' }
 SLVMPharoLowcodeFunctionCodeGenerator >> postProcessTranslation [
+	super postProcessTranslation.
 	(localFrameInstruction extendA = 0 and: [lowcodeUsed not]) ifTrue: [
 		self removeLowcodeStuff
 	]

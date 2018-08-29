@@ -3,6 +3,7 @@ Class {
 	#superclass : #SLVMPharoVariable,
 	#instVars : [
 		'name',
+		'vectorName',
 		'location'
 	],
 	#category : #'Slovim-StackCodeGenerator-Pharo'
@@ -26,4 +27,14 @@ SLVMPharoFunctionTemp >> name [
 { #category : #accessing }
 SLVMPharoFunctionTemp >> name: anObject [
 	name := anObject
+]
+
+{ #category : #accessing }
+SLVMPharoFunctionTemp >> vectorName [
+	^ vectorName
+]
+
+{ #category : #accessing }
+SLVMPharoFunctionTemp >> vectorName: anObject [
+	vectorName := anObject
 ]
