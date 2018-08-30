@@ -30,7 +30,8 @@ SLVMBasicBlock >> accept: aVisitor [
 { #category : #adding }
 SLVMBasicBlock >> add: anInstruction [ 
 	self addQuiet: anInstruction.
-	self instructionAdded: anInstruction
+	self instructionAdded: anInstruction.
+	^ anInstruction
 ]
 
 { #category : #adding }
@@ -53,7 +54,8 @@ SLVMBasicBlock >> add: anInstruction after: instructionPoint [
 	instructionPoint nextInstruction: anInstruction.
 	
 	numberOfInstructions ifNotNil: [ numberOfInstructions := numberOfInstructions + 1 ].
-	self instructionAdded: anInstruction
+	self instructionAdded: anInstruction.
+	^ anInstruction
 ]
 
 { #category : #adding }
@@ -76,7 +78,8 @@ SLVMBasicBlock >> add: anInstruction before: instructionPoint [
 	instructionPoint previousInstruction: anInstruction.
 	
 	numberOfInstructions ifNotNil: [ numberOfInstructions := numberOfInstructions + 1].
-	self instructionAdded: anInstruction
+	self instructionAdded: anInstruction.
+	^ anInstruction
 ]
 
 { #category : #testing }
@@ -99,7 +102,8 @@ SLVMBasicBlock >> addFirst: anInstruction [
 		numberOfInstructions ifNotNil: [ numberOfInstructions := numberOfInstructions + 1 ].
 	].
 
-	self instructionAdded: anInstruction
+	self instructionAdded: anInstruction.
+	^ anInstruction
 ]
 
 { #category : #adding }
@@ -153,7 +157,14 @@ SLVMBasicBlock >> addQuiet: anInstruction [
 		numberOfInstructions ifNotNil: [ numberOfInstructions := numberOfInstructions + 1 ].
 	].
 
-	anInstruction block: self
+	anInstruction block: self.
+	^ anInstruction
+]
+
+{ #category : #adding }
+SLVMBasicBlock >> addWithName: anInstruction before: instructionPoint [
+	anInstruction name ifNil: [ anInstruction name: function generateSymbol ].
+	^ self add: anInstruction before: instructionPoint
 ]
 
 { #category : #enumerating }

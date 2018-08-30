@@ -48,6 +48,16 @@ SLVMConstantValue >> isConstantValue [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMConstantValue >> isOneConstant [
+	^ value = 1
+]
+
+{ #category : #testing }
+SLVMConstantValue >> isZeroConstant [
+	^ value = 0
+]
+
 { #category : #printing }
 SLVMConstantValue >> printOn: aStream [
 	aStream nextPutAll: 'constant '; print: type; space; print: value

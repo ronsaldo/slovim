@@ -625,6 +625,16 @@ SLVMBuilder >> initialize [
 	debugPositionStack := Stack new.
 ]
 
+{ #category : #instructions }
+SLVMBuilder >> insertValue: anAggregateValue value: value indices: indicesValue [
+	^ self insertValue: anAggregateValue value: value indices: indicesValue name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> insertValue: anAggregateValue value: value indices: indicesValue name: resultName [
+	^ self addInstruction: (SLVMInsertValue aggregate: anAggregateValue value: value indices: indicesValue) name: resultName
+]
+
 { #category : #closures }
 SLVMBuilder >> instantiateClosure: closureDefinition captures: captures [
 	^ self instantiateClosure: closureDefinition captures: captures name: function generateSymbol

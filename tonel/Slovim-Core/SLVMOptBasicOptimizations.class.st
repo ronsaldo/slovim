@@ -40,6 +40,10 @@ SLVMOptBasicOptimizations >> foldConstant: instruction [
 	| folded |
 	folded := instruction foldConstant.
 	folded ~~ instruction ifTrue: [
+		(folded isInstruction and: [ folded block isNil ]) ifTrue: [
+			instruction block addWithName: folded before: instruction
+		].
+	
 		instruction instructionReferences do: [ :ref |
 			ref isInstruction ifTrue: [ pendingWork add: ref block ]
 		].

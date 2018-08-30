@@ -2,7 +2,8 @@ Class {
 	#name : #SLVMGetElementPointer,
 	#superclass : #SLVMInstruction,
 	#instVars : [
-		'type'
+		'type',
+		'inBounds'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -17,9 +18,27 @@ SLVMGetElementPointer >> accept: aVisitor [
 	^ aVisitor visitGetElementPointer: self
 ]
 
+{ #category : #testing }
+SLVMGetElementPointer >> aggregateInBoundIndices [
+	| result index |
+	self assert: inBounds.
+	result := Array new: parameters size - 2.
+	1 to: result size do: [ :i |
+		index := parameters at: i + 2.
+		self assert: index isConstantValue.
+		result at: i put: index value
+	].
+	^ result
+]
+
 { #category : #accessing }
 SLVMGetElementPointer >> firstIndex [
 	^ parameters second
+]
+
+{ #category : #testing }
+SLVMGetElementPointer >> hasConstantInBoundsIndices [
+	^ inBounds and: [ self hasConstantIndices ]
 ]
 
 { #category : #testing }
@@ -58,6 +77,11 @@ SLVMGetElementPointer >> isGetElementPointer [
 ]
 
 { #category : #testing }
+SLVMGetElementPointer >> isInBounds [
+	^ inBounds
+]
+
+{ #category : #testing }
 SLVMGetElementPointer >> isPureInstruction [
 	^ true
 ]
@@ -84,12 +108,19 @@ SLVMGetElementPointer >> pointer: pointer indices: indices [
 	self assert: (pointer type isPointerType or: [pointer type isDynamicObjectType ]).
 	pointerType := pointer type.
 	memberType := pointerType.
+	inBounds := true.
 	indices do: [ :index |
+		inBounds := inBounds and: [ memberType isMemberInBoundsAt: index ].
 		memberType := memberType typeOfMemberAt: index
 	].
 
 	type := SLVMPointerType size: pointerType size baseType: memberType storage: pointerType storage
 
+]
+
+{ #category : #accessing }
+SLVMGetElementPointer >> signature [
+	^ super signature , {inBounds}
 ]
 
 { #category : #accessing }

@@ -22,62 +22,62 @@ SLVMBinaryOperation class >> initialize [
 	super initialize.
 	
 	OperationSignatures := Dictionary newFromPairs: #(
-		add		(integer evaluateAdd)
-		sub   (integer evaluateSub) 
-		mul   (integer evaluateMul)
-		div   (integer evaluateIDiv)
-		udiv  (integer evaluateIDiv)
-		rem   (integer evaluateIRem)
-		urem  (integer evaluateIRem)
+		add		(integer evaluateAdd optimizeAdd)
+		sub   (integer evaluateSub optimizeSub) 
+		mul   (integer evaluateMul optimizeMul)
+		div   (integer evaluateIDiv optimizeDiv)
+		udiv  (integer evaluateIDiv optimizeDiv)
+		rem   (integer evaluateIRem optimizeRem)
+		urem  (integer evaluateIRem optimizeRem)
 
-		bitand (integer evaluateBitAnd)
-		bitor (integer evaluateBitOr)
-		bitxor (integer evaluateBitXOr)
+		bitand (integer evaluateBitAnd noOptimization)
+		bitor (integer evaluateBitOr noOptimization)
+		bitxor (integer evaluateBitXOr noOptimization)
 
-		shiftleft (integer evaluateShiftLeft)
-		shiftright (integer evaluateArithmeticShiftRight)
-		shiftrightarithmetic (integer evaluateLogicalShiftRight)
-		rotateleft (integer evaluateRotateLeft)
-		rotateright (integer evaluateRotateRight)
+		shiftleft (integer evaluateShiftLeft noOptimization)
+		shiftright (integer evaluateArithmeticShiftRight noOptimization)
+		shiftrightarithmetic (integer evaluateLogicalShiftRight noOptimization)
+		rotateleft (integer evaluateRotateLeft noOptimization)
+		rotateright (integer evaluateRotateRight noOptimization)
 
-		ilt (integerComp evaluateLessThan)
-		ile (integerComp evaluateLessEqual)
-		ieq (integerComp evaluateEqual)
-		ine (integerComp evaluateNotEqual)
-		igt (integerComp evaluateGreaterThan)
-		ige (integerComp evaluateGreaterEqual)
+		ilt (integerComp evaluateLessThan noOptimization)
+		ile (integerComp evaluateLessEqual noOptimization)
+		ieq (integerComp evaluateEqual noOptimization)
+		ine (integerComp evaluateNotEqual noOptimization)
+		igt (integerComp evaluateGreaterThan noOptimization)
+		ige (integerComp evaluateGreaterEqual noOptimization)
 
-		ult (integerComp evaluateLessThan)
-		ule (integerComp evaluateLessEqual)
-		ugt (integerComp evaluateGreaterThan)
-		uge (integerComp evaluateGreaterEqual)
+		ult (integerComp evaluateLessThan noOptimization)
+		ule (integerComp evaluateLessEqual noOptimization)
+		ugt (integerComp evaluateGreaterThan noOptimization)
+		uge (integerComp evaluateGreaterEqual noOptimization)
 
-		fadd 		(float evaluateAdd)
-		fsub 		(float evaluateSub)
-		fmul 		(float evaluateMul)
-		fdiv 		(float evaluateDiv)
-		frem 		(float evaluateRem)
+		fadd 		(float evaluateAdd optimizeFloatAdd)
+		fsub 		(float evaluateSub optimizeFloatSub)
+		fmul 		(float evaluateMul optimizeFloatMul)
+		fdiv 		(float evaluateDiv optimizeFloatDiv)
+		frem 		(float evaluateRem optimizeFloatRem)
 
-		uflt (floatComp evaluateLessThan)
-		ufle (floatComp evaluateLessEqual)
-		ufeq (floatComp evaluateEqual)
-		ufne (floatComp evaluateNotEqual)
-		ufgt (floatComp evaluateGreaterThan)
-		ufge (floatComp evaluateGreaterEqual)
+		uflt (floatComp evaluateLessThan noOptimization)
+		ufle (floatComp evaluateLessEqual noOptimization)
+		ufeq (floatComp evaluateEqual noOptimization)
+		ufne (floatComp evaluateNotEqual noOptimization)
+		ufgt (floatComp evaluateGreaterThan noOptimization)
+		ufge (floatComp evaluateGreaterEqual noOptimization)
 
-		oflt (floatComp evaluateLessThan)
-		ofle (floatComp evaluateLessEqual)
-		ofeq (floatComp evaluateEqual)
-		ofne (floatComp evaluateNotEqual)
-		ofgt (floatComp evaluateGreaterThan)
-		ofge (floatComp evaluateGreaterEqual)
+		oflt (floatComp evaluateLessThan noOptimization)
+		ofle (floatComp evaluateLessEqual noOptimization)
+		ofeq (floatComp evaluateEqual noOptimization)
+		ofne (floatComp evaluateNotEqual noOptimization)
+		ofgt (floatComp evaluateGreaterThan noOptimization)
+		ofge (floatComp evaluateGreaterEqual noOptimization)
 		
-		dynObjectIdentityEquals (dynObjectComp evaluateIdentityEquals)
-		dynObjectIdentityNotEquals (dynObjectComp evaluateIdentityNotEquals)
+		dynObjectIdentityEquals (dynObjectComp evaluateIdentityEquals noOptimization)
+		dynObjectIdentityNotEquals (dynObjectComp evaluateIdentityNotEquals noOptimization)
 		
-		mulMatrixMatrix (matrixMatrix evaluateMulMatrixMatrix)
-		mulMatrixVector (matrixVector evaluateMulMatrixVector)
-		mulVectorMatrix (vectorMatrix evaluateMulVectorMatrix)
+		mulMatrixMatrix (matrixMatrix evaluateMulMatrixMatrix noOptimization)
+		mulMatrixVector (matrixVector evaluateMulMatrixVector noOptimization)
+		mulVectorMatrix (vectorMatrix evaluateMulVectorMatrix noOptimization)
 	).
 
 ]
@@ -244,11 +244,17 @@ SLVMBinaryOperation >> evaluateSub [
 ]
 
 { #category : #'basic optimizations' }
+SLVMBinaryOperation >> foldArithmeticIdentities [
+	^ self perform: (OperationSignatures at: operation) third
+]
+
+{ #category : #'basic optimizations' }
 SLVMBinaryOperation >> foldConstant [
 	(self left isConstant and: [ self right isConstant ]) ifTrue: [ 
 		^ self perform: (OperationSignatures at: operation) second.
 	].
-	^ self
+	
+	^ self foldArithmeticIdentities
 ]
 
 { #category : #'as yet unclassified' }
@@ -278,6 +284,11 @@ SLVMBinaryOperation >> mnemonic [
 	^ self operation
 ]
 
+{ #category : #'arithmetic optimizations' }
+SLVMBinaryOperation >> noOptimization [
+	^ self
+]
+
 { #category : #accessing }
 SLVMBinaryOperation >> operation [
 	^ operation
@@ -293,6 +304,73 @@ SLVMBinaryOperation >> operation: anOperation left: leftOperand right: rightOper
 { #category : #accessing }
 SLVMBinaryOperation >> operationType [
 	^ (OperationSignatures at: operation) first
+]
+
+{ #category : #'arithmetic optimizations' }
+SLVMBinaryOperation >> optimizeAdd [
+	^ self
+]
+
+{ #category : #'arithmetic optimizations' }
+SLVMBinaryOperation >> optimizeDiv [
+	^ self
+]
+
+{ #category : #'arithmetic optimizations' }
+SLVMBinaryOperation >> optimizeFloatAdd [
+	| left right |
+	left := self left.
+	right := self right.
+	
+	left isZeroConstant ifTrue: [ ^ right ].
+	right isZeroConstant ifTrue: [ ^ left ].
+ 
+	^ self
+]
+
+{ #category : #'arithmetic optimizations' }
+SLVMBinaryOperation >> optimizeFloatDiv [
+	^ self
+]
+
+{ #category : #'arithmetic optimizations' }
+SLVMBinaryOperation >> optimizeFloatMul [
+	| left right |
+	left := self left.
+	right := self right.
+	
+	left isZeroConstant ifTrue: [ ^ left ].
+	right isZeroConstant ifTrue: [ ^ right ].
+
+	left isOneConstant ifTrue: [ ^ right ].
+	right isOneConstant ifTrue: [ ^ left ].
+ 
+	^ self
+]
+
+{ #category : #'arithmetic optimizations' }
+SLVMBinaryOperation >> optimizeFloatRem [
+	^ self
+]
+
+{ #category : #'arithmetic optimizations' }
+SLVMBinaryOperation >> optimizeFloatSub [
+	^ self
+]
+
+{ #category : #'arithmetic optimizations' }
+SLVMBinaryOperation >> optimizeMul [
+	^ self
+]
+
+{ #category : #'arithmetic optimizations' }
+SLVMBinaryOperation >> optimizeRem [
+	^ self
+]
+
+{ #category : #'arithmetic optimizations' }
+SLVMBinaryOperation >> optimizeSub [
+	^ self
 ]
 
 { #category : #accessing }

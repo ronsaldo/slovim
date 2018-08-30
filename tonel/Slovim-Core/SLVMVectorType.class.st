@@ -86,6 +86,11 @@ SLVMVectorType >> isIntegerVectorType [
 	^ baseType isIntegerType
 ]
 
+{ #category : #accessing }
+SLVMVectorType >> isMemberInBoundsAt: index [
+	^ index isConstantValue and: [ index value < elements ]
+]
+
 { #category : #testing }
 SLVMVectorType >> isScalarType [
 	^ false

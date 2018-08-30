@@ -8,6 +8,41 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #'as yet unclassified' }
+SLVMConstantAggregateValue >> extractValueAtIndices: indices [
+	| result |
+	result := self.
+	1 to: indices size do: [ :i |
+		result isConstantAggregateValue ifFalse: [
+			self halt.
+			^ { result . indices allButFirst: i - 1 }
+		].
+	
+		result := result slots at: (indices at: i) + 1
+	].
+
+	^ { result . #() }
+]
+
+{ #category : #'as yet unclassified' }
+SLVMConstantAggregateValue >> insertConstant: value atIndices: indices [
+	| index result newSlotValue slotValue |
+	index := indices first.
+
+	newSlotValue := value.
+	slotValue := slots at: index + 1.
+	indices size > 1 ifTrue: [
+		slotValue isConstantAggregateValue ifFalse: [ ^ nil ].
+		newSlotValue := slotValue insertConstant: value atIndices: indices allButFirst.
+	].
+
+	slotValue = newSlotValue ifTrue: [ ^ self ].
+
+	result := self copy.
+	result slots at: index + 1 put: newSlotValue.
+	^ result
+]
+
 { #category : #testing }
 SLVMConstantAggregateValue >> isConstantAggregateValue [
 	^ true

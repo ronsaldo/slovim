@@ -78,6 +78,11 @@ SLVMPointerType >> isDynamicObjectPointerType [
 	^ storage == SLVMType dynobjectStorage
 ]
 
+{ #category : #accessing }
+SLVMPointerType >> isMemberInBoundsAt: index [
+	^ index isConstantValue and: [ index value = 0 ]
+]
+
 { #category : #testing }
 SLVMPointerType >> isPointerType [
 	^ true
@@ -107,6 +112,11 @@ SLVMPointerType >> registerClass [
 { #category : #'as yet unclassified' }
 SLVMPointerType >> selectorForLoadingFromPointer [
 	^ #_slvm_pointerValue
+]
+
+{ #category : #'as yet unclassified' }
+SLVMPointerType >> selectorForStoring [
+	^ #_slvm_pointerValue:
 ]
 
 { #category : #'as yet unclassified' }

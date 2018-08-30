@@ -142,6 +142,11 @@ SLVMValue >> isInstruction [
 ]
 
 { #category : #testing }
+SLVMValue >> isOneConstant [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isPhi [
 	^ false
 ]
@@ -163,6 +168,11 @@ SLVMValue >> isUnaryOperation [
 
 { #category : #testing }
 SLVMValue >> isUndefined [
+	^ false
+]
+
+{ #category : #testing }
+SLVMValue >> isZeroConstant [
 	^ false
 ]
 

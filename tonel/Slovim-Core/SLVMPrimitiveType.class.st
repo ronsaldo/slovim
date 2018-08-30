@@ -65,6 +65,11 @@ SLVMPrimitiveType >> readFromPointer: pointer [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMPrimitiveType >> selectorForStoring [
+	^ (self selectorForLoadingFromPointer , ':') asSymbol
+]
+
+{ #category : #'as yet unclassified' }
 SLVMPrimitiveType >> selectorForStoringIntoPointer [
 	^ (self selectorForLoadingFromPointer , 'Into:') asSymbol
 ]

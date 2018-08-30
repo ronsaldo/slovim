@@ -75,6 +75,11 @@ SLVMArrayType >> isBounded [
 ]
 
 { #category : #accessing }
+SLVMArrayType >> isMemberInBoundsAt: index [
+	^ index isConstantValue and: [ index value < elements ]
+]
+
+{ #category : #accessing }
 SLVMArrayType >> memberAt: constantValue [
 	^ baseType
 ]
@@ -116,6 +121,31 @@ SLVMArrayType >> storeAndPopValueIntoPointerWith: irBuilder [
 		pushLiteral: self;
 		send: #_slvm_storeArrayValueInto:type:;
 		popTop
+	
+]
+
+{ #category : #'as yet unclassified' }
+SLVMArrayType >> storeAndPopValueWith: irBuilder [
+	^ irBuilder
+		pushLiteral: self;
+		send: #_slvm_storeArrayValue:type:;
+		popTop
+	
+]
+
+{ #category : #'as yet unclassified' }
+SLVMArrayType >> storeValueIntoPointerWith: irBuilder [
+	^ irBuilder
+		pushLiteral: self;
+		send: #_slvm_storeArrayValueInto:type:
+	
+]
+
+{ #category : #'as yet unclassified' }
+SLVMArrayType >> storeValueWith: irBuilder [
+	^ irBuilder
+		pushLiteral: self;
+		send: #_slvm_storeArrayValue:type:
 	
 ]
 

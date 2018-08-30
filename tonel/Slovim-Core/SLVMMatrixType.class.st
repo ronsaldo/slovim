@@ -106,6 +106,11 @@ SLVMMatrixType >> isMatrixType [
 ]
 
 { #category : #testing }
+SLVMMatrixType >> isMemberInBoundsAt: index [
+	^ index isConstantValue and: [ index value < columns ]
+]
+
+{ #category : #testing }
 SLVMMatrixType >> isRowMajor [
 	^ false
 ]

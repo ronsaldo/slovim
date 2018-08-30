@@ -155,6 +155,11 @@ SLVMInstruction >> isGetThisContext [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isInsertValue [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isInstantiateClosure [
 	^ false
 ]

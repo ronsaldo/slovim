@@ -567,6 +567,12 @@ SLVMType >> loadValueFromPointerWith: irBuilder [
 	^ irBuilder send: self selectorForLoadingFromPointer
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMType >> pointerStoreValueWith: irBuilder [
+	irBuilder
+		send: self selectorForPointerStoring
+]
+
 { #category : #'pointer accessing' }
 SLVMType >> readFromPointer: pointer [
 	^ #unreadable
@@ -579,6 +585,11 @@ SLVMType >> registerClass [
 
 { #category : #'as yet unclassified' }
 SLVMType >> selectorForLoadingFromPointer [
+	self subclassResponsibility
+]
+
+{ #category : #'as yet unclassified' }
+SLVMType >> selectorForStoring [
 	self subclassResponsibility
 ]
 
@@ -607,6 +618,25 @@ SLVMType >> storeAndPopValueIntoPointerWith: irBuilder [
 	irBuilder
 		send: self selectorForStoringIntoPointer;
 		popTop
+]
+
+{ #category : #'as yet unclassified' }
+SLVMType >> storeAndPopValueWith: irBuilder [
+	irBuilder
+		send: self selectorForStoring;
+		popTop
+]
+
+{ #category : #'as yet unclassified' }
+SLVMType >> storeValueIntoPointerWith: irBuilder [
+	irBuilder
+		send: self selectorForStoringIntoPointer
+]
+
+{ #category : #'as yet unclassified' }
+SLVMType >> storeValueWith: irBuilder [
+	irBuilder
+		send: self selectorForStoring
 ]
 
 { #category : #accessing }

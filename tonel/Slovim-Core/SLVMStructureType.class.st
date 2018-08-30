@@ -115,6 +115,11 @@ SLVMStructureType >> isAggregateType [
 	^ true
 ]
 
+{ #category : #accessing }
+SLVMStructureType >> isMemberInBoundsAt: index [
+	^ index isConstantValue and: [ index value < types size  ]
+]
+
 { #category : #testing }
 SLVMStructureType >> isScalarType [
 	^ false
@@ -232,6 +237,43 @@ SLVMStructureType >> storeAndPopValueIntoPointerWith: irBuilder [
 			pushLiteralVariable: behavior binding;
 			send: #_slvm_storeStructureValueInto:behavior:;
 			popTop
+	].
+
+	self halt
+	
+]
+
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> storeAndPopValueWith: irBuilder [
+	behavior ifNotNil: [ 
+		^ irBuilder
+			pushLiteralVariable: behavior binding;
+			send: #_slvm_storeStructureValue:behavior:;
+			popTop
+	].
+
+	self halt
+	
+]
+
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> storeValueIntoPointerWith: irBuilder [
+	behavior ifNotNil: [ 
+		^ irBuilder
+			pushLiteralVariable: behavior binding;
+			send: #_slvm_storeStructureValueInto:behavior:
+	].
+
+	self halt
+	
+]
+
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> storeValueWith: irBuilder [
+	behavior ifNotNil: [ 
+		^ irBuilder
+			pushLiteralVariable: behavior binding;
+			send: #_slvm_storeStructureValue:behavior:
 	].
 
 	self halt

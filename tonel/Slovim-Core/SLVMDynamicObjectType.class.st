@@ -53,6 +53,11 @@ SLVMDynamicObjectType >> isDynamicObjectType [
 	^ true
 ]
 
+{ #category : #accessing }
+SLVMDynamicObjectType >> isMemberInBoundsAt: index [
+	^ false
+]
+
 { #category : #testing }
 SLVMDynamicObjectType >> isScalarType [
 	^ true
