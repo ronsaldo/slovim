@@ -27,6 +27,11 @@ SLVMETreeExtractValue >> indices: anObject [
 	indices := anObject
 ]
 
+{ #category : #testing }
+SLVMETreeExtractValue >> isExtractValue [
+	^ true
+]
+
 { #category : #accessing }
 SLVMETreeExtractValue >> name [
 	^ #extractvalue

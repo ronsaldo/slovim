@@ -1,10 +1,6 @@
 Class {
 	#name : #SLVMETreeConstantStructureValue,
-	#superclass : #SLVMETreeConstant,
-	#instVars : [
-		'slots',
-		'evaluationValue'
-	],
+	#superclass : #SLVMETreeConstantAggregateValue,
 	#category : #'Slovim-StackCodeGenerator'
 }
 
@@ -24,14 +20,4 @@ SLVMETreeConstantStructureValue >> evaluate [
 	].
 
 	^ evaluationValue
-]
-
-{ #category : #accessing }
-SLVMETreeConstantStructureValue >> slots [
-	^ slots
-]
-
-{ #category : #accessing }
-SLVMETreeConstantStructureValue >> slots: anObject [
-	slots := anObject
 ]

@@ -122,6 +122,19 @@ SLVMPharoFunctionCodeGenerator >> compilationTarget: anObject [
 	compilationTarget := anObject
 ]
 
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> computeAggregate: aggregateType elementOffsetWithIndices: indices [
+	| offset currentType indexConstant |
+	offset := 0.
+	currentType := aggregateType.
+	indices do: [ :index |
+		indexConstant := SLVMConstant type: aggregateType value: index.
+		offset := offset + (currentType offsetWithIndex: indexConstant).
+		currentType := currentType typeOfMemberAt: indexConstant.
+	].
+	^ offset
+]
+
 { #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> convertBooleanValueToOop: value [
 	"Nothing required here"
@@ -397,6 +410,11 @@ SLVMPharoFunctionCodeGenerator >> pushConsArray: size [
 ]
 
 { #category : #instructions }
+SLVMPharoFunctionCodeGenerator >> pushDup [
+	self add: IRInstruction pushDup
+]
+
+{ #category : #instructions }
 SLVMPharoFunctionCodeGenerator >> pushInstVar: index [
 
 	self add: (IRInstruction pushInstVar: index).
@@ -547,7 +565,13 @@ SLVMPharoFunctionCodeGenerator >> translateFunction: aFunction [
 		]
 	].
 
-	etreeFunction selector = #initializeWithRows:columns: ifTrue: [ self halt ].
+	"etreeFunction selector = #identity ifTrue: [
+		etreeFunction classBinding printString = 'nil->WMReversibleAffineTransformF class' ifTrue: [ 
+			self halt
+		]
+	].
+
+	etreeFunction selector = #initializeWithRows:columns: ifTrue: [ self halt ]."
 	compiledMethod := ir optimize compiledMethodWith: trailer.
 	self setupCompiledMethod: compiledMethod.
 
@@ -735,17 +759,10 @@ SLVMPharoFunctionCodeGenerator >> visitExpression: anExpression [
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitExtractValue: anInstruction [
-	| aggregateType offset currentType indexConstant |
+	| aggregateType offset |
 	self visitExpression: anInstruction aggregate.
 	aggregateType := anInstruction aggregate type.
-	offset := 0.
-	currentType := aggregateType.
-	anInstruction indices do: [ :index |
-		indexConstant := SLVMConstant type: aggregateType value: index.
-		offset := offset + (currentType offsetWithIndex: indexConstant).
-		currentType := currentType typeOfMemberAt: indexConstant.
-	].
-
+	offset := self computeAggregate: aggregateType elementOffsetWithIndices: anInstruction indices.
 	offset ~= 0 ifTrue: [
 		self pushLiteral: offset;
 			send: #_slvm_pointerAddOffset:.
@@ -791,6 +808,27 @@ SLVMPharoFunctionCodeGenerator >> visitGetElementPointer: anInstruction [
 	self visitExpression: anInstruction pointer.
 	self emitGetElementPointerOffsets: anInstruction.
 
+]
+
+{ #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitInsertValue: anInstruction [
+	| offset |
+	self visitExpression: anInstruction aggregate.
+	anInstruction canOmitCopy ifFalse: [ 
+		self send: #copy.
+	].
+
+	self pushDup.
+		
+	offset := self computeAggregate: anInstruction type elementOffsetWithIndices: anInstruction indices.
+
+	offset ~= 0 ifTrue: [
+		self pushLiteral: offset;
+			send: #_slvm_pointerAddOffset:.
+	].
+
+	self visitExpression: anInstruction value.
+	anInstruction value type storeAndPopValueWith: self
 ]
 
 { #category : #visiting }
@@ -847,6 +885,10 @@ SLVMPharoFunctionCodeGenerator >> visitMessageSend: anInstruction [
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitReturn: anInstruction [
 	self visitExpression: anInstruction value.
+	anInstruction value isConstantAggregateValue ifTrue: [
+		self send: #copy
+	].
+
 	anInstruction value type isVoidType ifTrue: [
 		self pushReceiver
 	].

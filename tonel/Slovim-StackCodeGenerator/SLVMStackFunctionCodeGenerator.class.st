@@ -251,6 +251,14 @@ SLVMStackFunctionCodeGenerator >> visitGlobalVariable: aFunction [
 ]
 
 { #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitInsertValue: anInstruction [
+	^ self addParametersOf: anInstruction
+		into: (SLVMETreeInsertValue new
+		type: anInstruction type;
+		indices: anInstruction indices)
+]
+
+{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitIntToDynamicObjectCast: anInstruction [
 	^ self addParametersOf: anInstruction
 		into: (SLVMETreeIntToDynamicObjectCast new type: anInstruction type)

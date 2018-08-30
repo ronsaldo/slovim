@@ -28,6 +28,11 @@ SLVMETreeValue >> isConstant [
 ]
 
 { #category : #testing }
+SLVMETreeValue >> isConstantAggregateValue [
+	^ false
+]
+
+{ #category : #testing }
 SLVMETreeValue >> isConstantDynamicLiteral [
 	^ false
 ]
@@ -38,12 +43,22 @@ SLVMETreeValue >> isConstantValue [
 ]
 
 { #category : #testing }
+SLVMETreeValue >> isExtractValue [
+	^ false
+]
+
+{ #category : #testing }
 SLVMETreeValue >> isFunctionArgument [
 	^ false
 ]
 
 { #category : #testing }
 SLVMETreeValue >> isGetElementPointer [
+	^ false
+]
+
+{ #category : #testing }
+SLVMETreeValue >> isInsertValue [
 	^ false
 ]
 

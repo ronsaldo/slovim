@@ -2006,6 +2006,12 @@ SLVMPharoLowcodeFunctionCodeGenerator >> visitFloatingPointCast: cast [
 ]
 
 { #category : #visiting }
+SLVMPharoLowcodeFunctionCodeGenerator >> visitInsertValue: anInstruction [
+	self visitExpression: anInstruction aggregate.
+	self halt
+]
+
+{ #category : #visiting }
 SLVMPharoLowcodeFunctionCodeGenerator >> visitIntToDynamicObjectCast: cast [
 	self visitExpression: cast source.
 	cast source type toOopUsingLowcodeWith: self.
