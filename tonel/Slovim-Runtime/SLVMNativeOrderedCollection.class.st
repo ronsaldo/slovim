@@ -24,6 +24,12 @@ SLVMNativeOrderedCollection class >> for: type new: initialCapacity [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMNativeOrderedCollection >> _slvm_storeArrayValueAndReturnPointerInto: target type: arrayType [
+	target _slvm_storeBytes: data count: arrayType size.
+	^ target
+]
+
+{ #category : #'as yet unclassified' }
 SLVMNativeOrderedCollection >> _slvm_storeArrayValueInto: target type: arrayType [
 	target _slvm_storeBytes: data count: arrayType size
 ]

@@ -33,6 +33,12 @@ SLVMNativeArray class >> new: aSize [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMNativeArray >> _slvm_storeArrayValueAndReturnPointerInto: target type: arrayType [
+	target _slvm_storeBytes: data count: arrayType size.
+	^ target
+]
+
+{ #category : #'as yet unclassified' }
 SLVMNativeArray >> _slvm_storeArrayValueInto: target type: arrayType [
 	target _slvm_storeBytes: data count: arrayType size
 ]
