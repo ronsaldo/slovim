@@ -1117,32 +1117,42 @@ SLVMBuilder >> returnVoidFromContext: context name: resultName [
 	^ self addInstruction: (SLVMReturnVoidFromContext context: context) name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #sampling }
+SLVMBuilder >> sample: combinedSampler explicitLod: lod atCoord: texcoord [
+	^ self sample: combinedSampler explicitLod: lod atCoord: texcoord name: function generateSymbol
+]
+
+{ #category : #sampling }
+SLVMBuilder >> sample: combinedSampler explicitLod: lod atCoord: texcoord name: resultName [
+	^ self addInstruction: (SLVMSampleExplicitLod sampledTexture: combinedSampler texcoord: texcoord lod: lod) name: resultName
+]
+
+{ #category : #sampling }
 SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord [
 	^ self sample: combinedSampler implicitLodAtCoord: texcoord name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #sampling }
 SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord depthReference: depthReference [
 	^ self sample: combinedSampler implicitLodAtCoord: texcoord depthReference: depthReference name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #sampling }
 SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord depthReference: depthReference name: resultName [
 	^ self addInstruction: (SLVMSampleDepthRefImplicitLod sampledTexture: combinedSampler texcoord: texcoord depthReference: depthReference) name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #sampling }
 SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord name: resultName [
 	^ self addInstruction: (SLVMSampleImplicitLod sampledTexture: combinedSampler texcoord: texcoord) name: resultName
 ]
 
-{ #category : #instructions }
+{ #category : #sampling }
 SLVMBuilder >> sampleDepth: combinedSampler implicitLodAtCoord: texcoord [
 	^ self sampleDepth: combinedSampler implicitLodAtCoord: texcoord name: function generateSymbol
 ]
 
-{ #category : #instructions }
+{ #category : #sampling }
 SLVMBuilder >> sampleDepth: combinedSampler implicitLodAtCoord: texcoord name: resultName [
 	^ self addInstruction: (SLVMSampleDepthImplicitLod sampledTexture: combinedSampler texcoord: texcoord) name: resultName
 ]
