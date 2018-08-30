@@ -9,6 +9,18 @@ SLVMETreeGetElementPointer >> accept: aVisitor [
 	^ aVisitor visitGetElementPointer: self
 ]
 
+{ #category : #testing }
+SLVMETreeGetElementPointer >> canReferencesBeMerged: references [
+	(super canReferencesBeMerged: references) ifTrue: [ ^ true ].	
+	^ self hasConstantIndices
+]
+
+{ #category : #testing }
+SLVMETreeGetElementPointer >> hasConstantIndices [
+	self indices do: [ :index | index isConstantValue ifFalse: [^ false] ].
+	^ true
+]
+
 { #category : #accessing }
 SLVMETreeGetElementPointer >> indexAt: anIndex [
 	^ parameters at: anIndex + 1

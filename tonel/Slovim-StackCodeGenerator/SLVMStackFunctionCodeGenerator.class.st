@@ -67,7 +67,11 @@ SLVMStackFunctionCodeGenerator >> mergeExpressions [
 
 { #category : #'as yet unclassified' }
 SLVMStackFunctionCodeGenerator >> mergeExpressionsInBasicBlock: bb [
-	bb statementsDo: [ :statement | statement mergePreviousExpressions ]
+	bb statementsDo: [ :statement |
+		statement
+			mergePreviousExpressions;
+			mergeIntoNextExpressions
+	]
 ]
 
 { #category : #accessing }

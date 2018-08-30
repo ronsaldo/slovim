@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-StackCodeGenerator'
 }
 
+{ #category : #testing }
+SLVMETreeExpression >> canReferencesBeMerged: references [
+	^ false
+]
+
 { #category : #printing }
 SLVMETreeExpression >> fullPrintOn: aStream [
 	self prettyPrintOn: aStream
@@ -45,4 +50,11 @@ SLVMETreeExpression >> prettyPrintOn: aStream [
 		op prettyPrintOn: aStream.
 	].
 	aStream nextPutAll: ')'
+]
+
+{ #category : #accessing }
+SLVMETreeExpression >> replaceParameter: oldParam with: newParam [
+	parameters doWithIndex: [ :param :index |
+		oldParam = param ifTrue: [ parameters at: index put: newParam ]
+	]
 ]

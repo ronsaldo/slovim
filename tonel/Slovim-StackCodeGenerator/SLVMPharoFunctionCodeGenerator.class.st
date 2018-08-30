@@ -34,7 +34,7 @@ Class {
 SLVMPharoFunctionCodeGenerator class >> initialize [
 	super initialize.
 	
-	MaxNumberOfNormalTemps := 30.
+	MaxNumberOfNormalTemps := 40.
 	
 	BinaryOperationMessageMap := Dictionary newFromPairs: #(
 		add		+
@@ -451,12 +451,15 @@ SLVMPharoFunctionCodeGenerator >> send: selector [
 
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> setupCompiledMethod: compiledMethod [
+	compiledMethod setSignFlag.
+	compiledMethod setFrameBit: true.
 
 
 ]
 
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> setupIRMethodCompilationContext [
+	ir compilationContext encoderClass: OpalEncoderForSistaV1.
 ]
 
 { #category : #variables }

@@ -91,13 +91,25 @@ SLVMETreeStatement >> isStatement [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMETreeStatement >> mergeIntoNextExpressions [
+	self assert: expression isNotNil.
+	(expression canReferencesBeMerged: references) ifTrue: [ 
+		references do: [ :ref |
+			ref expression replaceParameter: self with: expression
+		].
+	
+		self removeFromBlock
+	]
+]
+
+{ #category : #'as yet unclassified' }
 SLVMETreeStatement >> mergePreviousExpressions [
 	| parameters param |
 	self assert: expression isNotNil.
 	parameters := expression parameters.
 	parameters size to: 1 by: -1 do: [ :i |
 		param := parameters at: i.
-		(param isStatement and: [ param references size == 1 and: [
+		(param isStatement and: [ (param references size = 1) and: [
 				param == previous or: [param expression isPureExpression] ] ]) ifTrue: [
 			param removeFromBlock.
 			parameters at: i put: param expression.
