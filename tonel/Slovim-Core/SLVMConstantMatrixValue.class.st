@@ -13,3 +13,8 @@ SLVMConstantMatrixValue >> accept: aVisitor [
 SLVMConstantMatrixValue >> isConstantMatrixValue [
 	^ true
 ]
+
+{ #category : #printing }
+SLVMConstantMatrixValue >> mnemonic [
+	^ #constmatrix
+]

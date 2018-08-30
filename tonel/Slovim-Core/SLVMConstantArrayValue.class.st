@@ -13,3 +13,8 @@ SLVMConstantArrayValue >> accept: aVisitor [
 SLVMConstantArrayValue >> isConstantArrayValue [
 	^ true
 ]
+
+{ #category : #printing }
+SLVMConstantArrayValue >> mnemonic [
+	^ #constarray
+]

@@ -97,7 +97,7 @@ SLVMOptBasicOptimizations >> passOnFunction: aFunction [
 
 { #category : #private }
 SLVMOptBasicOptimizations >> processBlock: block [
-	| oldSuccessors function |
+	| oldSuccessors function seenInstructions |
 	function := block function.
 	function ifNil: [ ^ self ].
 	
@@ -125,8 +125,9 @@ SLVMOptBasicOptimizations >> processBlock: block [
 		^ self
 	].
 	
+	seenInstructions := Dictionary new.
 	block instructionsDo: [ :instruction |
-		self processInstruction: instruction
+		self processInstruction: instruction seenInstructions: seenInstructions
 	].
 	self validateFunction: function.
 
@@ -143,13 +144,24 @@ SLVMOptBasicOptimizations >> processBlock: block [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMOptBasicOptimizations >> processInstruction: instruction [
+SLVMOptBasicOptimizations >> processInstruction: instruction seenInstructions: seenInstructions [
+	| signature |
 	self removeDeadPureInstructions: instruction.
 	instruction block ifNil: [ ^ self ].
 	
 	self foldConstant: instruction.
 	instruction block ifNil: [ ^ self ].
 
+	"Remove duplicated pure instructions."
+	instruction isPureInstruction ifTrue: [ 
+		signature := instruction signature.
+		seenInstructions at: signature ifPresent: [ :previous |
+			previous block ifNotNil: [ 
+				instruction replaceWith: previous
+			]
+		 ] ifAbsentPut: [ instruction ]
+	]
+	
 ]
 
 { #category : #'as yet unclassified' }

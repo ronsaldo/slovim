@@ -8,18 +8,12 @@ Class {
 		'name',
 		'block',
 		'parameters',
-		'instructionReferences',
 		'previousInstruction',
 		'nextInstruction',
 		'livenessIndex'
 	],
 	#category : #'Slovim-Core-SSA'
 }
-
-{ #category : #adding }
-SLVMInstruction >> addInstructionReference: anInstruction [
-	instructionReferences add: anInstruction
-]
 
 { #category : #adding }
 SLVMInstruction >> addUnreachableSuccessors [
@@ -56,6 +50,15 @@ SLVMInstruction >> block: anObject [
 	block := anObject
 ]
 
+{ #category : #accessing }
+SLVMInstruction >> dominates: anotherInstruction [
+	block ~~ anotherInstruction block ifTrue: [
+		^ block dominates: anotherInstruction block
+	].
+
+	^ block isInstruction: self beforeThan: anotherInstruction
+]
+
 { #category : #'basic optimizations' }
 SLVMInstruction >> foldConstant [
 	^ self
@@ -81,7 +84,7 @@ SLVMInstruction >> function [
 
 { #category : #testing }
 SLVMInstruction >> hasAnonName [
-	^ name isNotNil or: [ name detect: [:c | c isDigit not] ifFound: [false] ifNone: [ true ] ]
+	^ name isNil or: [ name detect: [:c | c isDigit not] ifFound: [false] ifNone: [ true ] ]
 ]
 
 { #category : #testing }
@@ -94,20 +97,10 @@ SLVMInstruction >> hasOutputs [
 	^ true
 ]
 
-{ #category : #testing }
-SLVMInstruction >> hasReferences [
-	^ instructionReferences isNotEmpty
-]
-
 { #category : #initialization }
 SLVMInstruction >> initialize [
-	instructionReferences := OrderedCollection new.
+	super initialize.
 	parameters := #().
-]
-
-{ #category : #accessing }
-SLVMInstruction >> instructionReferences [
-	^ instructionReferences
 ]
 
 { #category : #testing }
@@ -274,8 +267,8 @@ SLVMInstruction >> parameters: anArrayOfParameter [
 
 { #category : #copying }
 SLVMInstruction >> postCopy [
+	super postCopy.
 	parameters := parameters copy.
-	instructionReferences := OrderedCollection new.
 	block := nil.	
 	previousInstruction := nil.
 	nextInstruction := nil.
@@ -309,11 +302,6 @@ SLVMInstruction >> removeFromBlockWithAllReferences [
 	self removeFromBlock
 ]
 
-{ #category : #adding }
-SLVMInstruction >> removeInstructionReference: anInstruction [
-	instructionReferences removeAllSuchThat: [:el | el == anInstruction]
-]
-
 { #category : #modifying }
 SLVMInstruction >> replaceWith: aNewInstruction [
 	self == aNewInstruction ifTrue: [ ^ self ].
@@ -325,6 +313,18 @@ SLVMInstruction >> replaceWith: aNewInstruction [
 
 	instructionReferences removeAll.
 	self removeFromBlock
+]
+
+{ #category : #modifying }
+SLVMInstruction >> replaceWithNewInstruction: aNewInstruction [
+	block add: aNewInstruction before: self.
+	aNewInstruction name: name.
+	^ self replaceWith: aNewInstruction
+]
+
+{ #category : #accessing }
+SLVMInstruction >> signature [
+	^ {self class . self type . parameters}
 ]
 
 { #category : #'as yet unclassified' }

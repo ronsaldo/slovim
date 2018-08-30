@@ -13,3 +13,8 @@ SLVMConstantStructureValue >> accept: aVisitor [
 SLVMConstantStructureValue >> isConstantStructureValue [
 	^ true
 ]
+
+{ #category : #printing }
+SLVMConstantStructureValue >> mnemonic [
+	^ #conststruct
+]

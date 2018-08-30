@@ -301,6 +301,11 @@ SLVMBinaryOperation >> right [
 ]
 
 { #category : #accessing }
+SLVMBinaryOperation >> signature [
+	^ super signature , { operation }
+]
+
+{ #category : #accessing }
 SLVMBinaryOperation >> type [
 	^ type
 ]

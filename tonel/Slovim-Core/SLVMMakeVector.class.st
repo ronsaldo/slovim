@@ -17,6 +17,11 @@ SLVMMakeVector >> accept: aVisitor [
 	^ aVisitor visitMakeVector: self
 ]
 
+{ #category : #testing }
+SLVMMakeVector >> isPureInstruction [
+	^ true
+]
+
 { #category : #printing }
 SLVMMakeVector >> mnemonic [
 	^ 'makeVector'

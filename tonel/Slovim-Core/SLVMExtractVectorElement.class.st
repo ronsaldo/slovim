@@ -22,6 +22,11 @@ SLVMExtractVectorElement >> index [
 	^ parameters second
 ]
 
+{ #category : #testing }
+SLVMExtractVectorElement >> isPureInstruction [
+	^ true
+]
+
 { #category : #printing }
 SLVMExtractVectorElement >> mnemonic [
 	^ 'extractVectorElement'

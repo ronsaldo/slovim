@@ -232,6 +232,18 @@ SLVMBasicBlock >> dominanceFrontier: anObject [
 	dominanceFrontier := anObject
 ]
 
+{ #category : #testing }
+SLVMBasicBlock >> dominates: anotherBlock [
+	| position |
+	position := anotherBlock immediateDominator.
+	[ position ] whileNotNil: [
+		position == self ifTrue: [ ^ true ].
+		position := position immediateDominator
+	].
+
+	^ false
+]
+
 { #category : #accessing }
 SLVMBasicBlock >> firstInstruction [
 	^ firstInstruction
@@ -351,6 +363,17 @@ SLVMBasicBlock >> isCompletelyUnused [
 { #category : #testing }
 SLVMBasicBlock >> isEmpty [
 	^ firstInstruction isNil
+]
+
+{ #category : #testing }
+SLVMBasicBlock >> isInstruction: instruction beforeThan: targetInstruction [
+	| position |
+	position := instruction.
+	[ position ] whileNotNil: [ 
+		position nextInstruction == targetInstruction ifTrue: [ ^ true ].
+		position := position nextInstruction
+	].
+	^ false
 ]
 
 { #category : #testing }
@@ -538,4 +561,10 @@ SLVMBasicBlock >> successors [
 { #category : #accessing }
 SLVMBasicBlock >> successors: anObject [
 	successors := anObject
+]
+
+{ #category : #accessing }
+SLVMBasicBlock >> validImmediateDominator [
+	function computeDominance.
+	^ immediateDominator
 ]

@@ -11,6 +11,18 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #arithmetic }
+SLVMConstantValue >> + other [
+	self assert: other isConstantValue.
+	^ self copy value: value + other value
+]
+
+{ #category : #arithmetic }
+SLVMConstantValue >> - other [
+	self assert: other isConstantValue.
+	^ self copy value: value - other value
+]
+
 { #category : #comparing }
 SLVMConstantValue >> = other [
 	^ self class = other class and: [ self type = other type and: [ self value = other value and: [self value class == other value class ] ] ]

@@ -52,6 +52,11 @@ SLVMLoadInstruction >> mnemonic [
 ]
 
 { #category : #accessing }
+SLVMLoadInstruction >> signature [
+	^ super signature , { volatile }
+]
+
+{ #category : #accessing }
 SLVMLoadInstruction >> type [
 	^ type
 ]

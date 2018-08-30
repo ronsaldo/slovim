@@ -17,6 +17,11 @@ SLVMGetElementPointer >> accept: aVisitor [
 	^ aVisitor visitGetElementPointer: self
 ]
 
+{ #category : #accessing }
+SLVMGetElementPointer >> firstIndex [
+	^ parameters second
+]
+
 { #category : #testing }
 SLVMGetElementPointer >> hasConstantIndices [
 	self indices do: [ :index | index isConstantValue ifFalse: [^ false] ].
@@ -50,6 +55,16 @@ SLVMGetElementPointer >> isElementAccess [
 { #category : #testing }
 SLVMGetElementPointer >> isGetElementPointer [
 	^ true
+]
+
+{ #category : #testing }
+SLVMGetElementPointer >> isPureInstruction [
+	^ true
+]
+
+{ #category : #accessing }
+SLVMGetElementPointer >> lastIndex [
+	^ parameters last
 ]
 
 { #category : #printing }

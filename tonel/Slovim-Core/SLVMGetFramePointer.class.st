@@ -17,6 +17,11 @@ SLVMGetFramePointer >> accept: visitor [
 	^ visitor visitGetFramePointer: self
 ]
 
+{ #category : #testing }
+SLVMGetFramePointer >> isPureInstruction [
+	^ true
+]
+
 { #category : #'as yet unclassified' }
 SLVMGetFramePointer >> mnemonic [
 	^ 'getFramePointer'

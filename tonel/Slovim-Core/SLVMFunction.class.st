@@ -139,6 +139,11 @@ SLVMFunction >> childrenNodes [
 	^ basicBlocks
 ]
 
+{ #category : #testing }
+SLVMFunction >> classBindingValue [
+	^ dynamicLiterals last value
+]
+
 { #category : #accessing }
 SLVMFunction >> compilationTarget [
 	^ compilationTarget

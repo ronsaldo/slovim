@@ -6,10 +6,16 @@ Class {
 	#superclass : #SLVMValue,
 	#instVars : [
 		'debugInformation',
-		'debugSourceLocation'
+		'debugSourceLocation',
+		'instructionReferences'
 	],
 	#category : #'Slovim-Core-SSA'
 }
+
+{ #category : #adding }
+SLVMFunctionLocalValue >> addInstructionReference: anInstruction [
+	instructionReferences add: anInstruction
+]
 
 { #category : #accessing }
 SLVMFunctionLocalValue >> debugInformation [
@@ -37,6 +43,32 @@ SLVMFunctionLocalValue >> function [
 ]
 
 { #category : #testing }
+SLVMFunctionLocalValue >> hasReferences [
+	^ instructionReferences isNotEmpty
+]
+
+{ #category : #initialization }
+SLVMFunctionLocalValue >> initialize [
+	instructionReferences := OrderedCollection new.
+]
+
+{ #category : #accessing }
+SLVMFunctionLocalValue >> instructionReferences [
+	^ instructionReferences
+]
+
+{ #category : #testing }
 SLVMFunctionLocalValue >> isFunctionLocalValue [
 	^ true
+]
+
+{ #category : #copying }
+SLVMFunctionLocalValue >> postCopy [
+	super postCopy.
+	instructionReferences := OrderedCollection new.
+]
+
+{ #category : #adding }
+SLVMFunctionLocalValue >> removeInstructionReference: anInstruction [
+	instructionReferences removeAllSuchThat: [:el | el == anInstruction]
 ]

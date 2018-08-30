@@ -107,6 +107,7 @@ SLVMModule >> createFunctionOptimizationPassesForLevel: optimizationLevel [
 	passes := OrderedCollection new.
 	passes addAll: {
 		SLVMOptPromoteAllocas.
+		SLVMOptPointerAliasingPass.
 		SLVMOptBasicOptimizations.
 	}.
 	

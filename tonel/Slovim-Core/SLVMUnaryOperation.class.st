@@ -128,6 +128,11 @@ SLVMUnaryOperation >> operation: anOperation operand: operand [
 ]
 
 { #category : #accessing }
+SLVMUnaryOperation >> signature [
+	^ super signature , { operation }
+]
+
+{ #category : #accessing }
 SLVMUnaryOperation >> type [
 	^ type
 ]

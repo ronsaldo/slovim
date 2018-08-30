@@ -38,6 +38,11 @@ SLVMShuffleVectors >> firstVector: firstVector secondVector: secondVector compon
 	type := SLVMVectorType baseType: firstVector type baseType elements: components size.
 ]
 
+{ #category : #testing }
+SLVMShuffleVectors >> isPureInstruction [
+	^ true
+]
+
 { #category : #printing }
 SLVMShuffleVectors >> mnemonic [
 	^ #shuffleVectors
@@ -46,6 +51,11 @@ SLVMShuffleVectors >> mnemonic [
 { #category : #accessing }
 SLVMShuffleVectors >> secondVector [
 	^ parameters second
+]
+
+{ #category : #accessing }
+SLVMShuffleVectors >> signature [
+	^ super signature , { components }
 ]
 
 { #category : #accessing }

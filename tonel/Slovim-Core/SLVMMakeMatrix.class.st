@@ -17,6 +17,11 @@ SLVMMakeMatrix >> accept: aVisitor [
 	^ aVisitor visitMakeMatrix: self
 ]
 
+{ #category : #testing }
+SLVMMakeMatrix >> isPureInstruction [
+	^ true
+]
+
 { #category : #printing }
 SLVMMakeMatrix >> mnemonic [
 	^ 'makeVector'

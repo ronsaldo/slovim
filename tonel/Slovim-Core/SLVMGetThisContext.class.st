@@ -27,6 +27,11 @@ SLVMGetThisContext >> isGetThisContext [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMGetThisContext >> isPureInstruction [
+	^ true
+]
+
 { #category : #printing }
 SLVMGetThisContext >> mnemonic [
 	^ 'getThisContext'

@@ -27,6 +27,11 @@ SLVMDynamicObjectNativeCast >> isDynamicObjectReferenceCreator [
 ]
 
 { #category : #accessing }
+SLVMDynamicObjectNativeCast >> signature [
+	^ super signature , { unchecked }
+]
+
+{ #category : #accessing }
 SLVMDynamicObjectNativeCast >> unchecked [
 	^ unchecked
 ]

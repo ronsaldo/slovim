@@ -26,6 +26,11 @@ SLVMDynamicObjectCompositeCast >> isDynamicObjectReferenceCreator [
 	^ true
 ]
 
+{ #category : #accessing }
+SLVMDynamicObjectCompositeCast >> signature [
+	^ super signature , { unchecked }
+]
+
 { #category : #'as yet unclassified' }
 SLVMDynamicObjectCompositeCast >> source: source targetType: targetType [
 	self shouldNotImplement

@@ -15,6 +15,11 @@ SLVMCast class >> source: source targetType: valueType [
 	^ self new source: source targetType: valueType
 ]
 
+{ #category : #testing }
+SLVMCast >> isPureInstruction [
+	^ true
+]
+
 { #category : #accessing }
 SLVMCast >> source [
 	^ parameters first

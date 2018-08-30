@@ -50,9 +50,19 @@ SLVMExtractValue >> isExtractValue [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMExtractValue >> isPureInstruction [
+	^ true
+]
+
 { #category : #printing }
 SLVMExtractValue >> mnemonic [
 	^ 'extractValue'
+]
+
+{ #category : #accessing }
+SLVMExtractValue >> signature [
+	^ super signature , { indices }
 ]
 
 { #category : #accessing }

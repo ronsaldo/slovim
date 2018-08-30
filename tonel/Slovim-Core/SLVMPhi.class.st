@@ -62,6 +62,11 @@ SLVMPhi >> replaceParent: oldParent with: newParent [
 ]
 
 { #category : #accessing }
+SLVMPhi >> signature [
+	^ super signature , { incomingBlocks }
+]
+
+{ #category : #accessing }
 SLVMPhi >> type [
 	^ type
 ]
