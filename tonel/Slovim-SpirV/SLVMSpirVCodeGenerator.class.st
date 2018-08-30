@@ -1071,6 +1071,22 @@ SLVMSpirVCodeGenerator >> visitSampleDepthRefImplicitLod: ssaInstruction [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitSampleExplicitLod: sampleImplicitLod [
+	| sampledTexture texcoord lod resultType |
+	^ self instructionTranslation: sampleImplicitLod do: [ :id |
+		sampledTexture := self translateValue: sampleImplicitLod sampledTexture.
+		texcoord := self translateValue: sampleImplicitLod texcoord.
+		lod := self translateValue: sampleImplicitLod lod.
+		resultType := self translateValue: sampleImplicitLod type.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpImageSampleExplicitLod
+			type: resultType
+			result: id
+			operands: { sampledTexture . texcoord . SpvImageOperandsLod . lod })
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitSampleImplicitLod: sampleImplicitLod [
 	| sampledTexture texcoord resultType |
 	^ self instructionTranslation: sampleImplicitLod do: [ :id |
