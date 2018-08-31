@@ -1889,14 +1889,9 @@ SLVMPharoLowcodeFunctionCodeGenerator >> removeLowcodeStuff [
 
 { #category : #'code generation' }
 SLVMPharoLowcodeFunctionCodeGenerator >> setupCompiledMethod: compiledMethod [
-	self flag: 'FIXME: Check whether the sista bytecode set is the primary one or not.'.
-	compiledMethod setSignFlag.
+	super setupCompiledMethod: compiledMethod.
 	compiledMethod setFrameBit: true.
-]
 
-{ #category : #'code generation' }
-SLVMPharoLowcodeFunctionCodeGenerator >> setupIRMethodCompilationContext [
-	ir compilationContext encoderClass: OpalEncoderForSistaV1.
 ]
 
 { #category : #variables }

@@ -20,7 +20,8 @@ Class {
 		'currentBasicBlock',
 		'moduleTranslator',
 		'thenSequences',
-		'methodTempVectorInstruction'
+		'methodTempVectorInstruction',
+		'useSecondaryBytecodeSet'
 	],
 	#classVars : [
 		'BinaryOperationMessageMap',
@@ -110,6 +111,15 @@ SLVMPharoFunctionCodeGenerator >> add: anInstruction [
 	anInstruction sourceNode: currentSourceLocation.
 	anInstruction bytecodeIndex: self newBytecodeIndex.
 	currentSequence add: anInstruction
+]
+
+{ #category : #accessing }
+SLVMPharoFunctionCodeGenerator >> bytecodeEncoderClass [
+	Smalltalk version = 'Pharo6.0' ifTrue: [ 
+		^ Smalltalk globals at: (useSecondaryBytecodeSet ifTrue: [ #OpalEncoderForSistaV1 ] ifFalse: [ #OpalEncoderForV3PlusClosures ])
+	].
+
+	^ useSecondaryBytecodeSet ifTrue: [ EncoderForSistaV1 ] ifFalse: [ EncoderForV3PlusClosures ]
 ]
 
 { #category : #accessing }
@@ -340,6 +350,7 @@ SLVMPharoFunctionCodeGenerator >> initialize [
 	currentSourceLocation := nullSourceLocation := SLVMDebugLocation null.
 	lastBytecodeIndex := 0.
 	nextSequenceIndex := 0.
+	useSecondaryBytecodeSet := true.
 ]
 
 { #category : #visiting }
@@ -469,15 +480,16 @@ SLVMPharoFunctionCodeGenerator >> send: selector [
 
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> setupCompiledMethod: compiledMethod [
-	compiledMethod setSignFlag.
-	compiledMethod setFrameBit: true.
+	useSecondaryBytecodeSet ifTrue: [ 
+		compiledMethod setSignFlag.
+	].
 
 
 ]
 
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> setupIRMethodCompilationContext [
-	ir compilationContext encoderClass: OpalEncoderForSistaV1.
+	ir compilationContext encoderClass: self bytecodeEncoderClass.
 ]
 
 { #category : #variables }
@@ -565,8 +577,9 @@ SLVMPharoFunctionCodeGenerator >> translateFunction: aFunction [
 		]
 	].
 
-	"etreeFunction selector = #identity ifTrue: [
-		etreeFunction classBinding printString = 'nil->WMReversibleAffineTransformF class' ifTrue: [ 
+	"etreeFunction selector = #hash ifTrue: [
+		self halt.
+		etreeFunction classBinding printString = '#WMComplexF->WMComplexF' ifTrue: [ 
 			self halt
 		]
 	].
