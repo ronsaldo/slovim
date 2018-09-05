@@ -687,6 +687,14 @@ SLVMSpirVCodeGenerator >> visitConstantVectorValue: constantVectorValue [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitDiscardFragment: discardInstruction [
+	^ self instructionTranslation: discardInstruction do: [ :id |
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpKill)
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitExtractVectorElement: extractElement [
 	| resultType vector index |
 	^ self instructionTranslation: extractElement do: [ :id |
