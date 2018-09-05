@@ -303,6 +303,16 @@ SLVMBuilder >> debugSetVariable: variable value: value name: resultName [
 	^ self addInstruction: (SLVMDebugInstructionSetVariableValue variable: variable value: value) name: resultName
 ]
 
+{ #category : #instructions }
+SLVMBuilder >> discardFragment [
+	^ self discardFragment: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> discardFragment: resultName [
+	^ self addInstruction: SLVMDiscardFragment new name: resultName
+]
+
 { #category : #arithmetic }
 SLVMBuilder >> div: left with: right [
 	^ self div: left with: right name: function generateSymbol
