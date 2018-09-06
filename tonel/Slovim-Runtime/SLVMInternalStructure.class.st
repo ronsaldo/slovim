@@ -34,6 +34,12 @@ SLVMInternalStructure class >> basicNew: aVariableSize [
 	^ super basicNew: self structureSize + aVariableSize
 ]
 
+{ #category : #fuel }
+SLVMInternalStructure class >> materializeFrom: aDecoder [
+
+	^ aDecoder nextEncodedSLVMInternalStructureOfType: self
+]
+
 { #category : #accessing }
 SLVMInternalStructure class >> structureAlignment [
 	^ layout structureAlignment
@@ -243,6 +249,12 @@ SLVMInternalStructure >> byteAt: index put: value [
 	^self at: index put: value
 ]
 
+{ #category : #fuel }
+SLVMInternalStructure >> fuelAccept: aGeneralMapper [
+
+	^aGeneralMapper visitHookPrimitive: self
+]
+
 { #category : #'gt-inspector' }
 SLVMInternalStructure >> gtInspectorVariableNodesIn: aCollection [
 	"Only show the slots. Do not show the raw data."
@@ -274,10 +286,28 @@ SLVMInternalStructure >> readBytesFrom: aByteArray size: readSize position: byte
 ]
 
 { #category : #'memory access' }
+SLVMInternalStructure >> readBytesFromStream: aByteStream [
+	self readBytesFromStream: aByteStream size: self class structureSize
+]
+
+{ #category : #'memory access' }
+SLVMInternalStructure >> readBytesFromStream: aByteStream size: readSize [
+	1 to: readSize do: [ :i |
+		self basicAt: i put: aByteStream next
+	]
+]
+
+{ #category : #'memory access' }
 SLVMInternalStructure >> replaceFrom: start to: stop with: replacement startingAt: repStart [
 	"This method is required by Fuel."
 	^ self _slvm_replaceBytesFrom: start to: stop with: replacement startingAt: repStart
 
+]
+
+{ #category : #fuel }
+SLVMInternalStructure >> serializeOn: anEncoder [
+
+	anEncoder encodeSLVMInternalStructure: self
 ]
 
 { #category : #'memory access' }
