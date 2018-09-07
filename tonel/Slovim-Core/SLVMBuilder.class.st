@@ -466,6 +466,8 @@ SLVMBuilder >> floatingPointCast: source target: targetType [
 { #category : #casting }
 SLVMBuilder >> floatingPointCast: source target: targetType name: resultName [
 	source type = targetType ifTrue: [ ^ source ].
+	self assert: source type isVectorType = targetType isVectorType.
+	
 	^ self addInstruction: (SLVMFloatingPointCast source: source targetType: targetType) name: resultName
 ]
 
@@ -662,19 +664,25 @@ SLVMBuilder >> intCast: source target: targetType [
 
 { #category : #casting }
 SLVMBuilder >> intCast: source target: targetType name: resultName [
-	| sourceType |
+	| sourceType baseSourceType baseTargetType|
 	sourceType := source type.
 	sourceType = targetType ifTrue: [ ^ source ].
-	
-	self assert: (sourceType isIntegerType and: [targetType isIntegerType]).
-	self flag: 'Handle vectorial types.'.
-	sourceType size = targetType size ifTrue: [
+	self assert: sourceType isVectorType = targetType isVectorType .	
+	baseSourceType := sourceType.
+	baseTargetType := targetType.
+	sourceType isVectorType ifTrue: [ 
+		baseSourceType := sourceType baseType.
+		baseTargetType := targetType baseType.
+	].
+
+	self assert: (baseSourceType isIntegerType and: [baseTargetType isIntegerType]).
+	baseSourceType size = baseTargetType size ifTrue: [
 		^ self bitCast: source target: targetType name: resultName
 	] ifFalse: [ 
-		targetType size < sourceType size ifTrue: [
+		baseTargetType size < baseSourceType size ifTrue: [
 			^ self truncate: source target: targetType name: resultName
 		] ifFalse: [ 
-			sourceType isSigned ifTrue: [ 
+			baseSourceType isSigned ifTrue: [ 
 				self flag: 'Check whether this is the correct case for performing sign extension'.
 				^ self signExtend: source target: targetType name: resultName
 			] ifFalse: [
@@ -1309,6 +1317,35 @@ SLVMBuilder >> vectorAdd: left with: right name: name [
 	] ifFalse: [ 
 		^ self add: left with: right name: name
 	]
+]
+
+{ #category : #casting }
+SLVMBuilder >> vectorCastFrom: source into: targetType [
+	^ self vectorCastFrom: source into: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> vectorCastFrom: source into: targetType name: name [
+	| sourceElementType targetElementType |
+	self assert: source type elements = targetType elements.
+	sourceElementType := source type baseType.
+	targetElementType := targetType baseType.
+	(sourceElementType isIntegerType and: [ targetElementType isFloatType ]) ifTrue: [ 
+		^ self intToFloatCast: source target: targetType name: name
+	].
+	(sourceElementType isFloatType and: [ targetElementType isIntegerType ]) ifTrue: [ 
+		^ self floatToIntCast: source target: targetType name: name
+	].
+
+	(sourceElementType isIntegerType and: [ targetElementType isIntegerType ]) ifTrue: [ 
+		^ self intCast: source target: targetType name: name
+	].
+
+	(sourceElementType isFloatType and: [ targetElementType isFloatType ]) ifTrue: [ 
+		^ self floatingPointCast: source target: targetType name: name
+	].
+
+	self error: 'Unsupported vector cast type.'
 ]
 
 { #category : #'vector arithmetic' }
