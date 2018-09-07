@@ -69,6 +69,14 @@ SLVMConstantBuiltInFunction class >> initialize [
 		
 		"Texture"
 		'texture.query.size'
+		
+		"Fragment"
+		'fragment.derivative.dx'
+		'fragment.derivative.dy'
+		'fragment.derivative.dx.fine'
+		'fragment.derivative.dy.fine'
+		'fragment.derivative.dx.coarse'
+		'fragment.derivative.dy.coarse'
 	) collect: #asSymbol).
 ]
 
