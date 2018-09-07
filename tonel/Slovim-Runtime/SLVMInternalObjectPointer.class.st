@@ -122,6 +122,11 @@ SLVMInternalObjectPointer >> _slvm_replaceBytesFrom: start to: stop with: replac
 	^ object _slvm_replaceBytesFrom: offset + start to: offset + stop with: replacement startingAt: repStart
 ]
 
+{ #category : #'aggregate accessors' }
+SLVMInternalObjectPointer >> _slvm_storeArrayValueInto: target type: arrayType [
+	target _slvm_storeArrayValue: self type: arrayType
+]
+
 { #category : #'value accessors' }
 SLVMInternalObjectPointer >> _slvm_uint16ValueAt: extraOffset [
 	^ object _slvm_uint16ValueAt: offset + extraOffset

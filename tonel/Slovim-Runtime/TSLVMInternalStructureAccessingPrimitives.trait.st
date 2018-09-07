@@ -176,6 +176,11 @@ TSLVMInternalStructureAccessingPrimitives >> _slvm_replaceBytesFrom: start to: s
 ]
 
 { #category : #'aggregate accessors' }
+TSLVMInternalStructureAccessingPrimitives >> _slvm_storeArrayValue: value type: arrayType [
+	self _slvm_replaceBytesFrom: 1 to: arrayType size with: value _slvm_copySource startingAt: value _slvm_copySourceOffset
+]
+
+{ #category : #'aggregate accessors' }
 TSLVMInternalStructureAccessingPrimitives >> _slvm_storeBytes: bytes count: aCount [
 	1 to: aCount do: [ :i |
 		self
