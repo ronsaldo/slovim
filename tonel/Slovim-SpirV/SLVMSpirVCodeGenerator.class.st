@@ -40,7 +40,7 @@ SLVMSpirVCodeGenerator class >> initialize [
 	"
 	self initialize
 	"
-	| value |
+	| value requirements |
 	super initialize.
 	
 	(Smalltalk at: #SpirVConstants) initialize.
@@ -196,10 +196,17 @@ SLVMSpirVCodeGenerator class >> initialize [
 		'math.fmix' (glsl450 GLSLstd450FMix)
 		
 		'matrix.transpose' (SpirV SpvOpTranspose)
+		
+		'texture.query.size' (SpirV SpvOpImageQuerySize (SpvCapabilityImageQuery))
 	) pairsDo: [ :k :v |
 		value := (SpirVConstants bindingOf: v second) value.
+		requirements := #().
+		v size >= 3 ifTrue: [
+			requirements := v third collect: [:c | (SpirVConstants bindingOf: c) value]
+		].
+	
 		self assert: value isNotNil.
-		BuiltInExtensionInstructionMap at: k put: { v first . value }
+		BuiltInExtensionInstructionMap at: k put: { v first . value . requirements}
 	].
 
 	BlockBuiltIns := Set newFrom: (#(
@@ -543,7 +550,8 @@ SLVMSpirVCodeGenerator >> visitCall: callInstruction [
 
 		functionValue isConstantBuiltInFunction ifTrue: [
 			setInstructionPair := BuiltInExtensionInstructionMap at: functionValue name.
-			setInstructionPair first = #SpirV ifTrue: [ 
+			setInstructionPair first = #SpirV ifTrue: [
+				builder addCapabilities: setInstructionPair third.
 				builder addFunctionInstruction: (SpirVInstruction
 					opcode: setInstructionPair second
 					type: resultType

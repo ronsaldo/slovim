@@ -12,7 +12,8 @@ Class {
 		'capabilityInstructions',
 		'executionModeInstructions',
 		'entryPointInstructions',
-		'constantGlobalAndTypeInstructions'
+		'constantGlobalAndTypeInstructions',
+		'usedCapabilties'
 	],
 	#pools : [
 		'SpirVConstants'
@@ -36,7 +37,14 @@ SpirVModuleBuilder >> addAnnotationInstruction: anInstruction [
 ]
 
 { #category : #adding }
+SpirVModuleBuilder >> addCapabilities: capabilities [
+	capabilities do: [ :cap | self addCapability: cap ]
+]
+
+{ #category : #adding }
 SpirVModuleBuilder >> addCapability: capability [
+	(usedCapabilties includes: capability) ifTrue: [ ^ self ].
+	usedCapabilties add: capability.
 	capabilityInstructions add: (SpirVInstruction opcode: SpvOpCapability operands: {capability}).
 	
 ]
@@ -145,6 +153,7 @@ SpirVModuleBuilder >> glsl450ExtensionSet [
 SpirVModuleBuilder >> initialize [
 	super initialize.
 	module := SpirVModule new.
+	usedCapabilties := Set new.
 	capabilityInstructions := OrderedCollection new.
 	prologueInstructions := OrderedCollection new.
 	entryPointInstructions := OrderedCollection new.
