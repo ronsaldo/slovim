@@ -198,6 +198,13 @@ SLVMSpirVCodeGenerator class >> initialize [
 		'matrix.transpose' (SpirV SpvOpTranspose)
 		
 		'texture.query.size' (SpirV SpvOpImageQuerySize (SpvCapabilityImageQuery))
+		
+		'fragment.derivative.dx' (SpirV SpvOpDPdx)
+		'fragment.derivative.dy' (SpirV SpvOpDPdy)
+		'fragment.derivative.dx.fine' (SpirV SpvOpDPdxFine (SpvCapabilityDerivativeControl))
+		'fragment.derivative.dy.fine' (SpirV SpvOpDPdyFine (SpvCapabilityDerivativeControl))
+		'fragment.derivative.dx.coarse' (SpirV SpvOpDPdxCoarse (SpvCapabilityDerivativeControl))
+		'fragment.derivative.dy.coarse' (SpirV SpvOpDPdyCoarse (SpvCapabilityDerivativeControl))
 	) pairsDo: [ :k :v |
 		value := (SpirVConstants bindingOf: v second) value.
 		requirements := #().
