@@ -446,6 +446,17 @@ SLVMLLVMCodeGenerator >> visitConstantArrayBlob: constant [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantArrayValue: constantStructureValue [
+	| type slots |
+	type := self translateType: constantStructureValue type.
+	slots := constantStructureValue slots collect: [ :slot | self translateValue: slot ].
+	^ LLVMConstantArray new
+		type: type;
+		elements: slots;
+		yourself
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitConstantExpressionBitCast: constantBitCast [
 	^ LLVMBitCastConstantExpr new
 		type: (self translateType: constantBitCast type);
