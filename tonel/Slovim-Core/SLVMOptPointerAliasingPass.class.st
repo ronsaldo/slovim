@@ -44,7 +44,7 @@ SLVMOptPointerAliasingPass >> findAliasedArguments: arguments [
 SLVMOptPointerAliasingPass >> findAliasesIntroducedBy: instruction intoMay: aliasedPointers mayNot: unaliasedPointers visited: visitedPointers [
 	instruction isBitCast ifTrue: [
 		aliasedPointers join: instruction source with: instruction.
-		instruction type isPointer ifTrue: [ 
+		instruction type isPointerType ifTrue: [ 
 			self findAliasesOfPointers: instruction instructionReferences derivedOf: instruction intoMay: aliasedPointers mayNot: unaliasedPointers visited: visitedPointers.
 		].
 	

@@ -250,7 +250,7 @@ SLVMBinaryOperation >> foldArithmeticIdentities [
 
 { #category : #'basic optimizations' }
 SLVMBinaryOperation >> foldConstant [
-	(self left isConstant and: [ self right isConstant ]) ifTrue: [ 
+	(self left isConstantValue and: [ self right isConstantValue ]) ifTrue: [ 
 		^ self perform: (OperationSignatures at: operation) second.
 	].
 	
