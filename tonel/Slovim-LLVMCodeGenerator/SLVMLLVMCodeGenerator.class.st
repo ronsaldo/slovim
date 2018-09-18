@@ -317,9 +317,16 @@ SLVMLLVMCodeGenerator >> translateDebugType: type [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> translateDynamicLiteral: aLiteral [
-	| literalConstantValue type llvmConstant variable |
+	| literalConstantValue llvmConstant variable literalVariable |
 	self assert: (target objectModel isInlineLiteral: aLiteral) not.
 	translatedLiterals at: aLiteral ifPresent: [ :existent | ^ existent ].
+	
+	literalVariable := target objectModel createNonInlineLiteralUniqueGlobal: aLiteral withCodeGenerator: self.
+	literalVariable ifNotNil: [
+		variable := self translateValue: literalVariable.
+		translatedLiterals at: aLiteral put: variable.
+		^ variable
+	].
 	
 	literalConstantValue := target objectModel createNonInlineLiteralConstant: aLiteral withCodeGenerator: self.
 	
@@ -454,6 +461,11 @@ SLVMLLVMCodeGenerator >> visitConstantArrayValue: constantStructureValue [
 		type: type;
 		elements: slots;
 		yourself
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantCompiledMethodMetadata: compiledMethodMetadata [
+	self halt
 ]
 
 { #category : #visiting }
