@@ -20,7 +20,8 @@ Class {
 		'emptyDebugExpression',
 		'doesNotUnderstandTrampolines',
 		'debugAnonymousCount',
-		'translatedLiterals'
+		'translatedLiterals',
+		'translatedCompiledMethodMetadata'
 	],
 	#pools : [
 		'SAsmDWConstants'
@@ -254,6 +255,7 @@ SLVMLLVMCodeGenerator >> initialize [
 	translatedTypes := IdentityDictionary new.
 	translatedConstants := IdentityDictionary new.
 	translatedLiterals := IdentityDictionary new.
+	translatedCompiledMethodMetadata := IdentityDictionary new.
 	doesNotUnderstandTrampolines := Dictionary new.
 	usedNames := Set new.
 	debugAnonymousCount := 0.
@@ -301,6 +303,16 @@ SLVMLLVMCodeGenerator >> target [
 { #category : #accessing }
 SLVMLLVMCodeGenerator >> target: anObject [
 	target := anObject
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> translateCompiledMethodMetadataOf: aFunction [
+	| metadata |
+	translatedCompiledMethodMetadata at: aFunction ifPresent: [ :existent | ^ existent ].
+	
+	metadata := self translateDynamicLiteral: (target objectModel createFunctionContextMetaData: aFunction).
+	translatedCompiledMethodMetadata at: aFunction put: metadata.
+	^ metadata
 ]
 
 { #category : #'code generation' }
@@ -465,7 +477,16 @@ SLVMLLVMCodeGenerator >> visitConstantArrayValue: constantStructureValue [
 
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> visitConstantCompiledMethodMetadata: compiledMethodMetadata [
-	self halt
+	| metadata targetType |
+	metadata := self translateCompiledMethodMetadataOf: compiledMethodMetadata sourceMethod.
+	targetType := self translateType: compiledMethodMetadata type.
+	targetType ~~ metadata type ifTrue: [
+		^ LLVMBitCastConstantExpr new
+			type: targetType;
+			source: metadata;
+			yourself
+	].
+	^ metadata
 ]
 
 { #category : #visiting }
