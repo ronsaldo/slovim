@@ -32,7 +32,7 @@ LLVMConstantDataArray >> elements: anObject [
 LLVMConstantDataArray >> printOn: aStream [
 	| elementType |		
 	elementType := type elementType.
-	(elements isString and: [ elementType isIntegerTy and: [ elementType bits = 8 ] ]) ifTrue: [ 
+	((elements isString or: [ elements class == ByteArray ]) and: [ elementType isIntegerTy and: [ elementType bits = 8 ] ]) ifTrue: [ 
 		aStream nextPut: $c.
 		elements llvmPrintEscapedStringOn: aStream addNull: addNull.
 		^ self
