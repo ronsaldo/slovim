@@ -789,6 +789,15 @@ SLVMLLVMFunctionCodeGenerator >> nullVoidPointer [
 	^ LLVMConstantPointerNull new type: (self translateType: (target pointerTo: target void))
 ]
 
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> signExtend: source target: targetType name: name [
+	^ self addInstruction: (LLVMSExtInst new
+			type: targetType;
+			name: name;
+			source: source;
+			yourself)
+]
+
 { #category : #accessing }
 SLVMLLVMFunctionCodeGenerator >> target [
 	^ target
@@ -1164,6 +1173,13 @@ SLVMLLVMFunctionCodeGenerator >> visitReturnVoid: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitSignExtend: instruction [
+	^ self signExtend: (self translateValue: instruction source)
+		target: (self translateType: instruction type)
+		name: (self convertName: instruction name)
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitStore: instruction [
 	| pointer value |
 	pointer := self translateValue: instruction variable.
@@ -1235,4 +1251,20 @@ SLVMLLVMFunctionCodeGenerator >> visitUnaryOperation: instruction [
 SLVMLLVMFunctionCodeGenerator >> visitUnarySqrt: instruction [
 	self halt
 
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitZeroExtend: instruction [
+	^ self zeroExtend: (self translateValue: instruction source)
+		target: (self translateType: instruction type)
+		name: (self convertName: instruction name)
+]
+
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> zeroExtend: source target: targetType name: name [
+	^ self addInstruction: (LLVMZExtInst new
+			type: targetType;
+			name: name;
+			source: source;
+			yourself)
 ]
