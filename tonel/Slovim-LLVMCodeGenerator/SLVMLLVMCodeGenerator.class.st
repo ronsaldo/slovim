@@ -261,6 +261,11 @@ SLVMLLVMCodeGenerator >> initialize [
 	debugAnonymousCount := 0.
 ]
 
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> intPointerType [
+	^ target pointerSize = 4 ifTrue: [ llvmContext int32Ty ] ifFalse: [ llvmContext int64Ty ]
+]
+
 { #category : #'debug information' }
 SLVMLLVMCodeGenerator >> isEmittingDebugInformation [
 	^ target emittingDebugInformation
@@ -434,6 +439,11 @@ SLVMLLVMCodeGenerator >> type: type translationDo: aBlock [
 	^ result
 ]
 
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> uintPointerType [
+	^ target pointerSize = 4 ifTrue: [ llvmContext int32Ty ] ifFalse: [ llvmContext int64Ty ]
+]
+
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> unknownDebugFile [
 	^ unknownDebugFile ifNil: [ unknownDebugFile := (LLVMDIFile for: self llvmModule)
@@ -550,6 +560,14 @@ SLVMLLVMCodeGenerator >> visitConstantValue: aConstantValue [
 		(aConstantValue value = 0 or: [ aConstantValue value isNil ]) ifTrue: [ 
 			^ LLVMConstantPointerNull new type: type
 		].
+	
+		^ LLVMIntToPtrConstantExpr new
+			type: type;
+			source: (LLVMConstantInt new
+				type: self intPointerType;
+				value: aConstantValue value;
+				yourself);
+			yourself
 	].
 	self error: 'Unsupported constant value type'
 ]

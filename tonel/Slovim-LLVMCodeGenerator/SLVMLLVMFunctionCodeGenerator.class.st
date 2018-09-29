@@ -861,6 +861,15 @@ SLVMLLVMFunctionCodeGenerator >> translateValue: aValue [
 ]
 
 { #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> truncate: source target: targetType name: name [
+	^ self addInstruction: (LLVMTruncInst new
+			type: targetType;
+			name: name;
+			source: source;
+			yourself)
+]
+
+{ #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> vector: sourceVector extractElementAt: sourceIndex [
 	^ self addInstruction: (LLVMExtractElementInst new
 		type: sourceVector type elementType;
@@ -1191,6 +1200,13 @@ SLVMLLVMFunctionCodeGenerator >> visitStore: instruction [
 		value: value;
 		type: self context voidTy;
 		yourself)
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitTruncate: instruction [
+	^ self truncate: (self translateValue: instruction source)
+		target: (self translateType: instruction type)
+		name: (self convertName: instruction name)
 ]
 
 { #category : #visiting }
