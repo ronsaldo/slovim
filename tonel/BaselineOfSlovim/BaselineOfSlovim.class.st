@@ -11,7 +11,7 @@ BaselineOfSlovim >> baseline: spec [
 	spec for: #'common' do: [
 		spec blessing: #'baseline'.
 		spec repository: 'http://smalltalkhub.com/mc/ronsaldo/Slovim/main/'.
-		spec project: 'SAsm' with: [
+		spec baseline: 'SAsm' with: [
 				spec
 					repository: 'github://ronsaldo/sasm/tonel'].
 		spec project: 'Lowcode' with: [
