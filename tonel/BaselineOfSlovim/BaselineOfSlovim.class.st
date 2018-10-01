@@ -14,11 +14,9 @@ BaselineOfSlovim >> baseline: spec [
 		spec baseline: 'SAsm' with: [
 				spec
 					repository: 'github://ronsaldo/sasm/tonel'].
-		spec project: 'Lowcode' with: [
+		spec baseline: 'Lowcode' with: [
 				spec
-					className: #ConfigurationOfLowcode;
-					versionString: #'bleedingEdge';
-					repository: 'http://smalltalkhub.com/mc/ronsaldo/Lowcode/main/';
+					repository: 'github://ronsaldo/lowcode/tonel';
 					loads: #(#'Core') ].
 		spec 
 			package: #'Slovim-Core';
