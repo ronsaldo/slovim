@@ -144,7 +144,7 @@ LLVMModule >> valueSymbolTable [
 { #category : #printing }
 LLVMModule >> writeAssemblyToFileNamed: aFileName [
 	aFileName asFileReference writeStreamDo: [ :out |
-		out text truncate.
+		out truncate.
 		self fullPrintOn: out
 	]
 ]
@@ -166,8 +166,7 @@ LLVMModule >> writeSharedToFileNamed: aFileName [
 
 { #category : #printing }
 LLVMModule >> writeTextToFileNamed: aFileName [
-	aFileName asFileReference writeStreamDo: [ :out |
-		out text truncate.
+	aFileName asFileReference slvmAtomicWriteStreamDo: [ :out |
 		self fullPrintOn: out
 	]
 ]
