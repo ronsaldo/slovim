@@ -520,7 +520,7 @@ SLVMLLVMCodeGenerator >> visitConstantMatrixValue: constantMatrixValue [
 
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> visitConstantPointer: constant [
-	| type variable pointedValue indexType |
+	| type variable pointedValue |
 	type := self translateType: constant type.
 	pointedValue := self translateConstant: constant constant.
 	
@@ -529,12 +529,9 @@ SLVMLLVMCodeGenerator >> visitConstantPointer: constant [
 		alignment: constant constant type alignment;
 		initialValue: pointedValue.
 	
-	indexType := type context int32Ty.
-	^ LLVMGetElementPtrConstantExpr new
+	^ LLVMBitCastConstantExpr new
 		type: type;
-		pointer: variable;
-		inbounds: true;
-		indices: { indexType zeroConstant . indexType zeroConstant };
+		source: variable;
 		yourself
 ]
 

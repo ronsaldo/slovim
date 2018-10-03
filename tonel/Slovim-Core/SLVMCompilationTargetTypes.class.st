@@ -26,6 +26,14 @@ SLVMCompilationTargetTypes class >> forCurrentImage [
 ]
 
 { #category : #types }
+SLVMCompilationTargetTypes >> anonStructure: slots [
+	^ SLVMStructureType
+		name: nil types: slots
+		kind: SLVMStructureType genericKind names:
+		(slots collectWithIndex: [:s :i | ('s', i asString) asSymbol])
+]
+
+{ #category : #types }
 SLVMCompilationTargetTypes >> arrayOf: elementType size: size [
 	^ SLVMArrayType baseType: elementType elements: size
 ]

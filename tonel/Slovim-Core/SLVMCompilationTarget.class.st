@@ -9,6 +9,11 @@ Class {
 }
 
 { #category : #types }
+SLVMCompilationTarget >> anonStructure: slots [
+	^ types anonStructure: slots
+]
+
+{ #category : #types }
 SLVMCompilationTarget >> arrayOf: elementType size: size [
 	^ types arrayOf: elementType size: size
 ]
@@ -118,6 +123,11 @@ SLVMCompilationTarget >> int64 [
 { #category : #types }
 SLVMCompilationTarget >> int8 [
 	^ types int8
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> intPointer [
+	^ types intPointer
 ]
 
 { #category : #testing }
@@ -244,6 +254,11 @@ SLVMCompilationTarget >> uint64 [
 { #category : #types }
 SLVMCompilationTarget >> uint8 [
 	^ types uint8
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> uintPointer [
+	^ types uintPointer
 ]
 
 { #category : #types }
