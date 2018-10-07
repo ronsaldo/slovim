@@ -716,6 +716,16 @@ SLVMBuilder >> intToFloatCast: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMIntToFloatCast source: source targetType: targetType) name: resultName
 ]
 
+{ #category : #casting }
+SLVMBuilder >> intToPointerCast: source target: targetType [
+	^ self intToPointerCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> intToPointerCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMIntToPointerCast source: source targetType: targetType) name: resultName
+]
+
 { #category : #'matrix operations' }
 SLVMBuilder >> isFloatingPointMatrix: matrix [
 	| type |
@@ -1073,6 +1083,16 @@ SLVMBuilder >> pointerToDynamicObjectCast: source target: targetType typeObject:
 { #category : #casting }
 SLVMBuilder >> pointerToDynamicObjectCast: source target: targetType typeObject: typeObject name: resultName [
 	^ self addInstruction: (SLVMPointerToDynamicObjectCast source: source targetType: targetType typeObject: typeObject) name: resultName
+]
+
+{ #category : #casting }
+SLVMBuilder >> pointerToIntCast: source target: targetType [
+	^ self pointerToIntCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> pointerToIntCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMPointerToIntCast source: source targetType: targetType) name: resultName
 ]
 
 { #category : #accessing }

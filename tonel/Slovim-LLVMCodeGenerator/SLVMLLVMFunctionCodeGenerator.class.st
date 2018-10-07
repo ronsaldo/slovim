@@ -761,6 +761,15 @@ SLVMLLVMFunctionCodeGenerator >> initialize [
 	usedNames := Set new.
 ]
 
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> intToPointerCast: source target: targetType name: name [
+	^ self addInstruction: (LLVMIntToPtrInst new
+			type: targetType;
+			name: name;
+			source: source;
+			yourself)
+]
+
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> mapArguments [
 
@@ -787,6 +796,15 @@ SLVMLLVMFunctionCodeGenerator >> moduleTranslator: anObject [
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> nullVoidPointer [
 	^ LLVMConstantPointerNull new type: (self translateType: (target pointerTo: target void))
+]
+
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> pointerToIntCast: source target: targetType name: name [
+	^ self addInstruction: (LLVMPtrToIntInst new
+			type: targetType;
+			name: name;
+			source: source;
+			yourself)
 ]
 
 { #category : #'instruction building' }
@@ -1061,6 +1079,13 @@ SLVMLLVMFunctionCodeGenerator >> visitIntToFloatCast: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitIntToPointerCast: instruction [
+	^ self intToPointerCast: (self translateValue: instruction source)
+		target: (self translateType: instruction type)
+		name: (self convertName: instruction name)
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitJump: instruction [
 	| destination |
 	destination := self translateValue: instruction destination.
@@ -1162,6 +1187,13 @@ SLVMLLVMFunctionCodeGenerator >> visitPhi: instruction [
 	].
 
 	^ result
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitPointerToIntCast: instruction [
+	^ self pointerToIntCast: (self translateValue: instruction source)
+		target: (self translateType: instruction type)
+		name: (self convertName: instruction name)
 ]
 
 { #category : #visiting }
