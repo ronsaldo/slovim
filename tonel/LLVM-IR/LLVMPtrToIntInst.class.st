@@ -6,5 +6,5 @@ Class {
 
 { #category : #printing }
 LLVMPtrToIntInst >> mnemonic [
-	^ #ptroint
+	^ #ptrtoint
 ]
