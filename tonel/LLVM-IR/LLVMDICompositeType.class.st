@@ -3,10 +3,21 @@ Class {
 	#superclass : #LLVMDIType,
 	#instVars : [
 		'tag',
-		'elements'
+		'elements',
+		'baseType'
 	],
 	#category : #'LLVM-IR-Metadata'
 }
+
+{ #category : #accessing }
+LLVMDICompositeType >> baseType [
+	^ baseType
+]
+
+{ #category : #accessing }
+LLVMDICompositeType >> baseType: anObject [
+	baseType := anObject
+]
 
 { #category : #accessing }
 LLVMDICompositeType >> elements [
@@ -25,7 +36,13 @@ LLVMDICompositeType >> specializedName [
 
 { #category : #accessing }
 LLVMDICompositeType >> specializedProperties [
-	^ super specializedProperties , #(tag elements)
+	| result |
+	result := super specializedProperties , #(tag elements).
+	baseType ifNotNil: [ 
+		result := result , #(baseType)
+	].
+
+	^ result
 ]
 
 { #category : #accessing }

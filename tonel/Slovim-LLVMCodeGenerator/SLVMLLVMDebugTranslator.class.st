@@ -31,6 +31,26 @@ SLVMLLVMDebugTranslator >> translate: aDebugElement [
 ]
 
 { #category : #visiting }
+SLVMLLVMDebugTranslator >> visitArrayType: type [
+	| compositeType |
+	compositeType := (LLVMDICompositeType for: self llvmModule)
+		name: type name;
+		tag: DW_TAG_array_type;
+		file: moduleTranslator unknownDebugFile;
+		size: type size*8;
+		align: type alignment*8;
+		elements: ((LLVMMDTuple for: self llvmModule)
+			elements: {(LLVMDISubrange for: self llvmModule)
+					count: type elements;
+					yourself
+			};
+		yourself).
+	compositeType baseType: (moduleTranslator translateDebugType: type baseType).
+	moduleTranslator register: type debugElement: compositeType.
+	^ compositeType
+]
+
+{ #category : #visiting }
 SLVMLLVMDebugTranslator >> visitBoolType: type [
 	| basicType |
 	basicType := (LLVMDIBasicType for: self llvmModule)
