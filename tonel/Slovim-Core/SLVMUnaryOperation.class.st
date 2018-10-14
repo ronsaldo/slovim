@@ -55,7 +55,7 @@ SLVMUnaryOperation >> computeTypeFor: anOperation operand: operand [
 		^ operandType
 	].
 	operationType == #bool ifTrue: [ 
-		(operandType isBooleanType or: [operandType isVectorType and: [operandType baseType isBooleanType ] ]) ifFalse: [ self error: 'Unary operation ' , anOperation , ' requires float operands.' ].
+		(operandType isBooleanType or: [operandType isVectorType and: [operandType baseType isBooleanType ] ]) ifFalse: [ self error: 'Unary operation ' , anOperation , ' requires boolean operands.' ].
 		^ operandType
 	].
 	self error: 'Unsupported operation type'

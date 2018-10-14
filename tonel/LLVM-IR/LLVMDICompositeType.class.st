@@ -36,13 +36,7 @@ LLVMDICompositeType >> specializedName [
 
 { #category : #accessing }
 LLVMDICompositeType >> specializedProperties [
-	| result |
-	result := super specializedProperties , #(tag elements).
-	baseType ifNotNil: [ 
-		result := result , #(baseType)
-	].
-
-	^ result
+	^ super specializedProperties , #(tag elements baseType)
 ]
 
 { #category : #accessing }

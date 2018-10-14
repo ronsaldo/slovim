@@ -31,6 +31,38 @@ SLVMLLVMDebugTranslator >> translate: aDebugElement [
 ]
 
 { #category : #visiting }
+SLVMLLVMDebugTranslator >> translateStructureType: type tag: tag [
+	| compositeType offset memberType derivedType |
+	compositeType := (LLVMDICompositeType for: self llvmModule)
+		distinct;
+		name: type name;
+		tag: tag;
+		file: moduleTranslator unknownDebugFile;
+		size: type size*8;
+		align: type alignment*8;
+		elements: (LLVMMDTuple for: self llvmModule);
+		yourself.
+		
+	type names doWithIndex: [ :name :index |
+		offset := type offsets at: index.
+		memberType := type types at: index.
+		
+		derivedType := (LLVMDIDerivedType for: self llvmModule)
+			tag: DW_TAG_member;
+			name: name;
+			size: memberType size * 8;
+			baseType: (moduleTranslator translateDebugType: memberType);
+			offset: offset*8;
+			yourself.
+		compositeType elements addElement: derivedType.
+	].
+
+	moduleTranslator register: type debugElement: compositeType.
+	^ compositeType
+
+]
+
+{ #category : #visiting }
 SLVMLLVMDebugTranslator >> visitArrayType: type [
 	| compositeType |
 	compositeType := (LLVMDICompositeType for: self llvmModule)
@@ -135,6 +167,11 @@ SLVMLLVMDebugTranslator >> visitMatrixType: type [
 ]
 
 { #category : #visiting }
+SLVMLLVMDebugTranslator >> visitPackedStructureType: type [
+	^ self translateStructureType: type tag: DW_TAG_structure_type
+]
+
+{ #category : #visiting }
 SLVMLLVMDebugTranslator >> visitPointerType: type [
 	| derivedType |
 	derivedType := (LLVMDIDerivedType for: self llvmModule)
@@ -154,18 +191,12 @@ SLVMLLVMDebugTranslator >> visitPointerType: type [
 
 { #category : #visiting }
 SLVMLLVMDebugTranslator >> visitStructureType: type [
-	| compositeType |
-	compositeType := (LLVMDICompositeType for: self llvmModule)
-		distinct;
-		name: type name;
-		tag: DW_TAG_structure_type;
-		file: moduleTranslator unknownDebugFile;
-		size: type size*8;
-		align: type alignment*8;
-		elements: (LLVMMDTuple for: self llvmModule);
-		yourself.
-	moduleTranslator register: type debugElement: compositeType.
-	^ compositeType
+	^ self translateStructureType: type tag: DW_TAG_structure_type
+]
+
+{ #category : #visiting }
+SLVMLLVMDebugTranslator >> visitUnionType: type [
+	^ self translateStructureType: type tag: DW_TAG_union_type
 ]
 
 { #category : #visiting }

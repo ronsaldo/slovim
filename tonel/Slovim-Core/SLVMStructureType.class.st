@@ -121,6 +121,11 @@ SLVMStructureType >> isMemberInBoundsAt: index [
 ]
 
 { #category : #testing }
+SLVMStructureType >> isPacked [
+	^ false
+]
+
+{ #category : #testing }
 SLVMStructureType >> isScalarType [
 	^ false
 ]

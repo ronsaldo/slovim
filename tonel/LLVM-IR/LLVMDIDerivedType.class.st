@@ -3,7 +3,8 @@ Class {
 	#superclass : #LLVMDIType,
 	#instVars : [
 		'tag',
-		'baseType'
+		'baseType',
+		'offset'
 	],
 	#category : #'LLVM-IR-Metadata'
 }
@@ -19,13 +20,23 @@ LLVMDIDerivedType >> baseType: anObject [
 ]
 
 { #category : #accessing }
+LLVMDIDerivedType >> offset [
+	^ offset
+]
+
+{ #category : #accessing }
+LLVMDIDerivedType >> offset: anObject [
+	offset := anObject
+]
+
+{ #category : #accessing }
 LLVMDIDerivedType >> specializedName [
 	^ #DIDerivedType
 ]
 
 { #category : #accessing }
 LLVMDIDerivedType >> specializedProperties [
-	^ super specializedProperties , #(tag baseType)
+	^ super specializedProperties , #(tag baseType offset)
 ]
 
 { #category : #accessing }

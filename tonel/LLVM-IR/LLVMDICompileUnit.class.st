@@ -7,7 +7,8 @@ Class {
 		'isOptimized',
 		'runtimeVersion',
 		'emissionKind',
-		'enums'
+		'enums',
+		'globals'
 	],
 	#category : #'LLVM-IR-Metadata'
 }
@@ -30,6 +31,16 @@ LLVMDICompileUnit >> enums [
 { #category : #accessing }
 LLVMDICompileUnit >> enums: anObject [
 	enums := anObject
+]
+
+{ #category : #accessing }
+LLVMDICompileUnit >> globals [
+	^ globals
+]
+
+{ #category : #accessing }
+LLVMDICompileUnit >> globals: anObject [
+	globals := anObject
 ]
 
 { #category : #initialization }
@@ -92,5 +103,6 @@ LLVMDICompileUnit >> specializedProperties [
 		runtimeVersion
 		emissionKind
 		enums
+		globals
 	)
 ]

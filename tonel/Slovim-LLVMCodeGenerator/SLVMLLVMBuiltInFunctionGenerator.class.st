@@ -20,6 +20,19 @@ SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName inlineWith: aB
 ]
 
 { #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> atomicBuiltIn [
+	<builtInFunctions>
+	self
+		addBuiltIn: #'atomic.compare_and_swap' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateAtomicCompare: callInstruction arguments first
+				with: callInstruction arguments second
+				andSwapWith: callInstruction arguments third
+				returnType: callInstruction type
+		];
+		yourself
+]
+
+{ #category : #initialization }
 SLVMLLVMBuiltInFunctionGenerator class >> fromName: intrinsicName [
 	^ BuiltInFunctionDictionary at: intrinsicName ifAbsent: [ nil ]
 ]

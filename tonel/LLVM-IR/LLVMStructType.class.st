@@ -2,7 +2,8 @@ Class {
 	#name : #LLVMStructType,
 	#superclass : #LLVMCompositeType,
 	#instVars : [
-		'elements'
+		'elements',
+		'packed'
 	],
 	#category : #'LLVM-IR-Types'
 }
@@ -44,6 +45,13 @@ LLVMStructType >> fullPrintOn: aStream [
 	self printDefinitionOn: aStream
 ]
 
+{ #category : #initialization }
+LLVMStructType >> initialize [
+	super initialize.
+	packed := false.
+	
+]
+
 { #category : #accessing }
 LLVMStructType >> memberAt: sourceIndex [
 	^ elements at: sourceIndex + 1
@@ -54,6 +62,16 @@ LLVMStructType >> name [
 	^ name ifNil: [ name := self createName ]
 ]
 
+{ #category : #accessing }
+LLVMStructType >> packed [
+	^ packed
+]
+
+{ #category : #accessing }
+LLVMStructType >> packed: anObject [
+	packed := anObject
+]
+
 { #category : #printing }
 LLVMStructType >> printDefinitionOn: aStream [
 	elements ifNil: [ 
@@ -61,12 +79,18 @@ LLVMStructType >> printDefinitionOn: aStream [
 		^ self
 	].
 
-	aStream nextPutAll: 'type {'.
+	packed ifTrue: [ 
+		aStream nextPutAll: 'type <{'.
+	] ifFalse: [
+		aStream nextPutAll: 'type {'.
+	].
+
 	elements doWithIndex: [ :element :index |
 		index > 1 ifTrue: [ aStream nextPutAll: ', ' ].
 		aStream print: element
 	].
-	aStream nextPut: $}
+
+	aStream nextPut: $}. packed ifTrue: [ aStream nextPut: $> ].
 ]
 
 { #category : #'as yet unclassified' }

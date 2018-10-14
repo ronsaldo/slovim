@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #private }
+SLVMUnionType >> accept: aVisitor [
+	^ aVisitor visitUnionType: self
+]
+
+{ #category : #private }
 SLVMUnionType >> computeLayout [
 	alignment := 1.
 	size := 0.

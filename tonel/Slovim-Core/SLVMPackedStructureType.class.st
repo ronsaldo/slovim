@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #private }
+SLVMPackedStructureType >> accept: aVisitor [
+	^ aVisitor visitPackedStructureType: self
+]
+
+{ #category : #private }
 SLVMPackedStructureType >> computeLayout [
 	| currentOffset offset |
 	currentOffset := 0.
@@ -15,4 +20,9 @@ SLVMPackedStructureType >> computeLayout [
 		offset.
 	].
 	size := currentOffset
+]
+
+{ #category : #testing }
+SLVMPackedStructureType >> isPacked [
+	^ true
 ]

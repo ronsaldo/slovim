@@ -49,7 +49,13 @@ LLVMGlobalVariable >> fullPrintOn: aStream [
 	aStream space; nextPutAll: (isConstant ifTrue: [ 'constant' ] ifFalse: [ 'global' ]);
 		space; print: valueType.
 	initialValue ifNotNil: [ aStream space; print: initialValue ].
-	alignment ifNotNil: [ aStream nextPutAll: ', align '; print: alignment ]
+	alignment ifNotNil: [ aStream nextPutAll: ', align '; print: alignment ].
+
+	metadata ifNotEmpty: [ 
+		aStream nextPutAll: ', '.
+		self printMetadataOn: aStream.
+	].
+
 ]
 
 { #category : #accessing }

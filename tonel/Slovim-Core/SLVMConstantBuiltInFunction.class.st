@@ -21,6 +21,7 @@ SLVMConstantBuiltInFunction class >> initialize [
 	super initialize.
 	ValidBuiltInFunctionNames := Set newFrom: ( #(
 		"Atomic"
+		'atomic.compare_and_swap'
 		'atomic.fetch_and_add'
 		'atomic.fetch_and_subtract'
 		'atomic.swap_value'

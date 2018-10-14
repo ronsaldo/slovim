@@ -85,6 +85,44 @@ SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmf
 	^ subprogram
 ]
 
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> buildGlobalVariable: slvmGlobalVariable debugInformationInto: variable [
+	| debugGlobalVariable debugFile debugGlobalVariableExpression debugInfo |
+	(self isEmittingDebugInformation not or: [slvmGlobalVariable hasProperty: #omitDebugInformation]) ifTrue: [ ^ nil ].
+	debugInfo := slvmGlobalVariable debugInformation ifNil: [ ^ nil ].
+	
+	debugGlobalVariable := (LLVMDIGlobalVariable for: llvmModule)
+		distinct;
+		name: debugInfo name;
+		scope: debugCompileUnit;
+		isLocal: (slvmGlobalVariable isPublic or: [ slvmGlobalVariable isExternal ]) not;
+		isDefinition: slvmGlobalVariable isExternal not;
+		type: (self translateDebugType: slvmGlobalVariable valueType);
+		yourself.
+	
+	slvmGlobalVariable debugSourceLocation ifNotNil: [ :sourceLocation |
+		debugFile := self convertDebugFile: sourceLocation sourceFile.
+		debugGlobalVariable
+			file: debugFile;
+			line: sourceLocation startLine.
+			
+		debugGlobalVariable scope == debugCompileUnit ifTrue: [ 
+			debugGlobalVariable scope: debugFile
+		].
+	].
+
+	debugGlobalVariableExpression := (LLVMDIGlobalVariableExpression for: llvmModule)
+		var: debugGlobalVariable;
+		expr: (LLVMDIExpression for: llvmModule);
+		yourself.
+	variable addDebugMetadata: debugGlobalVariableExpression.
+	
+	debugCompileUnit globals ifNil: [ debugCompileUnit globals: (LLVMMDDynamicTuple for: llvmModule) ].
+	debugCompileUnit globals addElement: debugGlobalVariableExpression.
+	
+	^ debugGlobalVariable
+]
+
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> context [
 	^ llvmContext ifNil: [ llvmContext := LLVMContext new ]
@@ -217,6 +255,7 @@ SLVMLLVMCodeGenerator >> declareNamedStructure: aNamedStructure [
 	convertedStructure := LLVMStructType new
 		context: self context;
 		name: ('%' , aNamedStructure name);
+		packed: aNamedStructure isPacked;
 		yourself.
 	translatedTypes at: aNamedStructure put: convertedStructure.
 	self llvmModule addNamedStructure: convertedStructure
@@ -629,6 +668,7 @@ SLVMLLVMCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 	variableType := self translateType: aGlobalVariable valueType.
 	variable := LLVMGlobalVariable createWithType: variableType module: self llvmModule isConstant: aGlobalVariable readOnly linkage: (self convertLinkage: aGlobalVariable) name: (self convertName: aGlobalVariable name) threadLocalMode: LLVMGlobalValue notThreadLocal addressSpace: 0.
 	translatedModuleElements at: aGlobalVariable put: variable.
+	self buildGlobalVariable: aGlobalVariable debugInformationInto: variable.
 	
 	aGlobalVariable initialValue ifNotNil: [ :constant |
 		variable initialValue: (self translateValue: constant)
@@ -650,6 +690,15 @@ SLVMLLVMCodeGenerator >> visitMatrixType: type [
 	^ self type: type translationDo: [
 		columnType := self translateType: type columnType.
 		LLVMStructType context: self context elements: ((1 to: type rows) collect: [:i | columnType])
+	]
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> visitPackedStructureType: structureType [
+	structureType name ifNotNil: [ self halt ].
+	^ self recursiveType: structureType translationDo: [
+		(LLVMStructType context: llvmContext elements: (structureType types collect: [:type | self translateType: type]))
+			packed: true
 	]
 ]
 

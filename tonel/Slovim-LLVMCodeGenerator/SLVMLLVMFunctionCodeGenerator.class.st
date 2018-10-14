@@ -201,6 +201,21 @@ SLVMLLVMFunctionCodeGenerator >> castRuntimeCallArgument: value into: targetType
 
 ]
 
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> compare: pointer with: comparisonValue andSwapWith: newValue [
+ 	| resultType |
+	resultType := LLVMStructType context: self context
+			elements: {comparisonValue type . self context int1Ty}.
+
+	^ self addInstruction: (LLVMAtomicCmpXchgInst new
+			type: resultType;
+			pointer: pointer;
+			comparisonValue: comparisonValue;
+			newValue: newValue;
+			yourself).
+
+]
+
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> constructVectorOfType: resultVectorType byLoading: sourceIndices from: sourceVectors [
 	^ self constructVectorOfType: resultVectorType byLoading: sourceIndices withResultSize: sourceVectors size from: sourceVectors
@@ -379,6 +394,21 @@ SLVMLLVMFunctionCodeGenerator >> functionDebugScope [
 { #category : #accessing }
 SLVMLLVMFunctionCodeGenerator >> functionDebugScope: aDebugScope [
 	functionDebugScope := aDebugScope
+]
+
+{ #category : #'atomic intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateAtomicCompare: sourcePointer with: comparisonValue andSwapWith: newValue returnType: returnType [
+	| cmpxchg |
+	cmpxchg := self compare: (self translateValue: sourcePointer)
+		with: (self translateValue: comparisonValue)
+		andSwapWith: (self translateValue: newValue).
+		
+	^ returnType isBooleanType ifTrue: [
+		self aggregate: cmpxchg extractValueAt: 1
+	] ifFalse: [
+		self aggregate: cmpxchg extractValueAt: 0
+	].
+
 ]
 
 { #category : #visiting }
@@ -641,22 +671,21 @@ SLVMLLVMFunctionCodeGenerator >> generateVector: vectorType cross: leftVector wi
 		subtractionOperation := #sub.
 	].
 
-	^ Array streamContents: [ :out |
-		"Left multiply"
-		lu := self vector: leftVectorValue shuffleWith: leftVectorValue mask: #(1 2 0). out nextPut: lu.
-		lv := self vector: rightVectorValue shuffleWith: rightVectorValue mask: #(2 0 1). out nextPut: lv.
+	"Left multiply"
+	lu := self vector: leftVectorValue shuffleWith: leftVectorValue mask: #(1 2 0).
+	lv := self vector: rightVectorValue shuffleWith: rightVectorValue mask: #(2 0 1).
 		
-		lm := self generateScalarVectorBinaryOperation: multiplyOperation resultType: resultType left: lu right: lv name: nil. out nextPut: lm.
+	lm := self generateScalarVectorBinaryOperation: multiplyOperation resultType: resultType left: lu right: lv name: nil.
 		
-		"Right multiply"
-		ru := self vector: leftVectorValue shuffleWith: leftVectorValue mask: #(2 0 1). out nextPut: ru.
-		rv := self vector: rightVectorValue shuffleWith: rightVectorValue mask: #(1 2 0). out nextPut: rv.
+	"Right multiply"
+	ru := self vector: leftVectorValue shuffleWith: leftVectorValue mask: #(2 0 1).
+	rv := self vector: rightVectorValue shuffleWith: rightVectorValue mask: #(1 2 0).
 		
-		rm := self generateScalarVectorBinaryOperation: multiplyOperation resultType: resultType left: ru right: rv name: nil. out nextPut: rm.
+	rm := self generateScalarVectorBinaryOperation: multiplyOperation resultType: resultType left: ru right: rv name: nil.
 		
-		"Subtraction"
-		result := self generateScalarVectorBinaryOperation: subtractionOperation resultType: resultType left: lm right: rm name: nil. out nextPut: result.
-	]
+	"Subtraction"
+	^ self generateScalarVectorBinaryOperation: subtractionOperation resultType: resultType left: lm right: rm name: nil
+	
 ]
 
 { #category : #'vector intrinsics' }
