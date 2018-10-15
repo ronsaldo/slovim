@@ -401,13 +401,17 @@ SLVMLLVMCodeGenerator >> translateDynamicLiteral: aLiteral [
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
 	self translateModuleDebugInformation: module.
-
+	
 	module structures do: [ :structures |
 		self declareNamedStructure: structures
 	].
 
 	module structures do: [ :structures |
 		self translateNamedStructure: structures
+	].
+
+	module inlineAssemblyFragments do: [ :assemblyFragments |
+		self translateModuleInlineAssembly: assemblyFragments
 	].
 
 	exportList do: [ :value |
@@ -442,6 +446,14 @@ SLVMLLVMCodeGenerator >> translateModuleDebugInformation: module [
 SLVMLLVMCodeGenerator >> translateModuleElement: value [
 	translatedModuleElements at: value ifPresent: [ :existent | ^ existent ].
 	^ value accept: self
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> translateModuleInlineAssembly: assemblyFragment [
+	"Only support gas syntax for now."
+	assemblyFragment language ~~ #gas ifTrue: [^ self].
+	
+	llvmModule addModuleLevelInlineAssembly: assemblyFragment source
 ]
 
 { #category : #'as yet unclassified' }

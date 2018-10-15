@@ -8,7 +8,8 @@ Class {
 		'symbolGenerationCount',
 		'metadataSymbolGenerationCount',
 		'structureSymbolTable',
-		'metadataSymbolTable'
+		'metadataSymbolTable',
+		'moduleLevelAssemblySources'
 	],
 	#category : #'LLVM-IR'
 }
@@ -40,6 +41,11 @@ LLVMModule >> addModuleFlag: flagName value: flagValue behaviorOnCollision: flag
 ]
 
 { #category : #adding }
+LLVMModule >> addModuleLevelInlineAssembly: assemblySource [
+	moduleLevelAssemblySources add: assemblySource
+]
+
+{ #category : #adding }
 LLVMModule >> addNamedStructure: aStructureType [
 	structureSymbolTable at: aStructureType name ifAbsentPut: [ aStructureType ]
 ]
@@ -58,6 +64,7 @@ LLVMModule >> context [
 LLVMModule >> fullPrintOn: aStream [
 	aStream << '; Module ' << name; lf.
 	structureSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ].
+	moduleLevelAssemblySources do: [ :assembly | self printModuleLevelAssembly: assembly on: aStream ].
 	valueSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ].
 	metadataSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ].
 ]
@@ -118,6 +125,7 @@ LLVMModule >> initialize [
 	structureSymbolTable := LLVMOrderedDictionary new.
 	valueSymbolTable := LLVMOrderedDictionary new.
 	metadataSymbolTable := LLVMOrderedDictionary new.
+	moduleLevelAssemblySources := OrderedCollection new.
 	symbolGenerationCount := 0.
 	metadataSymbolGenerationCount := 0.
 	
@@ -134,6 +142,13 @@ LLVMModule >> initializeWithName: aName context: aContext [
 { #category : #accessing }
 LLVMModule >> name [
 	^ name
+]
+
+{ #category : #printing }
+LLVMModule >> printModuleLevelAssembly: assembly on: aStream [
+	aStream << 'module asm '.
+	assembly llvmPrintEscapedStringOn: aStream.
+	aStream lf
 ]
 
 { #category : #accessing }

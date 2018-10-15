@@ -11,7 +11,8 @@ Class {
 		'packages',
 		'classVariableClassMap',
 		'debugInformation',
-		'structures'
+		'structures',
+		'inlineAssemblyFragments'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -21,6 +22,15 @@ SLVMModule >> add: aGlobalValue [
 	aGlobalValue module: self.
 	aGlobalValue name ifNil: [ ^ anonymousGlobals add: aGlobalValue ].
 	globalValues at: aGlobalValue name put: aGlobalValue
+]
+
+{ #category : #adding }
+SLVMModule >> addArchitecture: architecture language: language inlineAssembly: assembly [
+	inlineAssemblyFragments add: (SLVMGlobalInlineAssemblyFragment new
+		architecture: architecture;
+		language: language;
+		source: assembly;
+		yourself)
 ]
 
 { #category : #adding }
@@ -258,6 +268,12 @@ SLVMModule >> initialize [
 	anonymousGlobals := OrderedCollection new.
 	globalValues := OrderedDictionary new.
 	packages := OrderedCollection new.
+	inlineAssemblyFragments := OrderedCollection new.
+]
+
+{ #category : #accessing }
+SLVMModule >> inlineAssemblyFragments [
+	^ inlineAssemblyFragments
 ]
 
 { #category : #'as yet unclassified' }
