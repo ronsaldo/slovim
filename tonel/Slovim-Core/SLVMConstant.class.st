@@ -102,6 +102,12 @@ SLVMConstant class >> value: value bitcast: aTargetType [
 	^ SLVMConstantExpresionBitCast new value: value targetType: aTargetType
 ]
 
+{ #category : #constructor }
+SLVMConstant class >> zeroInitializer: type [
+	^ SLVMConstantZeroInitializer new type: type
+	
+]
+
 { #category : #testing }
 SLVMConstant >> isCompiledMethodMetaData [
 	^ false

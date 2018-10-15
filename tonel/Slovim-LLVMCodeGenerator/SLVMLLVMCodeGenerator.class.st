@@ -632,6 +632,15 @@ SLVMLLVMCodeGenerator >> visitConstantVectorValue: constantVectorValue [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantZeroInitializer: aConstant [
+	| type |
+	type := self translateType: aConstant type.
+	^ LLVMConstantZeroInitializer new
+		type: type;
+		yourself
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitDynamicObjectType: type [
 	^ self recursiveType: type translationDo: [
 		self flag: 'TODO: Change this for a pointer into an object header.'.
@@ -679,6 +688,11 @@ SLVMLLVMCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 	| variableType variable |
 	variableType := self translateType: aGlobalVariable valueType.
 	variable := LLVMGlobalVariable createWithType: variableType module: self llvmModule isConstant: aGlobalVariable readOnly linkage: (self convertLinkage: aGlobalVariable) name: (self convertName: aGlobalVariable name) threadLocalMode: LLVMGlobalValue notThreadLocal addressSpace: 0.
+	variable alignment: aGlobalVariable valueType alignment.
+	aGlobalVariable minimalAlignment ifNotNil: [ :align |
+		variable alignment: (variable alignment max: align)
+	].
+
 	translatedModuleElements at: aGlobalVariable put: variable.
 	self buildGlobalVariable: aGlobalVariable debugInformationInto: variable.
 	

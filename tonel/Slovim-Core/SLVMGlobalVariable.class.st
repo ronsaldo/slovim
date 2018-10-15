@@ -9,7 +9,8 @@ Class {
 		'type',
 		'initialValue',
 		'readOnly',
-		'headerValue'
+		'headerValue',
+		'minimalAlignment'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -86,6 +87,16 @@ SLVMGlobalVariable >> initialize [
 { #category : #testing }
 SLVMGlobalVariable >> isGlobalVariable [
 	^ true
+]
+
+{ #category : #accessing }
+SLVMGlobalVariable >> minimalAlignment [
+	^ minimalAlignment
+]
+
+{ #category : #accessing }
+SLVMGlobalVariable >> minimalAlignment: anObject [
+	minimalAlignment := anObject
 ]
 
 { #category : #accessing }
