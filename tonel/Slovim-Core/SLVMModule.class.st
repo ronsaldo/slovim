@@ -12,7 +12,9 @@ Class {
 		'classVariableClassMap',
 		'debugInformation',
 		'structures',
-		'inlineAssemblyFragments'
+		'inlineAssemblyFragments',
+		'globalConstructors',
+		'globalDestructors'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -30,6 +32,34 @@ SLVMModule >> addArchitecture: architecture language: language inlineAssembly: a
 		architecture: architecture;
 		language: language;
 		source: assembly;
+		yourself)
+]
+
+{ #category : #adding }
+SLVMModule >> addGlobal: aGlobalVariable constructor: constructor [
+	^ self addGlobal: aGlobalVariable constructor: constructor priority: 0
+]
+
+{ #category : #adding }
+SLVMModule >> addGlobal: aGlobalVariable constructor: constructor priority: priority [
+	globalConstructors add: (SLVMGlobalConstructorDestructorMetadata new
+		global: aGlobalVariable;
+		function: constructor;
+		priority: priority;
+		yourself)
+]
+
+{ #category : #adding }
+SLVMModule >> addGlobal: aGlobalVariable destructor: destructor [
+	^ self addGlobal: aGlobalVariable destructor: destructor priority: 0
+]
+
+{ #category : #adding }
+SLVMModule >> addGlobal: aGlobalVariable destructor: destructor priority: priority [
+	globalDestructors add: (SLVMGlobalConstructorDestructorMetadata new
+		global: aGlobalVariable;
+		function: destructor;
+		priority: priority;
 		yourself)
 ]
 
@@ -218,6 +248,16 @@ SLVMModule >> generatePackageRegistration [
 	^ packageRegistrationFunction
 ]
 
+{ #category : #accessing }
+SLVMModule >> globalConstructors [
+	^ globalConstructors
+]
+
+{ #category : #accessing }
+SLVMModule >> globalDestructors [
+	^ globalDestructors
+]
+
 { #category : #adding }
 SLVMModule >> globalNamed: aSymbol [
 	^ globalValues at: aSymbol
@@ -269,6 +309,8 @@ SLVMModule >> initialize [
 	globalValues := OrderedDictionary new.
 	packages := OrderedCollection new.
 	inlineAssemblyFragments := OrderedCollection new.
+	globalConstructors := OrderedCollection new.
+	globalDestructors := OrderedCollection new.
 ]
 
 { #category : #accessing }

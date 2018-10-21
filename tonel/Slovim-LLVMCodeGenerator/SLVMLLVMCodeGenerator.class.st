@@ -417,7 +417,47 @@ SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
 	exportList do: [ :value |
 		self translateModuleElement: value
 	].
+
+	self translateModuleConstructorsOrDestructors: module globalConstructors name: #'llvm.global_ctors'.
+	self translateModuleConstructorsOrDestructors: module globalDestructors name: #'llvm.global_dtors'.
 	^ self llvmModule
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> translateModuleConstructorsOrDestructors: constructorsOrDestructors name: llvmGlobalName [
+	| ctorFunctionType ctorFunctionPointerType int32Ty varPointerType descriptorType descriptors descriptorsType variable |
+	constructorsOrDestructors ifEmpty: [ ^ self ].
+	
+	ctorFunctionType := LLVMFunctionType get: llvmContext voidTy params: #() isVarArg: false.
+	ctorFunctionPointerType := LLVMPointerType getUnqual: ctorFunctionType.
+	int32Ty := llvmContext int32Ty.
+	varPointerType := LLVMPointerType getUnqual: llvmContext int8Ty.
+	
+	descriptorType := LLVMStructType context: llvmContext elements: { int32Ty . ctorFunctionPointerType . varPointerType }.
+	descriptors := constructorsOrDestructors collect: [ :desc |
+		LLVMConstantStruct new
+			type: descriptorType;
+			elements: {
+				int32Ty constant: desc priority .
+				self translateModuleElement: desc function .
+				desc global
+					ifNil: [ LLVMConstantPointerNull new type: varPointerType ]
+					ifNotNil: [ LLVMBitCastConstantExpr new
+						type: varPointerType;
+						source: (self translateModuleElement: desc global);
+						yourself ]
+				};
+			yourself 
+	].
+
+	descriptorsType := LLVMArrayType get: descriptorType elements: descriptors size.
+	
+	variable := LLVMGlobalVariable createWithType: descriptorsType module: self llvmModule isConstant: false linkage: LLVMGlobalValue appendingLinkage name: llvmGlobalName.
+	variable initialValue: (LLVMConstantArray new
+		type: descriptorsType;
+		elements: descriptors;
+		yourself)
+
 ]
 
 { #category : #'code generation' }

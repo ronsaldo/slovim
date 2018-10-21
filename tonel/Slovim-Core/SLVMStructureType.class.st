@@ -80,6 +80,11 @@ SLVMStructureType >> computeLayout [
 	size := currentOffset alignedTo: alignment.
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> defaultConstant [
+	^ SLVMConstant zeroInitializer: self
+]
+
 { #category : #printing }
 SLVMStructureType >> fullPrintOn: aStream [
 	self fullPrintOn: aStream fromPrint: false

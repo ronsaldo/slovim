@@ -44,6 +44,11 @@ SLVMArrayType >> baseType: anObject [
 	baseType := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMArrayType >> defaultConstant [
+	^ SLVMConstant zeroInitializer: self
+]
+
 { #category : #accessing }
 SLVMArrayType >> elements [
 	^ elements
