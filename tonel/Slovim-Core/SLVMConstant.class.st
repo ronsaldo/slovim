@@ -79,7 +79,8 @@ SLVMConstant class >> structure: aStructureType slots: anArrayOfSlots [
 ]
 
 { #category : #constructor }
-SLVMConstant class >> type: aSLVMType value: aConstantValue [ 
+SLVMConstant class >> type: aSLVMType value: aConstantValue [
+	aSLVMType isIntegerType ifTrue: [ self assert: aConstantValue isInteger ].
 	^ SLVMConstantValue new type: aSLVMType; value: aConstantValue
 ]
 

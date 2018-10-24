@@ -40,6 +40,7 @@ LLVMIntegerType >> bits: anObject [
 
 { #category : #accessing }
 LLVMIntegerType >> constant: aValue [
+	self assert: aValue isInteger.
 	^ LLVMConstantInt new
 		type: self;
 		value: aValue;
@@ -53,16 +54,10 @@ LLVMIntegerType >> isIntegerTy [
 
 { #category : #'as yet unclassified' }
 LLVMIntegerType >> oneConstant [
-	^ LLVMConstantInt new
-		type: self;
-		value: 1;
-		yourself
+	^ self constant: 1
 ]
 
 { #category : #'as yet unclassified' }
 LLVMIntegerType >> zeroConstant [
-	^ LLVMConstantInt new
-		type: self;
-		value: 0;
-		yourself
+	^ self constant: 0
 ]

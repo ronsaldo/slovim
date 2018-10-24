@@ -642,7 +642,10 @@ SLVMLLVMCodeGenerator >> visitConstantValue: aConstantValue [
 	| type |
 	type := self translateType: aConstantValue type.
 	aConstantValue type isBooleanType ifTrue: [ ^ LLVMConstantInt new type: type; value: aConstantValue value asBit ].
-	type isIntegerTy ifTrue: [ ^ LLVMConstantInt new type: type; value: aConstantValue value ].
+	type isIntegerTy ifTrue: [
+		self assert: aConstantValue value isInteger.
+		^ LLVMConstantInt new type: type; value: aConstantValue value
+	].
 	type isFloatingPointTy ifTrue: [ ^ LLVMConstantFP new type: type; value: aConstantValue value ].
 	type isPointerTy ifTrue: [ 
 		(aConstantValue value = 0 or: [ aConstantValue value isNil ]) ifTrue: [ 
