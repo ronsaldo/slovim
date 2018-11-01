@@ -1331,6 +1331,14 @@ SLVMLLVMFunctionCodeGenerator >> visitUnarySqrt: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitUnreachable: instruction [
+	^ self addInstruction: (LLVMUnreachableInst new
+		name: (self convertName: instruction name);
+		type: self context voidTy;
+		yourself)
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitZeroExtend: instruction [
 	^ self zeroExtend: (self translateValue: instruction source)
 		target: (self translateType: instruction type)
