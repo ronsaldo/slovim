@@ -186,7 +186,7 @@ SLVMBuilder >> branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock name:
 	^ self addInstruction: (SLVMBranch condition: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock) name: resultName
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #intrinsics }
 SLVMBuilder >> builtInFunctionName: name argumentTypes: argumentTypes returnType: returnType [
 	| builtInFunctionType |
 	builtInFunctionType := SLVMFunctionType arguments: argumentTypes returnType: returnType.
@@ -271,6 +271,48 @@ SLVMBuilder >> constUInt: aValue [
 { #category : #constants }
 SLVMBuilder >> constULong: aValue [
 	^ SLVMConstant ulong: aValue
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> ctlz: aValue [
+	"Count leading zeros."
+	| intrinsic |
+	intrinsic := self ctlzIntrinsicFor: aValue type.
+	^ self call: intrinsic arguments: { aValue }
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> ctlzIntrinsicFor: aType [
+	"Count leading zeros."
+	^ self builtInFunctionName: #'bitwise.ctlz' argumentTypes: { aType } returnType: aType
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> ctpop: aValue [
+	"Count population"
+	| intrinsic |
+	intrinsic := self ctpopIntrinsicFor: aValue type.
+	^ self call: intrinsic arguments: { aValue }
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> ctpopIntrinsicFor: aType [
+	"Count population"
+	^ self builtInFunctionName: #'bitwise.ctpop' argumentTypes: { aType } returnType: aType
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> cttz: aValue [
+	"Count trailing zeros."
+	| intrinsic |
+	intrinsic := self cttzIntrinsicFor: aValue type.
+	^ self call: intrinsic arguments: { aValue }
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> cttzIntrinsicFor: aType [
+	"Count trailing zeros."
+	^ self builtInFunctionName: #'bitwise.ctlz' argumentTypes: { aType } returnType: aType
 ]
 
 { #category : #accessing }
@@ -571,6 +613,15 @@ SLVMBuilder >> getThisContext: resultName [
 	^ self addInstruction: (SLVMGetThisContext type: function compilationTarget dynamicObjectType) name: resultName
 ]
 
+{ #category : #intrinsics }
+SLVMBuilder >> highBit: aValue [
+	| leadingZeros |
+	leadingZeros := self ctlz: aValue.
+	^ self sub:
+		(self const: aValue type size * 8 type: aValue type )
+		with: leadingZeros
+]
+
 { #category : #comparisons }
 SLVMBuilder >> ieq: left with: right [
 	^ self ieq: left with: right name: function generateSymbol
@@ -813,6 +864,14 @@ SLVMBuilder >> load: variable [
 { #category : #instructions }
 SLVMBuilder >> load: variable name: resultName [
 	^ self addInstruction: (SLVMLoadInstruction variable: variable) name: resultName
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> lowBit: aValue [
+	"https://en.wikipedia.org/wiki/Find_first_set"
+	
+	^ self sub: (self const: aValue type size * 8 type: aValue type)
+		with: (self ctlz: (self bitAnd: aValue with: (self neg: aValue)))
 ]
 
 { #category : #instructions }

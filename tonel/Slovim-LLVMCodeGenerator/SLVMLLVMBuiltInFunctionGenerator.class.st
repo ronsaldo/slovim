@@ -11,6 +11,15 @@ Class {
 }
 
 { #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName callOverloadedUnary: llvmBuiltInName [
+	BuiltInFunctionDictionary at: builtInName put:
+		(SLVMLLVMUnaryOverloadedBuiltInFunctionGenerator new
+			name: builtInName;
+			llvmBuiltIn: llvmBuiltInName;
+			yourself)
+]
+
+{ #category : #initialization }
 SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName inlineWith: aBlock [
 	BuiltInFunctionDictionary at: builtInName put:
 		(SLVMLLVMInlineBuiltInFunctionGenerator new
@@ -30,6 +39,15 @@ SLVMLLVMBuiltInFunctionGenerator class >> atomicBuiltIn [
 				returnType: callInstruction type
 		];
 		yourself
+]
+
+{ #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> bitwiseBuiltin [
+	<builtInFunctions>
+	self
+		addBuiltIn: #'bitwise.ctpop' callOverloadedUnary: #'llvm.ctpop';
+		addBuiltIn: #'bitwise.ctlz' callOverloadedUnary: #'llvm.ctlz';
+		addBuiltIn: #'bitwise.cttz' callOverloadedUnary: #'llvm.cttz'
 ]
 
 { #category : #initialization }
@@ -72,7 +90,7 @@ SLVMLLVMBuiltInFunctionGenerator class >> vectorBuiltIn [
 		yourself
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'code generation' }
 SLVMLLVMBuiltInFunctionGenerator >> generateWith: functionCodeGenerator builtInFunction: builtInFunction callInstruction: instruction [
 	self subclassResponsibility
 ]

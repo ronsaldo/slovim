@@ -30,6 +30,11 @@ SLVMConstantBuiltInFunction class >> initialize [
 		'context.replace_function'
 		'context.return_from_frame_value'
 		
+		"Bit manipulation"
+		'bitwise.ctpop'
+		'bitwise.ctlz'
+		'bitwise.cttz'
+		
 		"Vector functions"
 		'vector.cross'
 		'vector.dot'

@@ -799,6 +799,11 @@ SLVMLLVMFunctionCodeGenerator >> intToPointerCast: source target: targetType nam
 			yourself)
 ]
 
+{ #category : #accessing }
+SLVMLLVMFunctionCodeGenerator >> llvmModule [
+	^ moduleTranslator llvmModule
+]
+
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> mapArguments [
 

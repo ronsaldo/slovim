@@ -17,7 +17,7 @@ SLVMLLVMInlineBuiltInFunctionGenerator >> block: anObject [
 	block := anObject
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'code generation' }
 SLVMLLVMInlineBuiltInFunctionGenerator >> generateWith: functionCodeGenerator builtInFunction: builtInFunction callInstruction: instruction [
 	^ block cull: functionCodeGenerator cull: builtInFunction cull: instruction
 ]
