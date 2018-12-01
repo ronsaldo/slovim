@@ -38,6 +38,17 @@ SLVMLLVMBuiltInFunctionGenerator class >> atomicBuiltIn [
 				andSwapWith: callInstruction arguments third
 				returnType: callInstruction type
 		];
+		addBuiltIn: #'atomic.fetch_and_add' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateAtomicRMW: callInstruction arguments first
+				with: callInstruction arguments second
+				operation: #add
+		];
+		addBuiltIn: #'atomic.fetch_and_subtract' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateAtomicRMW: callInstruction arguments first
+				with: callInstruction arguments second
+				operation: #sub
+		];
+	
 		yourself
 ]
 

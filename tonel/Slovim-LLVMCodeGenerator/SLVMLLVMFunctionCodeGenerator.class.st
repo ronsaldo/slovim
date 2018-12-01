@@ -411,6 +411,16 @@ SLVMLLVMFunctionCodeGenerator >> generateAtomicCompare: sourcePointer with: comp
 
 ]
 
+{ #category : #'atomic intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateAtomicRMW: sourcePointer with: operandValue operation: operation [
+	^ self addInstruction: (LLVMAtomicRMWInst new
+		operation: operation;
+		type: (self translateType: operandValue type);
+		pointer: (self translateValue: sourcePointer);
+		operand: (self translateValue: operandValue);
+		yourself)
+]
+
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> generateBuiltInFunction: builtInFunction call: instruction [
 	| generator |
