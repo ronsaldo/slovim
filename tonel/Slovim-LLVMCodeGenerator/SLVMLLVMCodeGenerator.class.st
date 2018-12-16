@@ -599,6 +599,18 @@ SLVMLLVMCodeGenerator >> visitConstantExpressionBitCast: constantBitCast [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantExpressionGetElementPointer: aConstant [
+	| type |
+	type := self translateType: aConstant type.
+	^ LLVMGetElementPtrConstantExpr new
+		type: type;
+		inbounds: aConstant inBounds;
+		pointer: (self translateValue: aConstant pointer);
+		indices: (aConstant indices collect: [:index | self translateValue: index]);
+		yourself
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitConstantMatrixValue: constantMatrixValue [
 	| type slots |
 	type := self translateType: constantMatrixValue type.

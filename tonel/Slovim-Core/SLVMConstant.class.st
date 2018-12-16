@@ -53,6 +53,16 @@ SLVMConstant class >> float: anInteger [
 ]
 
 { #category : #constructor }
+SLVMConstant class >> getPointer: constantPointer element: indices [
+	^ SLVMConstantExpresionGetElementPointer pointer: constantPointer indices: indices
+]
+
+{ #category : #constructor }
+SLVMConstant class >> getReference: reference element: elementIndex [
+	^ self getPointer: reference element: { self int: 0. self int: elementIndex }
+]
+
+{ #category : #constructor }
 SLVMConstant class >> int: anInteger [
 	^ self type: SLVMType intType value: anInteger
 ]
@@ -60,6 +70,11 @@ SLVMConstant class >> int: anInteger [
 { #category : #constructor }
 SLVMConstant class >> long: anInteger [
 	^ self type: SLVMType longType value: anInteger
+]
+
+{ #category : #constructor }
+SLVMConstant class >> nullPointer: pointerType [
+	^ self type: pointerType value: 0
 ]
 
 { #category : #constructor }
