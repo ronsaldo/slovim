@@ -9,7 +9,8 @@ Class {
 		'metadataSymbolGenerationCount',
 		'structureSymbolTable',
 		'metadataSymbolTable',
-		'moduleLevelAssemblySources'
+		'moduleLevelAssemblySources',
+		'optimizationLevel'
 	],
 	#category : #'LLVM-IR'
 }
@@ -48,6 +49,21 @@ LLVMModule >> addModuleLevelInlineAssembly: assemblySource [
 { #category : #adding }
 LLVMModule >> addNamedStructure: aStructureType [
 	structureSymbolTable at: aStructureType name ifAbsentPut: [ aStructureType ]
+]
+
+{ #category : #writing }
+LLVMModule >> asBinaryObject [
+	| arguments elfFile elf |
+	arguments := {
+		'-O=' , optimizationLevel asString.
+		'-filetype=obj' .
+		'-o'. '-'.
+		'-'.
+	}.
+
+	elfFile := (self runLLCWithArgumnents: arguments) asByteArray.
+	elf := SAsmElfLoader loadFromStream: (SAsmBinaryReadStream on: (ReadStream on: elfFile)).
+	^ elf asBinaryObject
 ]
 
 { #category : #printing }
@@ -128,6 +144,7 @@ LLVMModule >> initialize [
 	moduleLevelAssemblySources := OrderedCollection new.
 	symbolGenerationCount := 0.
 	metadataSymbolGenerationCount := 0.
+	optimizationLevel := 0.
 	
 	
 ]
@@ -144,11 +161,55 @@ LLVMModule >> name [
 	^ name
 ]
 
+{ #category : #accessing }
+LLVMModule >> optimizationLevel [
+	^ optimizationLevel
+]
+
+{ #category : #accessing }
+LLVMModule >> optimizationLevel: anObject [
+	optimizationLevel := anObject
+]
+
 { #category : #printing }
 LLVMModule >> printModuleLevelAssembly: assembly on: aStream [
 	aStream << 'module asm '.
 	assembly llvmPrintEscapedStringOn: aStream.
 	aStream lf
+]
+
+{ #category : #writing }
+LLVMModule >> runLLCWithArgumnents: arguments [
+	| process output errorString stdout stderr |
+
+	process := OSSUnixSubprocess new
+		command: 'llc';
+		arguments: arguments;
+		redirectStdin;
+		redirectStdout;
+		redirectStderr;
+		run.
+	
+	process stdinStream
+		nextPutAll: (self asString);
+		close.
+	
+	stdout := process stdoutStream.
+	stderr := process stderrStream.
+	output := ByteArray streamContents: [ :outputDest |
+		errorString := ByteString streamContents: [ :errorOutput |
+			process waitForExitPollingEvery: (Delay forMilliseconds: 50) doing: [
+				outputDest nextPutAll: (stdout upToEnd asByteArray).
+				errorOutput nextPutAll: stderr upToEnd
+			]
+		].
+	].
+
+	process closeAndCleanStreams.
+	^ process isSuccess
+		ifTrue: [ output ]
+		ifFalse: [ self error: errorString ]
+
 ]
 
 { #category : #accessing }
@@ -171,7 +232,34 @@ LLVMModule >> writeExecutableToFileNamed: aFileName [
 
 { #category : #writing }
 LLVMModule >> writeObjectToFileNamed: outputFileName [
-	self error: 'llvm to object not yet implemented'
+	| arguments process outputString errorString |
+	arguments := {
+		'-O=' , optimizationLevel asString.
+		'-filetype=obj' . '-o' .
+		outputFileName . '-'.
+	}.
+
+	process := OSSUnixSubprocess new
+		command: 'llc';
+		arguments: arguments;
+		redirectStdin;
+		redirectStdout;
+		redirectStderr;
+		run.
+	
+	process stdinStream
+		nextPutAll: (self asString);
+		close.
+	
+	process waitForExit.
+	outputString := process stdoutStream upToEndOfFile.
+	errorString := process stdoutStream upToEndOfFile.
+	process closeAndCleanStreams.
+	process isSuccess
+		ifTrue: [ ^ outputString ]
+		ifFalse: [
+			self error: errorString
+	]
 ]
 
 { #category : #writing }
