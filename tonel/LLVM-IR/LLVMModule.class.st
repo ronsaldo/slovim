@@ -10,7 +10,9 @@ Class {
 		'structureSymbolTable',
 		'metadataSymbolTable',
 		'moduleLevelAssemblySources',
-		'optimizationLevel'
+		'optimizationLevel',
+		'targetTriple',
+		'machineAttributes'
 	],
 	#category : #'LLVM-IR'
 }
@@ -54,8 +56,7 @@ LLVMModule >> addNamedStructure: aStructureType [
 { #category : #writing }
 LLVMModule >> asBinaryObject [
 	| arguments elfFile elf |
-	arguments := {
-		'-O=' , optimizationLevel asString.
+	arguments := self llcFlags , {
 		'-filetype=obj' .
 		'-o'. '-'.
 		'-'.
@@ -79,6 +80,8 @@ LLVMModule >> context [
 { #category : #printing }
 LLVMModule >> fullPrintOn: aStream [
 	aStream << '; Module ' << name; lf.
+	targetTriple ifNotNil: [ aStream << 'target triple = "' << targetTriple << '"'; lf ].
+
 	structureSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ].
 	moduleLevelAssemblySources do: [ :assembly | self printModuleLevelAssembly: assembly on: aStream ].
 	valueSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ].
@@ -145,6 +148,7 @@ LLVMModule >> initialize [
 	symbolGenerationCount := 0.
 	metadataSymbolGenerationCount := 0.
 	optimizationLevel := 0.
+	targetTriple := nil.
 	
 	
 ]
@@ -154,6 +158,28 @@ LLVMModule >> initializeWithName: aName context: aContext [
 	name := aName.
 	context := aContext.
 	self initialize
+]
+
+{ #category : #writing }
+LLVMModule >> llcFlags [
+	| flags |
+	flags := #().
+	optimizationLevel ifNotNil: [ flags := { '-O=' , optimizationLevel asString} ].
+	(machineAttributes isNotNil and: [machineAttributes isNotEmpty]) ifTrue: [ 
+		flags := { '-mattr=' , machineAttributes }
+	].
+
+	^ flags
+]
+
+{ #category : #accessing }
+LLVMModule >> machineAttributes [
+	^ machineAttributes
+]
+
+{ #category : #accessing }
+LLVMModule >> machineAttributes: anObject [
+	machineAttributes := anObject
 ]
 
 { #category : #accessing }
@@ -207,9 +233,22 @@ LLVMModule >> runLLCWithArgumnents: arguments [
 
 	process closeAndCleanStreams.
 	^ process isSuccess
-		ifTrue: [ output ]
+		ifTrue: [
+			errorString ifNotEmpty: [ self notify: errorString ].
+			output
+		]
 		ifFalse: [ self error: errorString ]
 
+]
+
+{ #category : #accessing }
+LLVMModule >> targetTriple [
+	^ targetTriple
+]
+
+{ #category : #accessing }
+LLVMModule >> targetTriple: aTargetTriple [
+	targetTriple := aTargetTriple
 ]
 
 { #category : #accessing }
@@ -232,34 +271,14 @@ LLVMModule >> writeExecutableToFileNamed: aFileName [
 
 { #category : #writing }
 LLVMModule >> writeObjectToFileNamed: outputFileName [
-	| arguments process outputString errorString |
-	arguments := {
-		'-O=' , optimizationLevel asString.
-		'-filetype=obj' . '-o' .
-		outputFileName . '-'.
+	| arguments |
+	arguments := self llcFlags , {
+		'-filetype=obj' .
+		'-o' . outputFileName .
+		'-'.
 	}.
 
-	process := OSSUnixSubprocess new
-		command: 'llc';
-		arguments: arguments;
-		redirectStdin;
-		redirectStdout;
-		redirectStderr;
-		run.
-	
-	process stdinStream
-		nextPutAll: (self asString);
-		close.
-	
-	process waitForExit.
-	outputString := process stdoutStream upToEndOfFile.
-	errorString := process stdoutStream upToEndOfFile.
-	process closeAndCleanStreams.
-	process isSuccess
-		ifTrue: [ ^ outputString ]
-		ifFalse: [
-			self error: errorString
-	]
+	^ self runLLCWithArgumnents: arguments
 ]
 
 { #category : #writing }

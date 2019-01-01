@@ -3,10 +3,16 @@ Class {
 	#superclass : #SLVMObject,
 	#instVars : [
 		'types',
-		'emittingDebugInformation'
+		'emittingDebugInformation',
+		'targetTriple'
 	],
 	#category : #'Slovim-Core-Type'
 }
+
+{ #category : #accessing }
+SLVMCompilationTarget >> abiName [
+	^ nil
+]
 
 { #category : #types }
 SLVMCompilationTarget >> anonStructure: slots [
@@ -29,8 +35,18 @@ SLVMCompilationTarget >> callingConventionDescriptionNamed: callingConventionNam
 ]
 
 { #category : #accessing }
+SLVMCompilationTarget >> canonicalArchitecture [
+	^ self architecture
+]
+
+{ #category : #accessing }
 SLVMCompilationTarget >> canonicalName [
 	self subclassResponsibility
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> canonicalOperatingSystem [
+	^ self operatingSystemName
 ]
 
 { #category : #types }
@@ -141,8 +157,33 @@ SLVMCompilationTarget >> isCurrentImage [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isFreeBSD [
+	^ self operatingSystemName = #freebsd
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> isLinux [
+	^ self operatingSystemName = #linux
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isLittleEndian [
 	^ true
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> isNoOperatingSystem [
+	^ self operatingSystemName = #none
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> isOSX [
+	^ self operatingSystemName = #osx
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> isWin32 [
+	^ self operatingSystemName = #win32
 ]
 
 { #category : #accessing }
@@ -167,11 +208,6 @@ SLVMCompilationTarget >> newModule [
 ]
 
 { #category : #accessing }
-SLVMCompilationTarget >> objectHeaderSize [
-	^ objectModel objectHeaderSize
-]
-
-{ #category : #accessing }
 SLVMCompilationTarget >> objectModel [
 	^ types objectModel
 ]
@@ -179,6 +215,11 @@ SLVMCompilationTarget >> objectModel [
 { #category : #accessing }
 SLVMCompilationTarget >> objectModel: anObject [
 	types objectModel: anObject
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> operatingSystemName [
+	^ self subclassResponsibility
 ]
 
 { #category : #accessing }
@@ -214,6 +255,39 @@ SLVMCompilationTarget >> referenceSize [
 { #category : #types }
 SLVMCompilationTarget >> short [
 	^ types short
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> subarchitecture [
+	^ nil
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> systemVendor [
+	^ nil
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> targetTriple [
+	^ targetTriple ifNil: [targetTriple := ByteString streamContents: [ :out |
+			out nextPutAll: self canonicalArchitecture.
+			self subarchitecture ifNotNil: [ :subarch |
+				out nextPutAll: subarch
+			].
+		
+			self systemVendor ifNotNil: [ :vendor |
+				out nextPut: $-; nextPutAll: vendor
+			].
+
+			self canonicalOperatingSystem ifNotNil: [ :system |
+				out nextPut: $-; nextPutAll: system
+			].
+
+			self abiName ifNotNil: [ :abi |
+				out nextPut: $-; nextPutAll: abi
+			].
+		]
+	].
 ]
 
 { #category : #types }

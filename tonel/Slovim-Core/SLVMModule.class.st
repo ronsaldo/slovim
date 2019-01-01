@@ -14,7 +14,8 @@ Class {
 		'structures',
 		'inlineAssemblyFragments',
 		'globalConstructors',
-		'globalDestructors'
+		'globalDestructors',
+		'currentOptimizationLevel'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -311,6 +312,7 @@ SLVMModule >> initialize [
 	inlineAssemblyFragments := OrderedCollection new.
 	globalConstructors := OrderedCollection new.
 	globalDestructors := OrderedCollection new.
+	currentOptimizationLevel := 0.
 ]
 
 { #category : #accessing }
@@ -331,6 +333,7 @@ SLVMModule >> optimizeGlobalVariables [
 { #category : #optimizations }
 SLVMModule >> optimizeWithLevel: optimizationLevel [
 	| functionOptimizationPasses |
+	currentOptimizationLevel := optimizationLevel.
 	optimizationLevel = 0 ifTrue: [ ^ self ].
 	functionOptimizationPasses := self createFunctionOptimizationPassesForLevel: optimizationLevel.
 	self applyFunctionOptimizationPasses: functionOptimizationPasses.

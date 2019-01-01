@@ -64,11 +64,6 @@ SLVMSAsmCompilationTarget >> generateLowLevelModule: aModule optimizationLevel: 
 ]
 
 { #category : #'operating systems' }
-SLVMSAsmCompilationTarget >> isWin32 [
-	^ self operatingSystemName = #win32
-]
-
-{ #category : #'operating systems' }
 SLVMSAsmCompilationTarget >> linux [
 	target linux
 ]

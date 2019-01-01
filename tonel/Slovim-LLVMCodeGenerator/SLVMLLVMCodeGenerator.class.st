@@ -312,7 +312,11 @@ SLVMLLVMCodeGenerator >> isEmittingDebugInformation [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> llvmModule [
-	^ llvmModule ifNil: [ llvmModule := LLVMModule name: #module context: self context ]
+	^ llvmModule ifNil: [ llvmModule := (LLVMModule name: #module context: self context)
+			optimizationLevel: optimizationLevel;
+			targetTriple: target targetTriple;
+			machineAttributes: target machineAttributes;
+			yourself ]
 ]
 
 { #category : #visiting }
