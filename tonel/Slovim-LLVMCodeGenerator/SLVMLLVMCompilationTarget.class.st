@@ -9,7 +9,8 @@ Class {
 		'operatingSystemName',
 		'abiName',
 		'systemVendor',
-		'machineAttributes'
+		'machineAttributes',
+		'compilationPlugins'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
@@ -88,6 +89,16 @@ SLVMLLVMCompilationTarget >> canonicalArchitecture: anObject [
 ]
 
 { #category : #accessing }
+SLVMLLVMCompilationTarget >> compilationPlugins [
+	^ compilationPlugins
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> compilationPlugins: anObject [
+	compilationPlugins := anObject
+]
+
+{ #category : #accessing }
 SLVMLLVMCompilationTarget >> createTargetTypes [
 	^ pointerSize = 4
 		ifTrue: [ SLVM32BitsPointerCompilationTargetTypes new ]
@@ -110,7 +121,13 @@ SLVMLLVMCompilationTarget >> generateLowLevelModule: aModule optimizationLevel: 
 { #category : #initialization }
 SLVMLLVMCompilationTarget >> initialize [
 	super initialize.
-	self operatingSystemName: #linux
+	compilationPlugins := #().
+	self operatingSystemName: #linux.
+]
+
+{ #category : #testing }
+SLVMLLVMCompilationTarget >> isLLVMCompilationTarget [
+	^ true
 ]
 
 { #category : #accessing }

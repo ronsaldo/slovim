@@ -162,6 +162,11 @@ SLVMCompilationTarget >> isFreeBSD [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isLLVMCompilationTarget [
+	^ false
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isLinux [
 	^ self operatingSystemName = #linux
 ]

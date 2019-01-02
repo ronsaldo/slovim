@@ -310,13 +310,20 @@ SLVMLLVMCodeGenerator >> isEmittingDebugInformation [
 	^ target emittingDebugInformation
 ]
 
+{ #category : #accessing }
+SLVMLLVMCodeGenerator >> isInliningMandatory [
+	^ false
+]
+
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> llvmModule [
 	^ llvmModule ifNil: [ llvmModule := (LLVMModule name: #module context: self context)
 			optimizationLevel: optimizationLevel;
 			targetTriple: target targetTriple;
 			machineAttributes: target machineAttributes;
-			yourself ]
+			compilationPlugins: target compilationPlugins;
+			yourself
+		]
 ]
 
 { #category : #visiting }
@@ -404,6 +411,7 @@ SLVMLLVMCodeGenerator >> translateDynamicLiteral: aLiteral [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
+	self applyPassesIn: module functionList: (exportList select: #isFunction).
 	self translateModuleDebugInformation: module.
 	
 	module structures do: [ :structures |
@@ -545,6 +553,11 @@ SLVMLLVMCodeGenerator >> unknownDebugFile [
 			filename: 'unknown';
 			directory: '';
 			yourself ]
+]
+
+{ #category : #testing }
+SLVMLLVMCodeGenerator >> usesGCStrategy [
+	^ true
 ]
 
 { #category : #visiting }
@@ -720,6 +733,11 @@ SLVMLLVMCodeGenerator >> visitFunction: aFunction [
 	| functionType function debugScope |
 	functionType := self translateType: aFunction functionType.
 	function := LLVMFunction createWithType: functionType linkage: (self convertLinkage: aFunction) name: (self convertName: aFunction name) module: self llvmModule.
+	
+	aFunction propertyAt: #llvmGCStrategy ifPresent: [ :gcStrategyName |
+		function gcStrategy: gcStrategyName
+	].
+
 	translatedModuleElements at: aFunction put: function.
 	debugScope := self buildFunction: aFunction debugInformationInto: function.
 	

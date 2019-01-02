@@ -12,7 +12,8 @@ Class {
 		'moduleLevelAssemblySources',
 		'optimizationLevel',
 		'targetTriple',
-		'machineAttributes'
+		'machineAttributes',
+		'compilationPlugins'
 	],
 	#category : #'LLVM-IR'
 }
@@ -70,6 +71,16 @@ LLVMModule >> asBinaryObject [
 { #category : #printing }
 LLVMModule >> asString [
 	^ ByteString streamContents: [ :out | self fullPrintOn: out ]
+]
+
+{ #category : #accessing }
+LLVMModule >> compilationPlugins [
+	^ compilationPlugins
+]
+
+{ #category : #accessing }
+LLVMModule >> compilationPlugins: anObject [
+	compilationPlugins := anObject
 ]
 
 { #category : #accessing }
@@ -167,6 +178,11 @@ LLVMModule >> llcFlags [
 	optimizationLevel ifNotNil: [ flags := { '-O=' , optimizationLevel asString} ].
 	(machineAttributes isNotNil and: [machineAttributes isNotEmpty]) ifTrue: [ 
 		flags := { '-mattr=' , machineAttributes }
+	].
+	compilationPlugins ifNotEmpty: [ 
+		flags := flags , (compilationPlugins collect: [:pluginName |
+			'-load=' , pluginName
+		])
 	].
 
 	^ flags

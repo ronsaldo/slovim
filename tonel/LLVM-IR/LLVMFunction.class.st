@@ -8,7 +8,8 @@ Class {
 		'arguments',
 		'symbolGenerationCount',
 		'hasArgumentNames',
-		'labelSymbolGenerationCount'
+		'labelSymbolGenerationCount',
+		'gcStrategy'
 	],
 	#category : #'LLVM-IR-GlobalValues'
 }
@@ -85,6 +86,7 @@ LLVMFunction >> fullPrintOn: aStream [
 	].
 
 	aStream << ' )'.
+	gcStrategy ifNotNil: [ aStream  << ' gc "' << gcStrategy << '"' ].
 	self printMetadataOn: aStream.
 	aStream nextPutAll: ' {'; lf.
 	basicBlocks do: [ :bb | bb fullPrintOn: aStream ].
@@ -96,6 +98,16 @@ LLVMFunction >> fullPrintOn: aStream [
 { #category : #accessing }
 LLVMFunction >> functionType [
 	^ functionType
+]
+
+{ #category : #accessing }
+LLVMFunction >> gcStrategy [
+	^ gcStrategy
+]
+
+{ #category : #accessing }
+LLVMFunction >> gcStrategy: anObject [
+	gcStrategy := anObject
 ]
 
 { #category : #initialization }
