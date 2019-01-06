@@ -83,6 +83,11 @@ SLVMConstantBuiltInFunction class >> initialize [
 		'fragment.derivative.dy.fine'
 		'fragment.derivative.dx.coarse'
 		'fragment.derivative.dy.coarse'
+		
+		"GC"
+		'gc.root'
+		'gc.read'
+		'gc.write'
 	) collect: #asSymbol).
 ]
 

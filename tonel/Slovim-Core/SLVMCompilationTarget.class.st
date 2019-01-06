@@ -361,6 +361,11 @@ SLVMCompilationTarget >> void [
 ]
 
 { #category : #types }
+SLVMCompilationTarget >> voidPointerPointerType [
+	^ types voidPointerPointerType
+]
+
+{ #category : #types }
 SLVMCompilationTarget >> voidPointerType [
 	^ types voidPointerType
 ]

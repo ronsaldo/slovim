@@ -11,6 +11,15 @@ Class {
 }
 
 { #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName callEquivalent: llvmBuiltInName [
+	BuiltInFunctionDictionary at: builtInName put:
+		(SLVMLLVMEquivalentBuiltInFunctionGenerator new
+			name: builtInName;
+			llvmBuiltIn: llvmBuiltInName;
+			yourself)
+]
+
+{ #category : #initialization }
 SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName callOverloadedUnary: llvmBuiltInName [
 	BuiltInFunctionDictionary at: builtInName put:
 		(SLVMLLVMUnaryOverloadedBuiltInFunctionGenerator new
@@ -64,6 +73,15 @@ SLVMLLVMBuiltInFunctionGenerator class >> bitwiseBuiltin [
 { #category : #initialization }
 SLVMLLVMBuiltInFunctionGenerator class >> fromName: intrinsicName [
 	^ BuiltInFunctionDictionary at: intrinsicName ifAbsent: [ nil ]
+]
+
+{ #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> gcBuiltin [
+	<builtInFunctions>
+	self
+		addBuiltIn: #'gc.root' callEquivalent: #'llvm.gcroot';
+		addBuiltIn: #'gc.read' callEquivalent: #'llvm.gcread';
+		addBuiltIn: #'gc.write' callEquivalent: #'llvm.gcwrite'
 ]
 
 { #category : #initialization }

@@ -129,6 +129,11 @@ SLVMInstruction >> isCall [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isDebugInstruction [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isDynamicObjectNativeCast [
 	^ false
 ]
@@ -260,6 +265,14 @@ SLVMInstruction >> nextInstruction: anObject [
 ]
 
 { #category : #accessing }
+SLVMInstruction >> nextNonDebugInstruction [
+	(nextInstruction isNotNil and: [ nextInstruction isDebugInstruction ]) ifTrue: [ 
+		^ nextInstruction nextNonDebugInstruction
+	].
+	^ nextInstruction
+]
+
+{ #category : #accessing }
 SLVMInstruction >> parameters [
 	^ parameters
 ]
@@ -308,7 +321,7 @@ SLVMInstruction >> removeFromBlockWithAllReferences [
 ]
 
 { #category : #modifying }
-SLVMInstruction >> replaceWith: aNewInstruction [
+SLVMInstruction >> replaceReferencesWith: aNewInstruction [
 	self == aNewInstruction ifTrue: [ ^ self ].
 	
 	instructionReferences do: [ :usage |
@@ -317,6 +330,14 @@ SLVMInstruction >> replaceWith: aNewInstruction [
 	].
 
 	instructionReferences removeAll.
+
+]
+
+{ #category : #modifying }
+SLVMInstruction >> replaceWith: aNewInstruction [
+	self == aNewInstruction ifTrue: [ ^ self ].
+	
+	self replaceReferencesWith: aNewInstruction.
 	self removeFromBlock
 ]
 

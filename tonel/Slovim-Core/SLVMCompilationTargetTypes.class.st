@@ -7,7 +7,8 @@ Class {
 	#instVars : [
 		'dynamicObjectType',
 		'voidPointerType',
-		'objectModel'
+		'objectModel',
+		'voidPointerPointerType'
 	],
 	#classVars : [
 		'CurrentImageCompilationTypes'
@@ -212,6 +213,11 @@ SLVMCompilationTargetTypes >> vector: baseType elements: elements [
 { #category : #types }
 SLVMCompilationTargetTypes >> void [
 	^ SLVMType voidType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> voidPointerPointerType [
+	^ voidPointerPointerType ifNil: [ voidPointerPointerType := self pointerTo: self voidPointerType ]
 ]
 
 { #category : #types }
