@@ -41,6 +41,26 @@ BaselineOfSlovim >> baseline: spec [
 			package: #'Slovim-SpirV' with: [
 				spec requires: #(#'Slovim-Core' ). ];
 			package: #'Slovim-Tests' with: [
-				spec requires: #(#'Slovim-Core' #'Slovim-SpirV' ). ]. ].
+				spec requires: #(#'Slovim-Core' #'Slovim-SpirV' ). ].
+			
+		spec
+			group: #Core with: #(#'Slovim-Core');
+			group: #ShaderCompilation with: #(
+				#'Slovim-SpirV'
+			);
+			group: #InImageCompilation with: #(
+				#'Slovim-StackCodeGenerator'
+				#'Slovim-Runtime'
+			);
+			group: #LLVM with: #(
+				#'LLVM-IR'
+				#'Slovim-LLVMCodeGenerator'
+			);
+			group: #NoLLVM with: #(
+				#'Slovim-SAsmCodeGenerator'
+				#InImageCompilation
+				#ShaderCompilation
+			).
+	].
 
 ]
