@@ -75,6 +75,8 @@ SLVMConstantBuiltInFunction class >> initialize [
 		
 		"Texture"
 		'texture.query.size'
+		'texture.image.read'
+		'texture.image.write'
 		
 		"Fragment"
 		'fragment.derivative.dx'

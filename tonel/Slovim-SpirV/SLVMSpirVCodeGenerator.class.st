@@ -22,6 +22,7 @@ Class {
 		'BuiltInExtensionInstructionMap',
 		'EntryPointTypes',
 		'StorageClassMap',
+		'TextureImageFormatMap',
 		'UnaryOperationMap'
 	],
 	#pools : [
@@ -198,6 +199,8 @@ SLVMSpirVCodeGenerator class >> initialize [
 		'matrix.transpose' (SpirV SpvOpTranspose)
 		
 		'texture.query.size' (SpirV SpvOpImageQuerySize (SpvCapabilityImageQuery))
+		'texture.image.read' (SpirV SpvOpImageRead)
+		'texture.image.write' (SpirV SpvOpImageWrite)
 		
 		'fragment.derivative.dx' (SpirV SpvOpDPdx)
 		'fragment.derivative.dy' (SpirV SpvOpDPdy)
@@ -216,6 +219,56 @@ SLVMSpirVCodeGenerator class >> initialize [
 		BuiltInExtensionInstructionMap at: k put: { v first . value . requirements}
 	].
 
+	TextureImageFormatMap := Dictionary new.
+	#(
+		nil (SpvImageFormatUnknown)
+		
+		rgba32f (SpvImageFormatRgba32f)
+		rgba16f (SpvImageFormatRgba16f)
+		r32f (SpvImageFormatR32f)
+		rgba8 (SpvImageFormatRgba8)
+		
+		rg32f (SpvImageFormatRg32f SpvCapabilityStorageImageExtendedFormats)
+		rg16f (SpvImageFormatRg16f SpvCapabilityStorageImageExtendedFormats)
+		r11fG11fB10f (SpvImageFormatR11fG11fB10f SpvCapabilityStorageImageExtendedFormats)
+		r16f (SpvImageFormatR16f SpvCapabilityStorageImageExtendedFormats)
+		rgba16 (SpvImageFormatRgba16 SpvCapabilityStorageImageExtendedFormats)
+		rgb10A2 (SpvImageFormatRgb10A2 SpvCapabilityStorageImageExtendedFormats)
+		rg16 (SpvImageFormatRg16 SpvCapabilityStorageImageExtendedFormats)
+		rg8 (SpvImageFormatRg8 SpvCapabilityStorageImageExtendedFormats)
+		r16 (SpvImageFormatR16 SpvCapabilityStorageImageExtendedFormats)
+		r8 (SpvImageFormatR8 SpvCapabilityStorageImageExtendedFormats)
+		rgba16Snorm (SpvImageFormatRgba16Snorm SpvCapabilityStorageImageExtendedFormats)
+		rg16Snorm (SpvImageFormatRg16Snorm SpvCapabilityStorageImageExtendedFormats)
+		rg8Snorm (SpvImageFormatRg8Snorm SpvCapabilityStorageImageExtendedFormats)
+		r16Snorm (SpvImageFormatR16Snorm SpvCapabilityStorageImageExtendedFormats)
+		r8Snorm (SpvImageFormatR8Snorm SpvCapabilityStorageImageExtendedFormats)
+		rgba32i (SpvImageFormatRgba32i)
+		rgba16i (SpvImageFormatRgba16i)
+		rgba8i (SpvImageFormatRgba8i)
+		r32i (SpvImageFormatR32i)
+
+		rg32i (SpvImageFormatRg32i SpvCapabilityStorageImageExtendedFormats)
+		rg16i (SpvImageFormatRg16i SpvCapabilityStorageImageExtendedFormats)
+		rg8i (SpvImageFormatRg8i SpvCapabilityStorageImageExtendedFormats)
+		r16i (SpvImageFormatR16i SpvCapabilityStorageImageExtendedFormats)
+		r8i (SpvImageFormatR8i SpvCapabilityStorageImageExtendedFormats)
+		
+		rgba32ui (SpvImageFormatRgba32ui)
+		rgba16ui (SpvImageFormatRgba16ui)
+		rgba8ui (SpvImageFormatRgba8ui)
+		r32ui (SpvImageFormatR32ui)
+		
+		rgb10a2ui (SpvImageFormatRgb10a2ui SpvCapabilityStorageImageExtendedFormats)
+		rg32ui (SpvImageFormatRg32ui SpvCapabilityStorageImageExtendedFormats)
+		rg16ui (SpvImageFormatRg16ui SpvCapabilityStorageImageExtendedFormats)
+		rg8ui (SpvImageFormatRg8ui SpvCapabilityStorageImageExtendedFormats)
+		r16ui (SpvImageFormatR16ui SpvCapabilityStorageImageExtendedFormats)
+		r8ui (SpvImageFormatR8ui SpvCapabilityStorageImageExtendedFormats)
+	) pairsDo: [:k :v |
+		TextureImageFormatMap at: k put: (v collect: [:el | (SpirVConstants bindingOf: el) value])
+	].
+	
 	BlockBuiltIns := Set newFrom: (#(
 		SpvBuiltInPosition
 		SpvBuiltInPointSize
@@ -508,6 +561,21 @@ SLVMSpirVCodeGenerator >> visitBinaryOperation: binaryOp [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitBitCast: instruction [
+	| resultType source |
+	^ self instructionTranslation: instruction do: [ :id |
+		resultType := self translateValue: instruction type.
+		source := self translateValue: instruction source.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpBitcast
+			type: resultType
+			result: id
+			operands: { source }
+		)
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitBoolType: voidType [
 	^ self valueTranslation: voidType do: [ :id |
 		builder addTypeInstruction: (SpirVInstruction
@@ -559,11 +627,19 @@ SLVMSpirVCodeGenerator >> visitCall: callInstruction [
 			setInstructionPair := BuiltInExtensionInstructionMap at: functionValue name.
 			setInstructionPair first = #SpirV ifTrue: [
 				builder addCapabilities: setInstructionPair third.
-				builder addFunctionInstruction: (SpirVInstruction
-					opcode: setInstructionPair second
-					type: resultType
-					result: id
-					operands: arguments)
+				callInstruction type isVoidType ifTrue: [
+						builder addFunctionInstruction: (SpirVInstruction
+						opcode: setInstructionPair second
+						type: nil
+						result: nil
+						operands: arguments)
+				] ifFalse: [ 
+					builder addFunctionInstruction: (SpirVInstruction
+						opcode: setInstructionPair second
+						type: resultType
+						result: id
+						operands: arguments)
+				]
 			] ifFalse: [ 
 				extensionSet := builder perform: (setInstructionPair first , #ExtensionSet) asSymbol. 
 				extensionInstruction := setInstructionPair second.
@@ -803,7 +879,20 @@ SLVMSpirVCodeGenerator >> visitFunction: function [
 			self halt.
 		].
 		function propertyAt: #compute ifPresent: [ :dummy |
-			self halt.
+			builder addEntryPointInstruction: (SpirVInstruction
+				opcode: SpvOpEntryPoint
+				operands: { SpvExecutionModelGLCompute . id . } , function name asSpirVStringLiteral , (self getFunctionInterfaceList: function)
+			).
+
+			builder addExecutionModeInstruction: (SpirVInstruction
+				opcode: SpvOpExecutionMode
+				operands: {id . SpvExecutionModeLocalSize . 
+						function propertyAt: #localSizeX ifAbsent: 1.
+						function propertyAt: #localSizeY ifAbsent: 1.
+						function propertyAt: #localSizeZ ifAbsent: 1
+					}
+			)
+
 		].
 	]
 ]
@@ -1244,9 +1333,13 @@ SLVMSpirVCodeGenerator >> visitStructureType: structureType [
 
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitTextureType: textureType [
-	| sampledType |
+	| sampledType formatAndCapability |
 	^ self valueTranslation: textureType do: [ :id |
 		sampledType := self translateValue: textureType sampledType.
+		formatAndCapability := TextureImageFormatMap at: textureType format.
+		formatAndCapability size > 1 ifTrue: [ 
+			builder addCapability: formatAndCapability second
+		].
 		builder addTypeInstruction: (SpirVInstruction
 			opcode: SpvOpTypeImage
 			result: id
@@ -1256,8 +1349,8 @@ SLVMSpirVCodeGenerator >> visitTextureType: textureType [
 				textureType depth asBit .
 				textureType array asBit .
 				textureType multisample asBit .
-				textureType sampled asBit .
-				"Unknown format" 0}
+				textureType sampled ifTrue: [ 1 ] ifFalse: [ 2 ] .
+				formatAndCapability first}
 		)
 	]
 ]

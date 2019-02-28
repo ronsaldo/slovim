@@ -7,19 +7,16 @@ Class {
 		'array',
 		'depth',
 		'multisample',
-		'sampled'
+		'sampled',
+		'format'
 	],
 	#category : #'Slovim-Core-Type'
 }
 
 { #category : #comparing }
 SLVMTextureType >> = other [
-	^ self class = other class and: [
-		sampledType = other sampledType and: [
-			dimensions = other dimensions and: [
-				array = other array and: [depth = other depth and: [
-						multisample = other multisample and: [
-							sampled = other sampled ]]]]]]
+	^ (self isSameButDiffersInFormatWith: other) and: [
+	format = other format ]
 ]
 
 { #category : #visitor }
@@ -57,14 +54,35 @@ SLVMTextureType >> dimensions: anObject [
 	dimensions := anObject
 ]
 
+{ #category : #accessing }
+SLVMTextureType >> format [
+	^ format
+]
+
+{ #category : #accessing }
+SLVMTextureType >> format: anObject [
+	format := anObject
+]
+
 { #category : #comparing }
 SLVMTextureType >> internalHash [
-	^ (((((self class hash bitXor: dimensions hash)
+	^ ((((((self class hash bitXor: dimensions hash)
 			bitXor: sampledType hash)
 			bitXor: array hash)
 			bitXor: depth hash)
 			bitXor: multisample hash)
-			bitXor: sampled hash
+			bitXor: sampled hash)
+			bitXor: format hash
+]
+
+{ #category : #comparing }
+SLVMTextureType >> isSameButDiffersInFormatWith: other [
+	^ self class = other class and: [
+	sampledType = other sampledType and: [
+	dimensions = other dimensions and: [
+	array = other array and: [depth = other depth and: [
+	multisample = other multisample and: [
+	sampled = other sampled]]]]]]
 ]
 
 { #category : #testing }

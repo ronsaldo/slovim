@@ -8,7 +8,8 @@ Class {
 		'dynamicObjectType',
 		'voidPointerType',
 		'objectModel',
-		'voidPointerPointerType'
+		'voidPointerPointerType',
+		'textureTypeWithFormat'
 	],
 	#classVars : [
 		'CurrentImageCompilationTypes'
@@ -82,6 +83,12 @@ SLVMCompilationTargetTypes >> float32 [
 { #category : #types }
 SLVMCompilationTargetTypes >> float64 [
 	^ self double
+]
+
+{ #category : #initialization }
+SLVMCompilationTargetTypes >> initialize [
+	super initialize.
+	textureTypeWithFormat := Dictionary new.
 ]
 
 { #category : #types }
@@ -163,6 +170,13 @@ SLVMCompilationTargetTypes >> referenceSize [
 { #category : #types }
 SLVMCompilationTargetTypes >> short [
 	^ SLVMType shortType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> textureType: baseTextureType versionWithFormat: requiredFormat [
+	| targetType |
+	targetType := baseTextureType copy format: requiredFormat.
+	^ textureTypeWithFormat at: targetType ifAbsentPut: [ targetType ]
 ]
 
 { #category : #types }

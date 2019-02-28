@@ -296,6 +296,11 @@ SLVMCompilationTarget >> targetTriple [
 ]
 
 { #category : #types }
+SLVMCompilationTarget >> textureType: baseTextureType versionWithFormat: requiredFormat [
+	^ types textureType: baseTextureType versionWithFormat: requiredFormat
+]
+
+{ #category : #types }
 SLVMCompilationTarget >> types [
 	^ types
 ]
