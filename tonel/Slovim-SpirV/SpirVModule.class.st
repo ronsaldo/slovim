@@ -3,7 +3,8 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'idBound',
-		'instructions'
+		'instructions',
+		'entryPoints'
 	],
 	#pools : [
 		'SpirVConstants'
@@ -39,6 +40,16 @@ SpirVModule >> emitOn: aStream [
 		nextPut: idBound;
 		nextPut: 0.
 	instructions do: [ :ins | ins emitOn: aStream ].
+]
+
+{ #category : #accessing }
+SpirVModule >> entryPoints [
+	^ entryPoints
+]
+
+{ #category : #accessing }
+SpirVModule >> entryPoints: anObject [
+	entryPoints := anObject
 ]
 
 { #category : #initialization }

@@ -13,7 +13,8 @@ Class {
 		'executionModeInstructions',
 		'entryPointInstructions',
 		'constantGlobalAndTypeInstructions',
-		'usedCapabilties'
+		'usedCapabilties',
+		'entryPoints'
 	],
 	#pools : [
 		'SpirVConstants'
@@ -130,6 +131,7 @@ SpirVModuleBuilder >> finish [
 	module addInstructions: annotationInstructions.
 	module addInstructions: constantGlobalAndTypeInstructions.
 	module addInstructions: functionInstructions.
+	module entryPoints: entryPoints.
 	^ module
 ]
 
@@ -162,6 +164,7 @@ SpirVModuleBuilder >> initialize [
 	annotationInstructions := OrderedCollection new.
 	constantGlobalAndTypeInstructions := OrderedCollection new.
 	functionInstructions := OrderedCollection new.
+	entryPoints := Dictionary new.
 	self createDefaultPrologue.
 ]
 
@@ -178,4 +181,15 @@ SpirVModuleBuilder >> module [
 { #category : #building }
 SpirVModuleBuilder >> newId [
 	^ module newId
+]
+
+{ #category : #'as yet unclassified' }
+SpirVModuleBuilder >> recordEntryPoint: function stage: stage [
+	| entryPointMetadata |
+	entryPointMetadata := SpirVModuleEntryPointMetadata new
+		name: function name;
+		stage: stage;
+		properties: function properties;
+		yourself.
+	entryPoints at: entryPointMetadata name -> entryPointMetadata stage put: entryPointMetadata
 ]

@@ -75,6 +75,7 @@ SLVMConstantBuiltInFunction class >> initialize [
 		
 		"Texture"
 		'texture.query.size'
+		'texture.query.lod.size'
 		'texture.image.read'
 		'texture.image.write'
 		

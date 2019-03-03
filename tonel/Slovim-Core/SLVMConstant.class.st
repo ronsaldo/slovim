@@ -119,6 +119,12 @@ SLVMConstant class >> value: value bitcast: aTargetType [
 ]
 
 { #category : #constructor }
+SLVMConstant class >> vector: aVectorType elements: vectorElements [
+	self assert: aVectorType isVectorType.
+	^ SLVMConstantVectorValue new type: aVectorType; slots: vectorElements
+]
+
+{ #category : #constructor }
 SLVMConstant class >> zeroInitializer: type [
 	^ SLVMConstantZeroInitializer new type: type
 	

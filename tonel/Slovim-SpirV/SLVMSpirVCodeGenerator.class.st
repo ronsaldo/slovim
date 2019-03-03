@@ -199,6 +199,7 @@ SLVMSpirVCodeGenerator class >> initialize [
 		'matrix.transpose' (SpirV SpvOpTranspose)
 		
 		'texture.query.size' (SpirV SpvOpImageQuerySize (SpvCapabilityImageQuery))
+		'texture.query.lod.size' (SpirV SpvOpImageQuerySizeLod (SpvCapabilityImageQuery))
 		'texture.image.read' (SpirV SpvOpImageRead)
 		'texture.image.write' (SpirV SpvOpImageWrite)
 		
@@ -857,6 +858,8 @@ SLVMSpirVCodeGenerator >> visitFunction: function [
 				opcode: SpvOpEntryPoint
 				operands: { SpvExecutionModelVertex . id . } , function name asSpirVStringLiteral , (self getFunctionInterfaceList: function)
 			).
+			
+			builder recordEntryPoint: function stage: #vertex
 		].
 		function propertyAt: #fragment ifPresent: [ :dummy |
 			builder addEntryPointInstruction: (SpirVInstruction
@@ -867,7 +870,9 @@ SLVMSpirVCodeGenerator >> visitFunction: function [
 			builder addExecutionModeInstruction: (SpirVInstruction
 				opcode: SpvOpExecutionMode
 				operands: {id . SpvExecutionModeOriginUpperLeft}
-			)
+			).
+
+			builder recordEntryPoint: function stage: #fragment
 		].
 		function propertyAt: #geometry ifPresent: [ :dummy |
 			self halt.
@@ -891,8 +896,9 @@ SLVMSpirVCodeGenerator >> visitFunction: function [
 						function propertyAt: #localSizeY ifAbsent: 1.
 						function propertyAt: #localSizeZ ifAbsent: 1
 					}
-			)
+			).
 
+			builder recordEntryPoint: function stage: #compute
 		].
 	]
 ]
@@ -964,18 +970,28 @@ SLVMSpirVCodeGenerator >> visitGetElementReference: getElementRef [
 
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitGlobalVariable: globalVariable [
-	| type storage |
+	| type storage initialValue |
 	^ self valueTranslation: globalVariable do: [ :id |
 		type := self translateValue: globalVariable type.
 		storage := StorageClassMap at: globalVariable type storage.
+		initialValue := globalVariable initialValue
+			ifNil: [#()]
+			ifNotNil: [{self translateValue: globalVariable initialValue}].
+		
 		builder addGlobalInstruction: (SpirVInstruction
 			opcode: SpvOpVariable
 			type: type 
 			result: id
-			operands: { storage }
+			operands: { storage } , initialValue
 		).
 		
 		self emitValue: id name: globalVariable name.
+		globalVariable propertyAt: #writeonly ifPresent: [ :ignored |
+				builder addAnnotationInstruction: (SpirVInstruction
+					opcode: SpvOpDecorate
+					operands: { id . SpvDecorationNonReadable }
+				).
+		].
 		globalVariable propertyAt: #location ifPresent: [ :location |
 			globalInterfaceList add: id.
 			location >= 0 ifTrue: [ 
