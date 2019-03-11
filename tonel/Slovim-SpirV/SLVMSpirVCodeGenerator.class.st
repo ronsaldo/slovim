@@ -992,6 +992,18 @@ SLVMSpirVCodeGenerator >> visitGlobalVariable: globalVariable [
 		).
 		
 		self emitValue: id name: globalVariable name.
+		globalVariable propertyAt: #restrict ifPresent: [ :ignored |
+				builder addAnnotationInstruction: (SpirVInstruction
+					opcode: SpvOpDecorate
+					operands: { id . SpvDecorationRestrict }
+				).
+		].
+		globalVariable propertyAt: #readonly ifPresent: [ :ignored |
+				builder addAnnotationInstruction: (SpirVInstruction
+					opcode: SpvOpDecorate
+					operands: { id . SpvDecorationNonWritable }
+				).
+		].
 		globalVariable propertyAt: #writeonly ifPresent: [ :ignored |
 				builder addAnnotationInstruction: (SpirVInstruction
 					opcode: SpvOpDecorate
