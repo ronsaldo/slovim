@@ -41,7 +41,7 @@ SLVMSpirVCodeGenerator class >> initialize [
 	"
 	self initialize
 	"
-	| value requirements |
+	| value requirements constants |
 	super initialize.
 	
 	(Smalltalk at: #SpirVConstants) initialize.
@@ -209,15 +209,30 @@ SLVMSpirVCodeGenerator class >> initialize [
 		'fragment.derivative.dy.fine' (SpirV SpvOpDPdyFine (SpvCapabilityDerivativeControl))
 		'fragment.derivative.dx.coarse' (SpirV SpvOpDPdxCoarse (SpvCapabilityDerivativeControl))
 		'fragment.derivative.dy.coarse' (SpirV SpvOpDPdyCoarse (SpvCapabilityDerivativeControl))
+		
+		#'shader.barrier.execution' (SpirV SpvOpControlBarrier () (SpvScopeWorkgroup SpvScopeWorkgroup 16r108))
+		#'shader.barrier.memory.all' (SpirV SpvOpMemoryBarrier () (SpvScopeDevice 16rd48))
+		#'shader.barrier.memory.atomic_counter' (SpirV SpvOpMemoryBarrier () (SpvScopeDevice 16r408))
+		#'shader.barrier.memory.image' (SpirV SpvOpMemoryBarrier () (SpvScopeDevice 16r808))
+		#'shader.barrier.memory.buffer' (SpirV SpvOpMemoryBarrier () (SpvScopeDevice 16r48))
+		#'shader.barrier.memory.shared' (SpirV SpvOpMemoryBarrier () (SpvScopeDevice 16r108))
+		#'shader.barrier.memory.group' (SpirV SpvOpMemoryBarrier () (SpvScopeWorkgroup 16rd48))
 	) pairsDo: [ :k :v |
 		value := (SpirVConstants bindingOf: v second) value.
 		requirements := #().
+		constants := #().
 		v size >= 3 ifTrue: [
-			requirements := v third collect: [:c | (SpirVConstants bindingOf: c) value]
+			requirements := v third collect: [:c | (SpirVConstants bindingOf: c) value].
+			v size >= 4 ifTrue: [
+				constants := v fourth collect: [:c | SLVMConstant uint: (c isInteger
+						ifTrue: [c]
+						ifFalse: [(SpirVConstants bindingOf: c) value]).
+				]
+			]
 		].
 	
 		self assert: value isNotNil.
-		BuiltInExtensionInstructionMap at: k put: { v first . value . requirements}
+		BuiltInExtensionInstructionMap at: k put: { v first . value . requirements . constants}
 	].
 
 	TextureImageFormatMap := Dictionary new.
@@ -470,16 +485,6 @@ SLVMSpirVCodeGenerator >> translateValue: aValue [
 	]
 ]
 
-{ #category : #accessing }
-SLVMSpirVCodeGenerator >> useGlobalInterfaceList [
-	^ useGlobalInterfaceList
-]
-
-{ #category : #accessing }
-SLVMSpirVCodeGenerator >> useGlobalInterfaceList: aBoolean [
-	useGlobalInterfaceList := aBoolean
-]
-
 { #category : #'as yet unclassified' }
 SLVMSpirVCodeGenerator >> valueTranslation: aValue do: aBlock [
 	| valueId |
@@ -618,7 +623,7 @@ SLVMSpirVCodeGenerator >> visitBranch: branchInstruction [
 
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitCall: callInstruction [
-	| resultType function arguments functionValue setInstructionPair extensionSet extensionInstruction |
+	| resultType function arguments functionValue setInstructionPair extensionSet extensionInstruction constantArguments |
 	^ self instructionTranslation: callInstruction do: [ :id |
 		functionValue := callInstruction functionValue.
 		resultType := self translateValue: callInstruction type.
@@ -628,18 +633,19 @@ SLVMSpirVCodeGenerator >> visitCall: callInstruction [
 			setInstructionPair := BuiltInExtensionInstructionMap at: functionValue name.
 			setInstructionPair first = #SpirV ifTrue: [
 				builder addCapabilities: setInstructionPair third.
+				constantArguments := setInstructionPair fourth collect: [ :c | self translateValue: c ].
 				callInstruction type isVoidType ifTrue: [
 						builder addFunctionInstruction: (SpirVInstruction
 						opcode: setInstructionPair second
 						type: nil
 						result: nil
-						operands: arguments)
+						operands: arguments , constantArguments)
 				] ifFalse: [ 
 					builder addFunctionInstruction: (SpirVInstruction
 						opcode: setInstructionPair second
 						type: resultType
 						result: id
-						operands: arguments)
+						operands: arguments , constantArguments)
 				]
 			] ifFalse: [ 
 				extensionSet := builder perform: (setInstructionPair first , #ExtensionSet) asSymbol. 

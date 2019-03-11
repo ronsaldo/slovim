@@ -87,6 +87,15 @@ SLVMConstantBuiltInFunction class >> initialize [
 		'fragment.derivative.dx.coarse'
 		'fragment.derivative.dy.coarse'
 		
+		"Shader barriers"
+		#'shader.barrier.execution'
+		#'shader.barrier.memory.all'
+		#'shader.barrier.memory.atomic_counter'
+		#'shader.barrier.memory.image'
+		#'shader.barrier.memory.buffer'
+		#'shader.barrier.memory.shared'
+		#'shader.barrier.memory.group'
+		
 		"GC"
 		'gc.root'
 		'gc.read'
