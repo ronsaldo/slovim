@@ -196,6 +196,8 @@ SLVMSpirVCodeGenerator class >> initialize [
 		
 		'math.fmix' (glsl450 GLSLstd450FMix)
 		
+		'math.fmod' (SpirV SpvOpFMod)
+		
 		'matrix.transpose' (SpirV SpvOpTranspose)
 		
 		'texture.query.size' (SpirV SpvOpImageQuerySize (SpvCapabilityImageQuery))
@@ -381,13 +383,14 @@ SLVMSpirVCodeGenerator >> generateLazyInstructionId: aValue [
 
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> getFunctionInterfaceList: function [
-	| interfaceList |
+	| interfaceList visitedElements |
 	self perFunctionInterfaceList at: function ifPresent: [ :result | ^ result ].
 	self perFunctionInterfaceList at: function put: #().
 	interfaceList := SLVMOrderedInsertionSet new.
 	 
+	visitedElements := IdentitySet new.
 	function allInstructionsDo: [ :instruction |
-		instruction allParametersDo: [ :param |
+		instruction notVisitedParameters: visitedElements recursivelyDo: [ :param |
 			"Process the functions recursively"
 			param isFunction ifTrue: [
 				interfaceList addAll: (self getFunctionInterfaceList: param).
@@ -432,6 +435,11 @@ SLVMSpirVCodeGenerator >> isEntryPointFunction: aGlobalValue [
 	^ false.
 ]
 
+{ #category : #testing }
+SLVMSpirVCodeGenerator >> isInliningMandatory [
+	^ false
+]
+
 { #category : #accessing }
 SLVMSpirVCodeGenerator >> logicalAddressMode [
 	^ logicalAddressMode
@@ -440,6 +448,11 @@ SLVMSpirVCodeGenerator >> logicalAddressMode [
 { #category : #accessing }
 SLVMSpirVCodeGenerator >> logicalAddressMode: aBoolean [
 	logicalAddressMode := aBoolean
+]
+
+{ #category : #testing }
+SLVMSpirVCodeGenerator >> needStructuredControlFlow [
+	^ true
 ]
 
 { #category : #visitor }
@@ -842,6 +855,7 @@ SLVMSpirVCodeGenerator >> visitFloatType: floatType [
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitFunction: function [
 	| functionType resultType |
+	self applyPassesInFunction: function.
 	^ self functionTranslation: function do: [ :id |
 		functionType := self translateValue: function functionType.
 		resultType := self translateValue: function functionType returnType.

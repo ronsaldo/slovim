@@ -25,11 +25,6 @@ SLVMInstruction >> allInstructionsDo: aBlock [
 	aBlock value: self
 ]
 
-{ #category : #enumerating }
-SLVMInstruction >> allParametersDo: aBlock [
-	parameters do: [ :param | param withAllParametersDo: aBlock ]
-]
-
 { #category : #'as yet unclassified' }
 SLVMInstruction >> applySubstitutions: substitutionDictionary [
 	parameters doWithIndex: [ :param :index |
@@ -270,6 +265,17 @@ SLVMInstruction >> nextNonDebugInstruction [
 		^ nextInstruction nextNonDebugInstruction
 	].
 	^ nextInstruction
+]
+
+{ #category : #enumerating }
+SLVMInstruction >> notVisitedParameters: visitedElements recursivelyDo: aBlock [
+	parameters do: [ :param |
+		(visitedElements includes: param) ifFalse: [
+			visitedElements add: param.
+			aBlock value: param.
+			param notVisitedParameters: visitedElements recursivelyDo: aBlock
+		]
+	]
 ]
 
 { #category : #accessing }

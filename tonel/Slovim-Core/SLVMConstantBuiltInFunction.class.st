@@ -69,6 +69,7 @@ SLVMConstantBuiltInFunction class >> initialize [
 		'math.fmax'
 		
 		'math.fmix'
+		'math.fmod'
 		
 		"Matrix functions"
 		'matrix.transpose'

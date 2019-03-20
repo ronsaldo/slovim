@@ -18,10 +18,6 @@ SLVMValue >> addInstructionReference: anInstruction [
 ]
 
 { #category : #accessing }
-SLVMValue >> allParametersDo: aBlock [
-]
-
-{ #category : #accessing }
 SLVMValue >> childrenNodes [
 	^ #()
 ]
@@ -186,6 +182,10 @@ SLVMValue >> nodeTitle [
 	^ self printString
 ]
 
+{ #category : #accessing }
+SLVMValue >> notVisitedParameters: visitedElements recursivelyDo: aBlock [
+]
+
 { #category : #adding }
 SLVMValue >> removeInstructionReference: anInstruction [
 	"By default, do nothing"
@@ -194,11 +194,4 @@ SLVMValue >> removeInstructionReference: anInstruction [
 { #category : #accessing }
 SLVMValue >> type [
 	self subclassResponsibility
-]
-
-{ #category : #accessing }
-SLVMValue >> withAllParametersDo: aBlock [
-	aBlock value: self.
-	self allParametersDo: aBlock
-	
 ]
