@@ -34,7 +34,7 @@ SLVMGetThisContext >> isPureInstruction [
 
 { #category : #printing }
 SLVMGetThisContext >> mnemonic [
-	^ 'getThisContext'
+	^ #getThisContext
 ]
 
 { #category : #accessing }

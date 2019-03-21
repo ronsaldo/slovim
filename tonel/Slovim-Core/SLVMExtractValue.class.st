@@ -122,7 +122,7 @@ SLVMExtractValue >> isPureInstruction [
 
 { #category : #printing }
 SLVMExtractValue >> mnemonic [
-	^ 'extractValue'
+	^ #extractValue
 ]
 
 { #category : #accessing }

@@ -71,7 +71,7 @@ SLVMAlloca >> isOnlyUsedByLoadStoreAndGetElementPtrBase [
 
 { #category : #printing }
 SLVMAlloca >> mnemonic [
-	^ 'alloca'
+	^ #alloca
 ]
 
 { #category : #accessing }

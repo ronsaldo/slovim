@@ -24,7 +24,7 @@ SLVMUndefined >> isUndefined [
 
 { #category : #printing }
 SLVMUndefined >> mnemonic [
-	^ 'undefined'
+	^ #undefined
 ]
 
 { #category : #accessing }

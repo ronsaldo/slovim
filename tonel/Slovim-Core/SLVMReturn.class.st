@@ -31,7 +31,7 @@ SLVMReturn >> isTerminator [
 
 { #category : #printing }
 SLVMReturn >> mnemonic [
-	^ 'return'
+	^ #return
 ]
 
 { #category : #accessing }

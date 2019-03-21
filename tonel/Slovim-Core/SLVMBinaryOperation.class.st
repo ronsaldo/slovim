@@ -264,6 +264,11 @@ SLVMBinaryOperation >> isBinaryComparison [
 	^ #(integerComp floatComp dynObjectComp) includes: operationType
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMBinaryOperation >> isBinaryOperation [
+	^ true
+]
+
 { #category : #testing }
 SLVMBinaryOperation >> isMatrixOperation [
 	^ type isMatrixType or: [ self left type isMatrixType or: [self right type isMatrixType] ]

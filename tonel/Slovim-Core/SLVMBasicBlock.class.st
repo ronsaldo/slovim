@@ -456,11 +456,6 @@ SLVMBasicBlock >> predecessors [
 	^ predecessors
 ]
 
-{ #category : #accessing }
-SLVMBasicBlock >> predecessors: anObject [
-	predecessors := anObject
-]
-
 { #category : #adding }
 SLVMBasicBlock >> predecessorsCouldBeRemoved [
 	| oldPredecessors |

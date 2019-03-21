@@ -48,7 +48,7 @@ SLVMLoadInstruction >> isPureInstruction [
 
 { #category : #printing }
 SLVMLoadInstruction >> mnemonic [
-	^ 'load'
+	^ #load
 ]
 
 { #category : #accessing }

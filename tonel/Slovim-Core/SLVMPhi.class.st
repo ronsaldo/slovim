@@ -51,7 +51,7 @@ SLVMPhi >> isPureInstruction [
 
 { #category : #printing }
 SLVMPhi >> mnemonic [
-	^ 'phi'
+	^ #phi
 ]
 
 { #category : #adding }

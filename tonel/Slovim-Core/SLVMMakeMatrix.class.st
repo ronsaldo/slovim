@@ -24,7 +24,7 @@ SLVMMakeMatrix >> isPureInstruction [
 
 { #category : #printing }
 SLVMMakeMatrix >> mnemonic [
-	^ 'makeVector'
+	^ #makeMatrix
 ]
 
 { #category : #accessing }

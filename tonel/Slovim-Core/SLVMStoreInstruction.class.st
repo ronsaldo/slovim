@@ -35,7 +35,7 @@ SLVMStoreInstruction >> isStore [
 
 { #category : #printing }
 SLVMStoreInstruction >> mnemonic [
-	^ 'store'
+	^ #store
 ]
 
 { #category : #accessing }

@@ -36,7 +36,7 @@ SLVMReturnFromContext >> isTerminator [
 
 { #category : #printing }
 SLVMReturnFromContext >> mnemonic [
-	^ 'returnFromContext'
+	^ #returnFromContext
 ]
 
 { #category : #accessing }

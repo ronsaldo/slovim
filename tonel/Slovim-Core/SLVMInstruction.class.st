@@ -109,6 +109,11 @@ SLVMInstruction >> isBinaryComparison [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isBinaryOperation [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isBitCast [
 	^ false
 ]

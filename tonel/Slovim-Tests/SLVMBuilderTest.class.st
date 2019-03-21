@@ -9,22 +9,62 @@ Class {
 		'function',
 		'builder',
 		'target',
-		'module'
+		'module',
+		'intArgument'
 	],
 	#category : #'Slovim-Tests'
 }
 
 { #category : #running }
+SLVMBuilderTest >> createFunctionWithArgumentTypes: argumentTypes returnType: returnType [
+	intArgument := nil.
+
+	functionType := SLVMFunctionType arguments: argumentTypes returnType: returnType.
+	function := SLVMFunction module: module name: #testFunction functionType: functionType.
+	builder := SLVMBuilder on: function.
+
+]
+
+{ #category : #running }
+SLVMBuilderTest >> createIntFunction [
+	self createFunctionWithArgumentTypes: {target int} returnType: target int.
+	intArgument := function arguments first.
+
+]
+
+{ #category : #running }
+SLVMBuilderTest >> createNullaryProcedure [
+	self createFunctionWithArgumentTypes: #() returnType: target void.
+
+]
+
+{ #category : #running }
 SLVMBuilderTest >> setUp [
 	target := SLVM32BitsPointerCompilationTarget new.
 	module := SLVMModule new compilationTarget: target.
-	
-	functionType := SLVMFunctionType arguments: {SLVMType intType} returnType: SLVMType voidType.
-	function := SLVMFunction module: module name: #testFunction functionType: functionType.
-	builder := SLVMBuilder on: function.
+	self createIntFunction
+
 ]
 
-{ #category : #tests }
+{ #category : #arithmetic }
+SLVMBuilderTest >> testAdd [
+	| left right top result |
+	left := intArgument.
+	right := builder constInt: 2.
+	
+	top := builder newBasicBlock: #top.
+	builder withBasicBlock: top do: [
+		result := builder add: left with: right.
+	].
+
+	self assert: result isBinaryOperation.
+	self assert: result parameters equals: {left . right}.
+	self assert: result left equals: left.
+	self assert: result right equals: right.
+	self assert: result type isIntegerType.
+]
+
+{ #category : #constants }
 SLVMBuilderTest >> testConstBool [
 	| constant |
 	constant := builder constBool: true.
@@ -32,7 +72,7 @@ SLVMBuilderTest >> testConstBool [
 	self assert: constant type = SLVMType boolType.
 ]
 
-{ #category : #tests }
+{ #category : #constants }
 SLVMBuilderTest >> testConstDouble [
 	| constant |
 	constant := builder constDouble: 1.0.
@@ -40,7 +80,7 @@ SLVMBuilderTest >> testConstDouble [
 	self assert: constant type isFloatType.
 ]
 
-{ #category : #tests }
+{ #category : #constants }
 SLVMBuilderTest >> testConstFloat [
 	| constant |
 	constant := builder constFloat: 1.0.
@@ -48,7 +88,7 @@ SLVMBuilderTest >> testConstFloat [
 	self assert: constant type = SLVMType floatType.
 ]
 
-{ #category : #tests }
+{ #category : #constants }
 SLVMBuilderTest >> testConstInt [
 	| constant |
 	constant := builder constInt: 1.
@@ -56,7 +96,7 @@ SLVMBuilderTest >> testConstInt [
 	self assert: constant type = SLVMType intType.
 ]
 
-{ #category : #tests }
+{ #category : #constants }
 SLVMBuilderTest >> testConstLong [
 	| constant |
 	constant := builder constLong: 1.
@@ -64,7 +104,7 @@ SLVMBuilderTest >> testConstLong [
 	self assert: constant type = SLVMType longType.
 ]
 
-{ #category : #tests }
+{ #category : #constants }
 SLVMBuilderTest >> testConstUInt [
 	| constant |
 	constant := builder constUInt: 1.
@@ -72,7 +112,7 @@ SLVMBuilderTest >> testConstUInt [
 	self assert: constant type = SLVMType uintType.
 ]
 
-{ #category : #tests }
+{ #category : #constants }
 SLVMBuilderTest >> testConstULong [
 	| constant |
 	constant := builder constULong: 1.
@@ -80,19 +120,119 @@ SLVMBuilderTest >> testConstULong [
 	self assert: constant type = SLVMType ulongType.
 ]
 
+{ #category : #branches }
+SLVMBuilderTest >> testIfSelection [
+	| entry constant result condition trueBlock falseBlock branch mergeBlock |
+	entry := builder newBasicBlock: #entry.
+	trueBlock := builder newBasicBlock: #trueBlock.
+	falseBlock := builder newBasicBlock: #falseBlock.
+	mergeBlock := builder newBasicBlock: #mergeBlock.
+	constant := builder constInt: 3.
+	
+	builder withBasicBlock: entry do: [
+		result := builder alloca: target int.
+		condition := builder ilt: intArgument with: constant.
+		branch := builder branch: condition ifTrue: trueBlock ifFalse: falseBlock.
+		branch mergeBlock: mergeBlock.
+	].
+
+	builder withBasicBlock: trueBlock do: [
+		builder store: intArgument in: result.
+		builder jump: mergeBlock
+	].
+
+	builder withBasicBlock: falseBlock do: [
+		builder store: constant in: result.
+		builder jump: mergeBlock
+	].
+
+	builder withBasicBlock: mergeBlock do: [
+		builder return: (builder load: result)
+	].
+
+	self assert: branch isBranch.
+	self assert: branch isTerminator.
+	self assert: branch trueBlock equals: trueBlock.
+	self assert: branch falseBlock equals: falseBlock.
+	self assert: branch mergeBlock equals: mergeBlock.
+	self assert: branch continueBlock equals: nil.
+
+	self assert: entry successors equals: {trueBlock . falseBlock}.
+	self assert: mergeBlock predecessors equals: {trueBlock . falseBlock}.
+]
+
+{ #category : #branches }
+SLVMBuilderTest >> testIfSelectionNoMerge [
+	| entry constant condition trueBlock falseBlock branch mergeBlock |
+	entry := builder newBasicBlock: #entry.
+	trueBlock := builder newBasicBlock: #trueBlock.
+	falseBlock := builder newBasicBlock: #falseBlock.
+	mergeBlock := builder newBasicBlock: #mergeBlock.
+	constant := builder constInt: 3.
+	
+	builder withBasicBlock: entry do: [
+		condition := builder ilt: intArgument with: constant.
+		branch := builder branch: condition ifTrue: trueBlock ifFalse: falseBlock.
+		branch mergeBlock: mergeBlock.
+	].
+
+	builder withBasicBlock: trueBlock do: [
+		builder return: intArgument.
+	].
+
+	builder withBasicBlock: falseBlock do: [
+		builder return: constant.
+	].
+
+	builder withBasicBlock: mergeBlock do: [
+		builder unreachable
+	].
+
+	branch addUnreachableSuccessors.
+	self assert: branch isBranch.
+	self assert: branch isTerminator.
+	self assert: branch trueBlock equals: trueBlock.
+	self assert: branch falseBlock equals: falseBlock.
+	self assert: branch mergeBlock equals: mergeBlock.
+	self assert: branch continueBlock equals: nil.
+
+	self assert: entry successors equals: {trueBlock . falseBlock . mergeBlock}.
+	self assert: mergeBlock predecessors equals: {entry}.
+]
+
+{ #category : #branches }
+SLVMBuilderTest >> testJump [
+	| entry body jump  |
+	entry := builder newBasicBlock: #entry.
+	body := builder newBasicBlock: #body.
+	builder withBasicBlock: entry do: [
+		jump := builder jump: body.
+	].
+
+	builder withBasicBlock: body do: [
+		builder return: intArgument
+	].
+
+	self assert: jump isJump.
+	self assert: jump isTerminator.
+	self assert: jump destination equals: body.
+	self assert: entry successors equals: {body}.
+	self assert: body predecessors equals: {entry}.
+]
+
 { #category : #tests }
 SLVMBuilderTest >> testNew [
 	self assert: builder function equals: function.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #tests }
 SLVMBuilderTest >> testNewBasicBlock [
 	| block |
 	block := builder newBasicBlock.
 	self assert: function basicBlocks first equals: block
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #tests }
 SLVMBuilderTest >> testReturn [
 	| top instruction |
 	top := builder newBasicBlock: #top.
@@ -104,9 +244,11 @@ SLVMBuilderTest >> testReturn [
 	self assert: function basicBlocks first firstInstruction equals: instruction.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #tests }
 SLVMBuilderTest >> testReturnVoid [
 	| top instruction |
+	self createNullaryProcedure.
+	
 	top := builder newBasicBlock: #top.
 	builder withBasicBlock: top do: [
 		instruction := builder returnVoid

@@ -36,7 +36,7 @@ SLVMReturnVoidFromContext >> isTerminator [
 
 { #category : #printing }
 SLVMReturnVoidFromContext >> mnemonic [
-	^ 'returnVoidFromContext'
+	^ #returnVoidFromContext
 ]
 
 { #category : #accessing }

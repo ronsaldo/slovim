@@ -92,7 +92,7 @@ SLVMCall >> isPrimitiveCall [
 
 { #category : #printing }
 SLVMCall >> mnemonic [
-	^ 'call'
+	^ #call
 ]
 
 { #category : #flags }

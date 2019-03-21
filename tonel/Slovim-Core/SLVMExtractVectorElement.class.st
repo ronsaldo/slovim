@@ -29,7 +29,7 @@ SLVMExtractVectorElement >> isPureInstruction [
 
 { #category : #printing }
 SLVMExtractVectorElement >> mnemonic [
-	^ 'extractVectorElement'
+	^ #extractVectorElement
 ]
 
 { #category : #accessing }

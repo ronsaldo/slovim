@@ -26,7 +26,7 @@ SLVMUnreacheable >> isUnreachable [
 
 { #category : #printing }
 SLVMUnreacheable >> mnemonic [
-	^ 'unreachable'
+	^ #unreachable
 ]
 
 { #category : #accessing }

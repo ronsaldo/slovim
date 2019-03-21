@@ -24,7 +24,7 @@ SLVMGetFramePointer >> isPureInstruction [
 
 { #category : #'as yet unclassified' }
 SLVMGetFramePointer >> mnemonic [
-	^ 'getFramePointer'
+	^ #getFramePointer
 ]
 
 { #category : #accessing }

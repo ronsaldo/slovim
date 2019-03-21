@@ -61,7 +61,7 @@ SLVMInstantiateClosure >> isInstantiateClosure [
 
 { #category : #printing }
 SLVMInstantiateClosure >> mnemonic [
-	^ 'instantiateClosure'
+	^ #instantiateClosure
 ]
 
 { #category : #accessing }

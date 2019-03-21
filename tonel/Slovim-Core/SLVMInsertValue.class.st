@@ -71,7 +71,7 @@ SLVMInsertValue >> isPureInstruction [
 
 { #category : #printing }
 SLVMInsertValue >> mnemonic [
-	^ 'insertValue'
+	^ #insertValue
 ]
 
 { #category : #accessing }

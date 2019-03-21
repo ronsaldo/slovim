@@ -26,7 +26,7 @@ SLVMReturnVoid >> isTerminator [
 
 { #category : #printing }
 SLVMReturnVoid >> mnemonic [
-	^ 'returnVoid'
+	^ #returnVoid
 ]
 
 { #category : #accessing }

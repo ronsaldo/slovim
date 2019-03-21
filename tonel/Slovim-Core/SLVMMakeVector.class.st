@@ -24,7 +24,7 @@ SLVMMakeVector >> isPureInstruction [
 
 { #category : #printing }
 SLVMMakeVector >> mnemonic [
-	^ 'makeVector'
+	^ #makeVector
 ]
 
 { #category : #accessing }

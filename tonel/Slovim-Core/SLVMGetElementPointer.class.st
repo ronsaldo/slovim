@@ -93,7 +93,7 @@ SLVMGetElementPointer >> lastIndex [
 
 { #category : #printing }
 SLVMGetElementPointer >> mnemonic [
-	^ 'getElementPointer'
+	^ #getElementPointer
 ]
 
 { #category : #accessing }

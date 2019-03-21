@@ -1201,6 +1201,7 @@ SLVMBuilder >> return: value fromContext: context name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> return: value name: resultName [
+	self assert: function functionType returnType isVoidType not.
 	^ self addInstruction: (SLVMReturn value: value) name: resultName
 ]
 
@@ -1211,6 +1212,7 @@ SLVMBuilder >> returnVoid [
 
 { #category : #instructions }
 SLVMBuilder >> returnVoid: resultName [
+	self assert: function functionType returnType isVoidType.
 	^ self addInstruction: SLVMReturnVoid new name: resultName
 ]
 

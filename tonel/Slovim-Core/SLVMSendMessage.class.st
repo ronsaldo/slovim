@@ -75,7 +75,7 @@ SLVMSendMessage >> isSuperSend [
 
 { #category : #printing }
 SLVMSendMessage >> mnemonic [
-	^ 'send'
+	^ #send
 ]
 
 { #category : #accessing }
