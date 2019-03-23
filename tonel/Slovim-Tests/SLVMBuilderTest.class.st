@@ -120,6 +120,71 @@ SLVMBuilderTest >> testConstULong [
 	self assert: constant type = SLVMType ulongType.
 ]
 
+{ #category : #'high level structures' }
+SLVMBuilderTest >> testDoWhileSequence [
+	| sequence |
+	sequence := builder sequenceWith: [ :b |
+		builder doWith: [ 
+			nil
+		] whileWith: [ builder constBool: false ].
+	
+		b return: intArgument
+	].
+
+	self assert: sequence block equals: function basicBlocks first.
+	self assert: sequence exitBlock equals: function basicBlocks last.
+	self assert: sequence result equals: nil.
+]
+
+{ #category : #'high level structures' }
+SLVMBuilderTest >> testIfExpression [
+	| const3 result entrySequence branch |
+	entrySequence := builder sequenceWith: [
+		const3 := builder constInt: 3.
+		result := builder if: (builder ilt: intArgument with: const3) trueValueWith: [ 
+			intArgument
+		] falseValueWith: [
+			const3
+		].
+	
+		builder return: result
+	].
+
+	branch := function basicBlocks first lastInstruction.
+	self assert: branch isBranch.
+	self assert: branch mergeBlock isNotNil.
+	self assert: branch continueBlock isNil.
+	self assert: function basicBlocks size equals: 4.
+	self assert: entrySequence block equals: function basicBlocks first.
+	self assert: entrySequence exitBlock equals: function basicBlocks last.
+
+
+]
+
+{ #category : #'high level structures' }
+SLVMBuilderTest >> testIfExpressionNoMerge [
+	| const3 entrySequence branch |
+	entrySequence := builder sequenceWith: [
+		const3 := builder constInt: 3.
+		builder if: (builder ilt: intArgument with: const3) trueValueWith: [ 
+			builder return: intArgument
+		] falseValueWith: [
+			builder return: const3
+		].		
+	].
+
+	branch := function basicBlocks first lastInstruction.
+	self assert: branch isBranch.
+	self assert: branch mergeBlock isNotNil.
+	self assert: branch continueBlock isNil.
+	self assert: function basicBlocks size equals: 4.
+	self assert: entrySequence block equals: function basicBlocks first.
+	self assert: entrySequence exitBlock equals: function basicBlocks last.
+	self assert: function basicBlocks last lastInstruction isUnreachable.
+
+
+]
+
 { #category : #branches }
 SLVMBuilderTest >> testIfSelection [
 	| entry constant result condition trueBlock falseBlock branch mergeBlock |
@@ -232,6 +297,23 @@ SLVMBuilderTest >> testNewBasicBlock [
 	self assert: function basicBlocks first equals: block
 ]
 
+{ #category : #'high level structures' }
+SLVMBuilderTest >> testRangeLoopSequence [
+	| sequence sum |
+	sequence := builder sequenceWith: [ :b |
+		sum := builder alloca: target int.
+		builder from: (builder constInt: 0) to: (builder constInt: 10) by: (builder constInt: 1) doSequenceWith: [ :i |
+			builder add: (builder load: sum) with: i
+		].
+	
+		b return: (builder load: sum)
+	].
+
+	self assert: sequence block equals: function basicBlocks first.
+	self assert: sequence exitBlock equals: function basicBlocks last.
+	self assert: sequence result equals: nil.
+]
+
 { #category : #tests }
 SLVMBuilderTest >> testReturn [
 	| top instruction |
@@ -256,4 +338,32 @@ SLVMBuilderTest >> testReturnVoid [
 
 	self assert: instruction block function equals: function.
 	self assert: function basicBlocks first firstInstruction equals: instruction.
+]
+
+{ #category : #'high level structures' }
+SLVMBuilderTest >> testSequence [
+	| sequence |
+	sequence := builder sequenceWith: [ :b |
+		b return: intArgument
+	].
+
+	self assert: sequence block equals: function basicBlocks first.
+	self assert: sequence exitBlock equals: function basicBlocks last.
+	self assert: sequence result equals: nil.
+]
+
+{ #category : #'high level structures' }
+SLVMBuilderTest >> testWhileSequence [
+	| sequence |
+	sequence := builder sequenceWith: [ :b |
+		builder whileWith: [ builder constBool: false ] doWith: [ 
+			nil
+		].
+	
+		b return: intArgument
+	].
+
+	self assert: sequence block equals: function basicBlocks first.
+	self assert: sequence exitBlock equals: function basicBlocks last.
+	self assert: sequence result equals: nil.
 ]

@@ -365,6 +365,39 @@ SLVMBuilder >> div: left with: right name: resultName [
 	^ self addOperation: #div left: left right: right name: resultName
 ]
 
+{ #category : #'high level structures' }
+SLVMBuilder >> doSequence: bodySequence whileSequence: conditionSequence [
+	| mergeBlock loopBranch |
+	conditionSequence exitBlock isLastTerminator ifTrue: [ ^ nil ].
+	self assert: conditionSequence result type isBooleanType.
+	
+	mergeBlock := self newBasicBlock: #doWhileMerge.
+
+	loopBranch := self jump: bodySequence block.
+	loopBranch continueBlock: bodySequence block;
+		mergeBlock: mergeBlock.
+
+	"Jump to the condition check."
+	bodySequence exitBlock isLastTerminator ifFalse: [
+		bodySequence exitBlock add: (SLVMJump destination: conditionSequence block)
+	].
+
+	"Continue on the loop, or exit."
+	conditionSequence exitBlock add: (SLVMBranch condition: conditionSequence result ifTrue: bodySequence block ifFalse: mergeBlock).
+	
+	"Enter the merge block."
+	loopBranch addUnreachableSuccessors.
+	self currentBlock: mergeBlock.
+]
+
+{ #category : #'high level structures' }
+SLVMBuilder >> doWith: bodyBlock whileWith: conditionBlock [ 
+	| conditionSequence bodySequence |
+	conditionSequence := self sequence: #whileCondition with: conditionBlock.
+	bodySequence := self sequence: #whileBody with: bodyBlock.
+	^ self doSequence: bodySequence whileSequence: conditionSequence
+]
+
 { #category : #comparisons }
 SLVMBuilder >> dynObjectIdentityEquals: left with: right [
 	^ self dynObjectIdentityEquals: left with: right name: function generateSymbol
@@ -543,6 +576,67 @@ SLVMBuilder >> frem: left with: right name: resultName [
 	^ self addOperation: #frem left: left right: right name: resultName
 ]
 
+{ #category : #'high level structures' }
+SLVMBuilder >> from: startCount to: endCount by: increment doSequenceWith: bodyBlock [
+	| mergeBlock counterType enterLoopBlock currentCount conditionSequence continueSequence nextValue bodySequence conditionBranch |
+	mergeBlock := SLVMBasicBlock new name: #rangeLoopMerge.
+	self assert: startCount type == endCount type.
+	self assert: endCount type == increment type.
+	counterType := startCount type.
+	
+	enterLoopBlock := self currentBlock.
+
+	"Condition sequence"
+	conditionSequence := self sequence: #rangeLoopCondition with: [
+		currentCount := self phi: counterType.
+		currentCount
+			addValue: startCount from: enterLoopBlock.
+		
+		counterType isIntegerType
+			ifTrue: [ counterType isSigned
+					ifTrue: [ self ilt: currentCount with: endCount ]
+					ifFalse: [ self ult: currentCount with: endCount ]
+			]
+			ifFalse: [ self oflt: currentCount with: endCount ]
+	].
+
+	"Continue sequence"
+	continueSequence := self sequence: #rangeLoopIncrement with: [ 
+		nextValue := counterType isIntegerType
+			ifTrue: [ self add: currentCount with: increment ]
+			ifFalse: [ self fadd: currentCount with: increment ].
+			
+		currentCount
+			addValue: nextValue from: self currentBlock.
+		self jump: conditionSequence block
+	].
+
+	"Body sequence"
+	bodySequence := self sequence: #rangeLoopSequence with: [ :b |
+		bodyBlock cull: currentCount cull: b
+	].
+
+	bodySequence exitBlock ifNotNil: [ :block | block add: (SLVMJump destination: continueSequence block) ].
+	
+	"Loop condition check branch"
+	conditionBranch := SLVMBranch condition: conditionSequence result
+		ifTrue: bodySequence block
+		ifFalse: mergeBlock.
+	conditionBranch
+		mergeBlock: mergeBlock;
+		continueBlock: continueSequence block.
+	conditionSequence exitBlock add: conditionBranch.
+	
+	"Enter the loop."
+	self jump: conditionSequence block.
+	
+	"Continue after the loop."
+	function addBasicBlock: mergeBlock.
+	self currentBlock: mergeBlock.
+
+	^ nil
+]
+
 { #category : #arithmetic }
 SLVMBuilder >> fsqrt: operand [
 	^ self fsqrt: operand name: function generateSymbol
@@ -630,6 +724,73 @@ SLVMBuilder >> ieq: left with: right [
 { #category : #comparisons }
 SLVMBuilder >> ieq: left with: right name: resultName [
 	^ self addOperation: #ieq left: left right: right name: resultName
+]
+
+{ #category : #'high level structures' }
+SLVMBuilder >> if: condition trueSequence: trueSequence falseSequence: falseSequence [
+	| mergeBlock trueBlock falseBlock branch trueResult falseResult trueExitBlock falseExitBlock |
+	mergeBlock := self newBasicBlock: #ifMerge.
+	
+	trueBlock := mergeBlock.
+	trueResult := nil.
+	falseResult := nil.
+	falseBlock := mergeBlock.
+	trueSequence ifNotNil: [ 
+		trueBlock := trueSequence block.
+		trueSequence block isLastTerminator ifFalse: [ 
+			trueSequence block add: (SLVMJump destination: mergeBlock).
+			trueResult := trueSequence result.
+			trueExitBlock := trueSequence exitBlock.
+		].
+	].
+
+	falseSequence ifNotNil: [ 
+		falseBlock := falseSequence block.
+		falseSequence block isLastTerminator ifFalse: [ 
+			falseSequence block add: (SLVMJump destination: mergeBlock).
+			falseResult := falseSequence result.
+			falseExitBlock := falseSequence exitBlock.
+		].
+	].
+
+	branch := self branch: condition ifTrue: trueBlock ifFalse: falseBlock.
+	branch
+		mergeBlock: mergeBlock.
+		
+	self currentBlock: mergeBlock.
+	
+	"Is this an unreachable merge block?"
+	mergeBlock predecessors ifEmpty: [
+		self unreachable.
+		branch addUnreachableSuccessors.
+		^ nil
+	].
+
+	trueResult ifNil: [
+		^ trueExitBlock ifNil: [falseResult] ifNotNil: [nil]
+	].
+
+	falseResult ifNil: [
+		^ falseExitBlock ifNil: [trueResult] ifNotNil: [nil]
+	].
+
+	(trueResult type = falseResult type) ifTrue: [
+		trueResult == falseResult ifTrue: [ ^ trueResult ].
+		^ (self phi: trueResult type)
+			addValue: trueResult from: trueExitBlock;
+			addValue: falseResult from: falseExitBlock
+	].
+
+	^ nil
+	
+]
+
+{ #category : #'high level structures' }
+SLVMBuilder >> if: condition trueValueWith: trueBlock falseValueWith: falseBlock [
+	| trueSequence falseSequence |
+	trueSequence := self sequence: #ifTrue with: trueBlock.
+	falseSequence := self sequence: #ifFalse with: falseBlock.
+	^ self if: condition trueSequence: trueSequence falseSequence: falseSequence.
 ]
 
 { #category : #comparisons }
@@ -1276,6 +1437,28 @@ SLVMBuilder >> send: selector returnType: returnType receiver: receiver argument
 	^ self addInstruction: (SLVMSendMessage returnType: returnType receiver: receiver selector: selector arguments: arguments) name: resultName
 ]
 
+{ #category : #'high level structures' }
+SLVMBuilder >> sequence: name with: aBlock [
+	| node |
+	node := SLVMHLSequenceExpression new.
+	node block: (self newBasicBlock: name).
+	
+	self withBasicBlock: node block do: [ 
+		node result: (aBlock cull: self).
+		node exitBlock: self currentBlock.
+		(node result isNotNil and: [ node result type isVoidType ]) ifTrue: [ 
+			node result: nil
+		]
+	].
+	
+	^ node
+]
+
+{ #category : #'high level structures' }
+SLVMBuilder >> sequenceWith: aBlock [
+	^ self sequence: #sequence with: aBlock
+]
+
 { #category : #'logical operations' }
 SLVMBuilder >> shiftLeft: left with: right [
 	^ self shiftLeft: left with: right name: function generateSymbol
@@ -1491,6 +1674,41 @@ SLVMBuilder >> vectorSub: left with: right name: name [
 	] ifFalse: [ 
 		^ self sub: left with: right name: name
 	]
+]
+
+{ #category : #'high level structures' }
+SLVMBuilder >> whileSequence: conditionSequence doSequence: bodySequence [
+	| mergeBlock loopBranch |
+	conditionSequence exitBlock isLastTerminator ifTrue: [ ^ nil ].
+	self assert: conditionSequence result type isBooleanType.
+	
+	mergeBlock := self newBasicBlock: #whileMerge.
+
+	self jump: conditionSequence block.
+	
+	"Create the loop branch."
+	loopBranch := SLVMBranch condition: conditionSequence result ifTrue: bodySequence block ifFalse: mergeBlock.
+	loopBranch
+		continueBlock: bodySequence block;
+		mergeBlock: mergeBlock.
+	conditionSequence exitBlock add: loopBranch.
+	
+	"Jump back to the condition check."
+	bodySequence exitBlock isLastTerminator ifFalse: [
+		bodySequence exitBlock add: (SLVMJump destination: conditionSequence block)
+	].
+
+	"Enter the merge block."
+	loopBranch addUnreachableSuccessors.
+	self currentBlock: mergeBlock.
+]
+
+{ #category : #'high level structures' }
+SLVMBuilder >> whileWith: conditionBlock doWith: bodyBlock [
+	| conditionSequence bodySequence |
+	conditionSequence := self sequence: #whileCondition with: conditionBlock.
+	bodySequence := self sequence: #whileBody with: bodyBlock.
+	^ self whileSequence: conditionSequence doSequence: bodySequence
 ]
 
 { #category : #'as yet unclassified' }
