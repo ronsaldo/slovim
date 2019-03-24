@@ -18,6 +18,11 @@ SLVMUndefined >> accept: aVisitor [
 ]
 
 { #category : #testing }
+SLVMUndefined >> isPureInstruction [
+	^ true
+]
+
+{ #category : #testing }
 SLVMUndefined >> isUndefined [
 	^ true
 ]

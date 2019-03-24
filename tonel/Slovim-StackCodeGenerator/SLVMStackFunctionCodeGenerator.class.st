@@ -330,6 +330,11 @@ SLVMStackFunctionCodeGenerator >> visitUnaryOperation: anInstruction [
 ]
 
 { #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitUndefinedInstruction: anInstruction [
+	^ SLVMETreeUndefined new type: anInstruction type
+]
+
+{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitUnreachable: anInstruction [
 	^ SLVMETreeUnreachable new type: anInstruction type
 ]

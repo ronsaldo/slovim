@@ -134,6 +134,16 @@ SLVMFunction >> callingConvention [
 	^ functionType callingConvention
 ]
 
+{ #category : #'control flow' }
+SLVMFunction >> canHaveCanonicalStructuredControlFlow [
+	^ self propertyAt: #canHaveCanonicalStructuredControlFlow ifAbsent: [ true ]
+]
+
+{ #category : #'control flow' }
+SLVMFunction >> canHaveCanonicalStructuredControlFlow: aBoolean [
+	^ self propertyAt: #canHaveCanonicalStructuredControlFlow put: aBoolean
+]
+
 { #category : #accessing }
 SLVMFunction >> childrenNodes [
 	^ basicBlocks
@@ -322,7 +332,8 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 	allocaInsertionPoint := nil.
 	
 	self basicBlocks do: [ :bb |
-		newBlock := SLVMBasicBlock new name: bb name.
+		newBlock := SLVMBasicBlock new
+			copyingFrom: bb.
 		newBlocks add: newBlock.
 		targetFunction addBasicBlock: newBlock.
 		substitutionDictionary at: bb put: newBlock.
@@ -343,6 +354,9 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 		] 
 	].
 
+	"Fix the structure CFG nodes."
+	newBlocks do: [ :bb | bb applySubstitutions: substitutionDictionary ].
+
 	"Fix the edges of the graph"
 	movedAllocas do: [ :instr | instr applySubstitutions: substitutionDictionary ].
 	newBlocks do: [ :bb |
@@ -352,9 +366,7 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 	].
 
 	newBlocks do: #computeSuccessors.
-	newBlocks do: [:bb |
-		bb lastInstruction isTerminator ifTrue: [ bb lastInstruction addUnreachableSuccessors ]
-	].
+	newBlocks do: #addUnreachableStructuredSuccessors.
 
 	"Only change the returns when we are having a continuation"
 	continuationBlock ifNil: [ ^ { newBlocks first . nil } ].
@@ -455,6 +467,15 @@ SLVMFunction >> dynamicLiterals [
 	^ dynamicLiterals
 ]
 
+{ #category : #'control flow' }
+SLVMFunction >> ensureCanonicalStructuredControlFlow [
+	"Inlining requires a canonical structured control flow in order to
+	preserve the invariants for structured control flow."
+	(self canHaveCanonicalStructuredControlFlow and: [ self hasCanonicalStructuredControlFlow not ]) ifTrue: [
+		SLVMOptCanonicalizeStructuredControlFlow passOnFunction: self
+	]
+]
+
 { #category : #accessing }
 SLVMFunction >> exitPoint [
 	<compileTime>
@@ -521,6 +542,16 @@ SLVMFunction >> gtTreeViewIn: composite [
 { #category : #inlining }
 SLVMFunction >> hasAlwaysInlineMode [
 	^ self inlineMode == #always
+]
+
+{ #category : #'control flow' }
+SLVMFunction >> hasCanonicalStructuredControlFlow [
+	^ self propertyAt: #hasCanonicalStructuredControlFlow ifAbsent: [ false ]
+]
+
+{ #category : #'control flow' }
+SLVMFunction >> hasCanonicalStructuredControlFlow: aBoolean [
+	^ self propertyAt: #hasCanonicalStructuredControlFlow put: aBoolean
 ]
 
 { #category : #inlining }

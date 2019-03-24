@@ -1,6 +1,10 @@
 Class {
 	#name : #SLVMOptPromoteAllocas,
 	#superclass : #SLVMFunctionOptimizationPass,
+	#instVars : [
+		'currentFunction',
+		'undefinedInsertionPoint'
+	],
 	#category : #'Slovim-Core-Optimizations'
 }
 
@@ -9,24 +13,16 @@ SLVMOptPromoteAllocas >> addPhi: phi previousDefinitions: definitionsPerNode all
 	| value shouldBeRemoved definitions phiBlock |
 	phi block predecessors do: [ :predecessor |
 		value := self lastDefinitionValueAt: predecessor for: definitionsPerNode allocaInstruction: alloca forPhiNode: true.
-		(value isNotNil and: [ value isUndefined not ]) ifTrue: [ 
+		value ifNotNil: [ 
 			phi addValue: value from: predecessor
 		]
 	].
 
 	shouldBeRemoved := false.
 	phiBlock := phi block.
-	phi parameters isEmpty ifTrue: [ 
-		phi instructionReferences isEmpty ifTrue: [
-			phi removeFromBlock 
-		] ifFalse: [
-			"TODO: Replace this phi with undefined"
-			self halt.
-		].
+	self assert: phi parameters isNotEmpty.
+	self assert: phi parameters size = phi block predecessors size.
 	
-		shouldBeRemoved := true.	
-	].
-
 	(phi parameters size = 1) ifTrue: [
 		phi instructionReferences isEmpty ifTrue: [
 			phi removeFromBlock 
@@ -52,10 +48,12 @@ SLVMOptPromoteAllocas >> addPhi: phi previousDefinitions: definitionsPerNode all
 SLVMOptPromoteAllocas >> addUndefinedTo: definitionsPerNode allocaInstruction: allocaInstruction [
 	| function entryBlock undefinedInstruction |
 	function := allocaInstruction block function.
-	entryBlock := function basicBlocks first.
-	undefinedInstruction := self undefinedFor: allocaInstruction valueType name: (function generateSymbol, allocaInstruction name) asSymbol.
-	entryBlock addFirst: undefinedInstruction.
-	definitionsPerNode at: entryBlock put: { undefinedInstruction }.
+	undefinedInstruction := self undefinedFor: allocaInstruction valueType name: function generateSymbol.
+
+	entryBlock := undefinedInsertionPoint block.
+	entryBlock add: undefinedInstruction before: undefinedInsertionPoint.
+	(definitionsPerNode at: entryBlock ifAbsentPut: [ OrderedCollection new ])
+		addFirst: undefinedInstruction.
 	^ undefinedInstruction
 ]
 
@@ -137,22 +135,18 @@ SLVMOptPromoteAllocas >> firstDefinitionValueAt: node for: definitionsPerNode al
 	].
 
 	self assert: node predecessors size <= 2.
-	node predecessors ifEmpty: [ 
-		"Undef"
-		self halt
-	] ifNotEmpty: [
-		node predecessors size = 1 ifTrue: [ 
-		^ self lastDefinitionValueAt: node predecessors first for: definitionsPerNode allocaInstruction: allocaInstruction
-		].
-	
-		self assert: node predecessors size = 2.
-		firstDefinition := self lastDefinitionValueAt: node predecessors first for: definitionsPerNode allocaInstruction: allocaInstruction.
-		secondDefinition := self lastDefinitionValueAt: node predecessors second for: definitionsPerNode allocaInstruction: allocaInstruction.
-		firstDefinition == secondDefinition ifTrue: [ ^ firstDefinition].
-		self halt
-		
-	].
+	self assert: node predecessors isNotEmpty.
 
+	node predecessors size = 1 ifTrue: [ 
+		^ self lastDefinitionValueAt: node predecessors first for: definitionsPerNode allocaInstruction: allocaInstruction
+	].
+	
+	self assert: node predecessors size = 2.
+	firstDefinition := self lastDefinitionValueAt: node predecessors first for: definitionsPerNode allocaInstruction: allocaInstruction.
+	secondDefinition := self lastDefinitionValueAt: node predecessors second for: definitionsPerNode allocaInstruction: allocaInstruction.
+	self flag: 'FIXME: Why is this case even possible?'.
+	firstDefinition == secondDefinition ifTrue: [ ^ firstDefinition].
+	self halt
 ]
 
 { #category : #'aggregate promotion' }
@@ -193,12 +187,7 @@ SLVMOptPromoteAllocas >> lastDefinitionValueAt: node for: definitionsPerNode all
 		currentNode := currentNode immediateDominator
 	].
 
-	"Did we find a definition"
-	currentNode isNil ifTrue: [
-		isForPhiNode ifTrue: [ ^ nil ].
-		^ self addUndefinedTo: definitionsPerNode allocaInstruction: alloca
-	].
-
+	self assert: currentNode isNotNil.
 	instructionResult := (definitionsPerNode at: currentNode) last.
 	^ instructionResult isStore ifTrue: [ instructionResult value ] ifFalse: [ instructionResult ]
 ]
@@ -222,13 +211,19 @@ SLVMOptPromoteAllocas >> lastDefinitionValueAtLoad: loadInstruction for: definit
 SLVMOptPromoteAllocas >> passOnFunction: aFunction [
 	| toBePromoted |
 	aFunction isEmpty ifTrue: [ ^ self ].
-	self promoteAggregatesOn: aFunction.
+	currentFunction := aFunction.
+	self promoteAggregates.
 	
 	toBePromoted := OrderedCollection new.
+	undefinedInsertionPoint := aFunction basicBlocks first firstInstruction.
 	aFunction basicBlocks first instructionsDo: [ :ins |
-		(ins isAlloca and: [self canBePromoted: ins]) ifTrue: [ 
-			toBePromoted add: ins
-		]
+		ins isAlloca ifTrue: [
+			undefinedInsertionPoint := ins nextInstruction.
+			(self canBePromoted: ins) ifTrue: [ 
+				toBePromoted add: ins
+			].
+		].
+		
 	].
 
 	aFunction computeDominance.
@@ -246,7 +241,7 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 		ref isLoad ifTrue: [ hasLoad := true ].
 		ref isStore ifTrue: [
 			hasStore := true.
-			(definitionsPerNode at: ref block ifAbsentPut: [ OrderedCollection new. ])
+			(definitionsPerNode at: ref block ifAbsentPut: [ OrderedCollection new ])
 				add: ref
 		].
 	].
@@ -261,7 +256,7 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 	(hasStore not) ifTrue: [
 		"This variable is never set. It always contains the undefined value."
 		undefined := self undefinedFor: allocaInstruction valueType name: allocaInstruction name.
-		allocaInstruction block function basicBlocks addFirst: undefined.  
+		undefinedInsertionPoint block add: undefined before: undefinedInsertionPoint.
 		allocaInstruction instructionReferences asArray do: [ :load |
 			load replaceWith: undefined.
 		].
@@ -270,9 +265,13 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 		^ self
 	].
 
+	"Make sure the variable is at least undefined on the entry block."
+	undefined := self addUndefinedTo: definitionsPerNode allocaInstruction: allocaInstruction.
+
 	"Gather the basic blocks with the definitions."
 	originalDefinitionSites := Set new.
 	definitionsPerNode keysDo: [ :node | originalDefinitionSites add: node ].
+
 	pendingWork := originalDefinitionSites asOrderedCollection .
 	
 	phiNodeDictionary := Dictionary new.
@@ -316,12 +315,16 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 	].
 
 	allocaInstruction removeFromBlock.
+	"Remove the unused undefined instruction"
+	undefined hasReferences ifFalse: [
+		undefined removeFromBlock
+	]
 
 ]
 
 { #category : #'aggregate promotion' }
-SLVMOptPromoteAllocas >> promoteAggregatesOn: aFunction [
-	aFunction basicBlocks first allocaInstructionsDo: [ :alloca |
+SLVMOptPromoteAllocas >> promoteAggregates [
+	currentFunction basicBlocks first allocaInstructionsDo: [ :alloca |
 		alloca valueType isAggregateType ifTrue: [ self promoteLocalAggregate: alloca ]
 	].
 

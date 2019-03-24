@@ -2,10 +2,7 @@ Class {
 	#name : #SLVMJump,
 	#superclass : #SLVMInstruction,
 	#instVars : [
-		'destination',
-		'mergeBlock',
-		'continueBlock',
-		'unreachableSuccessors'
+		'destination'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -21,37 +18,9 @@ SLVMJump >> accept: aVisitor [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMJump >> addUnreachableSuccessors [
-	| changed |
-	changed := false.
-	(mergeBlock isNotNil and: [ mergeBlock predecessors isEmpty ]) ifTrue: [
-		unreachableSuccessors := { mergeBlock }.
-		changed := true.
-	].
-
-	(continueBlock isNotNil and: [ continueBlock predecessors isEmpty]) ifTrue: [
-		unreachableSuccessors := unreachableSuccessors , { continueBlock }.
-		changed := true.
-	].
-
-	changed ifTrue: [ block computeSuccessors. ]
-]
-
-{ #category : #'as yet unclassified' }
 SLVMJump >> applySubstitutions: substitutionDictionary [
-	destination := substitutionDictionary at: destination.
-	mergeBlock ifNotNil: [ mergeBlock := substitutionDictionary at: mergeBlock ].
-	continueBlock ifNotNil: [ continueBlock := substitutionDictionary at: continueBlock ].
-]
-
-{ #category : #accessing }
-SLVMJump >> continueBlock [
-	^ continueBlock
-]
-
-{ #category : #accessing }
-SLVMJump >> continueBlock: anObject [
-	continueBlock := anObject
+	super applySubstitutions: substitutionDictionary.
+	destination := substitutionDictionary at: destination
 ]
 
 { #category : #accessing }
@@ -74,12 +43,6 @@ SLVMJump >> hasOutputs [
 	^ false
 ]
 
-{ #category : #'as yet unclassified' }
-SLVMJump >> initialize [
-	super initialize.
-	unreachableSuccessors := #()
-]
-
 { #category : #testing }
 SLVMJump >> isJump [
 	^ true
@@ -90,35 +53,19 @@ SLVMJump >> isTerminator [
 	^ true
 ]
 
-{ #category : #accessing }
-SLVMJump >> mergeBlock [
-	^ mergeBlock
-]
-
-{ #category : #accessing }
-SLVMJump >> mergeBlock: anObject [
-	mergeBlock := anObject
-]
-
 { #category : #printing }
 SLVMJump >> mnemonic [
 	^ #jump
 ]
 
-{ #category : #'as yet unclassified' }
-SLVMJump >> postCopy [
-	super postCopy.
-	unreachableSuccessors := #()
-]
-
 { #category : #printing }
 SLVMJump >> printOn: aStream [
-	aStream nextPutAll: self mnemonic; print: destination
+	aStream nextPutAll: self mnemonic; space; print: destination
 ]
 
 { #category : #accessing }
 SLVMJump >> successors [
-	^ { destination } , unreachableSuccessors
+	^ { destination }
 ]
 
 { #category : #accessing }
@@ -130,7 +77,5 @@ SLVMJump >> type [
 SLVMJump >> validateInBlock: aBasicBlock [
 	super validateInBlock: aBasicBlock.
 	self assert: (block function basicBlocks includes: destination).
-	self assert: (mergeBlock isNil or: [block function basicBlocks includes: mergeBlock]).
-	self assert: (continueBlock isNil or: [block function basicBlocks includes: continueBlock]).
 	self assert: self block successors = self successors
 ]

@@ -9,11 +9,26 @@ Class {
 
 { #category : #private }
 SLVMOptBasicOptimizations >> foldBranchAtBlock: block [
-	| branch jump destinations discardedBranch |
+	| branch jump destinations discardedBranch branchBlock mergeBlock |
 	branch := block lastInstruction.
 	self assert: branch isBranch.
 	
 	branch condition isConstantValue ifFalse: [ ^ self ].
+
+	branchBlock := branch block.
+	
+	self flag: 'TODO: Support the destruction of loops.'.
+	branchBlock continueBlock ifNotNil: [ ^ self ].
+	
+	mergeBlock := branch block mergeBlock.
+	
+	self assert: branchBlock isStructuredControlFlowDivergence.
+	self assert: mergeBlock isStructuredControlFlowMergeBlock.
+	branchBlock destroyStructuredCFGHeaderRole.
+
+	self assert: branchBlock isStructuredControlFlowDivergence not.
+	self assert: mergeBlock isStructuredControlFlowMergeBlock not.
+
 	discardedBranch := nil.
 	branch condition value ifTrue: [ 
 		jump := SLVMJump destination: branch trueBlock.
@@ -23,16 +38,16 @@ SLVMOptBasicOptimizations >> foldBranchAtBlock: block [
 		discardedBranch := branch trueBlock
 	].
 
-	jump mergeBlock: branch mergeBlock; continueBlock: branch continueBlock.
 	destinations := {branch trueBlock . branch falseBlock}.
 	branch removeFromBlock.
 	block add: jump.
 	
 	destinations do: #predecessorsCouldBeRemoved.
-	jump addUnreachableSuccessors.
-	
-	pendingWork add: discardedBranch.
-	self mergeWithNextBlockOf: block.
+
+	pendingWork
+		add: block;
+		add: discardedBranch
+
 ]
 
 { #category : #'as yet unclassified' }
@@ -55,12 +70,33 @@ SLVMOptBasicOptimizations >> foldConstant: instruction [
 
 { #category : #private }
 SLVMOptBasicOptimizations >> mergeWithNextBlockOf: block [
-	| removedBlock function removedInstruction |
+	| removedBlock function removedInstruction cfgMergeWhitelisted |
 	function := block function.
 	removedBlock := block lastInstruction destination.
-	(removedBlock == block or: [ removedBlock predecessors size ~= 1 ]) ifTrue: [  ^ self ].
+
+	"Sanity checks"
+	removedBlock == block ifTrue: [  ^ self ].
+	removedBlock predecessors size ~= 1 ifTrue: [
+		self flag: 'TODO: If I only have one instruction, the jump then this could be safe to merge'.
+		^ self
+	].
+
 	self assert: removedBlock predecessors first == block.
 	self assert: removedBlock function == block function.
+
+	"Never merge into continue blocks"
+	removedBlock isStructuredControlFlowContinueBlock ifTrue: [ ^ self ].
+	
+	"CFG part , CFG part. This requires white listing"
+	(block isPartOfStructuredControlFlow and: [ removedBlock isPartOfStructuredControlFlow ]) ifTrue: [ 		cfgMergeWhitelisted := false.
+		cfgMergeWhitelisted ifFalse: [ ^ self ]
+	].
+
+	removedBlock phiInstructionsDo: [ :phi |
+		self assert: phi parameters size = 1.
+		self assert: phi incomingBlocks first == block.
+		phi replaceWith: phi parameters first
+	].
 	
 	block lastInstruction removeFromBlock.
 	removedInstruction := OrderedCollection new.
@@ -71,6 +107,10 @@ SLVMOptBasicOptimizations >> mergeWithNextBlockOf: block [
 		block addLast: instruction
 	].
 	
+	removedBlock isPartOfStructuredControlFlow ifTrue: [ 
+		block stealStructuredCFGRoleFrom: removedBlock.
+	].
+
 	block computeSuccessors.
 	removedBlock computeSuccessors; predecessorsCouldBeRemoved.
 	block successors do: #predecessorsCouldBeRemoved.
@@ -116,11 +156,12 @@ SLVMOptBasicOptimizations >> processBlock: block [
 		oldSuccessors := block successors copy.
 		block lastInstruction removeFromBlock.
 		block successors: #().
-		oldSuccessors do: #predecessorsCouldBeRemoved.
+		oldSuccessors do: [:s | s unreachablePredecessorRemoved: block].
 		
 		function removeBasicBlock: block.
 		pendingWork addAll: oldSuccessors.
-			self validateFunction: function.
+		oldSuccessors do: [ :succ | pendingWork addAll: succ predecessors ].
+		self validateFunction: function.
 		^ self
 	].
 

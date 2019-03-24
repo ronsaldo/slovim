@@ -11,17 +11,21 @@ Class {
 	#category : #'Slovim-Core-Optimizations'
 }
 
+{ #category : #'as yet unclassified' }
+SLVMOptInline class >> withStructuredControlFlow [
+	^ self new keepStructuredControlFlow: true; yourself
+]
+
 { #category : #applying }
 SLVMOptInline >> analyzeFunctionGraph: aFunction [
-	| state returnCount |
 	functionGraphAnalysisState at: aFunction ifPresent: [ :oldState |
-		oldState first == #gray ifTrue: [ aFunction propertyAt: #recursive put: true ].
+		oldState == #gray ifTrue: [ aFunction propertyAt: #recursive put: true ].
 		^ self
 	].
 
-	state := { #gray . 0 }.
-	functionGraphAnalysisState at: aFunction put: state.
-	returnCount := 0.
+	functionGraphAnalysisState at: aFunction put: #gray.
+	"We should always try to use functions with canonical structured control flow."
+	aFunction ensureCanonicalStructuredControlFlow.
 	
 	aFunction basicBlocks do: [ :bb |
 		bb instructionsDo: [ :instruction |
@@ -33,15 +37,10 @@ SLVMOptInline >> analyzeFunctionGraph: aFunction [
 				self flag: 'This is the place for vetting some functions'.
 				aFunction propertyAt: #recursive put: true
 			].
-		
-			(instruction isReturn or: [ instruction isReturnVoid ]) ifTrue: [
-				returnCount := returnCount + 1
-			]
 		]
 	].
 	
-	state at: 1 put: #black.
-	state at: 2 put: returnCount.
+	functionGraphAnalysisState at: aFunction put: #black
 ]
 
 { #category : #'as yet unclassified' }
@@ -52,7 +51,7 @@ SLVMOptInline >> findSomeInlineableCall: basicBlock [
 			function := instruction functionValue.
 			(function isFunction and: [function isNotEmpty]) ifTrue: [
 				((function propertyAt: #recursive ifAbsent: [ false ]) not and:
-				[ keepStructuredControlFlow not or: [ (functionGraphAnalysisState at: function) second < 2] ] ) ifTrue: [
+				[ keepStructuredControlFlow not or: [ function hasCanonicalStructuredControlFlow ] ] ) ifTrue: [
 					(inliningMandatory or:
 					[function hasAlwaysInlineMode or:
 					[function hasYesInlineMode]]) ifTrue: [ ^ instruction ].

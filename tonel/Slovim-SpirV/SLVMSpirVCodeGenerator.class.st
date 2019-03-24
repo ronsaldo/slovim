@@ -350,6 +350,26 @@ SLVMSpirVCodeGenerator >> basicBlockLabelId: basicBlock [
 	^ basicBlockDictionary at: basicBlock ifAbsentPut: [ builder newId ].
 ]
 
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> emitControlFlowMergeBlock: mergeBlock continueBlock: continueBlock [
+	| mergeBlockId continueBlockId |
+	mergeBlock ifNil: [ ^ self ].
+	mergeBlockId := self basicBlockLabelId: mergeBlock.
+	continueBlock ifNotNil: [ 
+		continueBlockId := self basicBlockLabelId: continueBlock.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpLoopMerge 
+			operands: { mergeBlockId . continueBlockId . SpvLoopControlNone }
+		)
+	] ifNil: [ 
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpSelectionMerge 
+			operands: { mergeBlockId . SpvSelectionControlNone }
+		)
+	].
+
+]
+
 { #category : #'code generation' }
 SLVMSpirVCodeGenerator >> emitValue: value name: name [
 	"Do not emit duplicated names. This crashes the NVIDIA driver."
@@ -606,27 +626,13 @@ SLVMSpirVCodeGenerator >> visitBoolType: voidType [
 
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitBranch: branchInstruction [
-	| condition trueBlock falseBlock mergeBlock continueBlock |
+	| condition trueBlock falseBlock |
 	^ self instructionTranslation: branchInstruction do: [ :id |
 		condition := self translateValue: branchInstruction condition.
 		trueBlock := self basicBlockLabelId: branchInstruction trueBlock. 
-		falseBlock := self basicBlockLabelId: branchInstruction falseBlock. 
-		branchInstruction mergeBlock ifNotNil: [
-			mergeBlock := self basicBlockLabelId: branchInstruction mergeBlock.
-			branchInstruction continueBlock ifNotNil: [
-				continueBlock := self basicBlockLabelId: branchInstruction continueBlock.
-				builder addFunctionInstruction: (SpirVInstruction
-					opcode: SpvOpLoopMerge 
-					operands: { mergeBlock . continueBlock . SpvLoopControlNone }
-				)
-			] ifNil: [
-				builder addFunctionInstruction: (SpirVInstruction
-					opcode: SpvOpSelectionMerge 
-					operands: { mergeBlock . SpvSelectionControlNone }
-				)
-			]
-		].
-	
+		falseBlock := self basicBlockLabelId: branchInstruction falseBlock.
+		self emitControlFlowMergeBlock: branchInstruction block mergeBlock continueBlock: branchInstruction block continueBlock.
+
 		builder addFunctionInstruction: (SpirVInstruction
 			opcode: SpvOpBranchConditional
 			operands: { condition . trueBlock . falseBlock }
@@ -857,6 +863,11 @@ SLVMSpirVCodeGenerator >> visitFunction: function [
 	| functionType resultType |
 	self applyPassesInFunction: function.
 	^ self functionTranslation: function do: [ :id |
+		compilationTarget emittingDebugInformation ifTrue: [ 
+			self emitValue: id name: (function unmangledName
+				ifNotNil: [:name | name ]
+				ifNil: [function name ]).
+		].
 		functionType := self translateValue: function functionType.
 		resultType := self translateValue: function functionType returnType.
 		
@@ -1082,6 +1093,8 @@ SLVMSpirVCodeGenerator >> visitJump: jumpInstruction [
 	| destination |
 	^ self instructionTranslation: jumpInstruction do: [ :id |
 		destination := self basicBlockLabelId: (jumpInstruction destination). 
+		self emitControlFlowMergeBlock: jumpInstruction block mergeBlock continueBlock: jumpInstruction block continueBlock.
+
 		builder addFunctionInstruction: (SpirVInstruction
 			opcode: SpvOpBranch
 			operands: { destination }
@@ -1415,6 +1428,19 @@ SLVMSpirVCodeGenerator >> visitUnaryOperation: unaryOp [
 			type: resultType
 			result: id
 			operands: { operand }
+		)
+	]
+]
+
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> visitUndefinedInstruction: undefined [
+	| resultType |
+	^ self instructionTranslation: undefined do: [ :id |
+		resultType := self translateValue: undefined type.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpUndef
+			type: resultType
+			result: id
 		)
 	]
 ]

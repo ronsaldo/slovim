@@ -16,6 +16,7 @@ SLVMFunctionOptimizationTest >> functionArguments: argumentTypes returnType: ret
 	functionType := SLVMFunctionType arguments: argumentTypes returnType: returnType.
 	function := SLVMFunction module: module name: #testFunction functionType: functionType.
 	builder := SLVMBuilder on: function.
+	^ function
 ]
 
 { #category : #initialization }

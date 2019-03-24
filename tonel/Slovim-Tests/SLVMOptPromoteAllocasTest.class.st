@@ -4,9 +4,6 @@ A SLVMOptPromoteAllocasTest is a test class for testing the behavior of SLVMOptP
 Class {
 	#name : #SLVMOptPromoteAllocasTest,
 	#superclass : #SLVMFunctionOptimizationTest,
-	#instVars : [
-		'matrixStruct'
-	],
 	#category : #'Slovim-Tests'
 }
 
@@ -95,6 +92,57 @@ SLVMOptPromoteAllocasTest >> testHalfBranch [
 ]
 
 { #category : #tests }
+SLVMOptPromoteAllocasTest >> testRangeLoopSum [
+	| sum sequence return |
+	self functionArguments: #() returnType: target int.
+	
+	sequence := builder sequenceWith: [ :b |
+		sum := builder alloca: target int.
+		builder store: (builder constInt: 0) in: sum.
+		
+		builder from: (builder constInt: 0) to: (builder constInt: 10) by: (builder constInt: 1) doSequenceWith: [ :i |
+			builder store: (builder add: (builder load: sum) with: i)
+				in: sum
+		].
+	
+		return := b return: (builder load: sum)
+	].
+
+	SLVMOptPromoteAllocas passOnFunction: function.
+
+	self assert: sequence block equals: function basicBlocks first.
+	self assert: sequence exitBlock equals: function basicBlocks last.
+	self assert: sequence result equals: nil.
+	
+	self assert: return value isPhi
+]
+
+{ #category : #tests }
+SLVMOptPromoteAllocasTest >> testRangeLoopUndefinedSum [
+	| sum sequence return |
+	self functionArguments: #() returnType: target int.
+	
+	sequence := builder sequenceWith: [ :b |
+		sum := builder alloca: target int.
+	
+		builder from: (builder constInt: 0) to: (builder constInt: 10) by: (builder constInt: 1) doSequenceWith: [ :i |
+			builder store: (builder add: (builder load: sum) with: i)
+				in: sum
+		].
+	
+		return := b return: (builder load: sum)
+	].
+
+	SLVMOptPromoteAllocas passOnFunction: function.
+
+	self assert: sequence block equals: function basicBlocks first.
+	self assert: sequence exitBlock equals: function basicBlocks last.
+	self assert: sequence result equals: nil.
+	
+	self assert: return value isPhi.
+]
+
+{ #category : #tests }
 SLVMOptPromoteAllocasTest >> testSingleBlock [
 	| entryBlock variable |
 	self functionArguments: #() returnType: target int.
@@ -106,6 +154,7 @@ SLVMOptPromoteAllocasTest >> testSingleBlock [
 		return: (builder load: variable).
 		
 	SLVMOptPromoteAllocas passOnFunction: function.
+
 	self assert: entryBlock size = 1.
 	self assert: entryBlock firstInstruction isReturn.
 	self assert: entryBlock firstInstruction value isConstantValue.

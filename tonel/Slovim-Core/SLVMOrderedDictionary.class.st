@@ -33,7 +33,7 @@ SLVMOrderedDictionary >> at: aKey put: aValue [
 
 { #category : #accessing }
 SLVMOrderedDictionary >> do: aBlock [
-	root ifNotNil: [ root do: [:association | aBlock value: association value] ]
+	root ifNotNil: [ root do: [:association | aBlock value: association] ]
 ]
 
 { #category : #adding }
@@ -43,7 +43,7 @@ SLVMOrderedDictionary >> errorKeyNotFound: aKey [
 
 { #category : #accessing }
 SLVMOrderedDictionary >> first [
-	^ self firstNode ifNotNil: [ :node | node value value ]
+	^ self firstNode ifNotNil: [ :node | node value ]
 ]
 
 { #category : #testing }
@@ -52,8 +52,13 @@ SLVMOrderedDictionary >> includesKey: aValue [
 ]
 
 { #category : #accessing }
+SLVMOrderedDictionary >> keysDo: aBlock [
+	root ifNotNil: [ root do: [:association | aBlock value: association key] ]
+]
+
+{ #category : #accessing }
 SLVMOrderedDictionary >> last [
-	^ self lastNode ifNotNil: [ :node | node value value ]
+	^ self lastNode ifNotNil: [ :node | node value ]
 ]
 
 { #category : #adding }
@@ -89,4 +94,9 @@ SLVMOrderedDictionary >> removeKey: key ifAbsent: ifAbsentBlock [
 		self deleteKey: key.
 		^ oldValue
 	]
+]
+
+{ #category : #accessing }
+SLVMOrderedDictionary >> valuesDo: aBlock [
+	root ifNotNil: [ root do: [:association | aBlock value: association value] ]
 ]

@@ -15,11 +15,6 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
-{ #category : #adding }
-SLVMInstruction >> addUnreachableSuccessors [
-	"This is used by branching instructions"
-]
-
 { #category : #enumerating }
 SLVMInstruction >> allInstructionsDo: aBlock [
 	aBlock value: self

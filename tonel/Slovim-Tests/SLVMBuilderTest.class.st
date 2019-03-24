@@ -152,8 +152,8 @@ SLVMBuilderTest >> testIfExpression [
 
 	branch := function basicBlocks first lastInstruction.
 	self assert: branch isBranch.
-	self assert: branch mergeBlock isNotNil.
-	self assert: branch continueBlock isNil.
+	self assert: branch block mergeBlock isNotNil.
+	self assert: branch block continueBlock isNil.
 	self assert: function basicBlocks size equals: 4.
 	self assert: entrySequence block equals: function basicBlocks first.
 	self assert: entrySequence exitBlock equals: function basicBlocks last.
@@ -175,8 +175,8 @@ SLVMBuilderTest >> testIfExpressionNoMerge [
 
 	branch := function basicBlocks first lastInstruction.
 	self assert: branch isBranch.
-	self assert: branch mergeBlock isNotNil.
-	self assert: branch continueBlock isNil.
+	self assert: branch block mergeBlock isNotNil.
+	self assert: branch block continueBlock isNil.
 	self assert: function basicBlocks size equals: 4.
 	self assert: entrySequence block equals: function basicBlocks first.
 	self assert: entrySequence exitBlock equals: function basicBlocks last.
@@ -198,7 +198,7 @@ SLVMBuilderTest >> testIfSelection [
 		result := builder alloca: target int.
 		condition := builder ilt: intArgument with: constant.
 		branch := builder branch: condition ifTrue: trueBlock ifFalse: falseBlock.
-		branch mergeBlock: mergeBlock.
+		branch block mergeBlock: mergeBlock.
 	].
 
 	builder withBasicBlock: trueBlock do: [
@@ -219,8 +219,8 @@ SLVMBuilderTest >> testIfSelection [
 	self assert: branch isTerminator.
 	self assert: branch trueBlock equals: trueBlock.
 	self assert: branch falseBlock equals: falseBlock.
-	self assert: branch mergeBlock equals: mergeBlock.
-	self assert: branch continueBlock equals: nil.
+	self assert: branch block mergeBlock equals: mergeBlock.
+	self assert: branch block continueBlock equals: nil.
 
 	self assert: entry successors equals: {trueBlock . falseBlock}.
 	self assert: mergeBlock predecessors equals: {trueBlock . falseBlock}.
@@ -238,7 +238,7 @@ SLVMBuilderTest >> testIfSelectionNoMerge [
 	builder withBasicBlock: entry do: [
 		condition := builder ilt: intArgument with: constant.
 		branch := builder branch: condition ifTrue: trueBlock ifFalse: falseBlock.
-		branch mergeBlock: mergeBlock.
+		branch block mergeBlock: mergeBlock.
 	].
 
 	builder withBasicBlock: trueBlock do: [
@@ -253,13 +253,13 @@ SLVMBuilderTest >> testIfSelectionNoMerge [
 		builder unreachable
 	].
 
-	branch addUnreachableSuccessors.
+	branch block addUnreachableStructuredSuccessors.
 	self assert: branch isBranch.
 	self assert: branch isTerminator.
 	self assert: branch trueBlock equals: trueBlock.
 	self assert: branch falseBlock equals: falseBlock.
-	self assert: branch mergeBlock equals: mergeBlock.
-	self assert: branch continueBlock equals: nil.
+	self assert: branch block mergeBlock equals: mergeBlock.
+	self assert: branch block continueBlock equals: nil.
 
 	self assert: entry successors equals: {trueBlock . falseBlock . mergeBlock}.
 	self assert: mergeBlock predecessors equals: {entry}.

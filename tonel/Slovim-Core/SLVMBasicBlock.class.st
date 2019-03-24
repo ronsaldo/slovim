@@ -17,7 +17,11 @@ Class {
 		'successors',
 		'immediateDominator',
 		'dominanceFrontier',
-		'backEdgesToMe'
+		'backEdgesToMe',
+		'structuredControlFlowHeader',
+		'mergeBlock',
+		'continueBlock',
+		'unreachableSuccessors'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -161,6 +165,24 @@ SLVMBasicBlock >> addQuiet: anInstruction [
 	^ anInstruction
 ]
 
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> addUnreachableStructuredSuccessors [
+	| changed |
+	changed := false.
+	unreachableSuccessors := #().
+	(mergeBlock isNotNil and: [ mergeBlock predecessors isEmpty ]) ifTrue: [
+		unreachableSuccessors := { mergeBlock }.
+		changed := true.
+	].
+
+	(continueBlock isNotNil and: [ continueBlock predecessors isEmpty]) ifTrue: [
+		unreachableSuccessors := unreachableSuccessors , { continueBlock }.
+		changed := true.
+	].
+
+	changed ifTrue: [ self computeSuccessors. ]
+]
+
 { #category : #adding }
 SLVMBasicBlock >> addWithName: anInstruction before: instructionPoint [
 	anInstruction name ifNil: [ anInstruction name: function generateSymbol ].
@@ -182,6 +204,13 @@ SLVMBasicBlock >> allocaInstructionsDo: aBlock [
 	]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMBasicBlock >> applySubstitutions: substitutionDictionary [
+	structuredControlFlowHeader ifNotNil: [ structuredControlFlowHeader := substitutionDictionary at: structuredControlFlowHeader ].
+	mergeBlock ifNotNil: [ mergeBlock := substitutionDictionary at: mergeBlock ].
+	continueBlock ifNotNil: [ continueBlock := substitutionDictionary at: continueBlock ].
+]
+
 { #category : #accessing }
 SLVMBasicBlock >> backEdgesToMe [
 	^ backEdgesToMe
@@ -199,6 +228,29 @@ SLVMBasicBlock >> childrenNodes [
 	]
 ]
 
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> clearPredecessorsFor: singlePredecessors [
+	self assert: predecessors size = 1.
+	self assert: predecessors first == singlePredecessors.
+	predecessors := #()
+	
+]
+
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> clearUnreachableStructuredSuccessors [
+	| changed oldUnreachableSuccessors|
+	oldUnreachableSuccessors := unreachableSuccessors.
+	changed := unreachableSuccessors isNotEmpty.
+	unreachableSuccessors := #().
+
+	changed ifTrue: [
+		self computeSuccessors.
+		oldUnreachableSuccessors do: [ :unreachable |
+			unreachable clearPredecessorsFor: self.
+		]
+	]
+]
+
 { #category : #adding }
 SLVMBasicBlock >> computeLastInstruction [
 	| current |
@@ -213,13 +265,38 @@ SLVMBasicBlock >> computeLastInstruction [
 { #category : #adding }
 SLVMBasicBlock >> computeSuccessors [
 	self isEmpty ifTrue: [ 
-		successors := #()
+		successors := unreachableSuccessors
 	] ifFalse: [
-		successors := self lastInstruction successors.
-		successors do: [ :suc | suc addPredecessor: self]
+		successors := self lastInstruction successors , unreachableSuccessors.
 	].
 
+	successors do: [ :suc | suc addPredecessor: self]
 
+
+]
+
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> continueBlock [
+	^ continueBlock
+]
+
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> continueBlock: aBasicBlock [
+	continueBlock ifNotNil: [ continueBlock structuredControlFlowHeader: nil ].
+	continueBlock := aBasicBlock.
+	continueBlock ifNotNil: [ continueBlock structuredControlFlowHeader: self ]
+	
+]
+
+{ #category : #'as yet unclassified' }
+SLVMBasicBlock >> copyingFrom: sourceBlock [
+	"This is used for inlining. This is a quiet copy that does
+	not preserve the structured control flow invariants."
+	
+	name := sourceBlock name.
+	structuredControlFlowHeader := sourceBlock structuredControlFlowHeader.
+	mergeBlock := sourceBlock mergeBlock.
+	continueBlock := sourceBlock continueBlock.
 ]
 
 { #category : #accessing }
@@ -231,6 +308,14 @@ SLVMBasicBlock >> countNumberOfInstructions [
 		current := current nextInstruction.
 		numberOfInstructions := numberOfInstructions + 1.
 	]
+]
+
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> destroyStructuredCFGHeaderRole [
+	self
+		mergeBlock: nil;
+		continueBlock: nil;
+		clearUnreachableStructuredSuccessors.
 ]
 
 { #category : #accessing }
@@ -329,6 +414,7 @@ SLVMBasicBlock >> initialize [
 	super initialize.
 	predecessors := #().
 	successors := #().
+	unreachableSuccessors := #().
 	backEdgesToMe := #().
 ]
 
@@ -356,6 +442,7 @@ SLVMBasicBlock >> instructionsDo: aBlock [
 	currentInstruction := self firstInstruction.
 	[ currentInstruction isNotNil ] whileTrue: [ 
 		nextInstruction := currentInstruction nextInstruction.
+		self assert: currentInstruction block == self.
 		aBlock value: currentInstruction.
 		currentInstruction := nextInstruction
 	]
@@ -392,6 +479,49 @@ SLVMBasicBlock >> isLastTerminator [
 	^ self isEmpty not and: [ self lastInstruction isTerminator ]
 ]
 
+{ #category : #testing }
+SLVMBasicBlock >> isPartOfStructuredControlFlow [
+	^ self isStructuredControlFlowDivergence or: [self isStructuredControlFlowMergeOrContinueBlock]
+]
+
+{ #category : #testing }
+SLVMBasicBlock >> isStructuredControlFlowContinueBlock [
+	^ structuredControlFlowHeader
+		ifNil: [ false ]
+		ifNotNil: [ structuredControlFlowHeader continueBlock == self ]
+]
+
+{ #category : #testing }
+SLVMBasicBlock >> isStructuredControlFlowDivergence [
+	^ mergeBlock isNotNil
+]
+
+{ #category : #testing }
+SLVMBasicBlock >> isStructuredControlFlowLoop [
+	^ continueBlock isNotNil
+]
+
+{ #category : #testing }
+SLVMBasicBlock >> isStructuredControlFlowMergeBlock [
+	^ structuredControlFlowHeader
+		ifNil: [ false ]
+		ifNotNil: [ structuredControlFlowHeader mergeBlock == self ]
+]
+
+{ #category : #testing }
+SLVMBasicBlock >> isStructuredControlFlowMergeOrContinueBlock [
+	^ structuredControlFlowHeader
+		ifNil: [ false ]
+		ifNotNil: [
+			structuredControlFlowHeader mergeBlock == self or:
+			[structuredControlFlowHeader continueBlock == self]]
+]
+
+{ #category : #testing }
+SLVMBasicBlock >> isStructuredControlFlowSelection [
+	^ mergeBlock isNotNil and: [continueBlock isNil]
+]
+
 { #category : #accessing }
 SLVMBasicBlock >> lastInstruction [
 	^ lastInstruction
@@ -400,6 +530,19 @@ SLVMBasicBlock >> lastInstruction [
 { #category : #accessing }
 SLVMBasicBlock >> livenessIndex [
 	^ index
+]
+
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> mergeBlock [
+	^ mergeBlock
+]
+
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> mergeBlock: aBasicBlock [
+	mergeBlock ifNotNil: [ mergeBlock structuredControlFlowHeader: nil ].
+	mergeBlock := aBasicBlock.
+	mergeBlock ifNotNil: [ mergeBlock structuredControlFlowHeader: self ]
+	
 ]
 
 { #category : #accessing }
@@ -533,6 +676,18 @@ SLVMBasicBlock >> removeFromFunction [
 	function removeBasicBlock: self
 ]
 
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> removedUnreachableSuccessor: oldUnreachable [
+	| oldUnreachableSuccessors|
+	oldUnreachableSuccessors := unreachableSuccessors.
+	unreachableSuccessors := oldUnreachableSuccessors copyWithout: oldUnreachable.
+
+	oldUnreachableSuccessors	= unreachableSuccessors ifFalse: [ 
+		self computeSuccessors.
+		oldUnreachable clearPredecessorsFor: self.
+	].
+]
+
 { #category : #adding }
 SLVMBasicBlock >> setChain: anInstructionChain [ 
 	| current |
@@ -559,6 +714,72 @@ SLVMBasicBlock >> size [
 	^ result
 ]
 
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> stealStructuredCFGHeaderFrom: otherBlock [
+	| newMergeBlock newContinueBlock |
+	self assert: self isStructuredControlFlowDivergence not.
+
+	newMergeBlock := otherBlock mergeBlock.
+	newContinueBlock := otherBlock continueBlock.
+	unreachableSuccessors := otherBlock unreachableSuccessors.
+	otherBlock
+		mergeBlock: nil;
+		continueBlock: nil;
+		clearUnreachableStructuredSuccessors.
+
+	self
+		mergeBlock: newMergeBlock;
+		continueBlock: newContinueBlock.
+
+]
+
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> stealStructuredCFGRoleFrom: otherBlock [
+	| cfgHeader |
+	self isPartOfStructuredControlFlow ifTrue: [ 
+		self error: 'This block merging case is not yet supported.'
+	].
+
+	otherBlock isStructuredControlFlowDivergence ifTrue: [
+		^ self stealStructuredCFGHeaderFrom: otherBlock
+	].
+
+	(otherBlock isStructuredControlFlowMergeBlock and: [ otherBlock isStructuredControlFlowContinueBlock ]) ifTrue: [
+		self error: 'Invalid structured CFG detected'
+	].
+
+	cfgHeader := otherBlock structuredControlFlowHeader.
+	otherBlock isStructuredControlFlowMergeBlock ifTrue: [
+		cfgHeader
+			mergeBlock: self;
+			removedUnreachableSuccessor: otherBlock.
+		^ self
+	].
+
+	otherBlock isStructuredControlFlowContinueBlock ifTrue: [
+		cfgHeader
+			continueBlock: self;
+			removedUnreachableSuccessor: otherBlock.
+		^ self
+	].
+
+	self error: 'This block merging case is not yet supported.'
+]
+
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> structuredControlFlowHeader [
+	^ structuredControlFlowHeader
+]
+
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> structuredControlFlowHeader: aBasicBlock [
+	(structuredControlFlowHeader isNotNil and: [aBasicBlock isNotNil]) ifTrue: [ 
+		self assert: structuredControlFlowHeader == aBasicBlock
+	].
+
+	structuredControlFlowHeader := aBasicBlock
+]
+
 { #category : #accessing }
 SLVMBasicBlock >> successors [
 	^ successors
@@ -567,6 +788,20 @@ SLVMBasicBlock >> successors [
 { #category : #accessing }
 SLVMBasicBlock >> successors: anObject [
 	successors := anObject
+]
+
+{ #category : #removing }
+SLVMBasicBlock >> unreachablePredecessorRemoved: oldPredecessor [
+	self predecessorsCouldBeRemoved.
+	self assert: (predecessors includes: oldPredecessor) not.
+	self phiInstructionsDo: [ :instruction |
+		instruction incomingBlockRemoved: oldPredecessor
+	]
+]
+
+{ #category : #'structured control flow' }
+SLVMBasicBlock >> unreachableSuccessors [
+	^ unreachableSuccessors
 ]
 
 { #category : #accessing }

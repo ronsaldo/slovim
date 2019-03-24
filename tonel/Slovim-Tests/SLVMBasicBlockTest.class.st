@@ -7,7 +7,7 @@ Class {
 	#category : #'Slovim-Tests'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #tests }
 SLVMBasicBlockTest >> testAddInstruction [
 	| basicBlock instruction |
 	basicBlock := SLVMBasicBlock new.
@@ -22,7 +22,7 @@ SLVMBasicBlockTest >> testAddInstruction [
 	
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #tests }
 SLVMBasicBlockTest >> testNew [
 	| basicBlock |
 	basicBlock := SLVMBasicBlock new.
@@ -31,4 +31,64 @@ SLVMBasicBlockTest >> testNew [
 	self assert: basicBlock predecessors isEmpty.
 	self assert: basicBlock successors isEmpty.
 	
+]
+
+{ #category : #tests }
+SLVMBasicBlockTest >> testStealStructuredCFGHeaderFrom [
+	| header merge continue oldHeader |
+	oldHeader := SLVMBasicBlock new.
+	header := SLVMBasicBlock new.
+	merge := SLVMBasicBlock new.
+	continue := SLVMBasicBlock new.
+	
+	oldHeader
+		mergeBlock: merge;
+		continueBlock: continue.
+		
+	header stealStructuredCFGRoleFrom: oldHeader.
+
+	self assert: oldHeader mergeBlock equals: nil.
+	self assert: oldHeader continueBlock equals: nil.
+	
+	self assert: merge structuredControlFlowHeader equals: header.
+	self assert: continue structuredControlFlowHeader equals: header.
+	self deny: header isStructuredControlFlowMergeBlock.
+	self deny: header isStructuredControlFlowContinueBlock.
+
+	self assert: merge isStructuredControlFlowMergeBlock.
+	self deny: merge isStructuredControlFlowContinueBlock.
+
+	self deny: continue isStructuredControlFlowMergeBlock.
+	self assert: continue isStructuredControlFlowContinueBlock.
+
+]
+
+{ #category : #tests }
+SLVMBasicBlockTest >> testStructuredControlFlowLinks [
+	| header merge continue |
+	header := SLVMBasicBlock new.
+	merge := SLVMBasicBlock new.
+	continue := SLVMBasicBlock new.
+	
+	header
+		mergeBlock: merge;
+		continueBlock: continue.
+		
+	self assert: header isPartOfStructuredControlFlow.
+	self assert: merge isPartOfStructuredControlFlow.
+	self assert: continue isPartOfStructuredControlFlow.
+	
+	self assert: merge structuredControlFlowHeader equals: header.
+	self assert: continue structuredControlFlowHeader equals: header.
+	self deny: header isStructuredControlFlowMergeBlock.
+	self deny: header isStructuredControlFlowContinueBlock.
+
+	self assert: merge isStructuredControlFlowMergeBlock.
+	self deny: merge isStructuredControlFlowContinueBlock.
+	self assert: merge isStructuredControlFlowMergeOrContinueBlock.
+
+	self deny: continue isStructuredControlFlowMergeBlock.
+	self assert: continue isStructuredControlFlowContinueBlock.
+	self assert: merge isStructuredControlFlowMergeOrContinueBlock.
+
 ]

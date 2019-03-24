@@ -367,15 +367,21 @@ SLVMBuilder >> div: left with: right name: resultName [
 
 { #category : #'high level structures' }
 SLVMBuilder >> doSequence: bodySequence whileSequence: conditionSequence [
-	| mergeBlock loopBranch |
+	| mergeBlock loopHeader |
 	conditionSequence exitBlock isLastTerminator ifTrue: [ ^ nil ].
 	self assert: conditionSequence result type isBooleanType.
 	
 	mergeBlock := self newBasicBlock: #doWhileMerge.
 
-	loopBranch := self jump: bodySequence block.
-	loopBranch continueBlock: bodySequence block;
-		mergeBlock: mergeBlock.
+	loopHeader := bodySequence block.
+
+	"Enter the loop."	
+	self jump: loopHeader.
+	
+	"Set the structure CFG nodes"
+	loopHeader
+		mergeBlock: mergeBlock;
+		continueBlock: loopHeader.
 
 	"Jump to the condition check."
 	bodySequence exitBlock isLastTerminator ifFalse: [
@@ -386,7 +392,7 @@ SLVMBuilder >> doSequence: bodySequence whileSequence: conditionSequence [
 	conditionSequence exitBlock add: (SLVMBranch condition: conditionSequence result ifTrue: bodySequence block ifFalse: mergeBlock).
 	
 	"Enter the merge block."
-	loopBranch addUnreachableSuccessors.
+	loopHeader addUnreachableStructuredSuccessors.
 	self currentBlock: mergeBlock.
 ]
 
@@ -578,7 +584,7 @@ SLVMBuilder >> frem: left with: right name: resultName [
 
 { #category : #'high level structures' }
 SLVMBuilder >> from: startCount to: endCount by: increment doSequenceWith: bodyBlock [
-	| mergeBlock counterType enterLoopBlock currentCount conditionSequence continueSequence nextValue bodySequence conditionBranch |
+	| mergeBlock counterType enterLoopBlock currentCount conditionSequence continueSequence nextValue bodySequence loopHeader |
 	mergeBlock := SLVMBasicBlock new name: #rangeLoopMerge.
 	self assert: startCount type == endCount type.
 	self assert: endCount type == increment type.
@@ -611,6 +617,11 @@ SLVMBuilder >> from: startCount to: endCount by: increment doSequenceWith: bodyB
 		self jump: conditionSequence block
 	].
 
+	loopHeader := conditionSequence block.
+	loopHeader
+		mergeBlock: mergeBlock;
+		continueBlock: continueSequence block.
+
 	"Body sequence"
 	bodySequence := self sequence: #rangeLoopSequence with: [ :b |
 		bodyBlock cull: currentCount cull: b
@@ -619,13 +630,9 @@ SLVMBuilder >> from: startCount to: endCount by: increment doSequenceWith: bodyB
 	bodySequence exitBlock ifNotNil: [ :block | block add: (SLVMJump destination: continueSequence block) ].
 	
 	"Loop condition check branch"
-	conditionBranch := SLVMBranch condition: conditionSequence result
+	conditionSequence exitBlock add: (SLVMBranch condition: conditionSequence result
 		ifTrue: bodySequence block
-		ifFalse: mergeBlock.
-	conditionBranch
-		mergeBlock: mergeBlock;
-		continueBlock: continueSequence block.
-	conditionSequence exitBlock add: conditionBranch.
+		ifFalse: mergeBlock).
 	
 	"Enter the loop."
 	self jump: conditionSequence block.
@@ -634,7 +641,18 @@ SLVMBuilder >> from: startCount to: endCount by: increment doSequenceWith: bodyB
 	function addBasicBlock: mergeBlock.
 	self currentBlock: mergeBlock.
 
+	loopHeader addUnreachableStructuredSuccessors.
 	^ nil
+]
+
+{ #category : #'high level structures' }
+SLVMBuilder >> from: startCount to: endCount doSequenceWith: bodyBlock [
+	| incrementValue increment |
+	incrementValue := startCount type isIntegerType
+		ifTrue: [ 1 ]
+		ifFalse: [ 1.0 ].
+	increment := self const: incrementValue type: startCount type.
+	^ self from: startCount to: endCount by: increment doSequenceWith: bodyBlock
 ]
 
 { #category : #arithmetic }
@@ -754,7 +772,7 @@ SLVMBuilder >> if: condition trueSequence: trueSequence falseSequence: falseSequ
 	].
 
 	branch := self branch: condition ifTrue: trueBlock ifFalse: falseBlock.
-	branch
+	branch block
 		mergeBlock: mergeBlock.
 		
 	self currentBlock: mergeBlock.
@@ -762,7 +780,7 @@ SLVMBuilder >> if: condition trueSequence: trueSequence falseSequence: falseSequ
 	"Is this an unreachable merge block?"
 	mergeBlock predecessors ifEmpty: [
 		self unreachable.
-		branch addUnreachableSuccessors.
+		branch block addUnreachableStructuredSuccessors.
 		^ nil
 	].
 
@@ -1678,7 +1696,7 @@ SLVMBuilder >> vectorSub: left with: right name: name [
 
 { #category : #'high level structures' }
 SLVMBuilder >> whileSequence: conditionSequence doSequence: bodySequence [
-	| mergeBlock loopBranch |
+	| mergeBlock loopHeader |
 	conditionSequence exitBlock isLastTerminator ifTrue: [ ^ nil ].
 	self assert: conditionSequence result type isBooleanType.
 	
@@ -1686,12 +1704,16 @@ SLVMBuilder >> whileSequence: conditionSequence doSequence: bodySequence [
 
 	self jump: conditionSequence block.
 	
+	loopHeader := conditionSequence block.
+	loopHeader
+		mergeBlock: mergeBlock;
+		continueBlock: loopHeader.
+	
 	"Create the loop branch."
-	loopBranch := SLVMBranch condition: conditionSequence result ifTrue: bodySequence block ifFalse: mergeBlock.
-	loopBranch
-		continueBlock: bodySequence block;
-		mergeBlock: mergeBlock.
-	conditionSequence exitBlock add: loopBranch.
+	conditionSequence exitBlock add: (SLVMBranch
+		condition: conditionSequence result
+		ifTrue: bodySequence block
+		ifFalse: mergeBlock).
 	
 	"Jump back to the condition check."
 	bodySequence exitBlock isLastTerminator ifFalse: [
@@ -1699,7 +1721,7 @@ SLVMBuilder >> whileSequence: conditionSequence doSequence: bodySequence [
 	].
 
 	"Enter the merge block."
-	loopBranch addUnreachableSuccessors.
+	loopHeader addUnreachableStructuredSuccessors.
 	self currentBlock: mergeBlock.
 ]
 
