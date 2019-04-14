@@ -1,6 +1,8 @@
 Class {
 	#name : #SLVMHLLGlobalReferenceExtractor,
-	#superclass : #SLVMValueVisitor,
+	#superclass : #Object,
+	#traits : 'TSLVMValueVisitor',
+	#classTraits : 'TSLVMValueVisitor classTrait',
 	#instVars : [
 		'globals',
 		'codeGenerator'
