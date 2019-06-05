@@ -12,6 +12,11 @@ SLVMTruncate >> accept: aVisitor [
 	^ aVisitor visitTruncate: self
 ]
 
+{ #category : #testing }
+SLVMTruncate >> isTruncate [
+	^ true
+]
+
 { #category : #printing }
 SLVMTruncate >> mnemonic [
 	^ #truncate

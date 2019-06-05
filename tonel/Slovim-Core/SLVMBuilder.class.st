@@ -1548,6 +1548,11 @@ SLVMBuilder >> sub: left with: right name: resultName [
 ]
 
 { #category : #casting }
+SLVMBuilder >> truncate: source target: targetType [
+	^ self truncate: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
 SLVMBuilder >> truncate: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMTruncate source: source targetType: targetType) name: resultName
 ]

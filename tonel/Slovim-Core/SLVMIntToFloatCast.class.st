@@ -12,6 +12,11 @@ SLVMIntToFloatCast >> accept: aVisitor [
 	^ aVisitor visitIntToFloatCast: self
 ]
 
+{ #category : #testing }
+SLVMIntToFloatCast >> isIntToFloatCast [
+	^ true
+]
+
 { #category : #printing }
 SLVMIntToFloatCast >> mnemonic [
 	^ #int2fp

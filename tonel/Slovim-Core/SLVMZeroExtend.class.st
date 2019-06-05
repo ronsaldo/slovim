@@ -12,6 +12,11 @@ SLVMZeroExtend >> accept: aVisitor [
 	^ aVisitor visitZeroExtend: self
 ]
 
+{ #category : #testing }
+SLVMZeroExtend >> isZeroExtend [
+	^ true
+]
+
 { #category : #printing }
 SLVMZeroExtend >> mnemonic [
 	^ #zext

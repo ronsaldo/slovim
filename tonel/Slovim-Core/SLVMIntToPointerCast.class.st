@@ -9,6 +9,11 @@ SLVMIntToPointerCast >> accept: aVisitor [
 	^ aVisitor visitIntToPointerCast: self
 ]
 
+{ #category : #testing }
+SLVMIntToPointerCast >> isIntToPointerCast [
+	^ true
+]
+
 { #category : #visitor }
 SLVMIntToPointerCast >> mnemonic [
 	^ #int2ptr

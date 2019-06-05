@@ -12,6 +12,11 @@ SLVMSignExtend >> accept: aVisitor [
 	^ aVisitor visitSignExtend: self
 ]
 
+{ #category : #testing }
+SLVMSignExtend >> isSignExtend [
+	^ true
+]
+
 { #category : #printing }
 SLVMSignExtend >> mnemonic [
 	^ #sext

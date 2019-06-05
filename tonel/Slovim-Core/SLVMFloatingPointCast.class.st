@@ -12,6 +12,11 @@ SLVMFloatingPointCast >> accept: aVisitor [
 	^ aVisitor visitFloatingPointCast: self
 ]
 
+{ #category : #testing }
+SLVMFloatingPointCast >> isFloatingPointCast [
+	^ true
+]
+
 { #category : #printing }
 SLVMFloatingPointCast >> mnemonic [
 	^ #fpcast

@@ -145,6 +145,16 @@ SLVMInstruction >> isExtractValue [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isFloatToIntCast [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isFloatingPointCast [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isGetElementPointer [
 	^ false
 ]
@@ -170,6 +180,16 @@ SLVMInstruction >> isInstruction [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isIntToFloatCast [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isIntToPointerCast [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isJump [
 	^ false
 ]
@@ -182,6 +202,11 @@ SLVMInstruction >> isLoad [
 { #category : #testing }
 SLVMInstruction >> isMessageSend [
 	^ true
+]
+
+{ #category : #testing }
+SLVMInstruction >> isPointerToIntCast [
+	^ false
 ]
 
 { #category : #testing }
@@ -210,6 +235,11 @@ SLVMInstruction >> isReturnVoidFromContext [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isSignExtend [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isStore [
 	^ false
 ]
@@ -220,7 +250,17 @@ SLVMInstruction >> isTerminator [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isTruncate [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isUnreachable [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isZeroExtend [
 	^ false
 ]
 

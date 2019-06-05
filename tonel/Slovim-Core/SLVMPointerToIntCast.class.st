@@ -9,6 +9,11 @@ SLVMPointerToIntCast >> accept: aVisitor [
 	^ aVisitor visitPointerToIntCast:  self
 ]
 
+{ #category : #testing }
+SLVMPointerToIntCast >> isPointerToIntCast [
+	^ true
+]
+
 { #category : #visitor }
 SLVMPointerToIntCast >> mnemonic [
 	^ #ptr2int
