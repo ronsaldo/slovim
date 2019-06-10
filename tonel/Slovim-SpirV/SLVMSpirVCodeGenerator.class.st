@@ -804,6 +804,21 @@ SLVMSpirVCodeGenerator >> visitConstantVectorValue: constantVectorValue [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitConvertInteger: instruction [
+	| resultType source |
+	^ self instructionTranslation: instruction do: [ :id |
+		resultType := self translateValue: instruction type.
+		source := self translateValue: instruction source.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: (instruction type isSigned ifTrue: [ SpvOpSConvert ] ifFalse: [ SpvOpUConvert ])
+			type: resultType
+			result: id
+			operands: { source }
+		)
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitDiscardFragment: discardInstruction [
 	^ self instructionTranslation: discardInstruction do: [ :id |
 		builder addFunctionInstruction: (SpirVInstruction
@@ -1084,6 +1099,8 @@ SLVMSpirVCodeGenerator >> visitIntToFloatCast: instruction [
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitIntegerType: integerType [
 	^ self valueTranslation: integerType do: [ :id |
+		integerType size = 1 ifTrue: [ builder addCapability: SpvCapabilityInt8 ].
+		integerType size = 2 ifTrue: [ builder addCapability: SpvCapabilityInt16 ].
 		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypeInt result: id operands: {integerType size * 8. integerType isSigned asBit})
 	]
 ]
@@ -1314,6 +1331,11 @@ SLVMSpirVCodeGenerator >> visitShuffleVectors: shuffleVectors [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitSignExtend: instruction [
+	^ self visitConvertInteger: instruction
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitStore: storeInstruction [
 	| value variable |
 	^ self instructionTranslation: storeInstruction do: [ :id |
@@ -1417,6 +1439,11 @@ SLVMSpirVCodeGenerator >> visitTextureType: textureType [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitTruncate: instruction [
+	^ self visitConvertInteger: instruction
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitUnaryOperation: unaryOp [
 	| opcode resultType operand |
 	^ self instructionTranslation: unaryOp do: [ :id |
@@ -1484,4 +1511,9 @@ SLVMSpirVCodeGenerator >> visitVoidType: voidType [
 			result: id
 		)
 	]
+]
+
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> visitZeroExtend: instruction [
+	^ self visitConvertInteger: instruction
 ]
