@@ -204,6 +204,8 @@ SLVMSpirVCodeGenerator class >> initialize [
 		'texture.query.lod.size' (SpirV SpvOpImageQuerySizeLod (SpvCapabilityImageQuery))
 		'texture.image.read' (SpirV SpvOpImageRead)
 		'texture.image.write' (SpirV SpvOpImageWrite)
+		#'texture.image.fetch' (SpirV SpvOpImageFetch)
+		
 		
 		'fragment.derivative.dx' (SpirV SpvOpDPdx)
 		'fragment.derivative.dy' (SpirV SpvOpDPdy)
