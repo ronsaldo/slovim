@@ -160,7 +160,7 @@ SLVMETreeFunction >> selector [
 
 { #category : #accessing }
 SLVMETreeFunction >> selector: anObject [
-	self assert: anObject isSymbol.
+	self assert: (anObject isSymbol or: [anObject class == AdditionalMethodState]).
 	selector := anObject
 ]
 

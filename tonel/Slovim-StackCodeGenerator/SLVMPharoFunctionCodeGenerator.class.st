@@ -592,7 +592,11 @@ SLVMPharoFunctionCodeGenerator >> translateFunction: aFunction [
 		compiledMethod classBinding: etreeFunction classBinding
 	].
 	etreeFunction selector ifNotNil: [ 
-		compiledMethod selector: etreeFunction selector
+		etreeFunction selector class == AdditionalMethodState ifTrue: [ 
+			etreeFunction selector method: compiledMethod.
+			etreeFunction selector pragmas do: [ :pragma | pragma method: compiledMethod ]
+		].
+		compiledMethod literalAt: compiledMethod numLiterals - 1 put: etreeFunction selector
 	].
 
 	^ compiledMethod
