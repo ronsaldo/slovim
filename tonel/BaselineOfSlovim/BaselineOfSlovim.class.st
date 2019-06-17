@@ -48,6 +48,9 @@ BaselineOfSlovim >> baseline: spec [
 			group: #ShaderCompilation with: #(
 				#'Slovim-SpirV'
 			);
+			group: #Runtime with: #(
+				#'Slovim-Runtime'
+			);
 			group: #InImageCompilation with: #(
 				#'Slovim-StackCodeGenerator'
 				#'Slovim-Runtime'
