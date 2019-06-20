@@ -73,6 +73,12 @@ SLVMConstant class >> long: anInteger [
 ]
 
 { #category : #constructor }
+SLVMConstant class >> matrix: aMatrixType columns: columns [
+	self assert: aMatrixType isMatrixType.
+	^ SLVMConstantMatrixValue new type: aMatrixType; slots: columns
+]
+
+{ #category : #constructor }
 SLVMConstant class >> nullPointer: pointerType [
 	^ self type: pointerType value: 0
 ]
