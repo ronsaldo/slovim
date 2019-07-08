@@ -130,6 +130,7 @@ SLVMSpirVCodeGenerator class >> initialize [
 
 	UnaryOperationMap := Dictionary new.
 	#(
+		lnot SpvOpLogicalNot
 		not SpvOpNot
 		neg SpvOpSNegate
 		fneg SpvOpFNegate
