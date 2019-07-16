@@ -85,10 +85,13 @@ SLVMConstantBuiltInFunction class >> initialize [
 		"Fragment"
 		'fragment.derivative.dx'
 		'fragment.derivative.dy'
+		'fragment.derivative.fwidth'
 		'fragment.derivative.dx.fine'
 		'fragment.derivative.dy.fine'
+		'fragment.derivative.fwidth.fine'
 		'fragment.derivative.dx.coarse'
 		'fragment.derivative.dy.coarse'
+		'fragment.derivative.fwidth.coarse'
 		
 		"Shader barriers"
 		#'shader.barrier.execution'

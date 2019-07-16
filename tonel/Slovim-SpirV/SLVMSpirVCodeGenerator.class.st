@@ -211,10 +211,13 @@ SLVMSpirVCodeGenerator class >> initialize [
 		
 		'fragment.derivative.dx' (SpirV SpvOpDPdx)
 		'fragment.derivative.dy' (SpirV SpvOpDPdy)
+		'fragment.derivative.fwidth' (SpirV SpvOpFwidth)
 		'fragment.derivative.dx.fine' (SpirV SpvOpDPdxFine (SpvCapabilityDerivativeControl))
 		'fragment.derivative.dy.fine' (SpirV SpvOpDPdyFine (SpvCapabilityDerivativeControl))
+		'fragment.derivative.fwidth.fine' (SpirV SpvOpFwidthFine (SpvCapabilityDerivativeControl))
 		'fragment.derivative.dx.coarse' (SpirV SpvOpDPdxCoarse (SpvCapabilityDerivativeControl))
 		'fragment.derivative.dy.coarse' (SpirV SpvOpDPdyCoarse (SpvCapabilityDerivativeControl))
+		'fragment.derivative.fwidth.coarse' (SpirV SpvOpFwidthCoarse (SpvCapabilityDerivativeControl))
 		
 		#'shader.barrier.execution' (SpirV SpvOpControlBarrier () (SpvScopeWorkgroup SpvScopeWorkgroup 16r108))
 		#'shader.barrier.memory.all' (SpirV SpvOpMemoryBarrier () (SpvScopeDevice 16rd48))
