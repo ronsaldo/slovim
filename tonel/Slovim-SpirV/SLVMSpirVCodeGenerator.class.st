@@ -834,6 +834,21 @@ SLVMSpirVCodeGenerator >> visitDiscardFragment: discardInstruction [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitExtractValue: instruction [
+	| resultType aggregate |
+	^ self instructionTranslation: instruction do: [ :id |
+		resultType := self translateValue: instruction type.
+		aggregate := self translateValue: instruction aggregate.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpCompositeExtract
+			type: resultType
+			result: id
+			operands: { aggregate } , instruction indices
+		)
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitExtractVectorElement: extractElement [
 	| resultType vector index |
 	^ self instructionTranslation: extractElement do: [ :id |
@@ -1085,6 +1100,22 @@ SLVMSpirVCodeGenerator >> visitGlobalVariable: globalVariable [
 				operands: { id . SpvDecorationDescriptorSet  . bindingSet }
 			).
 		].
+	]
+]
+
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> visitInsertValue: instruction [
+	| resultType aggregate value |
+	^ self instructionTranslation: instruction do: [ :id |
+		resultType := self translateValue: instruction type.
+		aggregate := self translateValue: instruction aggregate.
+		value := self translateValue: instruction value.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpCompositeInsert
+			type: resultType
+			result: id
+			operands: { value . aggregate } , instruction indices
+		)
 	]
 ]
 
@@ -1448,6 +1479,11 @@ SLVMSpirVCodeGenerator >> visitTextureType: textureType [
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitTruncate: instruction [
 	^ self visitConvertInteger: instruction
+]
+
+{ #category : #visiting }
+SLVMSpirVCodeGenerator >> visitTupleType: structureType [
+	^ self visitStructureType: structureType
 ]
 
 { #category : #visitor }

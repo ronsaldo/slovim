@@ -548,6 +548,11 @@ SLVMType >> isTextureType [
 ]
 
 { #category : #testing }
+SLVMType >> isTupleType [
+	^ false
+]
+
+{ #category : #testing }
 SLVMType >> isType [
 	^ true
 ]
