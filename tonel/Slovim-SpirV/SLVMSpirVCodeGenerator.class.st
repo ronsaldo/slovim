@@ -201,6 +201,19 @@ SLVMSpirVCodeGenerator class >> initialize [
 		
 		'matrix.transpose' (SpirV SpvOpTranspose)
 		
+		#'pack.snorm2x16' (glsl450 GLSLstd450PackSnorm2x16)
+		#'pack.unorm2x16' (glsl450 GLSLstd450PackUnorm2x16)
+		#'pack.snorm4x8' (glsl450 GLSLstd450PackSnorm4x8)
+		#'pack.unorm4x8' (glsl450 GLSLstd450PackUnorm4x8)
+		#'pack.double2x32' (glsl450 GLSLstd450PackDouble2x32)
+		#'pack.half2x16' (glsl450 GLSLstd450PackHalf2x16)
+		#'unpack.snorm2x16' (glsl450 GLSLstd450UnpackSnorm2x16)
+		#'unpack.unorm2x16' (glsl450 GLSLstd450UnpackUnorm2x16)
+		#'unpack.snorm4x8' (glsl450 GLSLstd450UnpackSnorm4x8)
+		#'unpack.unorm4x8' (glsl450 GLSLstd450UnpackUnorm4x8)
+		#'unpack.double2x32' (glsl450 GLSLstd450UnpackDouble2x32)
+		#'unpack.half2x16' (glsl450 GLSLstd450UnpackHalf2x16)
+		
 		'texture.query.size' (SpirV SpvOpImageQuerySize (SpvCapabilityImageQuery))
 		'texture.query.lod.size' (SpirV SpvOpImageQuerySizeLod (SpvCapabilityImageQuery))
 		'texture.query.lod.count' (SpirV SpvOpImageQueryLevels (SpvCapabilityImageQuery))

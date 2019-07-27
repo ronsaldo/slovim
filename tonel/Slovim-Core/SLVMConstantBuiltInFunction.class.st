@@ -102,6 +102,20 @@ SLVMConstantBuiltInFunction class >> initialize [
 		#'shader.barrier.memory.shared'
 		#'shader.barrier.memory.group'
 		
+		"Packing"
+		#'pack.snorm2x16'
+		#'pack.unorm2x16'
+		#'pack.snorm4x8'
+		#'pack.unorm4x8'
+		#'pack.double2x32'
+		#'pack.half2x16'
+		#'unpack.snorm2x16'
+		#'unpack.unorm2x16'
+		#'unpack.snorm4x8'
+		#'unpack.unorm4x8'
+		#'unpack.double2x32'
+		#'unpack.half2x16'
+
 		"GC"
 		'gc.root'
 		'gc.read'
