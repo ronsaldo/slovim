@@ -1092,6 +1092,13 @@ SLVMSpirVCodeGenerator >> visitGlobalVariable: globalVariable [
 					opcode: SpvOpDecorate
 					operands: { id . SpvDecorationLocation . location }
 				).
+				
+				globalVariable valueType isIntegerType ifTrue: [ 
+					builder addAnnotationInstruction: (SpirVInstruction
+						opcode: SpvOpDecorate
+						operands: { id . SpvDecorationFlat }
+					).
+				].
 			] ifFalse: [
 				builder addAnnotationInstruction: (SpirVInstruction
 					opcode: SpvOpDecorate
