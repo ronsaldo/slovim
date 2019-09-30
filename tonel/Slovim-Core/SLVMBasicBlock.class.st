@@ -189,6 +189,14 @@ SLVMBasicBlock >> addWithName: anInstruction before: instructionPoint [
 	^ self add: anInstruction before: instructionPoint
 ]
 
+{ #category : #accessing }
+SLVMBasicBlock >> allInstructions [
+	| result |
+	result := OrderedCollection new.
+	self instructionsDo: [ :instruction | result add: instruction ].
+	^ result
+]
+
 { #category : #enumerating }
 SLVMBasicBlock >> allInstructionsDo: aBlock [
 	self instructionsDo: [ :instruction |
