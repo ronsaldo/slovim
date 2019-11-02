@@ -8,7 +8,7 @@ Class {
 		'type',
 		'scopeLine',
 		'unit',
-		'variables'
+		'retainedNodes'
 	],
 	#category : #'LLVM-IR-Metadata'
 }
@@ -44,6 +44,16 @@ LLVMDISubprogram >> line: anObject [
 ]
 
 { #category : #accessing }
+LLVMDISubprogram >> retainedNodes [
+	^ retainedNodes
+]
+
+{ #category : #accessing }
+LLVMDISubprogram >> retainedNodes: anObject [
+	retainedNodes := anObject
+]
+
+{ #category : #accessing }
 LLVMDISubprogram >> scopeLine [
 	^ scopeLine
 ]
@@ -60,7 +70,7 @@ LLVMDISubprogram >> specializedName [
 
 { #category : #accessing }
 LLVMDISubprogram >> specializedProperties [
-	^ super specializedProperties , #(isDefinition isLocal line scopeLine type unit variables)
+	^ super specializedProperties , #(isDefinition isLocal line scopeLine type unit retainedNodes)
 ]
 
 { #category : #accessing }
@@ -81,14 +91,4 @@ LLVMDISubprogram >> unit [
 { #category : #accessing }
 LLVMDISubprogram >> unit: anObject [
 	unit := anObject
-]
-
-{ #category : #accessing }
-LLVMDISubprogram >> variables [
-	^ variables
-]
-
-{ #category : #accessing }
-LLVMDISubprogram >> variables: anObject [
-	variables := anObject
 ]

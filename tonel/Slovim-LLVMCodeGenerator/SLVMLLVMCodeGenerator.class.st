@@ -42,7 +42,7 @@ SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmf
 		isLocal: (slvmFunction isPublic or: [ slvmFunction isExternal ]) not;
 		isDefinition: true;
 		type: (self translateDebugType: slvmFunction functionType);
-		variables: (LLVMMDDynamicTuple for: llvmModule)
+		retainedNodes: (LLVMMDDynamicTuple for: llvmModule)
 		yourself.
 	
 	slvmFunction debugSourceLocation ifNotNil: [ :sourceLocation |
