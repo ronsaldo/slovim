@@ -558,6 +558,11 @@ SLVMType >> isType [
 ]
 
 { #category : #testing }
+SLVMType >> isUnionType [
+	^ false
+]
+
+{ #category : #testing }
 SLVMType >> isVectorType [
 	^ false
 ]

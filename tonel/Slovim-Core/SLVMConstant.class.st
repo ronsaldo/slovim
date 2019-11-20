@@ -116,6 +116,12 @@ SLVMConstant class >> ulong: anInteger [
 ]
 
 { #category : #constructor }
+SLVMConstant class >> union: anUnionType blob: encodedBlobData [
+	self assert: anUnionType isUnionType.
+	^ SLVMConstantUnionBlobValue new type: anUnionType; data: encodedBlobData
+]
+
+{ #category : #constructor }
 SLVMConstant class >> value: value bitcast: aTargetType [
 	value type == aTargetType ifTrue: [ ^ value ].
 	value isConstantExpressionBitCast ifTrue: [

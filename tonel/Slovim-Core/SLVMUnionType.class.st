@@ -20,3 +20,8 @@ SLVMUnionType >> computeLayout [
 	].
 	size := size alignedTo: alignment.
 ]
+
+{ #category : #testing }
+SLVMUnionType >> isUnionType [
+	^ true
+]

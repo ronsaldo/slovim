@@ -218,7 +218,14 @@ SLVMLLVMCodeGenerator >> convertName: aName [
 
 { #category : #'as yet unclassified' }
 SLVMLLVMCodeGenerator >> convertStructureContent: slvmStructure into: llvmStructure [
-	llvmStructure elements: (slvmStructure types collect: [:type | self translateType: type])
+	slvmStructure isUnionType ifTrue: [ 
+		llvmStructure elements: {
+			LLVMArrayType get: self context int8Ty elements: slvmStructure size
+		}
+	] ifFalse: [ 
+		llvmStructure elements: (slvmStructure types collect: [:type | self translateType: type])
+	]
+
 ]
 
 { #category : #'debug information' }
@@ -668,6 +675,11 @@ SLVMLLVMCodeGenerator >> visitConstantStructureValue: constantStructureValue [
 		type: type;
 		elements: slots;
 		yourself
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantUnionBlobValue: constantUnionValue [
+	^ self visitConstantArrayBlob: constantUnionValue
 ]
 
 { #category : #visiting }

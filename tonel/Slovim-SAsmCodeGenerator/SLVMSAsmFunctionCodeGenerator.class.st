@@ -247,7 +247,7 @@ SLVMSAsmFunctionCodeGenerator >> createArguments [
 	argumentVariableMap := Dictionary new.
 	
 	returnType := function functionType returnType.
-	returnType isStructureType ifTrue: [
+	(returnType isStructureType or: [returnType isUnionType]) ifTrue: [
 		returnArgumentType := SLVMPointerType size: target pointerSize baseType: returnType storage: SLVMPointerType genericStorage.
 		returnArgument := stackFrameLayout createArgument: returnArgumentType spillingClass registerClass: returnArgumentType registerClass.
 		returnArgumentRegister := self createVirtualRegistersForVariable: returnArgument type: returnArgumentType.
