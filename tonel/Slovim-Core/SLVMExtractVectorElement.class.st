@@ -23,6 +23,11 @@ SLVMExtractVectorElement >> index [
 ]
 
 { #category : #testing }
+SLVMExtractVectorElement >> isExtractVectorElement [
+	^ true
+]
+
+{ #category : #testing }
 SLVMExtractVectorElement >> isPureInstruction [
 	^ true
 ]

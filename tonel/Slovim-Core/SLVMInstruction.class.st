@@ -145,6 +145,11 @@ SLVMInstruction >> isExtractValue [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isExtractVectorElement [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isFloatToIntCast [
 	^ false
 ]
@@ -196,6 +201,16 @@ SLVMInstruction >> isJump [
 
 { #category : #testing }
 SLVMInstruction >> isLoad [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isMakeMatrix [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isMakeVector [
 	^ false
 ]
 

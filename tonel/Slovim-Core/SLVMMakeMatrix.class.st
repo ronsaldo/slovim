@@ -18,6 +18,11 @@ SLVMMakeMatrix >> accept: aVisitor [
 ]
 
 { #category : #testing }
+SLVMMakeMatrix >> isMakeMatrix [
+	^ true
+]
+
+{ #category : #testing }
 SLVMMakeMatrix >> isPureInstruction [
 	^ true
 ]

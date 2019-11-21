@@ -18,6 +18,11 @@ SLVMMakeVector >> accept: aVisitor [
 ]
 
 { #category : #testing }
+SLVMMakeVector >> isMakeVector [
+	^ true
+]
+
+{ #category : #testing }
 SLVMMakeVector >> isPureInstruction [
 	^ true
 ]
