@@ -49,6 +49,11 @@ TSLVMValueVisitor >> visitGetFramePointer: instruction [
 ]
 
 { #category : #visiting }
+TSLVMValueVisitor >> visitInsertVectorElement: instruction [
+	self explicitRequirement
+]
+
+{ #category : #visiting }
 TSLVMValueVisitor >> visitJump: instruction [
 	self explicitRequirement
 ]

@@ -175,6 +175,11 @@ SLVMInstruction >> isInsertValue [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isInsertVectorElement [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isInstantiateClosure [
 	^ false
 ]
@@ -246,6 +251,11 @@ SLVMInstruction >> isReturnVoid [
 
 { #category : #testing }
 SLVMInstruction >> isReturnVoidFromContext [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isShuffleVectors [
 	^ false
 ]
 

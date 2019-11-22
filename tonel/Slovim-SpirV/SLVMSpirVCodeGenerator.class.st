@@ -1140,6 +1140,11 @@ SLVMSpirVCodeGenerator >> visitInsertValue: instruction [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitInsertVectorElement: insertElement [
+	self halt
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitIntToFloatCast: instruction [
 	| resultType source |
 	^ self instructionTranslation: instruction do: [ :id |

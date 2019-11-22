@@ -877,6 +877,16 @@ SLVMBuilder >> insertValue: anAggregateValue value: value indices: indicesValue 
 	^ self addInstruction: (SLVMInsertValue aggregate: anAggregateValue value: value indices: indicesValue) name: resultName
 ]
 
+{ #category : #instructions }
+SLVMBuilder >> insertVector: aVectorValue element: indexValue value: value [
+	^ self insertVector: aVectorValue element: indexValue value: value name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> insertVector: aVectorValue element: indexValue value: value name: resultName [
+	^ self addInstruction: (SLVMInsertVectorElement vector: aVectorValue value: value index: indexValue) name: resultName
+]
+
 { #category : #closures }
 SLVMBuilder >> instantiateClosure: closureDefinition captures: captures [
 	^ self instantiateClosure: closureDefinition captures: captures name: function generateSymbol

@@ -43,6 +43,11 @@ SLVMShuffleVectors >> isPureInstruction [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMShuffleVectors >> isShuffleVectors [
+	^ true
+]
+
 { #category : #printing }
 SLVMShuffleVectors >> mnemonic [
 	^ #shuffleVectors

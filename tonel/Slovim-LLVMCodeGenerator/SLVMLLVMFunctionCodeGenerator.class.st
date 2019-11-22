@@ -1106,6 +1106,17 @@ SLVMLLVMFunctionCodeGenerator >> visitGetElementPointer: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitInsertVectorElement: instruction [
+	^ self addInstruction: (LLVMInsertElementInst new
+		name: (self convertName: instruction name);
+		type: (self translateType: instruction type);
+		element: (self translateValue: instruction element);
+		vector: (self translateValue: instruction vector);
+		index: (self translateValue: instruction index);
+		yourself)
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitIntToFloatCast: instruction [
 	instruction source type isSigned ifTrue: [ 
 		^ self addInstruction: (LLVMSIToFPInst new
