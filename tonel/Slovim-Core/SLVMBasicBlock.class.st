@@ -204,6 +204,12 @@ SLVMBasicBlock >> allInstructionsDo: aBlock [
 	]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMBasicBlock >> allInstructionsMnemonics [
+	"This is a method for facilitating the writing of some tests."
+	^ self allInstructions collect: #mnemonic as: Array
+]
+
 { #category : #enumerating }
 SLVMBasicBlock >> allocaInstructionsDo: aBlock [
 	self instructionsDo: [:ins |

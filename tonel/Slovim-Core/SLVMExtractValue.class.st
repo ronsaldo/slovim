@@ -26,7 +26,7 @@ SLVMExtractValue >> aggregate [
 { #category : #'as yet unclassified' }
 SLVMExtractValue >> aggregate: anAggregateValue indices: newIndices [
 	| constantIndex |
-	self assert: anAggregateValue type isAggregateType.
+	self assert: (anAggregateValue type isAggregateType or: [anAggregateValue type isMatrixType]).
 	indices := newIndices.
 	type := anAggregateValue type.
 	indices do: [ :index |
