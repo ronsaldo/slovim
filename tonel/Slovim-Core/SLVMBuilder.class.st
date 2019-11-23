@@ -1663,6 +1663,20 @@ SLVMBuilder >> vectorDiv: left with: right name: name [
 	]
 ]
 
+{ #category : #intrinsics }
+SLVMBuilder >> vectorDot: leftVector with: rightVector [
+	"Count leading zeros."
+	| intrinsic |
+	intrinsic := self vectorDotIntrinsicFor: leftVector type.
+	^ self call: intrinsic arguments: { leftVector . rightVector }
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> vectorDotIntrinsicFor: aType [
+	"Count population"
+	^ self builtInFunctionName: #'vector.dot' argumentTypes: { aType . aType} returnType: aType baseType
+]
+
 { #category : #'vector arithmetic' }
 SLVMBuilder >> vectorMul: left with: right [
 	^ self vectorMul: left with: right name: function generateSymbol
