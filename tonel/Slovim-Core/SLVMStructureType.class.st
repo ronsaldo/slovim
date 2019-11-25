@@ -232,7 +232,7 @@ SLVMStructureType >> readFromPointer: pointer [
 
 { #category : #accessing }
 SLVMStructureType >> shortName [
-	^ 'struct ' , name
+	^ 'struct ' , (name ifNil: [ '' ])
 ]
 
 { #category : #accessing }
