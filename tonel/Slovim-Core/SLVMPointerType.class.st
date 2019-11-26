@@ -47,6 +47,11 @@ SLVMPointerType >> baseType: aType [
 	baseType := aType
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMPointerType >> defaultConstant [
+	^ SLVMConstant nullPointer: self
+]
+
 { #category : #accessing }
 SLVMPointerType >> elementStrideDepth: depth [
 	depth = 0 ifTrue: [ ^ size ].
