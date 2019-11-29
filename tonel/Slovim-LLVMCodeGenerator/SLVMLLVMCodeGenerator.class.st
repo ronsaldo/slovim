@@ -41,7 +41,7 @@ SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmf
 		unit: debugCompileUnit;
 		isLocal: (slvmFunction isPublic or: [ slvmFunction isExternal ]) not;
 		isDefinition: true;
-		type: (self translateDebugType: slvmFunction functionType);
+		type: (self translateDebugType: (slvmFunction propertyAt: #debugType ifAbsent: [slvmFunction functionType]));
 		retainedNodes: (LLVMMDDynamicTuple for: llvmModule)
 		yourself.
 	
@@ -52,7 +52,7 @@ SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmf
 			line: sourceLocation startLine;
 			scopeLine: sourceLocation startLine.
 			
-		subprogram scope == debugCompileUnit ifTrue: [ 
+		subprogram scope == debugCompileUnit ifTrue: [
 			subprogram scope: debugFile
 		].
 	].
@@ -97,7 +97,7 @@ SLVMLLVMCodeGenerator >> buildGlobalVariable: slvmGlobalVariable debugInformatio
 		scope: debugCompileUnit;
 		isLocal: (slvmGlobalVariable isPublic or: [ slvmGlobalVariable isExternal ]) not;
 		isDefinition: slvmGlobalVariable isExternal not;
-		type: (self translateDebugType: slvmGlobalVariable valueType);
+		type: (self translateDebugType: (debugInfo type ifNil: [slvmGlobalVariable valueType]));
 		yourself.
 	
 	slvmGlobalVariable debugSourceLocation ifNotNil: [ :sourceLocation |
@@ -335,6 +335,11 @@ SLVMLLVMCodeGenerator >> llvmModule [
 			compilationPlugins: target compilationPlugins;
 			yourself
 		]
+]
+
+{ #category : #testing }
+SLVMLLVMCodeGenerator >> needStructuredControlFlow [
+	^ false
 ]
 
 { #category : #visiting }
