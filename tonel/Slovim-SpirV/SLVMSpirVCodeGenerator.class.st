@@ -1324,6 +1324,23 @@ SLVMSpirVCodeGenerator >> visitSampleDepthRefImplicitLod: ssaInstruction [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitSampleExplicitGradient: sampleExplicitGradient [
+	| sampledTexture texcoord dtdx dtdy resultType |
+	^ self instructionTranslation: sampleExplicitGradient do: [ :id |
+		sampledTexture := self translateValue: sampleExplicitGradient sampledTexture.
+		texcoord := self translateValue: sampleExplicitGradient texcoord.
+		dtdx := self translateValue: sampleExplicitGradient dtdx.
+		dtdy := self translateValue: sampleExplicitGradient dtdy.
+		resultType := self translateValue: sampleExplicitGradient type.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpImageSampleExplicitLod
+			type: resultType
+			result: id
+			operands: { sampledTexture . texcoord . SpvImageOperandsGrad . dtdx . dtdy })
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitSampleExplicitLod: sampleImplicitLod [
 	| sampledTexture texcoord lod resultType |
 	^ self instructionTranslation: sampleImplicitLod do: [ :id |

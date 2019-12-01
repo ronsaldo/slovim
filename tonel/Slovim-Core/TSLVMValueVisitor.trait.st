@@ -104,6 +104,11 @@ TSLVMValueVisitor >> visitSampleDepthRefImplicitLod: instruction [
 ]
 
 { #category : #visiting }
+TSLVMValueVisitor >> visitSampleExplicitGradient: instruction [
+	self explicitRequirement
+]
+
+{ #category : #visiting }
 TSLVMValueVisitor >> visitSampleExplicitLod: instruction [
 	self explicitRequirement
 ]

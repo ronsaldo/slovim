@@ -80,6 +80,12 @@ SLVMFunction >> allInstructionsDo: aBlock [
 	]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMFunction >> allInstructionsMnemonics [
+	"This is a method to facilitate the writing of tests"
+	^ basicBlocks collect: [:bb | {bb name . bb allInstructionsMnemonics}] as: Array
+]
+
 { #category : #'control flow' }
 SLVMFunction >> applyDominanceTopoSort [
 	basicBlocks := self dominanceTopoSort.

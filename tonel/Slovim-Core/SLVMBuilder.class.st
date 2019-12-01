@@ -1416,6 +1416,16 @@ SLVMBuilder >> returnVoidFromContext: context name: resultName [
 ]
 
 { #category : #sampling }
+SLVMBuilder >> sample: combinedSampler atCoord: texcoord dtdx: dtdx dtdy: dtdy [
+	^ self sample: combinedSampler atCoord: texcoord dtdx: dtdx dtdy: dtdy name: function generateSymbol
+]
+
+{ #category : #sampling }
+SLVMBuilder >> sample: combinedSampler atCoord: texcoord dtdx: dtdx dtdy: dtdy name: resultName [
+	^ self addInstruction: (SLVMSampleExplicitGradient sampledTexture: combinedSampler texcoord: texcoord dtdx: dtdx dtdy: dtdy) name: resultName
+]
+
+{ #category : #sampling }
 SLVMBuilder >> sample: combinedSampler explicitLod: lod atCoord: texcoord [
 	^ self sample: combinedSampler explicitLod: lod atCoord: texcoord name: function generateSymbol
 ]
