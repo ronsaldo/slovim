@@ -60,6 +60,26 @@ SLVMCompilationTarget >> createTargetTypes [
 ]
 
 { #category : #types }
+SLVMCompilationTarget >> depthTexture2D [
+	^ types depthTexture2D
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> depthTexture2DArray [
+	^ types depthTexture2DArray
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> depthTextureCube [
+	^ types depthTextureCube
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> depthTextureCubeArray [
+	^ types depthTextureCubeArray
+]
+
+{ #category : #types }
 SLVMCompilationTarget >> double [
 	^ types double
 ]
@@ -258,6 +278,11 @@ SLVMCompilationTarget >> referenceSize [
 ]
 
 { #category : #types }
+SLVMCompilationTarget >> sampler [
+	^ types sampler
+]
+
+{ #category : #types }
 SLVMCompilationTarget >> short [
 	^ types short
 ]
@@ -293,6 +318,46 @@ SLVMCompilationTarget >> targetTriple [
 			].
 		]
 	].
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> texture1D [
+	^ types texture1D
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> texture1DArray [
+	^ types texture1DArray
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> texture2D [
+	^ types texture2D
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> texture2DArray [
+	^ types texture2DArray
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> texture3D [
+	^ types texture3D
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> texture3DArray [
+	^ types texture3DArray
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> textureCube [
+	^ types textureCube
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> textureCubeArray [
+	^ types textureCubeArray
 ]
 
 { #category : #types }

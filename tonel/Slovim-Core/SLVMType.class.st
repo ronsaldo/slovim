@@ -79,6 +79,26 @@ SLVMType class >> crossWorkgroupStorage [
 ]
 
 { #category : #'built in types' }
+SLVMType class >> depthTexture2DArrayType [
+	^ DepthTexture2DArrayType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> depthTexture2DType [
+	^ DepthTexture2DType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> depthTextureCubeArrayType [
+	^ DepthTextureCubeArrayType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> depthTextureCubeType [
+	^ DepthTextureCubeType
+]
+
+{ #category : #'built in types' }
 SLVMType class >> doubleAlign4Type [
 	^ DoubleAlign4Type
 ]
@@ -256,6 +276,36 @@ SLVMType class >> shortType [
 	^ ShortType
 ]
 
+{ #category : #'built in types' }
+SLVMType class >> texture1DArrayType [
+	^ Texture1DArrayType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> texture1DType [
+	^ Texture1DType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> texture2DArrayType [
+	^ Texture2DArrayType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> texture2DType [
+	^ Texture2DType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> texture3DArrayType [
+	^ Texture3DArrayType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> texture3DType [
+	^ Texture3DType
+]
+
 { #category : #'class initialization' }
 SLVMType class >> textureAndSamplerTypes [
 	SamplerType := SLVMSamplerType new name: #sampler.
@@ -290,6 +340,16 @@ SLVMType class >> textureAndSamplerTypes [
 		DepthTextureCubeType.
 		DepthTextureCubeArrayType.
 	}
+]
+
+{ #category : #'built in types' }
+SLVMType class >> textureCubeArrayType [
+	^ TextureCubeArrayType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> textureCubeType [
+	^ TextureCubeType
 ]
 
 { #category : #'built in types' }

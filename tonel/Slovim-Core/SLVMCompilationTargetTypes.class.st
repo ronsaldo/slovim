@@ -51,6 +51,26 @@ SLVMCompilationTargetTypes >> char [
 ]
 
 { #category : #types }
+SLVMCompilationTargetTypes >> depthTexture2D [
+	^ SLVMType depthTexture2DType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> depthTexture2DArray [
+	^ SLVMType depthTexture2DArrayType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> depthTextureCube [
+	^ SLVMType depthTextureCubeType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> depthTextureCubeArray [
+	^ SLVMType depthTextureCubeArrayType
+]
+
+{ #category : #types }
 SLVMCompilationTargetTypes >> double [
 	^ self subclassResponsibility
 ]
@@ -168,8 +188,53 @@ SLVMCompilationTargetTypes >> referenceSize [
 ]
 
 { #category : #types }
+SLVMCompilationTargetTypes >> sampler [
+	^ SLVMType samplerType
+]
+
+{ #category : #types }
 SLVMCompilationTargetTypes >> short [
 	^ SLVMType shortType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> texture1D [
+	^ SLVMType texture1DType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> texture1DArray [
+	^ SLVMType texture1DArrayType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> texture2D [
+	^ SLVMType texture2DType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> texture2DArray [
+	^ SLVMType texture2DArrayType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> texture3D [
+	^ SLVMType texture3DType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> texture3DArray [
+	^ SLVMType texture3DArrayType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> textureCube [
+	^ SLVMType textureCubeType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> textureCubeArray [
+	^ SLVMType textureCubeArrayType
 ]
 
 { #category : #types }
