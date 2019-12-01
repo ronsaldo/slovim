@@ -9,7 +9,7 @@ Class {
 
 { #category : #accessing }
 SLVMOpaqueType >> alignment [
-	^ 0
+	^ 1
 ]
 
 { #category : #comparing }

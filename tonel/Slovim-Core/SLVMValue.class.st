@@ -103,6 +103,11 @@ SLVMValue >> isConstantVectorValue [
 ]
 
 { #category : #testing }
+SLVMValue >> isFakeValue [
+	^ false
+]
+
+{ #category : #testing }
 SLVMValue >> isFunction [
 	^ false
 ]
