@@ -1,6 +1,11 @@
 Extension { #name : #SLVMCompilationTarget }
 
 { #category : #'*Slovim-SpirV' }
+SLVMCompilationTarget >> isGPU [
+	^ false
+]
+
+{ #category : #'*Slovim-SpirV' }
 SLVMCompilationTarget >> isSpirV [
 	^ false
 ]

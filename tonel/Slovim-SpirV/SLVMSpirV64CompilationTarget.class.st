@@ -22,6 +22,11 @@ SLVMSpirV64CompilationTarget >> generateLowLevelModule: aModule optimizationLeve
 ]
 
 { #category : #testing }
+SLVMSpirV64CompilationTarget >> isGPU [
+	^ true
+]
+
+{ #category : #testing }
 SLVMSpirV64CompilationTarget >> isSpirV [
 	^ true
 ]
