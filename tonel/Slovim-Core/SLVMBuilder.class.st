@@ -1567,6 +1567,16 @@ SLVMBuilder >> sub: left with: right name: resultName [
 	^ self addOperation: #sub left: left right: right name: resultName
 ]
 
+{ #category : #instructions }
+SLVMBuilder >> switch: matchedValue caseConstants: casesConstants caseBlocks: casesBlocks defaultBlock: defaultBlock [ 
+	^ self switch: matchedValue caseConstants: casesConstants caseBlocks: casesBlocks defaultBlock: defaultBlock name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> switch: matchedValue caseConstants: casesConstants caseBlocks: casesBlocks defaultBlock: defaultBlock name: resultName [
+	^ self addInstruction: (SLVMSwitch matchedValue: matchedValue caseConstants: casesConstants caseBlocks: casesBlocks defaultBlock: defaultBlock) name: resultName
+]
+
 { #category : #casting }
 SLVMBuilder >> truncate: source target: targetType [
 	^ self truncate: source target: targetType name: function generateSymbol

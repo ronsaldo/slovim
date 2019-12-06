@@ -1290,6 +1290,18 @@ SLVMLLVMFunctionCodeGenerator >> visitStore: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitSwitch: instruction [
+	^ self addInstruction: (LLVMSwitchInst new
+		name: (self convertName: instruction name);
+		type: self context voidTy;
+		condition: (self translateValue: instruction matchedValue);
+		defaultDest: (self translateValue: instruction defaultBlock);
+		caseDests: (instruction caseBlocks collect: [:b | self translateValue: b]);
+		caseValues: (instruction caseConstants collect: [:c | self translateValue: c]);
+		yourself)
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitTruncate: instruction [
 	^ self truncate: (self translateValue: instruction source)
 		target: (self translateType: instruction type)

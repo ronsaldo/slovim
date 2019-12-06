@@ -270,6 +270,11 @@ SLVMInstruction >> isStore [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isSwitch [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isTerminator [
 	^ false
 ]

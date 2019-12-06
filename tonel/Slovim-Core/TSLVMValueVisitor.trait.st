@@ -129,6 +129,11 @@ TSLVMValueVisitor >> visitStore: instruction [
 ]
 
 { #category : #visiting }
+TSLVMValueVisitor >> visitSwitch: instruction [
+	self explicitRequirement
+]
+
+{ #category : #visiting }
 TSLVMValueVisitor >> visitUnaryOperation: instruction [
 	self explicitRequirement
 ]
