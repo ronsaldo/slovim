@@ -21,6 +21,14 @@ LLVMArrayType >> createName [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMArrayType >> validateNonRecursiveChildrenWith: visitedSet [
+	(visitedSet includes: self) ifTrue: [ self error: 'Recursive array definition.' ].
+	visitedSet add: self.
+	elementType validateNonRecursionWith: visitedSet.
+
+]
+
+{ #category : #'as yet unclassified' }
 LLVMArrayType >> zeroConstant [
 	| zeroElement |
 	zeroElement := elementType zeroConstant.

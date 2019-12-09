@@ -19,6 +19,7 @@ LLVMStructType class >> context: context elements: elements [
 
 { #category : #printing }
 LLVMStructType >> createName [
+	self validateNonRecursion.
 	^ ByteString streamContents: [ :out |
 		out nextPutAll: '{'.
 		elements doWithIndex: [ :element :index |
@@ -45,11 +46,21 @@ LLVMStructType >> fullPrintOn: aStream [
 	self printDefinitionOn: aStream
 ]
 
+{ #category : #accessing }
+LLVMStructType >> hasAlreadyGeneratedName [
+	^ name isNotNil
+]
+
 { #category : #initialization }
 LLVMStructType >> initialize [
 	super initialize.
 	packed := false.
 	
+]
+
+{ #category : #testing }
+LLVMStructType >> isStructTy [
+	^ true
 ]
 
 { #category : #accessing }
@@ -91,6 +102,14 @@ LLVMStructType >> printDefinitionOn: aStream [
 	].
 
 	aStream nextPut: $}. packed ifTrue: [ aStream nextPut: $> ].
+]
+
+{ #category : #'as yet unclassified' }
+LLVMStructType >> validateNonRecursiveChildrenWith: visitedSet [
+	(visitedSet includes: self) ifTrue: [ self error: 'Recursive structure definition.' ].
+	visitedSet add: self.
+	elements do: [ :el | el validateNonRecursionWith: visitedSet ].
+
 ]
 
 { #category : #'as yet unclassified' }

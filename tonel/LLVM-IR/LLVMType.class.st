@@ -3,7 +3,8 @@ Class {
 	#superclass : #LLVMObject,
 	#instVars : [
 		'context',
-		'name'
+		'name',
+		'isNotRecursive'
 	],
 	#category : #'LLVM-IR-Types'
 }
@@ -186,4 +187,26 @@ LLVMType >> name: anObject [
 { #category : #composition }
 LLVMType >> printOn: aStream [
 	aStream nextPutAll: self name
+]
+
+{ #category : #'as yet unclassified' }
+LLVMType >> validateNonRecursion [
+	| visitedSet |
+	isNotRecursive ifNotNil: [ ^ self ].
+
+	visitedSet := IdentitySet new.
+	self validateNonRecursionWith: visitedSet
+]
+
+{ #category : #'as yet unclassified' }
+LLVMType >> validateNonRecursionWith: visitedSet [
+	isNotRecursive ifNotNil: [ ^ isNotRecursive ].
+	self validateNonRecursiveChildrenWith: visitedSet.
+	^ isNotRecursive := true
+	
+]
+
+{ #category : #'as yet unclassified' }
+LLVMType >> validateNonRecursiveChildrenWith: aVisitedSet [
+	"By default nothing is required here."
 ]

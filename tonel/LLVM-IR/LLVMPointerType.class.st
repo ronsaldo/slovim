@@ -66,3 +66,12 @@ LLVMPointerType >> isPointerTy [
 LLVMPointerType >> name [
 	^ name ifNil: [ name := self createName ]
 ]
+
+{ #category : #'as yet unclassified' }
+LLVMPointerType >> validateNonRecursiveChildrenWith: visitedSet [
+	elementType isStructTy ifTrue: [ 
+		elementType hasAlreadyGeneratedName ifTrue: [ ^ self ].
+	].
+	elementType validateNonRecursionWith: visitedSet.
+
+]
