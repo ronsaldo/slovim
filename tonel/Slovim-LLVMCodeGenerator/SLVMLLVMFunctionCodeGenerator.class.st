@@ -1190,7 +1190,24 @@ SLVMLLVMFunctionCodeGenerator >> visitMakeVector: instruction [
 	^ Array streamContents: [ :out |
 		instruction parameters do: [ :param |
 			param type isVectorType ifTrue: [
-				self halt.
+				| vectorParam |
+				vectorParam := self translateValue: param.
+				"Expand the vector param to the target size."
+				(param type elements < vectorType elements) ifTrue: [ 
+					vectorParam := self vector: vectorParam shuffleWith: vectorParam
+						mask: ((0 to: vectorType elements - 1) collect: [ :mi | mi min: param type elements - 1 ])
+				].
+				
+				resultInstruction := self vector: resultInstruction shuffleWith: vectorParam
+						mask: ((0 to: vectorType elements - 1) collect: [:mi |
+							mi < destIndex ifTrue: [
+								mi
+							] ifFalse: [
+								mi - destIndex +  vectorType elements
+							]
+						]).
+				out nextPut: resultInstruction.
+				destIndex := destIndex + param type elements
 			] ifFalse: [
 				resultInstruction := self vector: resultInstruction
 					insertElement: (self translateValue: param) at: destIndex.
@@ -1266,6 +1283,15 @@ SLVMLLVMFunctionCodeGenerator >> visitReturnVoid: instruction [
 		name: (self convertName: instruction name);
 		type: self context voidTy;
 		yourself)
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitShuffleVectors: instruction [
+	| vectorType firstVector secondVector |
+	vectorType := self translateType: instruction type.
+	firstVector := self translateValue: instruction firstVector.
+	secondVector := self translateValue: instruction secondVector.
+	^ self vector: firstVector shuffleWith: secondVector mask: instruction components
 ]
 
 { #category : #visiting }
