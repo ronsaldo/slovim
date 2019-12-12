@@ -75,7 +75,22 @@ SpirVModule >> saveTo: aFileReference [
 	]
 ]
 
+{ #category : #writing }
+SpirVModule >> writeExecutableToFileNamed: fileName [
+	^ self saveTo: fileName
+]
+
+{ #category : #writing }
+SpirVModule >> writeObjectToFileNamed: fileName [
+	^ self saveTo: fileName
+]
+
 { #category : #building }
 SpirVModule >> writeOn: aByteStream [
 	self emitOn: (SpirVStream new out: aByteStream)
+]
+
+{ #category : #writing }
+SpirVModule >> writeSharedToFileNamed: fileName [
+	^ self saveTo: fileName
 ]
