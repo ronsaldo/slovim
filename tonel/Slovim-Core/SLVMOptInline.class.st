@@ -23,6 +23,11 @@ SLVMOptInline >> analyzeFunctionGraph: aFunction [
 		^ self
 	].
 
+	aFunction isEmpty ifTrue: [ 
+		functionGraphAnalysisState at: aFunction put: #black.
+		^ self
+	].
+
 	functionGraphAnalysisState at: aFunction put: #gray.
 	"We should always try to use functions with canonical structured control flow."
 	aFunction ensureCanonicalStructuredControlFlow.
