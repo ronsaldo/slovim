@@ -106,6 +106,11 @@ SLVMConstant class >> type: aSLVMType value: aConstantValue [
 ]
 
 { #category : #constructor }
+SLVMConstant class >> uchar: anInteger [
+	^ self type: SLVMType ucharType value: anInteger
+]
+
+{ #category : #constructor }
 SLVMConstant class >> uint: anInteger [
 	^ self type: SLVMType uintType value: anInteger
 ]

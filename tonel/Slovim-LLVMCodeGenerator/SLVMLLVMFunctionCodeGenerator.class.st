@@ -15,6 +15,7 @@ Class {
 		'BinaryFloatComparisonOperationMap',
 		'BinaryIntegerComparisonOperationMap',
 		'BinaryOperationMap',
+		'MemoryOrderingDictionary',
 		'UnaryOperationMap'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
@@ -22,6 +23,15 @@ Class {
 
 { #category : #initialization }
 SLVMLLVMFunctionCodeGenerator class >> initialize [
+	MemoryOrderingDictionary := Dictionary newFromPairs: #(
+		"Relaxed" 0 monotonic
+		"Consume" 1 acquire
+		"Acquire" 2 acquire
+		"Release" 3 release
+		"AcquireAndRelease" 4 acq_rel
+		"SequentiallyConsistent" 5 seq_cst
+	).
+	
 	BinaryOperationMap := Dictionary newFromPairs: #(
 		add add
 		sub sub
@@ -315,6 +325,13 @@ SLVMLLVMFunctionCodeGenerator >> convertDebugVariable: debugInformation [
 	^ moduleTranslator convertDebugVariable: debugInformation fallbackScopeInto: functionDebugScope
 ]
 
+{ #category : #'atomic intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> convertMemoryOrdering: ordering [
+	ordering isSymbol ifTrue: [ ^ ordering ].
+	(ordering isNil or: [ ordering isConstantValue not ]) ifTrue: [ ^ #seq_cst ].
+	^ MemoryOrderingDictionary at: ordering value
+]
+
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> convertName: aName [
 	^ aName ifNotNil: [
@@ -397,11 +414,12 @@ SLVMLLVMFunctionCodeGenerator >> functionDebugScope: aDebugScope [
 ]
 
 { #category : #'atomic intrinsics' }
-SLVMLLVMFunctionCodeGenerator >> generateAtomicCompare: sourcePointer with: comparisonValue andSwapWith: newValue returnType: returnType [
+SLVMLLVMFunctionCodeGenerator >> generateAtomicCompare: sourcePointer with: comparisonValue andSwapWith: newValue ordering: memoryOrdering returnType: returnType [
 	| cmpxchg |
 	cmpxchg := self compare: (self translateValue: sourcePointer)
 		with: (self translateValue: comparisonValue)
 		andSwapWith: (self translateValue: newValue).
+	cmpxchg ordering: (self convertMemoryOrdering: memoryOrdering).
 		
 	^ returnType isBooleanType ifTrue: [
 		self aggregate: cmpxchg extractValueAt: 1
@@ -412,12 +430,60 @@ SLVMLLVMFunctionCodeGenerator >> generateAtomicCompare: sourcePointer with: comp
 ]
 
 { #category : #'atomic intrinsics' }
-SLVMLLVMFunctionCodeGenerator >> generateAtomicRMW: sourcePointer with: operandValue operation: operation [
-	^ self addInstruction: (LLVMAtomicRMWInst new
-		operation: operation;
-		type: (self translateType: operandValue type);
+SLVMLLVMFunctionCodeGenerator >> generateAtomicLoad: sourcePointer returnType: returnType ordering: memoryOrdering [ 
+	| loadResult |
+	loadResult := self addInstruction: (LLVMLoadInst new
+		type: (self translateType: sourcePointer type baseType);
 		pointer: (self translateValue: sourcePointer);
-		operand: (self translateValue: operandValue);
+		atomic: true;
+		ordering: (self convertMemoryOrdering: memoryOrdering);
+		align: sourcePointer type baseType alignment;
+		yourself).
+	returnType isBooleanType ifTrue: [
+		^ self truncate: loadResult target: (self translateType: returnType) name: nil
+	].
+		
+	^ loadResult
+]
+
+{ #category : #'atomic intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateAtomicRMW: sourcePointer with: operandValue operation: operation ordering: memoryOrdering returnType: returnType [
+	| result operand operationType |
+	operand := self translateValue: operandValue.
+	operationType := self translateType: sourcePointer type baseType.
+	operandValue type isBooleanType ifTrue: [ 
+		operand := self zeroExtend: operand target: operationType name: nil
+	].
+
+	result := self addInstruction: (LLVMAtomicRMWInst new
+		operation: operation;
+		type: operationType;
+		pointer: (self translateValue: sourcePointer);
+		operand: operand;
+		ordering: (self convertMemoryOrdering: memoryOrdering);
+		yourself).
+	returnType isBooleanType ifTrue: [
+		^ self truncate: result target: (self translateType: returnType) name: nil
+	].
+
+	^ result
+]
+
+{ #category : #'atomic intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateAtomicStoreIn: pointer value: value ordering: memoryOrdering [
+	| storedValue |
+	storedValue := (self translateValue: value).
+	value type isBooleanType ifTrue: [
+		storedValue := self zeroExtend: storedValue target: (self translateType: pointer type baseType) name: nil
+	].
+	
+	^ self addInstruction: (LLVMStoreInst new
+		type: self context voidTy;
+		pointer: (self translateValue: pointer);
+		value: storedValue;
+		atomic: true;
+		ordering: (self convertMemoryOrdering: memoryOrdering);
+		align: pointer type baseType alignment;
 		yourself)
 ]
 

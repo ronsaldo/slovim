@@ -1584,6 +1584,12 @@ SLVMBuilder >> truncate: source target: targetType [
 
 { #category : #casting }
 SLVMBuilder >> truncate: source target: targetType name: resultName [
+	source isConstantValue ifTrue: [ 
+		(targetType isIntegerType and: [ source type isBooleanType ]) ifTrue: [
+			^ self constBool: source value ~= 0
+		].
+	].
+
 	^ self addInstruction: (SLVMTruncate source: source targetType: targetType) name: resultName
 ]
 
@@ -1797,5 +1803,11 @@ SLVMBuilder >> zeroExtend: source target: targetType [
 
 { #category : #casting }
 SLVMBuilder >> zeroExtend: source target: targetType name: resultName [
+	source isConstantValue ifTrue: [ 
+		(source type isBooleanType and: [ targetType isIntegerType ]) ifTrue: [
+			^ self const: source value asBit type: targetType
+		].
+	].
+
 	^ self addInstruction: (SLVMZeroExtend source: source targetType: targetType) name: resultName
 ]

@@ -54,6 +54,13 @@ LLVMAtomicCmpXchgInst >> newValue: anObject [
 ]
 
 { #category : #accessing }
+LLVMAtomicCmpXchgInst >> ordering: anOrdering [
+	self
+		failureOrdering: anOrdering;
+		successOrdering: anOrdering
+]
+
+{ #category : #accessing }
 LLVMAtomicCmpXchgInst >> pointer [
 	^ pointer
 ]

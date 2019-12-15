@@ -41,21 +41,50 @@ SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName inlineWith: aB
 SLVMLLVMBuiltInFunctionGenerator class >> atomicBuiltIn [
 	<builtInFunctions>
 	self
+		addBuiltIn: #'atomic.load' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateAtomicLoad: callInstruction arguments first
+				returnType: callInstruction type
+				ordering: (callInstruction arguments size > 1 ifTrue: [ callInstruction arguments last ] ifFalse: [ nil ])
+		];
+		addBuiltIn: #'atomic.store' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateAtomicStoreIn: callInstruction arguments first
+				value: callInstruction arguments second
+				ordering: (callInstruction arguments size > 2 ifTrue: [ callInstruction arguments last ] ifFalse: [ nil ])
+		];
 		addBuiltIn: #'atomic.compare_and_swap' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
 			functionCodeGenerator generateAtomicCompare: callInstruction arguments first
 				with: callInstruction arguments second
 				andSwapWith: callInstruction arguments third
+				ordering: (callInstruction arguments size > 3 ifTrue: [ callInstruction arguments last ] ifFalse: [ nil ])
+				returnType: callInstruction type
+		];
+		addBuiltIn: #'atomic.test_and_set' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateAtomicRMW: callInstruction arguments first
+				with: callInstruction arguments second
+				operation: #xchg
+				ordering: (callInstruction arguments size > 2 ifTrue: [ callInstruction arguments last ] ifFalse: [ nil ])
+				returnType: callInstruction type
+		];
+		addBuiltIn: #'atomic.swap_value' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateAtomicRMW: callInstruction arguments first
+				with: callInstruction arguments second
+				operation: #xchg
+				ordering: (callInstruction arguments size > 2 ifTrue: [ callInstruction arguments last ] ifFalse: [ nil ])
 				returnType: callInstruction type
 		];
 		addBuiltIn: #'atomic.fetch_and_add' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
 			functionCodeGenerator generateAtomicRMW: callInstruction arguments first
 				with: callInstruction arguments second
 				operation: #add
+				ordering: (callInstruction arguments size > 2 ifTrue: [ callInstruction arguments last ] ifFalse: [ nil ])
+				returnType: callInstruction type
 		];
 		addBuiltIn: #'atomic.fetch_and_subtract' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
 			functionCodeGenerator generateAtomicRMW: callInstruction arguments first
 				with: callInstruction arguments second
 				operation: #sub
+				ordering: (callInstruction arguments size > 2 ifTrue: [ callInstruction arguments last ] ifFalse: [ nil ])
+				returnType: callInstruction type
 		];
 	
 		yourself

@@ -18,13 +18,15 @@ SLVMConstantBuiltInFunction class >> initialize [
 	"
 	self initialize
 	"
-	super initialize.
 	ValidBuiltInFunctionNames := Set newFrom: ( #(
 		"Atomic"
 		'atomic.compare_and_swap'
 		'atomic.fetch_and_add'
 		'atomic.fetch_and_subtract'
 		'atomic.swap_value'
+		'atomic.load'
+		'atomic.store'
+		'atomic.test_and_set'
 		
 		"Context"
 		'context.replace_function'
