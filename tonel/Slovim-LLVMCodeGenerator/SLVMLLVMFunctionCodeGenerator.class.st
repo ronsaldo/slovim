@@ -496,7 +496,7 @@ SLVMLLVMFunctionCodeGenerator >> generateBuiltInFunction: builtInFunction call: 
 	^ generator generateWith: self builtInFunction: builtInFunction callInstruction: instruction
 ]
 
-{ #category : #visiting }
+{ #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateDot: left with: right mul: multiplyOperation add: additionOperation [
 	| multiplication |
 	self assert: left type = right type.
@@ -518,7 +518,7 @@ SLVMLLVMFunctionCodeGenerator >> generateFunction: slvmFunction into: newLLVMFun
 
 ]
 
-{ #category : #visiting }
+{ #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateMatrix: transposedMatrixType byTransposing: sourceMatrixValue [
 	| resultType destColumnType columns rows result majorComponents |
 	resultType := self translateType: transposedMatrixType.
@@ -544,7 +544,7 @@ SLVMLLVMFunctionCodeGenerator >> generateMatrix: transposedMatrixType byTranspos
 	^ result 
 ]
 
-{ #category : #visiting }
+{ #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateMatrixBinaryOperation: instruction [
 	| leftMatrix rightMatrix resultType result columnType leftColumn rightColumn resultColumn |
 	instruction operation == #mulMatrixMatrix ifTrue: [ ^ self generateMatrixTimesMatrix: instruction ].
@@ -569,7 +569,7 @@ SLVMLLVMFunctionCodeGenerator >> generateMatrixBinaryOperation: instruction [
 	^ result
 ]
 
-{ #category : #visiting }
+{ #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateMatrixTimesMatrix: instruction [
 "
 void matrixMultiply(float left[4][4], float right[4][4], float dest[4][4])
@@ -625,7 +625,7 @@ void matrixMultiply(float left[4][4], float right[4][4], float dest[4][4])
 	^ result
 ]
 
-{ #category : #visiting }
+{ #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateMatrixTimesVector: instruction [
 "
 void matrixMultiply(float matrix[4][4], float vector[4], float result[4])
@@ -633,7 +633,7 @@ void matrixMultiply(float matrix[4][4], float vector[4], float result[4])
 		for(int i = 0; i < 4; ++i)
 			result[i] += matrix[i][k]*vector[k]
 "
-	| multiplyOperation additionOperation matrixType vectorType resultType matrix vector result multiply resultLLVMType column |
+	| multiplyOperation additionOperation matrixType vectorType resultType matrix vector result multiply resultLLVMType column rows vectorElement |
 	matrixType := instruction left type.
 	vectorType := instruction right type.
 	resultType := instruction type.
@@ -657,18 +657,21 @@ void matrixMultiply(float matrix[4][4], float vector[4], float result[4])
 	vector := self translateValue: instruction right.
 	
 	column := self aggregate: matrix extractValueAt: 0.
+	rows := matrixType rows.
 
+	vectorElement := self vector: vector shuffleWith: vector mask: ((0 to: rows - 1) collect: [ :mi | 0 ]).
 	result := self generateScalarVectorBinaryOperation: multiplyOperation
 		resultType: resultLLVMType
 		left: column
-		right: vector name: nil.
+		right: vectorElement name: nil.
 		
 	2 to: matrixType columns do: [ :i |
 		column := self aggregate: matrix extractValueAt: i - 1.
+		vectorElement := self vector: vector shuffleWith: vector mask: ((0 to: rows - 1) collect: [ :mi | i - 1 ]).
 		multiply := self generateScalarVectorBinaryOperation: multiplyOperation
 			resultType: resultLLVMType
 			left: column
-			right: vector name: nil.
+			right: vectorElement name: nil.
 
 		result := self generateScalarVectorBinaryOperation: additionOperation
 			resultType: resultLLVMType
@@ -680,7 +683,7 @@ void matrixMultiply(float matrix[4][4], float vector[4], float result[4])
 
 ]
 
-{ #category : #visiting }
+{ #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateScalarVectorBinaryOperation: operation resultType: resultType left: left right: right name: name [
 	BinaryOperationMap at: operation ifPresent: [ :mappedOperation |
 		^ self addInstruction: (LLVMBinaryOperator new
@@ -785,7 +788,7 @@ SLVMLLVMFunctionCodeGenerator >> generateVectorDot: leftVector with: rightVector
 	^ self generateDot: leftVectorValue with: rightVectorValue mul: multiplyOperation add: additionOperation
 ]
 
-{ #category : #visiting }
+{ #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateVectorFold: vectorOrScalar with: operation [
 	| vectorType firstShuffleVector secondShuffleVector halfVectorSize halfVectorType leftIndices rightIndices leftVector rightVector result leftValue rightValue |
 	vectorType := vectorOrScalar type.
@@ -816,7 +819,7 @@ SLVMLLVMFunctionCodeGenerator >> generateVectorFold: vectorOrScalar with: operat
 	^ self generateVectorFold: result with: operation
 ]
 
-{ #category : #visiting }
+{ #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateVectorTimesMatrix: instruction [
 "
 void matrixMultiply(float vector[4], float matrix[4][4], float result[4])
@@ -1142,6 +1145,23 @@ SLVMLLVMFunctionCodeGenerator >> visitExtractVectorElement: instruction [
 		vector: (self translateValue: instruction vector);
 		index: (self translateValue: instruction index);
 		yourself)
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitFloatToIntCast: instruction [
+	instruction type isSigned ifTrue: [ 
+		^ self addInstruction: (LLVMFPToSIInst new
+				type: (self translateType: instruction type);
+				name: (self convertName: instruction name);
+				source: (self translateValue: instruction source);
+				yourself)
+	].
+	^ self addInstruction: (LLVMFPToUIInst new
+			type: (self translateType: instruction type);
+			name: (self convertName: instruction name);
+			source: (self translateValue: instruction source);
+			yourself)
+
 ]
 
 { #category : #visiting }

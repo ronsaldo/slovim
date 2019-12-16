@@ -112,7 +112,7 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 		self assert: rightType isVectorType.
 		self assert: leftType baseType = rightType baseType.
 		self assert: leftType columns = rightType elements.
-		^ rightType
+		^ SLVMVectorType baseType: leftType baseType elements: leftType rows
 	].
 
 	operationType == #vectorMatrix ifTrue: [ 
@@ -120,7 +120,7 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 		self assert: rightType isMatrixType.
 		self assert: leftType baseType = rightType baseType.
 		self assert: leftType elements = rightType rows.
-		^ leftType
+		^ SLVMVectorType baseType: rightType baseType elements: rightType columns
 	].
 
 	leftType ~= rightType ifTrue: [ self error: 'Unsupported binary operation whose operands have a different type.' ].
