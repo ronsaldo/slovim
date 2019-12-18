@@ -579,7 +579,7 @@ SLVMLLVMCodeGenerator >> usesGCStrategy [
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> visitArrayType: type [
 	^ self type: type translationDo: [ 
-		LLVMArrayType get: (self translateType: type baseType) elements: type elements
+		LLVMArrayType get: (self translateType: type baseType) elements: type validElements
 	]
 ]
 

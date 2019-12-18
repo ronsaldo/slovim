@@ -73,7 +73,7 @@ SLVMLLVMDebugTranslator >> visitArrayType: type [
 		align: type alignment*8;
 		elements: ((LLVMMDTuple for: self llvmModule)
 			elements: {(LLVMDISubrange for: self llvmModule)
-					count: type elements;
+					count: type validElements;
 					yourself
 			};
 		yourself).

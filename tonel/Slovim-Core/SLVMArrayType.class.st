@@ -81,7 +81,7 @@ SLVMArrayType >> isBounded [
 
 { #category : #accessing }
 SLVMArrayType >> isMemberInBoundsAt: index [
-	^ index isConstantValue and: [ index value < elements ]
+	^ index isConstantValue and: [ index value < self validElements ]
 ]
 
 { #category : #accessing }
@@ -162,6 +162,11 @@ SLVMArrayType >> strideWithIndex: index [
 { #category : #accessing }
 SLVMArrayType >> typeOfMemberAt: index [
 	^ self memberAt: index
+]
+
+{ #category : #'as yet unclassified' }
+SLVMArrayType >> validElements [
+	^ elements ifNil: [ 0 ]
 ]
 
 { #category : #writing }

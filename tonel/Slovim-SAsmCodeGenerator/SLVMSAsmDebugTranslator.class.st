@@ -32,7 +32,7 @@ SLVMSAsmDebugTranslator >> visitArrayType: type [
 				type: (codeGenerator translateDebugType: type baseType).
 				
 			builder subrangeType: [ :subrangeType |
-				subrangeType upperBound: (type elements - 1 max: 0)
+				subrangeType upperBound: (type validElements - 1 max: 0)
 			].
 		]
 	].
