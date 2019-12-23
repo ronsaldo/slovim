@@ -15,7 +15,9 @@ Class {
 		'inlineAssemblyFragments',
 		'globalConstructors',
 		'globalDestructors',
-		'currentOptimizationLevel'
+		'currentOptimizationLevel',
+		'highLevelMapToSymbol',
+		'symbolMapToHighLevel'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -62,6 +64,13 @@ SLVMModule >> addGlobal: aGlobalVariable destructor: destructor priority: priori
 		function: destructor;
 		priority: priority;
 		yourself)
+]
+
+{ #category : #adding }
+SLVMModule >> addHighLevelEntity: highLevelEntity mapToGlobalValue: globalValue [
+	globalValue name ifNil: [ ^ self ].
+	highLevelMapToSymbol at: highLevelEntity put: globalValue name.
+	symbolMapToHighLevel at: globalValue name put: highLevelEntity
 ]
 
 { #category : #adding }
@@ -303,6 +312,11 @@ SLVMModule >> gtTreeViewIn: composite [
 		format: [ :node | node nodeTitle ]
 ]
 
+{ #category : #accessing }
+SLVMModule >> highLevelMapToSymbol [
+	^ highLevelMapToSymbol
+]
+
 { #category : #initialization }
 SLVMModule >> initialize [
 	structures := OrderedCollection new.
@@ -312,6 +326,8 @@ SLVMModule >> initialize [
 	inlineAssemblyFragments := OrderedCollection new.
 	globalConstructors := OrderedCollection new.
 	globalDestructors := OrderedCollection new.
+	highLevelMapToSymbol := Dictionary new.
+	symbolMapToHighLevel := Dictionary new.
 	currentOptimizationLevel := 0.
 ]
 
@@ -377,4 +393,9 @@ SLVMModule >> sortPackageElements [
 { #category : #accessing }
 SLVMModule >> structures [
 	^ structures
+]
+
+{ #category : #accessing }
+SLVMModule >> symbolMapToHighLevel [
+	^ symbolMapToHighLevel
 ]
