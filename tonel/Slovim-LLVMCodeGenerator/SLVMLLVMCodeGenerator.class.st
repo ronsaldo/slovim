@@ -330,6 +330,7 @@ SLVMLLVMCodeGenerator >> isInliningMandatory [
 SLVMLLVMCodeGenerator >> llvmModule [
 	^ llvmModule ifNil: [ llvmModule := (LLVMModule name: #module context: self context)
 			optimizationLevel: optimizationLevel;
+			relocationModel: target relocationModel;
 			targetTriple: target targetTriple;
 			machineAttributes: target machineAttributes;
 			compilationPlugins: target compilationPlugins;

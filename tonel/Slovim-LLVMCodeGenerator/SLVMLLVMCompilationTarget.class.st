@@ -10,7 +10,8 @@ Class {
 		'abiName',
 		'systemVendor',
 		'machineAttributes',
-		'compilationPlugins'
+		'compilationPlugins',
+		'relocationModel'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
@@ -162,6 +163,16 @@ SLVMLLVMCompilationTarget >> pointerSize: anObject [
 ]
 
 { #category : #accessing }
+SLVMLLVMCompilationTarget >> relocationModel [
+	^ relocationModel
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> relocationModel: aRelocationModel [
+	relocationModel := aRelocationModel
+]
+
+{ #category : #accessing }
 SLVMLLVMCompilationTarget >> subarchitecture [
 	^ subarchitecture
 ]
@@ -179,6 +190,11 @@ SLVMLLVMCompilationTarget >> systemVendor [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> systemVendor: anObject [
 	systemVendor := anObject
+]
+
+{ #category : #initialization }
+SLVMLLVMCompilationTarget >> withPositionIndependentCode [
+	relocationModel := #pic
 ]
 
 { #category : #accessing }

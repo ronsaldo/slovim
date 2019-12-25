@@ -59,6 +59,11 @@ SpirVModule >> initialize [
 	instructions := OrderedCollection new.
 ]
 
+{ #category : #accessing }
+SpirVModule >> linkerArguments: aListOfArguments [
+	"This is ignored by this backend."
+]
+
 { #category : #'id generation' }
 SpirVModule >> newId [
 	| result |
@@ -91,6 +96,11 @@ SpirVModule >> writeOn: aByteStream [
 ]
 
 { #category : #writing }
+SpirVModule >> writePluginToFileNamed: fileName [
+	^ self writeExecutableToFileNamed: fileName
+]
+
+{ #category : #writing }
 SpirVModule >> writeSharedToFileNamed: fileName [
-	^ self saveTo: fileName
+	^ self writeExecutableToFileNamed: fileName
 ]

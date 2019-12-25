@@ -13,7 +13,11 @@ Class {
 		'optimizationLevel',
 		'targetTriple',
 		'machineAttributes',
-		'compilationPlugins'
+		'compilationPlugins',
+		'linkerProgram',
+		'llcProgram',
+		'relocationModel',
+		'linkerArguments'
 	],
 	#category : #'LLVM-IR'
 }
@@ -63,7 +67,7 @@ LLVMModule >> asBinaryObject [
 		'-'.
 	}.
 
-	elfFile := (self runLLCWithArgumnents: arguments) asByteArray.
+	elfFile := (self runLLCWithArguments: arguments) asByteArray.
 	elf := SAsmElfLoader loadFromStream: (SAsmBinaryReadStream on: (ReadStream on: elfFile)).
 	^ elf asBinaryObject
 ]
@@ -171,13 +175,34 @@ LLVMModule >> initializeWithName: aName context: aContext [
 	self initialize
 ]
 
+{ #category : #accessing }
+LLVMModule >> linkerArguments [
+	^ linkerArguments ifNil: [linkerArguments := #()]
+]
+
+{ #category : #accessing }
+LLVMModule >> linkerArguments: aListOfFlags [
+	linkerArguments := aListOfFlags
+]
+
+{ #category : #accessing }
+LLVMModule >> linkerProgram [
+	^ linkerProgram ifNil: [ linkerProgram := 'clang' ]
+]
+
+{ #category : #accessing }
+LLVMModule >> linkerProgram: aLinkerProgram [
+	linkerProgram := aLinkerProgram
+]
+
 { #category : #writing }
 LLVMModule >> llcFlags [
 	| flags |
 	flags := #().
 	optimizationLevel ifNotNil: [ flags := { '-O=' , optimizationLevel asString} ].
+	relocationModel ifNotNil: [ flags := flags , { '-relocation-model=' , relocationModel } ].
 	(machineAttributes isNotNil and: [machineAttributes isNotEmpty]) ifTrue: [ 
-		flags := { '-mattr=' , machineAttributes }
+		flags := flags , { '-mattr=' , machineAttributes }
 	].
 	compilationPlugins ifNotEmpty: [ 
 		flags := flags , (compilationPlugins collect: [:pluginName |
@@ -186,6 +211,16 @@ LLVMModule >> llcFlags [
 	].
 
 	^ flags
+]
+
+{ #category : #accessing }
+LLVMModule >> llcProgram [
+	^ llcProgram ifNil: [llcProgram := 'llc']
+]
+
+{ #category : #accessing }
+LLVMModule >> llcProgram: aProgramName [
+	llcProgram := aProgramName
 ]
 
 { #category : #accessing }
@@ -220,21 +255,38 @@ LLVMModule >> printModuleLevelAssembly: assembly on: aStream [
 	aStream lf
 ]
 
+{ #category : #accessing }
+LLVMModule >> relocationModel [
+	^ relocationModel
+]
+
+{ #category : #accessing }
+LLVMModule >> relocationModel: anObject [
+	relocationModel := anObject
+]
+
 { #category : #writing }
-LLVMModule >> runLLCWithArgumnents: arguments [
+LLVMModule >> runCommand: command withArguments: arguments [
+	^ self runCommand: command withArguments: arguments stdinInput: nil
+]
+
+{ #category : #writing }
+LLVMModule >> runCommand: command withArguments: arguments stdinInput: stdinInput [
 	| process output errorString stdout stderr |
 
 	process := OSSUnixSubprocess new
-		command: 'llc';
+		command: command;
 		arguments: arguments;
 		redirectStdin;
 		redirectStdout;
 		redirectStderr;
 		run.
 	
-	process stdinStream
-		nextPutAll: (self asString);
-		close.
+	stdinInput ifNotNil: [ 
+		process stdinStream
+			nextPutAll: stdinInput;
+			close.
+	].
 	
 	stdout := process stdoutStream.
 	stderr := process stderrStream.
@@ -257,6 +309,16 @@ LLVMModule >> runLLCWithArgumnents: arguments [
 
 ]
 
+{ #category : #writing }
+LLVMModule >> runLLCWithArguments: arguments [
+	^ self runCommand: self llcProgram withArguments: arguments stdinInput: self asString
+]
+
+{ #category : #writing }
+LLVMModule >> runLinkerWithArguments: arguments [
+	^ self runCommand: self linkerProgram withArguments: arguments
+]
+
 { #category : #accessing }
 LLVMModule >> targetTriple [
 	^ targetTriple
@@ -272,6 +334,22 @@ LLVMModule >> valueSymbolTable [
 	^ valueSymbolTable
 ]
 
+{ #category : #writing }
+LLVMModule >> withTemporaryObjectFileDo: aBlock [
+	| tempFileReference tempFileName |
+	tempFileReference := (FileSystem workingDirectory / ('temp_' , DateAndTime now asUnixTime asString , '.o')) asAbsolute.
+	tempFileName := tempFileReference fullName.
+	^ [
+		
+		self writeObjectToFileNamed: tempFileName.
+		aBlock value: tempFileName
+	] ensure: [
+		tempFileReference exists ifTrue: [
+			tempFileReference delete.
+		].
+	]
+]
+
 { #category : #printing }
 LLVMModule >> writeAssemblyToFileNamed: aFileName [
 	aFileName asFileReference writeStreamDo: [ :out |
@@ -282,7 +360,15 @@ LLVMModule >> writeAssemblyToFileNamed: aFileName [
 
 { #category : #writing }
 LLVMModule >> writeExecutableToFileNamed: aFileName [
-	self error: 'llvm to executable not yet implemented'
+	^ self withTemporaryObjectFileDo: [ :temporaryObjectFile |
+		| arguments |
+		arguments := {
+			'-o' . aFileName .
+			temporaryObjectFile .
+		} , self linkerArguments.
+		
+		self runLinkerWithArguments: arguments
+	]
 ]
 
 { #category : #writing }
@@ -294,12 +380,26 @@ LLVMModule >> writeObjectToFileNamed: outputFileName [
 		'-'.
 	}.
 
-	^ self runLLCWithArgumnents: arguments
+	^ self runLLCWithArguments: arguments
+]
+
+{ #category : #writing }
+LLVMModule >> writePluginToFileNamed: aFileName [
+	^ self writeSharedToFileNamed: aFileName
 ]
 
 { #category : #writing }
 LLVMModule >> writeSharedToFileNamed: aFileName [
-	self error: 'llvm to shared library not yet implemented'
+	^ self withTemporaryObjectFileDo: [ :temporaryObjectFile |
+		| arguments |
+		arguments := {
+			'-shared' .
+			'-o' . aFileName .
+			temporaryObjectFile .
+		} , self linkerArguments.
+		
+		self runLinkerWithArguments: arguments
+	]
 ]
 
 { #category : #printing }
