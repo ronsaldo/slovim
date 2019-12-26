@@ -42,6 +42,8 @@ SLVMObjectModel >> convertConstantValue: value inModule: module [
 
 { #category : #'literal conversion' }
 SLVMObjectModel >> convertInlineLiteral: literal [
+	literal == true ifTrue: [ ^ self trueLiteralValue ].
+	literal == false ifTrue: [ ^ self falseLiteralValue ].
 	^ SLVMConstantValue type: target dynamicObjectType value: literal
 ]
 

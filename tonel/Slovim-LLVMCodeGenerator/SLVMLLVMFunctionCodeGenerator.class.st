@@ -366,8 +366,6 @@ SLVMLLVMFunctionCodeGenerator >> doesNotUnderstandTrampolineFor: instruction [
 	instruction isDoesNotUnderstandMessage ifTrue: [ 
 		^ self nullVoidPointer
 	].
-
-	instruction isSuperSend ifTrue: [ self halt ].
 	
 	^ moduleTranslator doesNotUnderstandTrampolineWithType: instruction doesNotUnderstandTrampolineFunctionType
 ]
@@ -719,11 +717,6 @@ SLVMLLVMFunctionCodeGenerator >> generateScalarVectorBinaryOperation: operation 
 
 ]
 
-{ #category : #visiting }
-SLVMLLVMFunctionCodeGenerator >> generateSuperMessageSend: instruction [
-	self halt
-]
-
 { #category : #'vector intrinsics' }
 SLVMLLVMFunctionCodeGenerator >> generateVector: vectorType cross: leftVector with: rightVector [
 	"
@@ -881,6 +874,24 @@ SLVMLLVMFunctionCodeGenerator >> intToPointerCast: source target: targetType nam
 { #category : #accessing }
 SLVMLLVMFunctionCodeGenerator >> llvmModule [
 	^ moduleTranslator llvmModule
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> loadLiteralVariableValue: literalVariable [
+	| valueOffset valuePointer |
+	self assert: literalVariable type isPointerTy.
+	self assert: literalVariable type elementType bits = 8.
+	valueOffset := target objectModel associationValueOffset.
+	valuePointer := self addInstruction: (LLVMGetElementPtrInst new
+		type: literalVariable type;
+		pointer: literalVariable;
+		indices: { self context int32Ty constant: valueOffset };
+		yourself).
+	valuePointer := self bitCast: valuePointer target: (LLVMPointerType getUnqual: literalVariable type) name: nil.
+	^ self addInstruction: (LLVMLoadInst new
+		pointer: valuePointer;
+		type: literalVariable type;
+		yourself)
 ]
 
 { #category : #'code generation' }
@@ -1306,8 +1317,7 @@ SLVMLLVMFunctionCodeGenerator >> visitMakeVector: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitMessageSend: instruction [
-	| returnType receiver arguments selector lookupResult calledFunctionType calledType functionPointer |
-	instruction isSuperSend ifTrue: [ ^ self generateSuperMessageSend: instruction ].
+	| returnType receiver arguments selector lookupResult calledFunctionType calledType functionPointer lookupArguments lookupFunction methodClassBinding selfClass |
 
 	returnType := self translateType: instruction type.	
 	receiver := self translateValue: instruction receiver.
@@ -1315,8 +1325,17 @@ SLVMLLVMFunctionCodeGenerator >> visitMessageSend: instruction [
 	selector := self translateValue: instruction selector.
 	
 	"Lookup the message"
-	lookupResult := self callRuntimeFunction: target objectModel messageLookupFunction
-		arguments: { receiver . selector . self doesNotUnderstandTrampolineFor: instruction }
+	lookupArguments := { receiver . selector . self doesNotUnderstandTrampolineFor: instruction }.
+	lookupFunction := target objectModel messageLookupFunction.
+	instruction isSuperSend ifTrue: [
+		methodClassBinding := self translateValue: function dynamicLiterals last.
+		selfClass := self loadLiteralVariableValue: methodClassBinding.
+		lookupArguments := { receiver . selector . selfClass . self doesNotUnderstandTrampolineFor: instruction }.
+		lookupFunction := target objectModel superMessageLookupFunction.
+	].
+
+	lookupResult := self callRuntimeFunction: lookupFunction
+		arguments: lookupArguments
 		type: [ self halt ]
 		name: (self convertName: instruction name).
 	self convertDebugLocationFrom: instruction into: lookupResult.

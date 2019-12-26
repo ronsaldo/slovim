@@ -55,7 +55,11 @@ SLVMSendMessage >> initialize [
 
 { #category : #testing }
 SLVMSendMessage >> isDoesNotUnderstandMessage [
-	^ self selector isConstantDynamicLiteral and: [ self selector value == #doesNotUnderstand: ]
+	| selector |
+	selector := self selector.
+	(selector isInstruction and: [selector isBitCast]) ifTrue: [ selector := selector source ]..
+
+	^ selector isConstant and: [selector isConstantDynamicLiteral and: [ selector value == #doesNotUnderstand: ]]
 ]
 
 { #category : #testing }
