@@ -38,6 +38,16 @@ SLVMDebugDerivedType >> byteOffset: anOffset [
 	bitOffset := anOffset * 8
 ]
 
+{ #category : #testing }
+SLVMDebugDerivedType >> isDebugDerivedType [
+	^ true
+]
+
+{ #category : #'as yet unclassified' }
+SLVMDebugDerivedType >> makeInheritance [
+	kind := #inheritance
+]
+
 { #category : #'as yet unclassified' }
 SLVMDebugDerivedType >> makeMember [
 	kind := #member

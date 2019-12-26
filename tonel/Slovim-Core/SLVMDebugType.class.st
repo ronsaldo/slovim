@@ -39,6 +39,11 @@ SLVMDebugType >> byteSize: aSize [
 	bitSize := aSize * 8
 ]
 
+{ #category : #testing }
+SLVMDebugType >> isDebugType [
+	^ true
+]
+
 { #category : #accessing }
 SLVMDebugType >> kind [
 	^ kind
