@@ -30,6 +30,11 @@ LLVMDIDerivedType >> offset: anObject [
 ]
 
 { #category : #accessing }
+LLVMDIDerivedType >> requiredProperties [
+	^ #(baseType)
+]
+
+{ #category : #accessing }
 LLVMDIDerivedType >> specializedName [
 	^ #DIDerivedType
 ]

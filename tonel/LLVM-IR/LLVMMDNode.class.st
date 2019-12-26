@@ -79,8 +79,9 @@ LLVMMDNode >> printOn: aStream [
 
 { #category : #printing }
 LLVMMDNode >> printSpecializedContentOn: aStream [
-	| destIndex value propertyName propertySelector |
+	| destIndex value propertyName propertySelector requiredProperties |
 	destIndex := 0.
+	requiredProperties := self requiredProperties.
 	self specializedProperties do: [ :property |
 		propertyName := property.
 		propertySelector := property.
@@ -90,7 +91,8 @@ LLVMMDNode >> printSpecializedContentOn: aStream [
 		].
 	
 		value := self perform: propertySelector.
-		value ifNotNil: [
+		
+		(value isNotNil or: [requiredProperties includes: propertyName]) ifTrue: [
 			destIndex > 0 ifTrue: [
 				aStream nextPutAll: ', '
 			].
@@ -100,6 +102,11 @@ LLVMMDNode >> printSpecializedContentOn: aStream [
 			destIndex := destIndex + 1
 		].
 	]
+]
+
+{ #category : #accessing }
+LLVMMDNode >> requiredProperties [
+	^ #()
 ]
 
 { #category : #accessing }

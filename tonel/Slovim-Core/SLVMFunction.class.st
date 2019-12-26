@@ -418,6 +418,16 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 	]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMFunction >> debugType [
+	^ self propertyAt: #debugType ifAbsent: [ self functionType ]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMFunction >> debugType: debugType [
+	self propertyAt: #debugType put: debugType
+]
+
 { #category : #'control flow' }
 SLVMFunction >> dominanceTopoSort [
 	| visited result |

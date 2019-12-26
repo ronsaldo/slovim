@@ -4,11 +4,44 @@ Class {
 	#instVars : [
 		'moduleTranslator'
 	],
+	#classVars : [
+		'EncodingFromDebugTypeKind',
+		'TagFromDebugTypeKind'
+	],
 	#pools : [
 		'SAsmDWConstants'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
+
+{ #category : #'class initialization' }
+SLVMLLVMDebugTranslator class >> initialize [
+	TagFromDebugTypeKind := Dictionary newFromPairs: { 
+		"Derived types"
+		#pointer . DW_TAG_pointer_type.
+		#reference . DW_TAG_reference_type.
+		#const . DW_TAG_const_type.
+		#volatile . DW_TAG_volatile_type.
+		#restrict . DW_TAG_restrict_type.
+		#member . DW_TAG_member.
+		#inheritance . DW_TAG_inheritance.
+
+		"Composite type"
+		#class . DW_TAG_class_type.
+		#structure . DW_TAG_structure_type.
+		#union . DW_TAG_union_type.
+		#array . DW_TAG_array_type.
+		#enumeration . DW_TAG_enumeration_type.
+	}.
+	
+	EncodingFromDebugTypeKind := Dictionary newFromPairs: { 
+		"Derived types"
+		#boolean . DW_ATE_boolean.
+		#float . DW_ATE_float.
+		#signed . DW_ATE_signed.
+		#unsigned . DW_ATE_unsigned.
+	}.
+]
 
 { #category : #accessing }
 SLVMLLVMDebugTranslator >> llvmModule [
@@ -94,6 +127,85 @@ SLVMLLVMDebugTranslator >> visitBoolType: type [
 	moduleTranslator register: type debugElement: basicType.
 	
 	^ basicType
+]
+
+{ #category : #visiting }
+SLVMLLVMDebugTranslator >> visitDebugBasicType: debugType [
+	| basicType |
+	debugType kind = #void ifTrue: [
+		moduleTranslator register: debugType debugElement: nil.
+		^ nil
+	].
+	basicType := (LLVMDIBasicType for: self llvmModule)
+		name: debugType name;
+		size: debugType bitSize;
+		align: debugType bitAlignment;
+		encoding: (EncodingFromDebugTypeKind at: debugType kind);
+		yourself.
+	moduleTranslator register: debugType debugElement: basicType.
+	
+	^ basicType
+
+]
+
+{ #category : #visiting }
+SLVMLLVMDebugTranslator >> visitDebugCompositeType: debugType [
+	| compositeType |
+	compositeType := (LLVMDICompositeType for: self llvmModule)
+		distinct;
+		name: debugType name;
+		tag: (TagFromDebugTypeKind at: debugType kind);
+		file: moduleTranslator unknownDebugFile;
+		size: debugType bitSize;
+		align: debugType bitAlignment;
+		elements: (LLVMMDTuple for: self llvmModule);
+		yourself.
+	moduleTranslator register: debugType debugElement: compositeType.
+	
+	debugType baseType ifNotNil: [ 
+		compositeType baseType: (moduleTranslator translateDebugType: debugType baseType)
+	].
+	
+	debugType kind = #array ifTrue: [ 
+		compositeType elements elements: {(LLVMDISubrange for: self llvmModule)
+				count: (debugType arrayRange ifNil: [0]);
+				yourself
+		}
+	] ifFalse: [
+		debugType members do: [ :member |
+			compositeType elements addElement: (moduleTranslator translateDebugType: member)
+		].
+	].
+
+	^ compositeType
+]
+
+{ #category : #visiting }
+SLVMLLVMDebugTranslator >> visitDebugDerivedType: debugType [
+	| derivedType |
+	derivedType := (LLVMDIDerivedType for: self llvmModule)
+		name: debugType name;
+		tag: (TagFromDebugTypeKind at: debugType kind);
+		size: debugType bitSize;
+		align: debugType bitAlignment;
+		yourself.
+	moduleTranslator register: debugType debugElement: derivedType.
+	derivedType baseType: (moduleTranslator translateDebugType: debugType baseType).
+	
+	^ derivedType
+]
+
+{ #category : #visiting }
+SLVMLLVMDebugTranslator >> visitDebugSubroutineType: debugType [
+	| subroutineType returnType argumentTypes |
+	subroutineType := LLVMDISubroutineType for: self llvmModule.
+	moduleTranslator register: debugType debugElement: subroutineType.
+	
+	returnType := moduleTranslator translateDebugType: debugType returnType.
+	argumentTypes := debugType argumentTypes collect: [:arg | moduleTranslator translateDebugType: arg].
+	subroutineType types: (LLVMMDTuple for: self llvmModule rawElements: { returnType } , argumentTypes).
+	
+	^ subroutineType
 ]
 
 { #category : #visiting }

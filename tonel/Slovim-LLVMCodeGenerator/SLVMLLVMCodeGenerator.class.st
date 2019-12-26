@@ -41,7 +41,7 @@ SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmf
 		unit: debugCompileUnit;
 		isLocal: (slvmFunction isPublic or: [ slvmFunction isExternal ]) not;
 		isDefinition: true;
-		type: (self translateDebugType: (slvmFunction propertyAt: #debugType ifAbsent: [slvmFunction functionType]));
+		type: (self translateDebugType: slvmFunction debugType);
 		retainedNodes: (LLVMMDDynamicTuple for: llvmModule)
 		yourself.
 	
@@ -94,7 +94,7 @@ SLVMLLVMCodeGenerator >> buildGlobalVariable: slvmGlobalVariable debugInformatio
 	debugGlobalVariable := (LLVMDIGlobalVariable for: llvmModule)
 		distinct;
 		name: debugInfo name;
-		scope: debugCompileUnit;
+		scope: (self convertDebugScope: debugInfo scope fallbackTo: debugCompileUnit);
 		isLocal: (slvmGlobalVariable isPublic or: [ slvmGlobalVariable isExternal ]) not;
 		isDefinition: slvmGlobalVariable isExternal not;
 		type: (self translateDebugType: (debugInfo type ifNil: [slvmGlobalVariable valueType]));
