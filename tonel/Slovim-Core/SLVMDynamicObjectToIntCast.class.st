@@ -12,6 +12,11 @@ SLVMDynamicObjectToIntCast >> accept: aVisitor [
 	^ aVisitor visitDynamicObjectToIntCast: self
 ]
 
+{ #category : #testing }
+SLVMDynamicObjectToIntCast >> isDynamicObjectToIntCast [
+	^ true
+]
+
 { #category : #printing }
 SLVMDynamicObjectToIntCast >> mnemonic [
 	^ #dynobject2int

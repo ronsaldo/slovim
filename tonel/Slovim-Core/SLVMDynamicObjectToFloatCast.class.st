@@ -12,6 +12,11 @@ SLVMDynamicObjectToFloatCast >> accept: aVisitor [
 	^ aVisitor visitDynamicObjectToFloatCast: self
 ]
 
+{ #category : #testing }
+SLVMDynamicObjectToFloatCast >> isDynamicObjectToFloatCast [
+	^ true
+]
+
 { #category : #printing }
 SLVMDynamicObjectToFloatCast >> mnemonic [
 	^ #dynobject2float

@@ -114,6 +114,11 @@ SLVMInstruction >> isBitCast [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isBoolToDynamicObjectCast [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isBranch [
 	^ false
 ]
@@ -140,12 +145,32 @@ SLVMInstruction >> isDynamicObjectReferenceCreator [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isDynamicObjectToBoolCast [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isDynamicObjectToFloatCast [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isDynamicObjectToIntCast [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isExtractValue [
 	^ false
 ]
 
 { #category : #testing }
 SLVMInstruction >> isExtractVectorElement [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isFloatToDynamicObjectCast [
 	^ false
 ]
 
@@ -187,6 +212,11 @@ SLVMInstruction >> isInstantiateClosure [
 { #category : #testing }
 SLVMInstruction >> isInstruction [
 	^ true
+]
+
+{ #category : #testing }
+SLVMInstruction >> isIntToDynamicObjectCast [
+	^ false
 ]
 
 { #category : #testing }
