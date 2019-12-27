@@ -30,20 +30,41 @@ Class {
 }
 
 { #category : #'debug information' }
-SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmfunction [
+SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmFunction [
 	| subprogram debugFile |
 	(self isEmittingDebugInformation not or: [slvmFunction hasProperty: #omitDebugInformation]) ifTrue: [ ^ nil ].
 	slvmFunction isEmpty ifTrue: [ ^ nil ].
 	
-	subprogram := (LLVMDISubprogram for: llvmModule)
-		distinct;
-		scope: debugCompileUnit;
-		unit: debugCompileUnit;
-		isLocal: (slvmFunction isPublic or: [ slvmFunction isExternal ]) not;
-		isDefinition: true;
-		type: (self translateDebugType: slvmFunction debugType);
-		retainedNodes: (LLVMMDDynamicTuple for: llvmModule)
-		yourself.
+	slvmFunction debugInformation ifNotNil: [ :debugInfo |
+		subprogram := self translateDebugInformationElement: debugInfo
+	] ifNil: [
+		 subprogram := (LLVMDISubprogram for: llvmModule)
+			distinct;
+			scope: debugCompileUnit;
+			unit: debugCompileUnit;
+			isLocal: (slvmFunction isPublic or: [ slvmFunction isExternal ]) not;
+			isDefinition: true;
+			type: (self translateDebugType: slvmFunction debugType);
+			retainedNodes: (LLVMMDDynamicTuple for: llvmModule)
+			yourself.
+			
+		slvmFunction name ifNotNil: [ 
+			(slvmFunction unmangledName isNotNil and: [slvmFunction unmangledName ~= slvmFunction name]) ifTrue: [
+				subprogram
+					"linkageName: slvmFunction name;"
+					name: (slvmFunction unmangledName)
+			] ifFalse: [
+				subprogram name: (slvmFunction name)
+			].
+		] ifNil: [ 
+			slvmFunction unmangledName ifNotNil: [
+				subprogram name: (slvmFunction unmangledName)
+			] ifNil: [
+				self flag: 'This could be a closure'.
+				subprogram name: (self generateDebugAnonymousName).
+			]
+		].
+	].
 	
 	slvmFunction debugSourceLocation ifNotNil: [ :sourceLocation |
 		debugFile := self convertDebugFile: sourceLocation sourceFile.
@@ -56,25 +77,8 @@ SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmf
 			subprogram scope: debugFile
 		].
 	].
-	
-	slvmFunction name ifNotNil: [ 
-		(slvmFunction unmangledName isNotNil and: [slvmFunction unmangledName ~= slvmFunction name]) ifTrue: [
-			subprogram
-				"linkageName: slvmFunction name;"
-				name: (slvmFunction unmangledName)
-		] ifFalse: [
-			subprogram name: (slvmFunction name)
-		].
-	] ifNil: [ 
-		slvmFunction unmangledName ifNotNil: [
-			subprogram name: (slvmFunction unmangledName)
-		] ifNil: [
-			self flag: 'This could be a closure'.
-			subprogram name: (self generateDebugAnonymousName).
-		]
-	].
 
-	llvmfunction addDebugMetadata: subprogram.
+	llvmFunction addDebugMetadata: subprogram.
 	
 	"slvmFunction arguments doWithIndex: [ :arg :index |
 		arg debugInformation ifNotNil: [
@@ -94,11 +98,14 @@ SLVMLLVMCodeGenerator >> buildGlobalVariable: slvmGlobalVariable debugInformatio
 	debugGlobalVariable := (LLVMDIGlobalVariable for: llvmModule)
 		distinct;
 		name: debugInfo name;
+		yourself.
+		
+	self translatedDebugElements at: debugInfo put: debugGlobalVariable.
+	debugGlobalVariable
 		scope: (self convertDebugScope: debugInfo scope fallbackTo: debugCompileUnit);
 		isLocal: (slvmGlobalVariable isPublic or: [ slvmGlobalVariable isExternal ]) not;
 		isDefinition: slvmGlobalVariable isExternal not;
-		type: (self translateDebugType: (debugInfo type ifNil: [slvmGlobalVariable valueType]));
-		yourself.
+		type: (self translateDebugType: (debugInfo type ifNil: [slvmGlobalVariable valueType])).
 	
 	slvmGlobalVariable debugSourceLocation ifNotNil: [ :sourceLocation |
 		debugFile := self convertDebugFile: sourceLocation sourceFile.
@@ -141,7 +148,7 @@ SLVMLLVMCodeGenerator >> convertDebugFile: debugFile [
 { #category : #'debug information' }
 SLVMLLVMCodeGenerator >> convertDebugScope: scope fallbackTo: fallbackScope [
 	scope ifNil: [ ^ fallbackScope ].
-	self halt
+	^ self translateDebugInformationElement: scope
 ]
 
 { #category : #'debug information' }
@@ -393,10 +400,15 @@ SLVMLLVMCodeGenerator >> translateConstant: aConstant [
 ]
 
 { #category : #'debug information' }
-SLVMLLVMCodeGenerator >> translateDebugType: type [
-	self translatedDebugElements at: type ifPresent: [ :existent | ^ existent ].
-	^ self debugTranslator translate: type
+SLVMLLVMCodeGenerator >> translateDebugInformationElement: element [
+	self translatedDebugElements at: element ifPresent: [ :existent | ^ existent ].
+	^ self debugTranslator translate: element
 
+]
+
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> translateDebugType: type [
+	^ self translateDebugInformationElement: type
 ]
 
 { #category : #'code generation' }

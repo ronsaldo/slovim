@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #accessing }
+LLVMDINamespace >> requiredProperties [
+	^ #(scope)
+]
+
+{ #category : #accessing }
 LLVMDINamespace >> specializedName [
 	^ #DINamespace
 ]

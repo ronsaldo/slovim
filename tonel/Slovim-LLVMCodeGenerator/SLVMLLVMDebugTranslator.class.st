@@ -63,6 +63,15 @@ SLVMLLVMDebugTranslator >> translate: aDebugElement [
 	^ aDebugElement accept: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLLVMDebugTranslator >> translateDebugType: debugType commonParametersInto: llvmDebugType [
+	debugType parentScope ifNotNil: [ :parentScope |
+		llvmDebugType scope: (moduleTranslator convertDebugScope: parentScope fallbackTo: nil)
+	]
+
+
+]
+
 { #category : #visiting }
 SLVMLLVMDebugTranslator >> translateStructureType: type tag: tag [
 	| compositeType offset memberType derivedType |
@@ -143,7 +152,8 @@ SLVMLLVMDebugTranslator >> visitDebugBasicType: debugType [
 		encoding: (EncodingFromDebugTypeKind at: debugType kind);
 		yourself.
 	moduleTranslator register: debugType debugElement: basicType.
-	
+	self translateDebugType: debugType commonParametersInto: basicType.
+
 	^ basicType
 
 ]
@@ -161,6 +171,7 @@ SLVMLLVMDebugTranslator >> visitDebugCompositeType: debugType [
 		elements: (LLVMMDTuple for: self llvmModule);
 		yourself.
 	moduleTranslator register: debugType debugElement: compositeType.
+	self translateDebugType: debugType commonParametersInto: compositeType.
 	
 	debugType baseType ifNotNil: [ 
 		compositeType baseType: (moduleTranslator translateDebugType: debugType baseType)
@@ -191,8 +202,47 @@ SLVMLLVMDebugTranslator >> visitDebugDerivedType: debugType [
 		yourself.
 	moduleTranslator register: debugType debugElement: derivedType.
 	derivedType baseType: (moduleTranslator translateDebugType: debugType baseType).
+	self translateDebugType: debugType commonParametersInto: derivedType.
 	
 	^ derivedType
+]
+
+{ #category : #visiting }
+SLVMLLVMDebugTranslator >> visitDebugNamespace: debugNamespace [
+	| namespace |
+	namespace := (LLVMDINamespace for: self llvmModule)
+		distinct;
+		name: debugNamespace name;
+		yourself.
+	moduleTranslator register: debugNamespace debugElement: namespace.
+	debugNamespace parentScope ifNotNil: [ :parentScope |
+		debugNamespace scope: (moduleTranslator convertDebugScope: parentScope fallbackTo: nil)
+	].
+
+	^ namespace
+]
+
+{ #category : #visiting }
+SLVMLLVMDebugTranslator >> visitDebugSubprogram: debugSubprogram [
+	| subprogram |
+	subprogram := (LLVMDISubprogram for: self llvmModule)
+		distinct;
+		scope: moduleTranslator debugCompileUnit;
+		unit: moduleTranslator debugCompileUnit;
+		name: debugSubprogram name;
+		isLocal: debugSubprogram isLocal;
+		isDefinition: debugSubprogram isDefinition;
+		retainedNodes: (LLVMMDDynamicTuple for: self llvmModule)
+		yourself.
+	moduleTranslator register: debugSubprogram debugElement: subprogram.
+	
+	subprogram type: (moduleTranslator translateDebugType: debugSubprogram type).
+	
+	debugSubprogram parentScope ifNotNil: [ :parentScope |
+		subprogram scope: (moduleTranslator convertDebugScope: parentScope fallbackTo: moduleTranslator debugCompileUnit)
+	].
+
+	^ subprogram
 ]
 
 { #category : #visiting }
