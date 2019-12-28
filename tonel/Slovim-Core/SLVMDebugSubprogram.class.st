@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'isLocal',
 		'isDefinition',
-		'type'
+		'type',
+		'emitLinkageName'
 	],
 	#category : #'Slovim-Core-Debug'
 }
@@ -12,6 +13,16 @@ Class {
 { #category : #visiting }
 SLVMDebugSubprogram >> accept: visitor [
 	^ visitor visitDebugSubprogram: self
+]
+
+{ #category : #accessing }
+SLVMDebugSubprogram >> emitLinkageName [
+	^ emitLinkageName ifNil: [ emitLinkageName := false ]
+]
+
+{ #category : #accessing }
+SLVMDebugSubprogram >> emitLinkageName: anObject [
+	emitLinkageName := anObject
 ]
 
 { #category : #accessing }

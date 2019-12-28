@@ -2,6 +2,7 @@ Class {
 	#name : #LLVMDISubprogram,
 	#superclass : #LLVMDILocalScope,
 	#instVars : [
+		'linkageName',
 		'isLocal',
 		'isDefinition',
 		'line',
@@ -44,6 +45,16 @@ LLVMDISubprogram >> line: anObject [
 ]
 
 { #category : #accessing }
+LLVMDISubprogram >> linkageName [
+	^ linkageName
+]
+
+{ #category : #accessing }
+LLVMDISubprogram >> linkageName: anObject [
+	linkageName := anObject
+]
+
+{ #category : #accessing }
 LLVMDISubprogram >> retainedNodes [
 	^ retainedNodes
 ]
@@ -70,7 +81,7 @@ LLVMDISubprogram >> specializedName [
 
 { #category : #accessing }
 LLVMDISubprogram >> specializedProperties [
-	^ super specializedProperties , #(isDefinition isLocal line scopeLine type unit retainedNodes)
+	^ super specializedProperties , #(linkageName isDefinition isLocal line scopeLine type unit retainedNodes)
 ]
 
 { #category : #accessing }

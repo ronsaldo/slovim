@@ -17,7 +17,8 @@ Class {
 		'globalDestructors',
 		'currentOptimizationLevel',
 		'highLevelMapToSymbol',
-		'symbolMapToHighLevel'
+		'symbolMapToHighLevel',
+		'sourceLanguageName'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -388,6 +389,16 @@ SLVMModule >> sortPackageElements [
 	].
 	
 	^ result
+]
+
+{ #category : #accessing }
+SLVMModule >> sourceLanguageName [
+	^ sourceLanguageName
+]
+
+{ #category : #accessing }
+SLVMModule >> sourceLanguageName: anObject [
+	sourceLanguageName := anObject
 ]
 
 { #category : #accessing }

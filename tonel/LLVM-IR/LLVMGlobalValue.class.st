@@ -289,7 +289,8 @@ LLVMGlobalValue >> printMetadataOn: aStream [
 
 { #category : #printing }
 LLVMGlobalValue >> printOn: aStream [
-	^ aStream nextPut: $@; nextPutAll: name
+	aStream nextPut: $@.
+	name llvmPrintNameOn: aStream.
 ]
 
 { #category : #accessing }

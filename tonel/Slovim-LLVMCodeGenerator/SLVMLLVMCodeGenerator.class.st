@@ -23,11 +23,22 @@ Class {
 		'translatedLiterals',
 		'translatedCompiledMethodMetadata'
 	],
+	#classVars : [
+		'DebugLanguageMap'
+	],
 	#pools : [
 		'SAsmDWConstants'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
+
+{ #category : #'class initialization' }
+SLVMLLVMCodeGenerator class >> initialize [
+	DebugLanguageMap := Dictionary newFromPairs: { 
+		'C' . DW_LANG_C.
+		'C++' . DW_LANG_C_plus_plus.
+	}.
+]
 
 { #category : #'debug information' }
 SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmFunction [
@@ -50,9 +61,7 @@ SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmF
 			
 		slvmFunction name ifNotNil: [ 
 			(slvmFunction unmangledName isNotNil and: [slvmFunction unmangledName ~= slvmFunction name]) ifTrue: [
-				subprogram
-					"linkageName: slvmFunction name;"
-					name: (slvmFunction unmangledName)
+				subprogram name: (slvmFunction unmangledName)
 			] ifFalse: [
 				subprogram name: (slvmFunction name)
 			].
@@ -66,6 +75,14 @@ SLVMLLVMCodeGenerator >> buildFunction: slvmFunction debugInformationInto: llvmF
 		].
 	].
 	
+	slvmFunction name ifNotNil: [
+		slvmFunction debugInformation ifNotNil: [ :debugInfo |
+			debugInfo emitLinkageName ifTrue: [ 
+				subprogram linkageName: slvmFunction name
+			].
+		]
+	].
+
 	slvmFunction debugSourceLocation ifNotNil: [ :sourceLocation |
 		debugFile := self convertDebugFile: sourceLocation sourceFile.
 		subprogram
@@ -272,7 +289,7 @@ SLVMLLVMCodeGenerator >> declareNamedStructure: aNamedStructure [
 	| convertedStructure |
 	convertedStructure := LLVMStructType new
 		context: self context;
-		name: ('%' , aNamedStructure name);
+		name: ('%' , aNamedStructure name llvmNameString);
 		packed: aNamedStructure isPacked;
 		yourself.
 	translatedTypes at: aNamedStructure put: convertedStructure.
@@ -514,7 +531,7 @@ SLVMLLVMCodeGenerator >> translateModuleDebugInformation: module [
 	
 	debugCompileUnit := (LLVMDICompileUnit for: self llvmModule)
 		distinct;
-		language: DW_LANG_lo_user value;
+		language: (DebugLanguageMap at: module sourceLanguageName ifAbsent: [DW_LANG_lo_user value]);
 		producer: 'SLVM to LLVM';
 		file: (self unknownDebugFile)
 		yourself.

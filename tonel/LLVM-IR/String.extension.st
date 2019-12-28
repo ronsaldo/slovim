@@ -11,6 +11,25 @@ String >> isLLVMAnon [
 ]
 
 { #category : #'*LLVM-IR' }
+String >> isValidLLVMSymbol [
+	self isLLVMAnon ifTrue: [ ^ true ].
+	self ifEmpty: [ ^ false ].
+	self first isDigit ifTrue: [ ^ false ].
+	self do: [ :c |
+		(('._$' includes: c) or: [ c isAlphaNumeric ]) ifFalse: [ ^ false ].
+	].
+	^ true
+]
+
+{ #category : #'*LLVM-IR' }
+String >> llvmNameString [
+	self isValidLLVMSymbol ifTrue: [ ^ self ].
+	^ ByteString streamContents: [ :out |
+		self llvmPrintEscapedStringOn: out
+	]
+]
+
+{ #category : #'*LLVM-IR' }
 String >> llvmPrintEscapedStringOn: aStream [
 	^ self llvmPrintEscapedStringOn: aStream addNull: false
 ]
@@ -29,6 +48,15 @@ String >> llvmPrintEscapedStringOn: aStream addNull: addNull [
 	addNull ifTrue: [ aStream nextPutAll: '\00' ].
 	aStream nextPut: $".
 
+]
+
+{ #category : #'*LLVM-IR' }
+String >> llvmPrintNameOn: aStream [
+	self isValidLLVMSymbol ifTrue: [
+		aStream nextPutAll: self
+	] ifFalse: [
+		self llvmPrintEscapedStringOn: aStream
+	]
 ]
 
 { #category : #'*LLVM-IR' }
