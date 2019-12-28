@@ -208,6 +208,26 @@ SLVMLLVMDebugTranslator >> visitDebugDerivedType: debugType [
 ]
 
 { #category : #visiting }
+SLVMLLVMDebugTranslator >> visitDebugLexicalScope: debugLexicalScope [
+	| lexicalScope |
+	lexicalScope := (LLVMDILexicalBlock for: self llvmModule)
+		distinct;
+		yourself.
+	moduleTranslator register: debugLexicalScope debugElement: lexicalScope.
+	
+	debugLexicalScope parentScope ifNotNil: [ :parentScope |
+		lexicalScope scope: (moduleTranslator convertDebugScope: parentScope fallbackTo: moduleTranslator debugCompileUnit)
+	].
+
+	lexicalScope
+		file: (debugLexicalScope file ifNotNil: [:f | moduleTranslator convertDebugFile: f]);
+		line: debugLexicalScope startLine;
+		column: debugLexicalScope startColumn.
+
+	^ lexicalScope
+]
+
+{ #category : #visiting }
 SLVMLLVMDebugTranslator >> visitDebugNamespace: debugNamespace [
 	| namespace |
 	namespace := (LLVMDINamespace for: self llvmModule)

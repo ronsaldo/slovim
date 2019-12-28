@@ -308,14 +308,14 @@ SLVMLLVMFunctionCodeGenerator >> convertDebugLocationFrom: slvmInstruction into:
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> convertDebugScope: debugScope [
 	debugScope ifNil: [ ^ functionDebugScope ].
-	self halt
+	^ moduleTranslator convertDebugScope: debugScope fallbackTo: functionDebugScope
 ]
 
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> convertDebugSourceLocation: debugSourceLocation debugInformation: debugInformation [
 	| debugScope |
 	debugSourceLocation ifNil: [ ^ nil ].
-	debugScope := self convertDebugScope: (debugInformation ifNotNil: #scope).
+	debugScope := self convertDebugScope: (debugInformation ifNil: [ debugSourceLocation scope ] ifNotNil: #scope).
 	
 	^ moduleTranslator convertDebugSourceLocation: debugSourceLocation withScope: debugScope
 ]

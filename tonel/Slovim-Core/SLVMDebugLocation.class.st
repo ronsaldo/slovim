@@ -9,7 +9,8 @@ Class {
 		'endColumn',
 		'start',
 		'stop',
-		'collection'
+		'collection',
+		'scope'
 	],
 	#category : #'Slovim-Core-Debug'
 }
@@ -58,6 +59,16 @@ SLVMDebugLocation >> endLine: anObject [
 { #category : #printing }
 SLVMDebugLocation >> printOn: aStream [
 	aStream print: sourceFile; space; print: startLine; space; print: startColumn
+]
+
+{ #category : #accessing }
+SLVMDebugLocation >> scope [
+	^ scope
+]
+
+{ #category : #accessing }
+SLVMDebugLocation >> scope: anObject [
+	scope := anObject
 ]
 
 { #category : #accessing }
