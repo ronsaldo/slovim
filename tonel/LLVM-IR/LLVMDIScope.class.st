@@ -4,10 +4,22 @@ Class {
 	#instVars : [
 		'name',
 		'scope',
-		'file'
+		'file',
+		'flags',
+		'extraData'
 	],
 	#category : #'LLVM-IR-Metadata'
 }
+
+{ #category : #accessing }
+LLVMDIScope >> extraData [
+	^ extraData
+]
+
+{ #category : #accessing }
+LLVMDIScope >> extraData: anObject [
+	extraData := anObject
+]
 
 { #category : #accessing }
 LLVMDIScope >> file [
@@ -17,6 +29,16 @@ LLVMDIScope >> file [
 { #category : #accessing }
 LLVMDIScope >> file: anObject [
 	file := anObject
+]
+
+{ #category : #accessing }
+LLVMDIScope >> flags [
+	^ flags
+]
+
+{ #category : #accessing }
+LLVMDIScope >> flags: anObject [
+	flags := anObject
 ]
 
 { #category : #accessing }
@@ -46,5 +68,5 @@ LLVMDIScope >> specializedName [
 
 { #category : #accessing }
 LLVMDIScope >> specializedProperties [
-	^ #(name scope file )
+	^ #(name scope file flags extraData)
 ]

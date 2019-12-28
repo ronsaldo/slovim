@@ -199,10 +199,17 @@ SLVMLLVMDebugTranslator >> visitDebugDerivedType: debugType [
 		tag: (TagFromDebugTypeKind at: debugType kind);
 		size: debugType bitSize;
 		align: debugType bitAlignment;
+		offset: debugType bitOffset;
 		yourself.
 	moduleTranslator register: debugType debugElement: derivedType.
 	derivedType baseType: (moduleTranslator translateDebugType: debugType baseType).
 	self translateDebugType: debugType commonParametersInto: derivedType.
+	
+	debugType isBitField ifTrue: [ 
+		derivedType
+			flags: (LLVMNamedFlags with: #(DIFlagBitField));
+			extraData: (moduleTranslator context int64Ty constant: 64) asLLVMMetadata
+	].
 	
 	^ derivedType
 ]

@@ -18,6 +18,12 @@ LLVMConstantAsMetadata >> constant: anObject [
 ]
 
 { #category : #printing }
+LLVMConstantAsMetadata >> llvmPrintSpecializedMetadataValueOn: aStream [
+	self printOn: aStream
+	
+]
+
+{ #category : #printing }
 LLVMConstantAsMetadata >> printOn: aStream [
 	aStream print: constant type; space; print: constant
 ]
