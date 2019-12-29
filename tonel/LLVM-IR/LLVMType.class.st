@@ -184,6 +184,11 @@ LLVMType >> name: anObject [
 	name := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMType >> overloadedIntrinsicName [
+	^ self name
+]
+
 { #category : #composition }
 LLVMType >> printOn: aStream [
 	aStream nextPutAll: self name

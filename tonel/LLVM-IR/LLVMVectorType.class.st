@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #accessing }
+LLVMVectorType >> bits [
+	^ elementType bits
+]
+
+{ #category : #accessing }
 LLVMVectorType >> constant: constantElements [
 	self assert: constantElements size = elements.
 	^ LLVMConstantVector new
@@ -23,6 +28,11 @@ LLVMVectorType >> createName [
 { #category : #testing }
 LLVMVectorType >> isVectorTy [
 	^ true
+]
+
+{ #category : #'as yet unclassified' }
+LLVMVectorType >> overloadedIntrinsicName [
+	^ 'v', elements asString, elementType overloadedIntrinsicName
 ]
 
 { #category : #'as yet unclassified' }

@@ -198,6 +198,110 @@ SLVMLLVMFunctionCodeGenerator >> callRuntimeFunction: runtimeFunctionOrSymbol ar
 ]
 
 { #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> callScalarMathDoubleFunction: standardFunctionName arguments: arguments name: name [
+	| doubleTy standardFunction vectorSize operationResultType |
+	doubleTy := self context doubleTy.
+	standardFunction := self llvmModule getIntrinsic: standardFunctionName orCreateWithType: [
+		LLVMFunctionType get: doubleTy params: (arguments collect: [:a | doubleTy]) isVarArg: false
+	].
+	vectorSize := 1.
+	arguments do: [ :arg |
+		arg type isVectorTy ifTrue: [
+			vectorSize > 1 ifTrue: [ 
+				self assert: arg type elements = vectorSize
+			] ifFalse: [ 
+				vectorSize := arg type elements
+			]
+		]
+	].
+
+	vectorSize = 1 ifTrue: [
+		^ self call: standardFunction arguments: arguments returnType: doubleTy name: name
+	].
+
+	operationResultType := LLVMVectorType get: doubleTy elements: vectorSize.
+	self halt
+]
+
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> callScalarMathDoubleFunction: standardFunctionName arguments: arguments resultType: expectedResultType name: name [
+	| doubleTy standardFunction vectorSize operationResultType result elementArguments resultElement callArguments |
+	doubleTy := self context doubleTy.
+	standardFunction := self llvmModule getIntrinsic: standardFunctionName orCreateWithType: [
+		LLVMFunctionType get: doubleTy params: (arguments collect: [:a | doubleTy]) isVarArg: false
+	].
+	vectorSize := 1.
+	arguments do: [ :arg |
+		arg type isVectorTy ifTrue: [
+			vectorSize > 1 ifTrue: [ 
+				self assert: arg type elements = vectorSize
+			] ifFalse: [ 
+				vectorSize := arg type elements
+			]
+		]
+	].
+
+	vectorSize = 1 ifTrue: [
+		callArguments := arguments collect: [ :arg |
+			self assert: arg type isFloatTy.
+			arg type = doubleTy ifTrue: [ 
+				arg
+			] ifFalse: [ 
+				self castFloat: arg into: doubleTy name: nil
+			]
+		].
+
+		result := self call: standardFunction arguments: callArguments returnType: doubleTy name: name.
+	] ifFalse: [
+		operationResultType := LLVMVectorType get: doubleTy elements: vectorSize.
+		result := operationResultType zeroConstant.
+		0 to: vectorSize - 1 do: [ :i |
+			elementArguments := arguments collect: [ :arg |
+				| rawArgument |
+				rawArgument := 	arg type isVectorTy ifTrue: [ 
+					self vector: arg extractElementAt: i
+				] ifFalse: [
+					arg
+				].
+			
+				rawArgument type = doubleTy ifTrue: [ 
+					rawArgument
+				] ifFalse: [
+					self assert: rawArgument type isFloatTy.
+					self castFloat: rawArgument into: doubleTy name: nil
+				]
+			].
+			resultElement := self call: standardFunction arguments: elementArguments returnType: doubleTy name: nil.
+			result := self vector: result insertElement: resultElement at: i
+		]
+	].
+
+	result type ~= expectedResultType ifTrue: [
+		self assert: (expectedResultType isFloatTy or: [expectedResultType isVectorTy and: [expectedResultType elementType isFloatTy]]).
+		^ self castFloat: result into: expectedResultType name: nil
+	].
+
+	^ result
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> castFloat: floatValue into: targetType name: name [
+	floatValue type bits < targetType bits ifTrue: [
+		^ self addInstruction: (LLVMFPExtInst new
+			type: targetType;
+			name: name;
+			source: floatValue;
+			yourself)
+	].
+	^ self addInstruction: (LLVMFPTruncInst new
+			type: targetType;
+			name: name;
+			source: floatValue;
+			yourself)
+
+]
+
+{ #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> castRuntimeCallArgument: value into: targetType [
 	| sourceType |
 	sourceType := value type.
@@ -483,6 +587,15 @@ SLVMLLVMFunctionCodeGenerator >> generateAtomicStoreIn: pointer value: value ord
 		ordering: (self convertMemoryOrdering: memoryOrdering);
 		align: pointer type baseType alignment;
 		yourself)
+]
+
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> generateBuiltInCall: callInstruction byCallingScalarMathDoubleFunction: standardFunctionName [
+	| arguments |
+	arguments := callInstruction arguments collect: [:arg | self translateValue: arg].
+	^ self callScalarMathDoubleFunction: standardFunctionName arguments: arguments
+		resultType: (self translateType: callInstruction type)
+		name: (self convertName: callInstruction name)
 ]
 
 { #category : #visiting }
@@ -855,6 +968,19 @@ void matrixMultiply(float vector[4], float matrix[4][4], float result[4])
 	^ result
 ]
 
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> getOverloadedIntrinsic: intrinsicName argumentTypes: argumentTypes returnType: returnType [
+	| fullName |
+	fullName := intrinsicName.
+	argumentTypes do: [ :type |
+		fullName := fullName , '.' , type overloadedIntrinsicName
+	].
+
+	^ self llvmModule getIntrinsic: fullName orCreateWithType: [
+		LLVMFunctionType get: returnType params: argumentTypes isVarArg: false
+	]
+]
+
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> initialize [
 	super initialize.
@@ -1177,19 +1303,9 @@ SLVMLLVMFunctionCodeGenerator >> visitFloatToIntCast: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitFloatingPointCast: instruction [
-	instruction source type size < instruction type size ifTrue: [ 
-		^ self addInstruction: (LLVMFPExtInst new
-			type: (self translateType: instruction type);
-			name: (self convertName: instruction name);
-			source: (self translateValue: instruction source);
-			yourself)
-	].
-	^ self addInstruction: (LLVMFPTruncInst new
-			type: (self translateType: instruction type);
-			name: (self convertName: instruction name);
-			source: (self translateValue: instruction source);
-			yourself)
-
+	^ self castFloat: (self translateValue: instruction source)
+		into: (self translateType: instruction type)
+		name: (self convertName: instruction name)
 ]
 
 { #category : #visiting }
@@ -1495,8 +1611,11 @@ SLVMLLVMFunctionCodeGenerator >> visitUnaryOperation: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitUnarySqrt: instruction [
-	self halt
-
+	| resultType operand intrinsic |
+	resultType := self translateType: instruction type.
+	operand := self translateValue: instruction operand.
+	intrinsic := self getOverloadedIntrinsic: 'llvm.sqrt' argumentTypes: {resultType} returnType: resultType.
+	^ self call: intrinsic arguments: {operand} returnType: resultType name: (self convertName: instruction name)
 ]
 
 { #category : #visiting }

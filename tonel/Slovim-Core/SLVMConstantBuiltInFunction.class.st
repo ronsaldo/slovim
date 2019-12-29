@@ -58,7 +58,7 @@ SLVMConstantBuiltInFunction class >> initialize [
 		
 		'math.asin' 'math.sin' 'math.asinh' 'math.sinh'
 		'math.acos' 'math.cos' 'math.acosh' 'math.cosh'
-		'math.atan' 'math.tan' 'math.atanh'
+		'math.atan' 'math.tan' 'math.tanh' 'math.atanh'
 		'math.exp' 'math.exp2' 'math.log' 'math.log2'
 		'math.sqrt' 'math.inverseSqrt'
 		'math.floor' 'math.ceil' 'math.trunc' 'math.round' 'math.roundEven' 'math.fract'

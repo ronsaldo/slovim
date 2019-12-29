@@ -166,6 +166,7 @@ SLVMSpirVCodeGenerator class >> initialize [
 		'math.atan' (glsl450 GLSLstd450Atan)
 		'math.tan' (glsl450 GLSLstd450Tan)
 		'math.atanh' (glsl450 GLSLstd450Atanh)
+		'math.tanh' (glsl450 GLSLstd450Tanh)
 		
 		'math.exp' (glsl450 GLSLstd450Exp)
 		'math.exp2' (glsl450 GLSLstd450Exp2)

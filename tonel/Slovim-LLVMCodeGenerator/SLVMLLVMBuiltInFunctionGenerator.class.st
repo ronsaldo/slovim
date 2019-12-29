@@ -20,12 +20,28 @@ SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName callEquivalent
 ]
 
 { #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName callOverloadedBinarySameTypes: llvmBuiltInName [
+	BuiltInFunctionDictionary at: builtInName put:
+		(SLVMLLVMBinarySameTypesOverloadedBuiltInFunctionGenerator new
+			name: builtInName;
+			llvmBuiltIn: llvmBuiltInName;
+			yourself)
+]
+
+{ #category : #initialization }
 SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName callOverloadedUnary: llvmBuiltInName [
 	BuiltInFunctionDictionary at: builtInName put:
 		(SLVMLLVMUnaryOverloadedBuiltInFunctionGenerator new
 			name: builtInName;
 			llvmBuiltIn: llvmBuiltInName;
 			yourself)
+]
+
+{ #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName callScalarMathDoubleFunction: standardFunctionName [
+	self addBuiltIn: builtInName inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateBuiltInCall: callInstruction byCallingScalarMathDoubleFunction: standardFunctionName
+	]
 ]
 
 { #category : #initialization }
@@ -146,6 +162,51 @@ SLVMLLVMBuiltInFunctionGenerator class >> vectorBuiltIn [
 			functionCodeGenerator generateVector: builtInFunction functionType returnType cross: callInstruction arguments first with: callInstruction arguments second
 		];
 		yourself
+]
+
+{ #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> vectorScalarMathBuiltIn [
+	<builtInFunctions>
+	
+	self
+		addBuiltIn: 'math.pow' callOverloadedBinarySameTypes: 'llvm.pow';
+		addBuiltIn: 'math.sqrt' callOverloadedUnary: 'llvm.sqrt';
+
+		addBuiltIn: 'math.sin' callOverloadedUnary: 'llvm.sin';
+		addBuiltIn: 'math.asin' callScalarMathDoubleFunction: 'asin';
+		addBuiltIn: 'math.sinh' callScalarMathDoubleFunction: 'sinh';
+		addBuiltIn: 'math.asin' callScalarMathDoubleFunction: 'asinh';
+
+		addBuiltIn: 'math.cos' callOverloadedUnary: 'llvm.cos';
+		addBuiltIn: 'math.acos' callScalarMathDoubleFunction: 'acos';
+		addBuiltIn: 'math.cosh' callScalarMathDoubleFunction: 'cosh';
+		addBuiltIn: 'math.acosh' callScalarMathDoubleFunction: 'acosh';
+
+		addBuiltIn: 'math.tan' callScalarMathDoubleFunction: 'tan';
+		addBuiltIn: 'math.atan' callScalarMathDoubleFunction: 'atan';
+		addBuiltIn: 'math.atan2' callScalarMathDoubleFunction: 'atan2';
+		addBuiltIn: 'math.tanh' callScalarMathDoubleFunction: 'tanh';
+		addBuiltIn: 'math.atanh' callScalarMathDoubleFunction: 'atanh';
+
+		addBuiltIn: 'math.exp' callOverloadedUnary: 'llvm.exp';
+		addBuiltIn: 'math.exp2' callOverloadedUnary: 'llvm.exp2';
+		addBuiltIn: 'math.log' callOverloadedUnary: 'llvm.log';
+		addBuiltIn: 'math.log2' callOverloadedUnary: 'llvm.log2';
+
+		addBuiltIn: 'math.floor' callOverloadedUnary: 'llvm.floor';
+		addBuiltIn: 'math.ceil' callOverloadedUnary: 'llvm.ceil';
+		addBuiltIn: 'math.trunc' callOverloadedUnary: 'llvm.trunc';
+		addBuiltIn: 'math.round' callOverloadedUnary: 'llvm.round';
+		addBuiltIn: 'math.fabs' callOverloadedUnary: 'llvm.fabs'
+		
+		"math.degrees"
+		"math.radians"
+		
+		"math.fsign"
+		"math.fmax"
+		"math.fmin"
+		"math.fmix"
+		"math.fmod"
 ]
 
 { #category : #'code generation' }

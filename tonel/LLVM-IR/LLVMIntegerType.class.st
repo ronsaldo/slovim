@@ -58,6 +58,11 @@ LLVMIntegerType >> oneConstant [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMIntegerType >> overloadedIntrinsicName [
+	^ 'i', bits asString
+]
+
+{ #category : #'as yet unclassified' }
 LLVMIntegerType >> zeroConstant [
 	^ self constant: 0
 ]

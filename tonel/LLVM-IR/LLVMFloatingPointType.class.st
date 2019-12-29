@@ -46,6 +46,11 @@ LLVMFloatingPointType >> oneConstant [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMFloatingPointType >> overloadedIntrinsicName [
+	^ 'f', bits asString
+]
+
+{ #category : #'as yet unclassified' }
 LLVMFloatingPointType >> zeroConstant [
 	^ LLVMConstantFP new
 		type: self;
