@@ -18,6 +18,16 @@ LLVMVectorType >> constant: constantElements [
 		yourself
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMVectorType >> constantScalarValue: scalarValue [
+	| element |
+	element := elementType constantScalarValue: scalarValue.
+	^ LLVMConstantVector new
+		type: self;
+		elements: ((1 to: elements) collect: [:i | element]);
+		yourself
+]
+
 { #category : #accessing }
 LLVMVectorType >> createName [
 	^ ByteString streamContents: [ :out |
@@ -28,6 +38,26 @@ LLVMVectorType >> createName [
 { #category : #testing }
 LLVMVectorType >> isVectorTy [
 	^ true
+]
+
+{ #category : #'as yet unclassified' }
+LLVMVectorType >> minusOneConstant [
+	| oneElement |
+	oneElement := elementType minusOneConstant.
+	^ LLVMConstantVector new
+		type: self;
+		elements: ((1 to: elements) collect: [:i | oneElement]);
+		yourself
+]
+
+{ #category : #'as yet unclassified' }
+LLVMVectorType >> oneConstant [
+	| oneElement |
+	oneElement := elementType oneConstant.
+	^ LLVMConstantVector new
+		type: self;
+		elements: ((1 to: elements) collect: [:i | oneElement]);
+		yourself
 ]
 
 { #category : #'as yet unclassified' }

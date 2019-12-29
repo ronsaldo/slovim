@@ -17,6 +17,17 @@ LLVMFloatingPointType >> bits: anObject [
 	bits := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMFloatingPointType >> constantScalarValue: value [
+	| sanitizedValue |
+	sanitizedValue := value.
+	bits = 32 ifTrue: [ sanitizedValue := Float fromIEEE32Bit: sanitizedValue asIEEE32BitWord ].
+	^ LLVMConstantFP new
+		type: self;
+		value: sanitizedValue;
+		yourself
+]
+
 { #category : #testing }
 LLVMFloatingPointType >> isDoubleTy [
 	^ bits == 64
@@ -38,11 +49,13 @@ LLVMFloatingPointType >> isHalfTy [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMFloatingPointType >> minusOneConstant [
+	^ self constantScalarValue: -1.0
+]
+
+{ #category : #'as yet unclassified' }
 LLVMFloatingPointType >> oneConstant [
-	^ LLVMConstantFP new
-		type: self;
-		value: 1.0;
-		yourself
+	^ self constantScalarValue: 1.0
 ]
 
 { #category : #'as yet unclassified' }
@@ -52,8 +65,5 @@ LLVMFloatingPointType >> overloadedIntrinsicName [
 
 { #category : #'as yet unclassified' }
 LLVMFloatingPointType >> zeroConstant [
-	^ LLVMConstantFP new
-		type: self;
-		value: 0.0;
-		yourself
+	^ self constantScalarValue: 0.0
 ]

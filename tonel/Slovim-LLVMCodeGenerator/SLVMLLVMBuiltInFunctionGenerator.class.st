@@ -197,16 +197,50 @@ SLVMLLVMBuiltInFunctionGenerator class >> vectorScalarMathBuiltIn [
 		addBuiltIn: 'math.ceil' callOverloadedUnary: 'llvm.ceil';
 		addBuiltIn: 'math.trunc' callOverloadedUnary: 'llvm.trunc';
 		addBuiltIn: 'math.round' callOverloadedUnary: 'llvm.round';
-		addBuiltIn: 'math.fabs' callOverloadedUnary: 'llvm.fabs'
+		addBuiltIn: 'math.fabs' callOverloadedUnary: 'llvm.fabs';
 		
-		"math.degrees"
-		"math.radians"
-		
-		"math.fsign"
-		"math.fmax"
-		"math.fmin"
-		"math.fmix"
-		"math.fmod"
+		addBuiltIn: #'math.fmin' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateMinMaxWithComparison: #ule of: callInstruction arguments first with: callInstruction arguments second.
+		];
+		addBuiltIn: #'math.umin' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateMinMaxWithComparison: #ule of: callInstruction arguments first with: callInstruction arguments second.
+		];
+		addBuiltIn: #'math.smin' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateMinMaxWithComparison: #sle of: callInstruction arguments first with: callInstruction arguments second.
+		];
+		addBuiltIn: #'math.fmax' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateMinMaxWithComparison: #uge of: callInstruction arguments first with: callInstruction arguments second.
+		];
+		addBuiltIn: #'math.umax' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateMinMaxWithComparison: #uge of: callInstruction arguments first with: callInstruction arguments second.
+		];
+		addBuiltIn: #'math.smax' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateMinMaxWithComparison: #sge of: callInstruction arguments first with: callInstruction arguments second.
+		];
+		addBuiltIn: #'math.fmix' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateMixFrom: callInstruction arguments first to: callInstruction arguments second at: callInstruction arguments third.
+		];
+		addBuiltIn: #'math.step' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateStepEdge: callInstruction arguments first value: callInstruction arguments second.
+		];
+		addBuiltIn: #'math.smoothstep' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateSmoothStepEdge: callInstruction arguments first edge: callInstruction arguments second value: callInstruction arguments third.
+		];
+		addBuiltIn: #'math.degrees' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVectorOrScalar: callInstruction arguments first constantMultiplication: "180.0 / Float pi" 57.29577951308232
+		];
+		addBuiltIn: #'math.radians' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVectorOrScalar: callInstruction arguments first constantMultiplication: "Float pi / 180.0"  0.017453292519943295
+		];
+		addBuiltIn: #'math.fsign' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVectorOrScalarSign: callInstruction arguments first
+		];
+		addBuiltIn: #'math.fract' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVectorOrScalarFloorFract: callInstruction arguments first
+		];
+		addBuiltIn: #'math.fmod' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVectorOrScalarFloorMod: callInstruction arguments first divisor: callInstruction arguments second
+		].
 ]
 
 { #category : #'code generation' }

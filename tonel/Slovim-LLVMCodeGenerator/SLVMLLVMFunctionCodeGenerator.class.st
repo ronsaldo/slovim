@@ -124,6 +124,17 @@ SLVMLLVMFunctionCodeGenerator >> aggregate: sourceAggregate insertValue: value a
 ]
 
 { #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> binaryOperation: operation left: left right: right name: name [
+	^ self addInstruction: (LLVMBinaryOperator new
+		name: name;
+		type: left type;
+		operation: operation;
+		left: left;
+		right: right;
+		yourself)
+]
+
+{ #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> bitCast: source target: targetType name: name [
 	^ self addInstruction: (LLVMBitCastInst new
 			type: targetType;
@@ -459,6 +470,14 @@ SLVMLLVMFunctionCodeGenerator >> doesNotUnderstandTrampolineFor: instruction [
 	^ moduleTranslator doesNotUnderstandTrampolineWithType: instruction doesNotUnderstandTrampolineFunctionType
 ]
 
+{ #category : #'vector intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> expandScalar: scalar toVectorType: vectorType [
+	| vectorConstant |
+	vectorConstant := vectorType zeroConstant.
+	vectorConstant := self vector: vectorConstant insertElement: scalar at: 0.
+	^ self vector: vectorConstant shuffleWith: vectorConstant mask: ((Array new: vectorType elements) atAllPut: 0)
+]
+
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> extractMatrixColumns: sourceMatrixValue [
 	| sourceValue sourceColumnType columns column |
@@ -488,6 +507,17 @@ SLVMLLVMFunctionCodeGenerator >> extractMatrixRows: sourceMatrixValue [
 
 		self constructVectorOfType: rowType byLoading: sourceIndices from: sourceColumns
 	].
+]
+
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> fcmp: operation left: left right: right type: resultType name: name [
+	^ self addInstruction: (LLVMFCmpInst new
+			name: name;
+			operation: operation;
+			type: resultType;
+			left: left;
+			right: right;
+			yourself)
 ]
 
 { #category : #accessing }
@@ -779,6 +809,53 @@ void matrixMultiply(float matrix[4][4], float vector[4], float result[4])
 
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> generateMinMaxWithComparison: comparison of: left with: right [
+	| leftOperand rightOperand resultType int1Ty comparisonType scalarType comparisonResult |
+	leftOperand := self translateValue: left.
+	rightOperand := self translateValue: right.
+	self assert: leftOperand type = rightOperand type.
+	
+	resultType := leftOperand type.
+	int1Ty := self context int1Ty.
+	comparisonType := resultType isVectorTy
+		ifTrue: [ LLVMVectorType get: int1Ty elements: resultType elements  ]
+		ifFalse: [ int1Ty ].
+	scalarType := resultType isVectorTy
+		ifTrue: [ resultType elementType  ]
+		ifFalse: [ resultType ].
+		
+	comparisonResult := scalarType isFloatingPointTy
+		ifTrue: [ self fcmp: comparison left: leftOperand right: rightOperand type: comparisonType name: nil ]
+		ifFalse: [ self icmp: comparison left: leftOperand right: rightOperand type: comparisonType name: nil ].
+		
+	^ self select: comparisonResult trueValue: leftOperand falseValue: rightOperand name: nil
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> generateMixFrom: fromPoint to: endPoint at: alpha [
+	| fromPointValue endPointValue alphaValue resultType oneMinusAlpha fromContribution endContribution |
+	fromPointValue := self translateValue: fromPoint.
+	endPointValue := self translateValue: endPoint.
+	self assert: fromPointValue type = endPointValue type.
+	alphaValue := self translateValue: alpha.
+	
+	resultType := fromPointValue type.
+	
+	fromPointValue type isVectorTy ifTrue: [ 
+		alphaValue type isVectorTy ifTrue: [ 
+			self assert: fromPointValue type = alphaValue type.
+		] ifFalse: [
+			self expandScalar: alphaValue toVectorType: resultType
+		]
+	].
+
+	oneMinusAlpha := self binaryOperation: #fsub left: resultType oneConstant right: alphaValue name: nil.
+	fromContribution := self binaryOperation: #fmul left: fromPointValue right: oneMinusAlpha name: nil.
+	endContribution := self binaryOperation: #fmul left: endPointValue right: alphaValue name: nil.
+	^ self binaryOperation: #fadd left: fromContribution right: endContribution name: nil.
+]
+
 { #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateScalarVectorBinaryOperation: operation resultType: resultType left: left right: right name: name [
 	BinaryOperationMap at: operation ifPresent: [ :mappedOperation |
@@ -792,27 +869,80 @@ SLVMLLVMFunctionCodeGenerator >> generateScalarVectorBinaryOperation: operation 
 	].
 
 	BinaryIntegerComparisonOperationMap at: operation ifPresent: [ :mappedOperation |
-		^ self addInstruction: (LLVMICmpInst new
-			name: name;
-			operation: mappedOperation;
-			type: resultType;
-			left: left;
-			right: right;
-			yourself)
+		^ self icmp: mappedOperation left: left right: right type: resultType name: name
 	].
 
 	BinaryFloatComparisonOperationMap at: operation ifPresent: [ :mappedOperation |
-		^ self addInstruction: (LLVMFCmpInst new
-			name: name;
-			operation: mappedOperation;
-			type: resultType;
-			left: left;
-			right: right;
-			yourself)
+		^ self fcmp: mappedOperation left: left right: right type: resultType name: name
 	].
 
 	self error: 'Unsupported binary operation.'
 
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> generateSmoothStepEdge: leftEdge edge: rightEdge value: argument [
+	| leftEdgeValue rightEdgeValue argumentValue resultType int1Ty comparisonType comparisonResult t deltaEdge maxT minT tsquare t2 constantThree threeMinus2T |
+	leftEdgeValue := self translateValue: leftEdge.
+	rightEdgeValue := self translateValue: rightEdge.
+	argumentValue := self translateValue: argument.
+	
+	resultType := argumentValue type.
+	resultType isVectorTy ifTrue: [ 
+		leftEdgeValue type isVectorTy ifFalse: [ 
+			leftEdgeValue := self expandScalar: leftEdgeValue toVectorType: resultType
+		].
+		rightEdgeValue type isVectorTy ifFalse: [ 
+			rightEdgeValue := self expandScalar: rightEdgeValue toVectorType: resultType
+		].
+	].
+
+	"Compute t"
+	t := self binaryOperation: #fsub left: argumentValue right: leftEdgeValue name: nil.
+	deltaEdge := self binaryOperation: #fsub left: rightEdgeValue right: leftEdgeValue name: nil.
+	t := self binaryOperation: #fdiv left: t right: deltaEdge name: nil.
+	
+	"Clamp t."
+	int1Ty := self context int1Ty.
+	comparisonType := resultType isVectorTy
+		ifTrue: [ LLVMVectorType get: int1Ty elements: resultType elements  ]
+		ifFalse: [ int1Ty ].
+	maxT := resultType oneConstant.
+	minT := resultType zeroConstant.
+	comparisonResult := self fcmp: #ule left: t right: maxT type: comparisonType name: nil.
+	t := self select: comparisonResult trueValue: t falseValue: maxT name: nil.
+	comparisonResult := self fcmp: #uge left: minT right: t type: comparisonType name: nil.
+	t := self select: comparisonResult trueValue: minT falseValue: t name: nil.
+
+	"Hermite polynomial evaluation."
+	tsquare := self binaryOperation: #fmul left: t right: t name: nil.
+	t2 := self binaryOperation: #fadd left: t right: t name: nil.
+	constantThree := resultType constantScalarValue: 3.0.
+	threeMinus2T := self binaryOperation: #fsub left: constantThree right: t2 name: nil.
+	
+	^ self binaryOperation: #fmul left: tsquare right: threeMinus2T name: nil.
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> generateStepEdge: edge value: argument [
+	| edgeValue argumentValue resultType int1Ty comparisonType comparisonResult |
+	edgeValue := self translateValue: edge.
+	argumentValue := self translateValue: argument.
+	
+	resultType := argumentValue type.
+	resultType isVectorTy ifTrue: [ 
+		edgeValue type isVectorTy ifFalse: [ 
+			edgeValue := self expandScalar: edgeValue toVectorType: resultType
+		].
+	].
+
+	int1Ty := self context int1Ty.
+	comparisonType := resultType isVectorTy
+		ifTrue: [ LLVMVectorType get: int1Ty elements: resultType elements  ]
+		ifFalse: [ int1Ty ].
+
+	comparisonResult := self fcmp: #ult left: argumentValue right: edgeValue  type: comparisonType name: nil.
+	^ self select: comparisonResult trueValue: resultType zeroConstant falseValue: resultType oneConstant name: nil
 ]
 
 { #category : #'vector intrinsics' }
@@ -910,6 +1040,60 @@ SLVMLLVMFunctionCodeGenerator >> generateVectorFold: vectorOrScalar with: operat
 	^ self generateVectorFold: result with: operation
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> generateVectorOrScalar: vectorOrScalar constantMultiplication: constantValue [
+	| vectorOrScalarValue constant |
+	vectorOrScalarValue := self translateValue: vectorOrScalar.
+	constant := vectorOrScalarValue type constantScalarValue: constantValue.
+	^ self binaryOperation: #fmul left: vectorOrScalarValue right: constant name: nil
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> generateVectorOrScalarFloorFract: vectorOrScalar [
+	| vectorOrScalarValue resultType  floorFunction floorValue |
+	vectorOrScalarValue := self translateValue: vectorOrScalar.
+	resultType := vectorOrScalarValue type.
+	floorFunction := self getOverloadedIntrinsic: 'llvm.floor' argumentTypes: {resultType} returnType: resultType.
+	floorValue := self call: floorFunction arguments: { vectorOrScalarValue } returnType: resultType name: nil.
+	^ self binaryOperation: #fsub left: vectorOrScalarValue right: floorValue name: nil
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> generateVectorOrScalarFloorMod: dividend divisor: divisor [
+	| resultType  floorFunction dividendValue divisorValue divisionValue divisionFloorValue wholeDivisions |
+	dividendValue := self translateValue: dividend.
+	divisorValue := self translateValue: divisor.
+	resultType := dividendValue type.
+	divisionValue := self binaryOperation: #fdiv left: dividendValue right: divisorValue name: nil.
+	
+	floorFunction := self getOverloadedIntrinsic: 'llvm.floor' argumentTypes: {resultType} returnType: resultType.
+	divisionFloorValue := self call: floorFunction arguments: { divisionValue } returnType: resultType name: nil.
+	
+	wholeDivisions := self binaryOperation: #fmul left: divisorValue right: divisionFloorValue name: nil.
+	^ self binaryOperation: #fsub left: dividendValue right: wholeDivisions name: nil
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> generateVectorOrScalarSign: vectorOrScalar [
+	| vectorOrScalarValue zeroConstant oneConstant minusOneConstant resultType int1Ty comparisonType lessThanZero greaterThanZero greaterThanZeroResult |
+	vectorOrScalarValue := self translateValue: vectorOrScalar.
+	resultType := vectorOrScalarValue type.
+	int1Ty := self context int1Ty.
+	comparisonType := resultType isVectorTy
+		ifTrue: [ LLVMVectorType get: int1Ty elements: resultType elements ]
+		ifFalse: [ int1Ty ].
+
+	zeroConstant := vectorOrScalarValue type zeroConstant.
+	oneConstant := vectorOrScalarValue type oneConstant.
+	minusOneConstant := vectorOrScalarValue type minusOneConstant.
+
+	greaterThanZero := self fcmp: #ugt left: vectorOrScalarValue right: zeroConstant type: comparisonType name: nil.
+	greaterThanZeroResult := self select: greaterThanZero trueValue: oneConstant falseValue: zeroConstant name: nil.
+	
+	lessThanZero := self fcmp: #ult left: vectorOrScalarValue right: zeroConstant type: comparisonType name: nil.
+	^ self select: lessThanZero trueValue: minusOneConstant falseValue: greaterThanZeroResult name: nil
+]
+
 { #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateVectorTimesMatrix: instruction [
 "
@@ -964,6 +1148,17 @@ SLVMLLVMFunctionCodeGenerator >> getOverloadedIntrinsic: intrinsicName argumentT
 	^ self llvmModule getIntrinsic: fullName orCreateWithType: [
 		LLVMFunctionType get: returnType params: argumentTypes isVarArg: false
 	]
+]
+
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> icmp: operation left: left right: right type: resultType name: name [
+	^ self addInstruction: (LLVMICmpInst new
+			name: name;
+			operation: operation;
+			type: resultType;
+			left: left;
+			right: right;
+			yourself)
 ]
 
 { #category : #'code generation' }
@@ -1039,6 +1234,18 @@ SLVMLLVMFunctionCodeGenerator >> pointerToIntCast: source target: targetType nam
 			type: targetType;
 			name: name;
 			source: source;
+			yourself)
+]
+
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> select: condition trueValue: trueValue falseValue: falseValue name: name [
+	self assert: trueValue type = falseValue type.
+	^ self addInstruction: (LLVMSelectInst new
+			name: name;
+			condition: condition;
+			type: trueValue type;
+			trueValue: trueValue;
+			falseValue: falseValue;
 			yourself)
 ]
 
