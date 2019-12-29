@@ -18,6 +18,11 @@ LLVMSequentialType class >> get: elementType elements: elements [
 				yourself ]
 ]
 
+{ #category : #comparing }
+LLVMSequentialType >> = other [
+	^ self class == other class and: [ elementType = other elementType and: [ elements = other elements ] ]
+]
+
 { #category : #accessing }
 LLVMSequentialType >> elementType [
 	^ elementType
@@ -36,6 +41,11 @@ LLVMSequentialType >> elements [
 { #category : #accessing }
 LLVMSequentialType >> elements: anObject [
 	elements := anObject
+]
+
+{ #category : #comparing }
+LLVMSequentialType >> hash [
+	^ (self class identityHash bitXor: elementType hash) bitXor: elements hash
 ]
 
 { #category : #accessing }

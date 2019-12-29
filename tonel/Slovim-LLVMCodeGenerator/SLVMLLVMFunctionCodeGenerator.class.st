@@ -198,34 +198,8 @@ SLVMLLVMFunctionCodeGenerator >> callRuntimeFunction: runtimeFunctionOrSymbol ar
 ]
 
 { #category : #'code generation' }
-SLVMLLVMFunctionCodeGenerator >> callScalarMathDoubleFunction: standardFunctionName arguments: arguments name: name [
-	| doubleTy standardFunction vectorSize operationResultType |
-	doubleTy := self context doubleTy.
-	standardFunction := self llvmModule getIntrinsic: standardFunctionName orCreateWithType: [
-		LLVMFunctionType get: doubleTy params: (arguments collect: [:a | doubleTy]) isVarArg: false
-	].
-	vectorSize := 1.
-	arguments do: [ :arg |
-		arg type isVectorTy ifTrue: [
-			vectorSize > 1 ifTrue: [ 
-				self assert: arg type elements = vectorSize
-			] ifFalse: [ 
-				vectorSize := arg type elements
-			]
-		]
-	].
-
-	vectorSize = 1 ifTrue: [
-		^ self call: standardFunction arguments: arguments returnType: doubleTy name: name
-	].
-
-	operationResultType := LLVMVectorType get: doubleTy elements: vectorSize.
-	self halt
-]
-
-{ #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> callScalarMathDoubleFunction: standardFunctionName arguments: arguments resultType: expectedResultType name: name [
-	| doubleTy standardFunction vectorSize operationResultType result elementArguments resultElement callArguments |
+	| doubleTy standardFunction vectorSize operationResultType result elementArguments resultElement convertedArguments |
 	doubleTy := self context doubleTy.
 	standardFunction := self llvmModule getIntrinsic: standardFunctionName orCreateWithType: [
 		LLVMFunctionType get: doubleTy params: (arguments collect: [:a | doubleTy]) isVarArg: false
@@ -242,8 +216,8 @@ SLVMLLVMFunctionCodeGenerator >> callScalarMathDoubleFunction: standardFunctionN
 	].
 
 	vectorSize = 1 ifTrue: [
-		callArguments := arguments collect: [ :arg |
-			self assert: arg type isFloatTy.
+		convertedArguments := arguments collect: [ :arg |
+			self assert: arg type isFloatingPointTy.
 			arg type = doubleTy ifTrue: [ 
 				arg
 			] ifFalse: [ 
@@ -251,24 +225,35 @@ SLVMLLVMFunctionCodeGenerator >> callScalarMathDoubleFunction: standardFunctionN
 			]
 		].
 
-		result := self call: standardFunction arguments: callArguments returnType: doubleTy name: name.
+		result := self call: standardFunction arguments: convertedArguments returnType: doubleTy name: name.
 	] ifFalse: [
 		operationResultType := LLVMVectorType get: doubleTy elements: vectorSize.
+		
+		convertedArguments := arguments collect: [ :arg |
+			arg type isVectorTy ifTrue: [ 
+				self assert: arg type elementType isFloatingPointTy.
+				arg type ~= operationResultType ifTrue: [ 
+					self castFloat: arg into: operationResultType name: nil
+				] ifFalse: [
+					arg
+				]
+			] ifFalse: [ 
+				self assert: arg type isFloatingPointTy.
+				arg type ~= doubleTy ifTrue: [ 
+					self castFloat: arg into: operationResultType name: nil
+				] ifFalse: [ 
+					arg
+				].
+			]
+		].
+	
 		result := operationResultType zeroConstant.
 		0 to: vectorSize - 1 do: [ :i |
-			elementArguments := arguments collect: [ :arg |
-				| rawArgument |
-				rawArgument := 	arg type isVectorTy ifTrue: [ 
+			elementArguments := convertedArguments collect: [ :arg |
+				arg type isVectorTy ifTrue: [ 
 					self vector: arg extractElementAt: i
 				] ifFalse: [
 					arg
-				].
-			
-				rawArgument type = doubleTy ifTrue: [ 
-					rawArgument
-				] ifFalse: [
-					self assert: rawArgument type isFloatTy.
-					self castFloat: rawArgument into: doubleTy name: nil
 				]
 			].
 			resultElement := self call: standardFunction arguments: elementArguments returnType: doubleTy name: nil.
@@ -277,7 +262,7 @@ SLVMLLVMFunctionCodeGenerator >> callScalarMathDoubleFunction: standardFunctionN
 	].
 
 	result type ~= expectedResultType ifTrue: [
-		self assert: (expectedResultType isFloatTy or: [expectedResultType isVectorTy and: [expectedResultType elementType isFloatTy]]).
+		self assert: (expectedResultType isFloatingPointTy or: [expectedResultType isVectorTy and: [expectedResultType elementType isFloatingPointTy]]).
 		^ self castFloat: result into: expectedResultType name: nil
 	].
 
