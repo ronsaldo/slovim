@@ -129,6 +129,11 @@ SLVMInstruction >> isCall [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isCharToDynamicObjectCast [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isDebugInstruction [
 	^ false
 ]
@@ -146,6 +151,11 @@ SLVMInstruction >> isDynamicObjectReferenceCreator [
 
 { #category : #testing }
 SLVMInstruction >> isDynamicObjectToBoolCast [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isDynamicObjectToCharCast [
 	^ false
 ]
 

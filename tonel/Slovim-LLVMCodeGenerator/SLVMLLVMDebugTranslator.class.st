@@ -40,6 +40,7 @@ SLVMLLVMDebugTranslator class >> initialize [
 		#float . DW_ATE_float.
 		#signed . DW_ATE_signed.
 		#unsigned . DW_ATE_unsigned.
+		#character . DW_ATE_unsigned_char.
 	}.
 ]
 

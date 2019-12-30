@@ -15,6 +15,11 @@ SLVMDebugBasicType >> makeBoolean [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMDebugBasicType >> makeCharacter [
+	kind := #character.
+]
+
+{ #category : #'as yet unclassified' }
 SLVMDebugBasicType >> makeFloat [
 	kind := #float.
 ]

@@ -204,6 +204,20 @@ SLVMBuilder >> call: functionValue arguments: arguments name: resultName [
 ]
 
 { #category : #casting }
+SLVMBuilder >> charToDynamicObjectCast: source target: targetType [
+	^ self charToDynamicObjectCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> charToDynamicObjectCast: source target: targetType name: resultName [
+	source isConstantValue ifTrue: [
+		self assert: source type isIntegerType.
+		^ self addDynamicLiteral: source value asCharacter
+	].
+	^ self addInstruction: (SLVMCharToDynamicObjectCast source: source targetType: targetType) name: resultName
+]
+
+{ #category : #casting }
 SLVMBuilder >> closureToDynamicObject: source target: targetType [
 	^ self closureToDynamicObject: source target: targetType name: function generateSymbol
 ]
@@ -432,6 +446,16 @@ SLVMBuilder >> dynamicObjectToBoolCast: source target: targetType [
 { #category : #casting }
 SLVMBuilder >> dynamicObjectToBoolCast: source target: targetType name: resultName [
 	^ self addInstruction: (SLVMDynamicObjectToBoolCast source: source targetType: targetType) name: resultName
+]
+
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToCharCast: source target: targetType [
+	^ self dynamicObjectToCharCast: source target: targetType name: function generateSymbol
+]
+
+{ #category : #casting }
+SLVMBuilder >> dynamicObjectToCharCast: source target: targetType name: resultName [
+	^ self addInstruction: (SLVMDynamicObjectToCharCast source: source targetType: targetType) name: resultName
 ]
 
 { #category : #casting }
