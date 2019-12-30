@@ -73,3 +73,8 @@ SLVMDebugDerivedType >> makePointer [
 SLVMDebugDerivedType >> makeReference [
 	kind := #reference
 ]
+
+{ #category : #'as yet unclassified' }
+SLVMDebugDerivedType >> makeTemporaryReference [
+	kind := #temporaryReference
+]

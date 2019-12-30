@@ -20,6 +20,7 @@ SLVMLLVMDebugTranslator class >> initialize [
 		"Derived types"
 		#pointer . DW_TAG_pointer_type.
 		#reference . DW_TAG_reference_type.
+		#temporaryReference . DW_TAG_rvalue_reference_type.
 		#const . DW_TAG_const_type.
 		#volatile . DW_TAG_volatile_type.
 		#restrict . DW_TAG_restrict_type.
