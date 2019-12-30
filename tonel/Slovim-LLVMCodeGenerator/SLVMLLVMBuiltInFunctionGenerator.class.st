@@ -165,6 +165,49 @@ SLVMLLVMBuiltInFunctionGenerator class >> vectorBuiltIn [
 ]
 
 { #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> vectorPackingBuiltIn [
+	<builtInFunctions>
+	
+	self
+		addBuiltIn: #'pack.snorm2x16' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVector: callInstruction arguments first packMinValue: -1.0 maxValue: 1.0 channels: 2 channelSize: 16 channelScale: 32767.0 returnType: (functionCodeGenerator translateType: callInstruction type)
+		];
+		addBuiltIn: #'pack.unorm2x16' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVector: callInstruction arguments first packMinValue: 0.0 maxValue: 1.0 channels: 2 channelSize: 16 channelScale: 65535.0 returnType: (functionCodeGenerator translateType: callInstruction type)
+		];
+		addBuiltIn: #'pack.snorm4x8' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVector: callInstruction arguments first packMinValue: -1.0 maxValue: 1.0 channels: 4 channelSize: 8 channelScale: 127.0 returnType: (functionCodeGenerator translateType: callInstruction type)
+		];
+		addBuiltIn: #'pack.unorm4x8' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVector: callInstruction arguments first packMinValue: 0.0 maxValue: 1.0 channels: 4 channelSize: 8 channelScale: 255.0 returnType: (functionCodeGenerator translateType: callInstruction type)
+		];
+
+		addBuiltIn: #'unpack.snorm2x16' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVector: callInstruction arguments first signed: true unpackScale: 32767.0 channels: 2 channelSize: 16 returnType: (functionCodeGenerator translateType: callInstruction type)
+		];
+		addBuiltIn: #'unpack.unorm2x16' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVector: callInstruction arguments first signed: false unpackScale: 65535.0 channels: 2 channelSize: 16 returnType: (functionCodeGenerator translateType: callInstruction type)
+		];
+		addBuiltIn: #'unpack.snorm4x8' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVector: callInstruction arguments first signed: true unpackScale: 127.0 channels: 4 channelSize: 8 returnType: (functionCodeGenerator translateType: callInstruction type)
+		];
+		addBuiltIn: #'unpack.unorm4x8' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVector: callInstruction arguments first signed: false unpackScale: 255.0 channels: 4 channelSize: 8 returnType: (functionCodeGenerator translateType: callInstruction type)
+		];
+	
+		addBuiltIn: #'pack.half2x16' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator bitCast: (functionCodeGenerator translateValue: callInstruction arguments first)
+				target: (functionCodeGenerator translateType: callInstruction type)
+				name: (functionCodeGenerator convertName: callInstruction name)
+		];
+		addBuiltIn: #'unpack.half2x16' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator bitCast: (functionCodeGenerator translateValue: callInstruction arguments first)
+				target: (functionCodeGenerator translateType: callInstruction type)
+				name: (functionCodeGenerator convertName: callInstruction name)
+		]
+]
+
+{ #category : #initialization }
 SLVMLLVMBuiltInFunctionGenerator class >> vectorScalarMathBuiltIn [
 	<builtInFunctions>
 	

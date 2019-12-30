@@ -18,6 +18,11 @@ LLVMAllocaInst >> alignment: anObject [
 	alignment := anObject
 ]
 
+{ #category : #testing }
+LLVMAllocaInst >> isAlloca [
+	^ true
+]
+
 { #category : #printing }
 LLVMAllocaInst >> mnemonic [
 	^ #alloca

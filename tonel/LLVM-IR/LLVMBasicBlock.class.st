@@ -56,6 +56,18 @@ LLVMBasicBlock >> initializeWithContext: context name: theName parent: theParent
 
 ]
 
+{ #category : #replacing }
+LLVMBasicBlock >> insertAllocaInstruction: allocaInstruction [
+	instructions doWithIndex: [ :instruction :index |
+		instruction isAlloca ifFalse: [
+			instructions add: allocaInstruction beforeIndex: index.
+			^ self
+		].
+	].
+
+	instructions add: allocaInstruction
+]
+
 { #category : #accessing }
 LLVMBasicBlock >> instructions [
 	^ instructions

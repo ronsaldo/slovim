@@ -311,6 +311,26 @@ SLVMLLVMFunctionCodeGenerator >> castRuntimeCallArgument: value into: targetType
 
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> clampVectorOrScalar: vectorOrScalarValue minValue: minConstantValue maxValue: maxConstantValue [
+	| resultType int1Ty comparisonType clamped comparisonResult |
+	resultType := vectorOrScalarValue type.
+	int1Ty := self context int1Ty.
+	comparisonType := resultType isVectorTy
+		ifTrue: [ LLVMVectorType get: int1Ty elements: resultType elements  ]
+		ifFalse: [ int1Ty ].
+
+	clamped := vectorOrScalarValue.
+	comparisonResult := self fcmp: #ule left: clamped right: maxConstantValue type: comparisonType name: nil.
+	clamped := self select: comparisonResult trueValue: clamped falseValue: maxConstantValue name: nil.
+	
+	comparisonResult := self fcmp: #uge left: minConstantValue right: clamped type: comparisonType name: nil.
+	clamped := self select: comparisonResult trueValue: minConstantValue falseValue: clamped name: nil.
+	
+	^ clamped
+
+]
+
 { #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> compare: pointer with: comparisonValue andSwapWith: newValue [
  	| resultType |
@@ -461,6 +481,21 @@ SLVMLLVMFunctionCodeGenerator >> createProxyValues [
 	].
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> createSpillingAlloca: valueType [
+	| allocaInstruction |
+	allocaInstruction := LLVMAllocaInst new
+		valueType: valueType;
+		type: (LLVMPointerType getUnqual: valueType);
+		yourself.
+	llvmFunction basicBlocks first == currentBlockBuilder block ifTrue: [ 
+		currentBlockBuilder insertAllocaInstruction: allocaInstruction
+	] ifFalse: [ 
+		llvmFunction basicBlocks first insertAllocaInstruction: allocaInstruction
+	].
+	^ allocaInstruction
+]
+
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> doesNotUnderstandTrampolineFor: instruction [
 	instruction isDoesNotUnderstandMessage ifTrue: [ 
@@ -518,6 +553,24 @@ SLVMLLVMFunctionCodeGenerator >> fcmp: operation left: left right: right type: r
 			left: left;
 			right: right;
 			yourself)
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> fp: sourceValue toSI: targetType name: name [
+	^self addInstruction: (LLVMFPToSIInst new
+		type: targetType;
+		name: name;
+		source: sourceValue;
+		yourself)
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> fp: sourceValue toUI: targetType name: name [
+	^ self addInstruction: (LLVMFPToUIInst new
+		type: targetType;
+		name: name;
+		source: sourceValue;
+		yourself)
 ]
 
 { #category : #accessing }
@@ -882,7 +935,7 @@ SLVMLLVMFunctionCodeGenerator >> generateScalarVectorBinaryOperation: operation 
 
 { #category : #'as yet unclassified' }
 SLVMLLVMFunctionCodeGenerator >> generateSmoothStepEdge: leftEdge edge: rightEdge value: argument [
-	| leftEdgeValue rightEdgeValue argumentValue resultType int1Ty comparisonType comparisonResult t deltaEdge maxT minT tsquare t2 constantThree threeMinus2T |
+	| leftEdgeValue rightEdgeValue argumentValue resultType t deltaEdge tsquare t2 constantThree threeMinus2T |
 	leftEdgeValue := self translateValue: leftEdge.
 	rightEdgeValue := self translateValue: rightEdge.
 	argumentValue := self translateValue: argument.
@@ -903,16 +956,7 @@ SLVMLLVMFunctionCodeGenerator >> generateSmoothStepEdge: leftEdge edge: rightEdg
 	t := self binaryOperation: #fdiv left: t right: deltaEdge name: nil.
 	
 	"Clamp t."
-	int1Ty := self context int1Ty.
-	comparisonType := resultType isVectorTy
-		ifTrue: [ LLVMVectorType get: int1Ty elements: resultType elements  ]
-		ifFalse: [ int1Ty ].
-	maxT := resultType oneConstant.
-	minT := resultType zeroConstant.
-	comparisonResult := self fcmp: #ule left: t right: maxT type: comparisonType name: nil.
-	t := self select: comparisonResult trueValue: t falseValue: maxT name: nil.
-	comparisonResult := self fcmp: #uge left: minT right: t type: comparisonType name: nil.
-	t := self select: comparisonResult trueValue: minT falseValue: t name: nil.
+	t := self clampVectorOrScalar: t minValue: resultType zeroConstant maxValue: resultType oneConstant.
 
 	"Hermite polynomial evaluation."
 	tsquare := self binaryOperation: #fmul left: t right: t name: nil.
@@ -986,6 +1030,61 @@ SLVMLLVMFunctionCodeGenerator >> generateVector: vectorType cross: leftVector wi
 	"Subtraction"
 	^ self generateScalarVectorBinaryOperation: subtractionOperation resultType: resultType left: lm right: rm name: nil
 	
+]
+
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> generateVector: vector packMinValue: minValue maxValue: maxValue channels: channelCount channelSize: channelBitSize channelScale: channelScale returnType: returnType [
+	| vectorValue vectorType minConstantValue maxConstantValue clampedVector channelScaleConstant scaledVector halfIntegerConstant biasedVector channelIntegerType packedVectorType packedVector |
+	vectorValue := self translateValue: vector.
+	vectorType := vectorValue type.
+	minConstantValue := vectorType constantScalarValue: minValue.
+	maxConstantValue := vectorType constantScalarValue: maxValue.
+	channelIntegerType := nil.
+	channelBitSize = 8 ifTrue: [ channelIntegerType := self context int8Ty ].
+	channelBitSize = 16 ifTrue: [ channelIntegerType := self context int16Ty ].
+	channelBitSize = 32 ifTrue: [ channelIntegerType := self context int32Ty ].
+	self assert: channelIntegerType isNotNil.
+	packedVectorType := LLVMVectorType get: channelIntegerType elements: channelCount.
+	
+	clampedVector := self clampVectorOrScalar: vectorValue minValue: minConstantValue maxValue: maxConstantValue.
+	
+	channelScaleConstant := vectorType constantScalarValue: channelScale.
+	scaledVector := self binaryOperation: #fmul left: clampedVector right: channelScaleConstant name: nil.
+	halfIntegerConstant := vectorType constantScalarValue: 0.5.
+	biasedVector := self binaryOperation: #fadd left: scaledVector right: halfIntegerConstant name: nil.
+	
+	packedVector := minValue < 0
+		ifTrue: [ self fp: biasedVector toSI: packedVectorType name: nil ]
+		ifFalse: [ self fp: biasedVector toUI: packedVectorType name: nil ].
+	^ self bitCast: packedVector target: returnType name: nil
+]
+
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> generateVector: packedVectorInteger signed: isSigned unpackScale: unpackScale channels: channelCount channelSize: channelBitSize returnType: vectorType [
+	| packedVectorIntegerValue channelIntegerType packedVectorType packedVector normalizedVector unpackScaleConstant unpackedVector |
+	packedVectorIntegerValue := self translateValue: packedVectorInteger.
+
+	channelIntegerType := nil.
+	channelBitSize = 8 ifTrue: [ channelIntegerType := self context int8Ty ].
+	channelBitSize = 16 ifTrue: [ channelIntegerType := self context int16Ty ].
+	channelBitSize = 32 ifTrue: [ channelIntegerType := self context int32Ty ].
+	self assert: channelIntegerType isNotNil.
+	packedVectorType := LLVMVectorType get: channelIntegerType elements: channelCount.
+	packedVector := self bitCast: packedVectorIntegerValue target: packedVectorType name: nil.
+	
+	normalizedVector := isSigned
+		ifTrue: [ self si: packedVector toFP: vectorType name: nil ]
+		ifFalse: [ self ui: packedVector toFP: vectorType name: nil ].
+	unpackScaleConstant := vectorType constantScalarValue: unpackScale.
+	unpackedVector := self binaryOperation: #fdiv left: normalizedVector right: unpackScaleConstant name: nil.
+	
+	isSigned ifTrue: [
+		unpackedVector := self clampVectorOrScalar: unpackedVector 
+			minValue: (vectorType constantScalarValue: -1.0)
+			maxValue: (vectorType constantScalarValue: 1.0)
+	].
+	
+	^ unpackedVector
 ]
 
 { #category : #'vector intrinsics' }
@@ -1182,6 +1281,14 @@ SLVMLLVMFunctionCodeGenerator >> llvmModule [
 	^ moduleTranslator llvmModule
 ]
 
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> loadFrom: pointer [
+	^ self addInstruction: (LLVMLoadInst new
+		pointer: pointer;
+		type: pointer type elementType;
+		yourself)
+]
+
 { #category : #'as yet unclassified' }
 SLVMLLVMFunctionCodeGenerator >> loadLiteralVariableValue: literalVariable [
 	| valueOffset valuePointer |
@@ -1249,6 +1356,15 @@ SLVMLLVMFunctionCodeGenerator >> select: condition trueValue: trueValue falseVal
 			yourself)
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> si: sourceValue toFP: targetType name: name [
+	^self addInstruction: (LLVMSIToFPInst new
+		type: targetType;
+		name: name;
+		source: sourceValue;
+		yourself)
+]
+
 { #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> signExtend: source target: targetType name: name [
 	^ self addInstruction: (LLVMSExtInst new
@@ -1256,6 +1372,15 @@ SLVMLLVMFunctionCodeGenerator >> signExtend: source target: targetType name: nam
 			name: name;
 			source: source;
 			yourself)
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> store: value in: pointer [
+	^ self addInstruction: (LLVMStoreInst new
+		pointer: pointer;
+		value: value;
+		type: self context voidTy;
+		yourself)
 ]
 
 { #category : #accessing }
@@ -1327,6 +1452,15 @@ SLVMLLVMFunctionCodeGenerator >> truncate: source target: targetType name: name 
 			name: name;
 			source: source;
 			yourself)
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> ui: sourceValue toFP: targetType name: name [
+	^self addInstruction: (LLVMUIToFPInst new
+		type: targetType;
+		name: name;
+		source: sourceValue;
+		yourself)
 ]
 
 { #category : #'instruction building' }
@@ -1479,18 +1613,9 @@ SLVMLLVMFunctionCodeGenerator >> visitExtractVectorElement: instruction [
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitFloatToIntCast: instruction [
 	instruction type isSigned ifTrue: [ 
-		^ self addInstruction: (LLVMFPToSIInst new
-				type: (self translateType: instruction type);
-				name: (self convertName: instruction name);
-				source: (self translateValue: instruction source);
-				yourself)
+		^ self fp: (self translateValue: instruction source) toSI: (self translateType: instruction type) name: (self convertName: instruction name)
 	].
-	^ self addInstruction: (LLVMFPToUIInst new
-			type: (self translateType: instruction type);
-			name: (self convertName: instruction name);
-			source: (self translateValue: instruction source);
-			yourself)
-
+	^ self fp: (self translateValue: instruction source) toUI: (self translateType: instruction type) name: (self convertName: instruction name)
 ]
 
 { #category : #visiting }
@@ -1523,18 +1648,10 @@ SLVMLLVMFunctionCodeGenerator >> visitInsertVectorElement: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitIntToFloatCast: instruction [
-	instruction source type isSigned ifTrue: [ 
-		^ self addInstruction: (LLVMSIToFPInst new
-				type: (self translateType: instruction type);
-				name: (self convertName: instruction name);
-				source: (self translateValue: instruction source);
-				yourself)
+	instruction source type isSigned ifTrue: [
+		^ self si: (self translateValue: instruction source) toFP: (self translateType: instruction type) name: (self convertName: instruction name)
 	].
-	^ self addInstruction: (LLVMUIToFPInst new
-			type: (self translateType: instruction type);
-			name: (self convertName: instruction name);
-			source: (self translateValue: instruction source);
-			yourself)
+	^ self ui: (self translateValue: instruction source) toFP: (self translateType: instruction type) name: (self convertName: instruction name)
 
 ]
 

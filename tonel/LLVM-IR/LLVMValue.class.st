@@ -29,6 +29,11 @@ LLVMValue >> hasName [
 	^ name isString
 ]
 
+{ #category : #testing }
+LLVMValue >> isAlloca [
+	^ false
+]
+
 { #category : #accessing }
 LLVMValue >> name [
 	^ name

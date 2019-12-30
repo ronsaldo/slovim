@@ -24,6 +24,18 @@ LLVMBasicBlockInstructionReplacer >> block: anObject [
 	block := anObject
 ]
 
+{ #category : #replacing }
+LLVMBasicBlockInstructionReplacer >> insertAllocaInstruction: allocaInstruction [
+	newInstructions doWithIndex: [ :instruction :index |
+		instruction isAlloca ifFalse: [
+			newInstructions add: allocaInstruction beforeIndex: index .
+			^ self
+		].
+	].
+
+	newInstructions add: allocaInstruction
+]
+
 { #category : #accessing }
 LLVMBasicBlockInstructionReplacer >> newInstructions [
 	^ newInstructions
