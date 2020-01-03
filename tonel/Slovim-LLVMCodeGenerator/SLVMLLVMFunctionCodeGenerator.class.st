@@ -1902,7 +1902,7 @@ SLVMLLVMFunctionCodeGenerator >> visitTruncate: instruction [
 SLVMLLVMFunctionCodeGenerator >> visitUnaryFloatNegation: instruction [
 	| resultType |
 	resultType := self translateType: instruction type.
-	self assert: resultType isFloatingPointTy.
+	self assert: (resultType isFloatingPointTy or: [resultType isVectorTy and: [resultType elementType isFloatingPointTy]]).
 	^ self addInstruction: (LLVMBinaryOperator new
 			name: (self convertName: instruction name);
 			operation: #fsub;
