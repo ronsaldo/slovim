@@ -1139,6 +1139,29 @@ SLVMLLVMFunctionCodeGenerator >> generateVectorFold: vectorOrScalar with: operat
 	^ self generateVectorFold: result with: operation
 ]
 
+{ #category : #'vector intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateVectorLength: vector [
+	| vectorValue length2 intrinsic |
+	vectorValue := self translateValue: vector.
+	length2 := self generateDot: vectorValue with: vectorValue mul: #fmul add: #fadd.
+	intrinsic := self getOverloadedIntrinsic: 'llvm.sqrt' argumentTypes: {length2 type} returnType: length2 type.
+	^ self call: intrinsic arguments: { length2 } returnType: length2 type name: nil
+]
+
+{ #category : #'vector intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateVectorNormalize: vector [
+	| vectorValue length2 intrinsic length lengthVector |
+	vectorValue := self translateValue: vector.
+	length2 := self generateDot: vectorValue with: vectorValue mul: #fmul add: #fadd.
+	intrinsic := self getOverloadedIntrinsic: 'llvm.sqrt' argumentTypes: {length2 type} returnType: length2 type.
+	length := self call: intrinsic arguments: { length2 } returnType: length2 type name: nil.
+	
+	lengthVector := LLVMConstantZeroInitializer new type: vectorValue type.
+	lengthVector := self vector: lengthVector insertElement: length at: 0.
+	lengthVector := self vector: lengthVector shuffleWith: lengthVector mask: ((Array new: vectorValue type elements) atAllPut: 0).
+	^ self binaryOperation: #fdiv left: vectorValue right: lengthVector name: nil
+]
+
 { #category : #'as yet unclassified' }
 SLVMLLVMFunctionCodeGenerator >> generateVectorOrScalar: vectorOrScalar constantMultiplication: constantValue [
 	| vectorOrScalarValue constant |
