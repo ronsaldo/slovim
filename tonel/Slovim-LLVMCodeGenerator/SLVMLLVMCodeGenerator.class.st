@@ -726,7 +726,7 @@ SLVMLLVMCodeGenerator >> visitConstantValue: aConstantValue [
 		self assert: aConstantValue value isInteger.
 		^ LLVMConstantInt new type: type; value: aConstantValue value
 	].
-	type isFloatingPointTy ifTrue: [ ^ LLVMConstantFP new type: type; value: aConstantValue value ].
+	type isFloatingPointTy ifTrue: [ ^ type constantScalarValue: aConstantValue value ].
 	type isPointerTy ifTrue: [ 
 		(aConstantValue value = 0 or: [ aConstantValue value isNil ]) ifTrue: [ 
 			^ LLVMConstantPointerNull new type: type

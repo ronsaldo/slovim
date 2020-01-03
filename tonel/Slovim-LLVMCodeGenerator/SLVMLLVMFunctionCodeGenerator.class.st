@@ -1636,6 +1636,17 @@ SLVMLLVMFunctionCodeGenerator >> visitGetElementPointer: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitInsertValue: instruction [
+	^ self addInstruction: (LLVMInsertValueInst new
+		name: (self convertName: instruction name);
+		type: (self translateType: instruction type);
+		aggregate: (self translateValue: instruction aggregate);
+		element: (self translateValue: instruction value);
+		indices: instruction indices;
+		yourself)
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitInsertVectorElement: instruction [
 	^ self addInstruction: (LLVMInsertElementInst new
 		name: (self convertName: instruction name);

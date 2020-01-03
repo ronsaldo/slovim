@@ -257,6 +257,11 @@ SLVMBinaryOperation >> foldConstant [
 	^ self foldArithmeticIdentities
 ]
 
+{ #category : #testing }
+SLVMBinaryOperation >> hasFastMath [
+	^ false
+]
+
 { #category : #'as yet unclassified' }
 SLVMBinaryOperation >> isBinaryComparison [
 	| operationType |
@@ -344,8 +349,11 @@ SLVMBinaryOperation >> optimizeFloatMul [
 	left := self left.
 	right := self right.
 	
-	left isZeroConstant ifTrue: [ ^ left ].
-	right isZeroConstant ifTrue: [ ^ right ].
+	self hasFastMath ifTrue: [
+		"Multiplication by zero is not a safe optimization because of NaN."
+		left isZeroConstant ifTrue: [ ^ left ].
+		right isZeroConstant ifTrue: [ ^ right ].
+	].
 
 	left isOneConstant ifTrue: [ ^ right ].
 	right isOneConstant ifTrue: [ ^ left ].
@@ -360,6 +368,14 @@ SLVMBinaryOperation >> optimizeFloatRem [
 
 { #category : #'arithmetic optimizations' }
 SLVMBinaryOperation >> optimizeFloatSub [
+	| left right |
+	left := self left.
+	right := self right.
+	
+	right isZeroConstant ifTrue: [ ^ left ].
+	self hasFastMath ifTrue: [ 
+		left == right ifTrue: [ ^ self type defaultConstant ].
+	].
 	^ self
 ]
 
