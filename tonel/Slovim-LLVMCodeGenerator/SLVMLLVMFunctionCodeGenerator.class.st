@@ -75,7 +75,7 @@ SLVMLLVMFunctionCodeGenerator class >> initialize [
 	
 	BinaryFloatComparisonOperationMap := Dictionary newFromPairs: #(
 		uflt ult
-		ufle ult
+		ufle ule
 		ufeq ueq
 		ufne une
 		ufgt ugt
