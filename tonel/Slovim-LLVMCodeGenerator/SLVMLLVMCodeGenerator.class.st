@@ -430,8 +430,12 @@ SLVMLLVMCodeGenerator >> translateDebugType: type [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> translateDynamicLiteral: aLiteral [
-	| literalConstantValue llvmConstant variable literalVariable |
-	self assert: (target objectModel isInlineLiteral: aLiteral) not.
+	| literalConstantValue llvmConstant variable literalVariable encodedLiteral |
+	(target objectModel isInlineLiteral: aLiteral) ifTrue: [ 
+		encodedLiteral := target objectModel encodeInlineLiteral: aLiteral.
+		^ self translateValue: encodedLiteral
+	].
+
 	translatedLiterals at: aLiteral ifPresent: [ :existent | ^ existent ].
 	
 	literalVariable := target objectModel createNonInlineLiteralUniqueGlobal: aLiteral withCodeGenerator: self.
@@ -719,8 +723,17 @@ SLVMLLVMCodeGenerator >> visitConstantUnionBlobValue: constantUnionValue [
 
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> visitConstantValue: aConstantValue [
-	| type |
+	| type resultValue |
 	type := self translateType: aConstantValue type.
+	aConstantValue type isDynamicObjectType ifTrue: [
+		resultValue := self translateDynamicLiteral: aConstantValue value.
+		resultValue type = type ifTrue: [ ^ resultValue ].
+		self assert: type isPointerTy.
+		resultValue type isIntegerTy ifTrue: [ ^ LLVMIntToPtrConstantExpr new type: type; source: resultValue; yourself ].
+		resultValue type isPointerTy ifTrue: [ ^ LLVMBitCastConstantExpr new type: type; source: resultValue; yourself ].
+		self error: 'Case not supported'.
+	].
+	
 	aConstantValue type isBooleanType ifTrue: [ ^ LLVMConstantInt new type: type; value: aConstantValue value asBit ].
 	type isIntegerTy ifTrue: [
 		self assert: aConstantValue value isInteger.

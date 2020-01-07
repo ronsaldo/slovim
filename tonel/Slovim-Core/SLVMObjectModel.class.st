@@ -31,6 +31,16 @@ SLVMObjectModel >> closureInstantiateFunction [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMObjectModel >> compiledMethodLiteralsOffset [
+	self subclassResponsibility
+]
+
+{ #category : #'as yet unclassified' }
+SLVMObjectModel >> compiledMethodMetadataLiteralOffsetWithIndex: index [
+	^ target pointerSize * (index - 1) + self compiledMethodLiteralsOffset
+]
+
+{ #category : #'as yet unclassified' }
 SLVMObjectModel >> contextMetaDataHeaderSize [
 	self subclassResponsibility
 ]

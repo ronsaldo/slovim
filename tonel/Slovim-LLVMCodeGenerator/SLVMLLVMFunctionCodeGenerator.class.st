@@ -1426,14 +1426,24 @@ SLVMLLVMFunctionCodeGenerator >> translateBasicBlocks [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> translateConstantDynamicLiteral: aConstantLiteral [
-	| constantValue |
-	self flag: 'TODO: Support the compiled method meta object data.'.
-	constantValue := moduleTranslator translateDynamicLiteral: aConstantLiteral value.
-	^ LLVMBitCastConstantExpr new
-		type: (self translateType: aConstantLiteral type);
-		source: constantValue;
-		yourself
-	"^ LLVMConstantPointerNull new type: (self translateType: aConstantLiteral type)"
+	| compiledMethodMetaData literalPointerOffset literalPointer |
+	compiledMethodMetaData := self translateValue: function compiledMethodMetaDataValue.
+	self assert: compiledMethodMetaData type isPointerTy.
+	self assert: compiledMethodMetaData type elementType isIntegerTy.
+	self assert: compiledMethodMetaData type elementType bits = 8.
+	
+	literalPointerOffset := target objectModel compiledMethodMetadataLiteralOffsetWithIndex: aConstantLiteral index.
+	literalPointer := LLVMGetElementPtrConstantExpr new
+		type: compiledMethodMetaData type;
+		inbounds: true;
+		pointer: compiledMethodMetaData;
+		indices: { self context int32Ty constant: literalPointerOffset };
+		yourself.
+	literalPointer := LLVMBitCastConstantExpr new
+		type: (LLVMPointerType getUnqual: (self translateType: aConstantLiteral type));
+		source: literalPointer;
+		yourself.
+	^ self loadFrom: literalPointer
 ]
 
 { #category : #'code generation' }
