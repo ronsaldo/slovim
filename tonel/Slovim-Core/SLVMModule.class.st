@@ -18,7 +18,8 @@ Class {
 		'currentOptimizationLevel',
 		'highLevelMapToSymbol',
 		'symbolMapToHighLevel',
-		'sourceLanguageName'
+		'sourceLanguageName',
+		'disableSLVMOptimizations'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -174,6 +175,16 @@ SLVMModule >> debugInformation [
 { #category : #accessing }
 SLVMModule >> debugInformation: anObject [
 	debugInformation := anObject
+]
+
+{ #category : #accessing }
+SLVMModule >> disableSLVMOptimizations [
+	^ disableSLVMOptimizations ifNil: [ disableSLVMOptimizations := false ]
+]
+
+{ #category : #accessing }
+SLVMModule >> disableSLVMOptimizations: aBoolean [
+	disableSLVMOptimizations := aBoolean
 ]
 
 { #category : #printing }

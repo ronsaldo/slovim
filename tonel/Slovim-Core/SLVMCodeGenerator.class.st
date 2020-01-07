@@ -90,6 +90,8 @@ SLVMCodeGenerator >> applyPassesInFunction: function [
 { #category : #'code generation' }
 SLVMCodeGenerator >> globalOptimizationForModule: ssaModule [
 	(optimizationLevel = 0 and: [ self isInliningMandatory not ]) ifTrue: [ ^ nil ].
+	ssaModule disableSLVMOptimizations ifTrue: [ ^ nil ].
+	
 	^ globalOptimization ifNil: [
 		globalOptimization := SLVMOptInline new.
 		globalOptimization inliningMandatory: self isInliningMandatory.

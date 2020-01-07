@@ -350,12 +350,16 @@ LLVMModule >> withTemporaryObjectFileDo: aBlock [
 	]
 ]
 
-{ #category : #printing }
-LLVMModule >> writeAssemblyToFileNamed: aFileName [
-	aFileName asFileReference writeStreamDo: [ :out |
-		out truncate.
-		self fullPrintOn: out
-	]
+{ #category : #writing }
+LLVMModule >> writeAssemblyToFileNamed: outputFileName [
+	| arguments |
+	arguments := self llcFlags , {
+		'-filetype=asm' .
+		'-o' . outputFileName .
+		'-'.
+	}.
+
+	^ self runLLCWithArguments: arguments
 ]
 
 { #category : #writing }
@@ -368,6 +372,14 @@ LLVMModule >> writeExecutableToFileNamed: aFileName [
 		} , self linkerArguments.
 		
 		self runLinkerWithArguments: arguments
+	]
+]
+
+{ #category : #printing }
+LLVMModule >> writeIRAssemblyToFileNamed: aFileName [
+	aFileName asFileReference writeStreamDo: [ :out |
+		out truncate.
+		self fullPrintOn: out
 	]
 ]
 
