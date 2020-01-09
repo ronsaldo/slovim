@@ -152,6 +152,28 @@ SLVMLLVMBuiltInFunctionGenerator class >> matrixBuiltIn [
 ]
 
 { #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> shaderBarrierBuiltIn [
+	<builtInFunctions>
+	
+	"Nop the shader barriers with this backend."
+	self
+		addBuiltIn: #'shader.barrier.execution' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+		];
+		addBuiltIn: #'shader.barrier.memory.all' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+		];
+		addBuiltIn: #'shader.barrier.memory.atomic_counter' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+		];
+		addBuiltIn: #'shader.barrier.memory.image' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+		];
+		addBuiltIn: #'shader.barrier.memory.buffer' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+		];
+		addBuiltIn: #'shader.barrier.memory.shared' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+		];
+		addBuiltIn: #'shader.barrier.memory.group' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+		]
+]
+
+{ #category : #initialization }
 SLVMLLVMBuiltInFunctionGenerator class >> vectorBuiltIn [
 	<builtInFunctions>
 	self
