@@ -905,6 +905,8 @@ SLVMSpirVCodeGenerator >> visitFloatToIntCast: instruction [
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> visitFloatType: floatType [
 	^ self valueTranslation: floatType do: [ :id |
+		floatType size = 2 ifTrue: [ builder addCapability: SpvCapabilityFloat16 ].
+		floatType size = 8 ifTrue: [ builder addCapability: SpvCapabilityFloat64 ].
 		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypeFloat result: id operands: {floatType size*8})
 	]
 ]
@@ -1165,6 +1167,7 @@ SLVMSpirVCodeGenerator >> visitIntegerType: integerType [
 	^ self valueTranslation: integerType do: [ :id |
 		integerType size = 1 ifTrue: [ builder addCapability: SpvCapabilityInt8 ].
 		integerType size = 2 ifTrue: [ builder addCapability: SpvCapabilityInt16 ].
+		integerType size = 8 ifTrue: [ builder addCapability: SpvCapabilityInt64 ].
 		builder addTypeInstruction: (SpirVInstruction opcode: SpvOpTypeInt result: id operands: {integerType size * 8. integerType isSigned asBit})
 	]
 ]
