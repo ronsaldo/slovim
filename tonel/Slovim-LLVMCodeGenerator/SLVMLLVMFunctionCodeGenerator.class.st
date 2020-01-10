@@ -1564,6 +1564,24 @@ SLVMLLVMFunctionCodeGenerator >> visitBitCast: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitBoolToDynamicObjectCast: instruction [
+	| sourceValue targetType  trueValue falseValue |
+	sourceValue := self translateValue: instruction source.
+	targetType := self translateType: instruction type.
+	
+	trueValue := self moduleTranslator translateDynamicLiteral: true.
+	trueValue type ~= targetType ifTrue: [ 
+		trueValue := LLVMBitCastConstantExpr new type: targetType; source: trueValue; yourself.
+	].
+
+	falseValue := self moduleTranslator translateDynamicLiteral: false.
+	falseValue type ~= targetType ifTrue: [ 
+		falseValue := LLVMBitCastConstantExpr new type: targetType; source: falseValue; yourself.
+	].
+	^ self select: sourceValue trueValue: trueValue falseValue: falseValue name: (self convertName: instruction name)
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitBranch: instruction [
 	^ self addInstruction: (LLVMBranchInst new
 		name: (self convertName: instruction name);
@@ -1586,6 +1604,37 @@ SLVMLLVMFunctionCodeGenerator >> visitCall: instruction [
 	calledFunction := self translateValue: instruction functionValue.
 	arguments := instruction arguments collect: [ :arg | self translateValue: arg ].
 	^ self call: calledFunction arguments: arguments returnType: type name: (self convertName: instruction name)
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitCharToDynamicObjectCast: instruction [
+	| sourceType sourceValue targetType conversionFunction conversionResult |
+	sourceType := instruction source type.
+	sourceValue := self translateValue: instruction source.
+	targetType := self translateType: instruction type.
+
+	self assert: sourceType isIntegerType.
+	
+	"Make sure the source type is at least an Int32"
+	sourceType size < 4 ifTrue: [
+		sourceType isUnsigned ifTrue: [ 
+			sourceValue := self zeroExtend: sourceValue target: self context int32Ty  name: nil
+		] ifFalse: [ 
+			sourceValue := self signExtend: sourceValue target: self context int32Ty  name: nil
+		].
+	].
+
+	conversionFunction := target objectModel uint32ToCharacterFunction.
+	conversionResult := self callRuntimeFunction: conversionFunction
+		arguments: {sourceValue}
+		type: [ self halt ]
+		name: (self convertName: instruction name).
+	self convertDebugLocationFrom: instruction into: conversionResult.
+	conversionResult type ~= targetType ifTrue: [
+		conversionResult := self bitCast: conversionResult target: targetType name: nil
+	].
+	
+	^ conversionResult
 ]
 
 { #category : #visiting }
@@ -1644,6 +1693,34 @@ SLVMLLVMFunctionCodeGenerator >> visitExtractVectorElement: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitFloatToDynamicObjectCast: instruction [
+	| sourceType sourceValue targetType conversionFunction conversionResult |
+	sourceType := instruction source type.
+	sourceValue := self translateValue: instruction source.
+	targetType := self translateType: instruction type.
+
+	self assert: sourceType isFloatType.
+	
+	"Make sure the source type is at least a Float64"
+	sourceType size < 8 ifTrue: [
+		sourceValue := self castFloat: sourceValue into: self context doubleTy name: nil
+	].
+
+	conversionFunction := target objectModel float64ToFloatFunction.
+
+	conversionResult := self callRuntimeFunction: conversionFunction
+		arguments: {sourceValue}
+		type: [ self halt ]
+		name: (self convertName: instruction name).
+	self convertDebugLocationFrom: instruction into: conversionResult.
+	conversionResult type ~= targetType ifTrue: [
+		conversionResult := self bitCast: conversionResult target: targetType name: nil
+	].
+	
+	^ conversionResult
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitFloatToIntCast: instruction [
 	instruction type isSigned ifTrue: [ 
 		^ self fp: (self translateValue: instruction source) toSI: (self translateType: instruction type) name: (self convertName: instruction name)
@@ -1688,6 +1765,53 @@ SLVMLLVMFunctionCodeGenerator >> visitInsertVectorElement: instruction [
 		vector: (self translateValue: instruction vector);
 		index: (self translateValue: instruction index);
 		yourself)
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitIntToDynamicObjectCast: instruction [
+	| sourceType sourceValue targetType conversionFunction conversionResult |
+	sourceType := instruction source type.
+	sourceValue := self translateValue: instruction source.
+	targetType := self translateType: instruction type.
+
+	self assert: sourceType isIntegerType.
+	
+	"Make sure the source type is at least an Int32"
+	sourceType size < 4 ifTrue: [
+		sourceType isUnsigned ifTrue: [ 
+			sourceValue := self zeroExtend: sourceValue target: self context int32Ty  name: nil
+		] ifFalse: [ 
+			sourceValue := self signExtend: sourceValue target: self context int32Ty  name: nil
+		].
+		
+		sourceType := target int32
+	].
+
+	conversionFunction := sourceType size = 4 ifTrue: [
+		sourceType isUnsigned ifTrue: [ 
+			target objectModel uint32ToIntegerFunction.
+		] ifFalse: [ 
+			target objectModel int32ToIntegerFunction.
+		].
+	] ifFalse: [
+		self assert: sourceType size = 8.
+		sourceType isUnsigned ifTrue: [ 
+			target objectModel uint64ToIntegerFunction.
+		] ifFalse: [ 
+			target objectModel int64ToIntegerFunction.
+		].
+	].
+
+	conversionResult := self callRuntimeFunction: conversionFunction
+		arguments: {sourceValue}
+		type: [ self halt ]
+		name: (self convertName: instruction name).
+	self convertDebugLocationFrom: instruction into: conversionResult.
+	conversionResult type ~= targetType ifTrue: [
+		conversionResult := self bitCast: conversionResult target: targetType name: nil
+	].
+	
+	^ conversionResult
 ]
 
 { #category : #visiting }
