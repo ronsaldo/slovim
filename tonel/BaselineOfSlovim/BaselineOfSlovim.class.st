@@ -10,14 +10,10 @@ BaselineOfSlovim >> baseline: spec [
 
 	spec for: #'common' do: [
 		spec blessing: #'baseline'.
-		spec configuration: 'OSSubprocess' with: [
-			spec
-				versionString: #stable;
-				repository: 'github://marianopeck/OSSubprocess/repository' ];
-			yourself.
+		spec baseline: 'OSSubprocess' with: [
+			spec repository: 'github://pharo-contributions/OSSubprocess:v1.0.1/repository' ].
 		spec baseline: 'SAsm' with: [
-				spec
-					repository: 'github://ronsaldo/sasm/tonel'].
+				spec repository: 'github://ronsaldo/sasm/tonel'].
 		spec baseline: 'Lowcode' with: [
 				spec
 					repository: 'github://ronsaldo/lowcode/tonel';
