@@ -4,3 +4,8 @@ Extension { #name : #UndefinedObject }
 UndefinedObject >> asLLVMMetadata [
 	^ LLVMMDNull new
 ]
+
+{ #category : #'*LLVM-IR' }
+UndefinedObject >> llvmPrintSpecializedMetadataValueOn: aStream [
+	aStream nextPutAll: 'null'
+]
