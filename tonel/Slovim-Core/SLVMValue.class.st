@@ -17,6 +17,11 @@ SLVMValue >> addInstructionReference: anInstruction [
 	"By default, do nothing"
 ]
 
+{ #category : #converting }
+SLVMValue >> asCanonicalLocalReference [
+	^ self
+]
+
 { #category : #accessing }
 SLVMValue >> childrenNodes [
 	^ #()

@@ -12,6 +12,11 @@ SLVMBitCast >> accept: aVisitor [
 	^ aVisitor visitBitCast: self
 ]
 
+{ #category : #converting }
+SLVMBitCast >> asCanonicalLocalReference [
+	^ self source
+]
+
 { #category : #testing }
 SLVMBitCast >> canBeNop [
 	instructionReferences ifEmpty: [ ^ true ].
