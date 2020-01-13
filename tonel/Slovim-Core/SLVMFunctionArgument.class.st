@@ -76,6 +76,11 @@ SLVMFunctionArgument >> isReceiver [
 	^ self hasFlag: #receiver
 ]
 
+{ #category : #testing }
+SLVMFunctionArgument >> isStructReturnPointer [
+	^ self hasFlag: #sret
+]
+
 { #category : #accessing }
 SLVMFunctionArgument >> livenessIndex [
 	^ livenessIndex
@@ -89,6 +94,11 @@ SLVMFunctionArgument >> livenessIndex: anObject [
 { #category : #accessing }
 SLVMFunctionArgument >> makeReceiver [
 	self addFlag: #receiver
+]
+
+{ #category : #testing }
+SLVMFunctionArgument >> markStructReturnPointer [
+	^ self addFlag: #sret
 ]
 
 { #category : #accessing }

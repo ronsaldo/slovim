@@ -3,10 +3,16 @@ Class {
 	#superclass : #LLVMValue,
 	#instVars : [
 		'parent',
-		'argNo'
+		'argNo',
+		'flags'
 	],
 	#category : #'LLVM-IR'
 }
+
+{ #category : #adding }
+LLVMArgument >> addFlag: flag [
+	flags := flags copyWith: flag
+]
 
 { #category : #accessing }
 LLVMArgument >> argNo [
@@ -16,6 +22,22 @@ LLVMArgument >> argNo [
 { #category : #accessing }
 LLVMArgument >> argNo: anObject [
 	argNo := anObject
+]
+
+{ #category : #accessing }
+LLVMArgument >> flags [
+	^ flags
+]
+
+{ #category : #accessing }
+LLVMArgument >> flags: anObject [
+	flags := anObject
+]
+
+{ #category : #initialization }
+LLVMArgument >> initialize [
+	super initialize.
+	flags := #().
 ]
 
 { #category : #accessing }
@@ -39,5 +61,5 @@ LLVMArgument >> printOnDefinition: aStream [
 	name isLLVMAnon ifFalse: [ 
 		aStream nextPutAll: ' %'; nextPutAll: name.
 	].
-
+	flags do: [ :flag | aStream space; nextPutAll: flag ].
 ]

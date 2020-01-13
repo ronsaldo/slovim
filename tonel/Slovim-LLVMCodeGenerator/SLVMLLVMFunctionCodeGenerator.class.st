@@ -1335,10 +1335,10 @@ SLVMLLVMFunctionCodeGenerator >> mapArguments [
 
 	| argumentBaseOffset llvmArgument |
 	argumentBaseOffset := 0.
-	self flag: 'TODO: Add support for returning structures as arguments'.
 	function arguments doWithIndex: [ :arg :index |
 		llvmArgument := llvmFunction arguments at: index + argumentBaseOffset.
 		llvmArgument name: (self convertName: arg name).
+		arg isStructReturnPointer ifTrue: [ llvmArgument addFlag: #sret; addFlag: #noalias ].
 		valueDictionary at: arg put: llvmArgument
 	]
 ]
