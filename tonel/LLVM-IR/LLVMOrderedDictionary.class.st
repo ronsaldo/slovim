@@ -11,3 +11,10 @@ LLVMOrderedDictionary >> at: aKey ifPresent: aPresentBlock ifAbsentPut: anAbsent
 		ifPresent: aPresentBlock
 		ifAbsent: [self at: aKey put: anAbsentBlock value]
 ]
+
+{ #category : #enumerating }
+LLVMOrderedDictionary >> valuesDo: aBlock [
+	self keysDo: [ :key |
+		key ifNotNil: [ aBlock value: (self at: key) ]
+	]
+]
