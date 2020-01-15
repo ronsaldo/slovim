@@ -58,8 +58,10 @@ LLVMArgument >> printOnDeclaration: aStream [
 { #category : #printing }
 LLVMArgument >> printOnDefinition: aStream [
 	aStream print: type.
+	flags do: [ :flag | aStream space; nextPutAll: flag ].
+	
 	name isLLVMAnon ifFalse: [ 
 		aStream nextPutAll: ' %'; nextPutAll: name.
 	].
-	flags do: [ :flag | aStream space; nextPutAll: flag ].
+
 ]
