@@ -30,6 +30,12 @@ LLVMStructType >> createName [
 	]
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMStructType >> elementAtConstIndex: constIndex [
+	^ elements at: constIndex + 1
+	
+]
+
 { #category : #accessing }
 LLVMStructType >> elements [
 	^ elements

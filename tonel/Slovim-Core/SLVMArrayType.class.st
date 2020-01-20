@@ -49,6 +49,11 @@ SLVMArrayType >> defaultConstant [
 	^ SLVMConstant zeroInitializer: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMArrayType >> defaultFullConstant [
+	^ SLVMConstant array: self slots: ((1 to: (elements ifNil: [0])) collect: #defaultFullConstant)
+]
+
 { #category : #accessing }
 SLVMArrayType >> elements [
 	^ elements

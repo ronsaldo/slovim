@@ -1272,6 +1272,20 @@ SLVMLLVMFunctionCodeGenerator >> getOverloadedIntrinsic: intrinsicName argumentT
 	]
 ]
 
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> getReference: reference constElement: constElementIndex [
+	| resultType int32Ty |
+	self assert: reference type isPointerTy.
+	resultType := LLVMPointerType get: (reference type elementType elementAtConstIndex: constElementIndex) addressSpace: reference type addressSpace.
+	int32Ty := self context int32Ty.
+	
+	^ self addInstruction: (LLVMGetElementPtrInst new
+		type: resultType;
+		pointer: reference;
+		indices: { int32Ty constant: 0 . int32Ty constant: constElementIndex}
+	)
+]
+
 { #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> icmp: operation left: left right: right type: resultType name: name [
 	^ self addInstruction: (LLVMICmpInst new
@@ -1765,6 +1779,58 @@ SLVMLLVMFunctionCodeGenerator >> visitInsertVectorElement: instruction [
 		vector: (self translateValue: instruction vector);
 		index: (self translateValue: instruction index);
 		yourself)
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitInstantiateClosure: instruction [
+	| closurePrototype captures kind allocation dynamicCaptures normalCaptures normalFunctionType closureStructureType captureDefinitions environmentPtr |
+	closurePrototype := self translateValue: instruction definition.
+	captureDefinitions := instruction definition captures.
+	dynamicCaptures := OrderedCollection new.
+	normalCaptures := OrderedCollection new.
+	
+	instruction captures doWithIndex: [:capture :index |
+		capture type isDynamicObjectPointerType ifTrue: [ 
+			dynamicCaptures add: {captureDefinitions at: index . self translateValue: capture}
+		] ifFalse: [ 
+			normalCaptures add: {captureDefinitions at: index  . self translateValue: capture}
+		].
+	].
+	
+	captures := dynamicCaptures asArray, normalCaptures asArray.
+	kind := instruction closureType kind.
+	normalFunctionType := instruction closureType normalFunctionTypeWith: self target.
+	closureStructureType := normalFunctionType third.
+	
+	allocation := nil.
+	(self target objectModel isClosureKindAllocatedInTheStack: kind) ifTrue: [
+		allocation := self createSpillingAlloca: (self translateType: closureStructureType)
+	] ifFalse: [
+		self halt
+	].
+	
+	self assert: allocation isNotNil.
+	
+	"Basic initialize the closure."
+	self store: closurePrototype in: allocation.
+	
+	"Copy the captures"
+	environmentPtr := self getReference: allocation constElement: closureStructureType types size - 1.
+	captures doWithIndex: [ :captureDefinitionWithValue :index |
+		| captureDefinition captureValue targetPointer copyFunction |
+		captureDefinition := captureDefinitionWithValue first.
+		captureValue := captureDefinitionWithValue second.
+		targetPointer := self getReference: environmentPtr constElement: index - 1.
+		
+		captureDefinition copyFunction ifNil: [ 
+			self store: captureValue in: targetPointer
+		] ifNotNil: [
+			copyFunction := self translateValue: captureDefinition copyFunction.
+			self call: copyFunction arguments: { targetPointer . captureValue } returnType: copyFunction returnType name: nil.
+		].
+	].
+	
+	^ allocation
 ]
 
 { #category : #visiting }

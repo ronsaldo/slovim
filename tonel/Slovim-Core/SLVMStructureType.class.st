@@ -85,6 +85,11 @@ SLVMStructureType >> defaultConstant [
 	^ SLVMConstant zeroInitializer: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> defaultFullConstant [
+	^ SLVMConstant structure: self slots: (types collect: #defaultFullConstant)
+]
+
 { #category : #printing }
 SLVMStructureType >> fullPrintOn: aStream [
 	self fullPrintOn: aStream fromPrint: false

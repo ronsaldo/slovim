@@ -35,6 +35,11 @@ SLVMInstantiateClosure >> childrenNodes [
 ]
 
 { #category : #accessing }
+SLVMInstantiateClosure >> closureType [
+	^ closureType
+]
+
+{ #category : #accessing }
 SLVMInstantiateClosure >> definition [
 	^ parameters first
 ]
@@ -45,7 +50,7 @@ SLVMInstantiateClosure >> definition: definition captures: captures [
 	self parameters: { definition } , captures.
 	self assert: definition isClosureDefinition.
 	self assert: captures size = definition captures size.
-	1 to: captures size do: [ :i | self assert: (captures at: i) type = (definition captures at: i) type].
+	1 to: captures size do: [ :i | self assert: (captures at: i) type = (definition captures at: i) requiredInitialValueType].
 	
 	functionType := definition functionType.
 	captureTypes := captures collect: #type.

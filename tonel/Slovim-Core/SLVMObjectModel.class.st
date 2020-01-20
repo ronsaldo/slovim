@@ -21,7 +21,7 @@ SLVMObjectModel class >> initialize [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMObjectModel >> closureHeaderType [
+SLVMObjectModel >> closureHeaderTypeForKind: kind [
 	^ nil
 ]
 
@@ -38,6 +38,28 @@ SLVMObjectModel >> compiledMethodLiteralsOffset [
 { #category : #'as yet unclassified' }
 SLVMObjectModel >> compiledMethodMetadataLiteralOffsetWithIndex: index [
 	^ target pointerSize * (index - 1) + self compiledMethodLiteralsOffset
+]
+
+{ #category : #'as yet unclassified' }
+SLVMObjectModel >> constructClosurePrototypeFor: closureDefinition [
+	| normalFunction normalFunctionTypeInfo prototype closureStructureType requiredFunctionPointerType prototypeCaptures |
+	normalFunction := closureDefinition asNormalFunction.
+	normalFunctionTypeInfo := closureDefinition closureType normalFunctionTypeWith: target.
+	
+	closureStructureType := normalFunctionTypeInfo third.
+	requiredFunctionPointerType := closureStructureType types at: closureStructureType types size - 1.
+
+	prototype := closureStructureType defaultFullConstant.
+	prototype slots at: prototype slots size - 1 put: (SLVMConstant value: normalFunction bitcast: requiredFunctionPointerType).
+	
+	prototypeCaptures := prototype slots last.
+	closureDefinition captures doWithIndex: [ :capture :index |
+		capture basicInitialValue ifNotNil: [ :value |
+			prototypeCaptures slots at: index put: value
+		].
+	].
+
+	^ prototype
 ]
 
 { #category : #'as yet unclassified' }
@@ -100,8 +122,8 @@ SLVMObjectModel >> encodeSmallInteger: integer [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMObjectModel >> fillClosureStructure: closureStructureType functionPointerType: closureFunctionPointer capturedEnvironmentStructure: capturedEnvironmentStructure [
-	self closureHeaderType ifNotNil: [ :objectHeader |
+SLVMObjectModel >> fillClosureStructure: closureStructureType functionPointerType: closureFunctionPointer capturedEnvironmentStructure: capturedEnvironmentStructure kind: closureKind [
+	(self closureHeaderTypeForKind: closureKind) ifNotNil: [ :objectHeader |
 		closureStructureType
 			types: { objectHeader . closureFunctionPointer . capturedEnvironmentStructure };
 			names: #(objectHeader function environment).
@@ -112,6 +134,16 @@ SLVMObjectModel >> fillClosureStructure: closureStructureType functionPointerTyp
 			names: #(function environment)
 	]
 	
+]
+
+{ #category : #'as yet unclassified' }
+SLVMObjectModel >> genericClosurePointerForKind: kind [
+	^ target voidPointerType
+]
+
+{ #category : #testing }
+SLVMObjectModel >> isClosureKindAllocatedInTheStack: kind [
+	^ false
 ]
 
 { #category : #testing }

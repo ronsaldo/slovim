@@ -462,6 +462,11 @@ SLVMType >> asSlovimType: compilationTarget [
 	^ self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMType >> defaultFullConstant [
+	^ self defaultConstant
+]
+
 { #category : #'constant encoding' }
 SLVMType >> encodeConstant: value bigEndian: bigEndian intoByteStream: stream [
 	self subclassResponsibility

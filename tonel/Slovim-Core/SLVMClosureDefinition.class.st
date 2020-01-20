@@ -7,7 +7,8 @@ Class {
 	#instVars : [
 		'captures',
 		'closureType',
-		'normalFunctionTypes'
+		'normalFunctionTypes',
+		'kind'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -92,7 +93,7 @@ SLVMClosureDefinition >> captures [
 
 { #category : #accessing }
 SLVMClosureDefinition >> closureType [
-	^ closureType ifNil: [closureType := SLVMClosureType functionType: functionType captures: (captures collect: #type)]
+	^ closureType ifNil: [closureType := SLVMClosureType functionType: functionType kind: kind captures: (captures collect: #type)]
 ]
 
 { #category : #initialization }
@@ -116,6 +117,16 @@ SLVMClosureDefinition >> initialize [
 { #category : #testing }
 SLVMClosureDefinition >> isClosureDefinition [
 	^ true
+]
+
+{ #category : #accessing }
+SLVMClosureDefinition >> kind [
+	^ kind
+]
+
+{ #category : #accessing }
+SLVMClosureDefinition >> kind: anObject [
+	kind := anObject
 ]
 
 { #category : #converting }

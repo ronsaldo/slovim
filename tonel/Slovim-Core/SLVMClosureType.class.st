@@ -4,14 +4,15 @@ Class {
 	#instVars : [
 		'functionType',
 		'captures',
+		'kind',
 		'normalFunctionTypeInfo'
 	],
 	#category : #'Slovim-Core-Type'
 }
 
 { #category : #'as yet unclassified' }
-SLVMClosureType class >> functionType: aFunctionType captures: captures [
-	^ self new functionType: aFunctionType; captures: captures
+SLVMClosureType class >> functionType: aFunctionType kind: kind captures: captures [
+	^ self new functionType: aFunctionType; kind: kind; captures: captures
 ]
 
 { #category : #comparing }
@@ -26,7 +27,7 @@ SLVMClosureType >> accept: aVisitor [
 
 { #category : #'as yet unclassified' }
 SLVMClosureType >> capturedEnvironmentStructureTypeWith: compilationTarget [
-	^ SLVMStructureType name: #closureEnvironment types: self sortedCapturedTypes kind: SLVMStructureType genericKind names: ((1 to: captures size) collect: [:i | 'c' , i asString])
+	^ SLVMStructureType name: nil types: self sortedCapturedTypes kind: SLVMStructureType genericKind names: ((1 to: captures size) collect: [:i | 'c' , i asString])
 ]
 
 { #category : #accessing }
@@ -60,6 +61,16 @@ SLVMClosureType >> isClosureType [
 	^ true
 ]
 
+{ #category : #accessing }
+SLVMClosureType >> kind [
+	^ kind
+]
+
+{ #category : #accessing }
+SLVMClosureType >> kind: anObject [
+	kind := anObject
+]
+
 { #category : #comparing }
 SLVMClosureType >> name [
 	^ self printString
@@ -67,19 +78,23 @@ SLVMClosureType >> name [
 
 { #category : #'as yet unclassified' }
 SLVMClosureType >> normalFunctionTypeWith: compilationTarget [
-	| capturedEnvironmentStructure closureStructureType closurePointer closureFunctionType closureFunctionPointer |
+	| capturedEnvironmentStructure closureStructureType closurePointer closureFunctionType genericClosurePointer genericClosureFunctionType genericClosureFunctionPointer |
 	normalFunctionTypeInfo ifNotNil: [ ^ normalFunctionTypeInfo ].
 	
 	capturedEnvironmentStructure := self capturedEnvironmentStructureTypeWith: compilationTarget.
 	
-	closureStructureType := SLVMStructureType new name: #closure; kind: SLVMStructureType genericKind.
-	closurePointer := SLVMPointerType size: compilationTarget pointerSize baseType: closureStructureType storage: SLVMType genericStorage.
-	
+	closureStructureType := SLVMStructureType new kind: SLVMStructureType genericKind.
+	closurePointer := compilationTarget pointerTo: closureStructureType.
+
 	closureFunctionType := SLVMFunctionType callingConvention: functionType callingConvention
 		arguments: {closurePointer} , functionType arguments returnType: functionType returnType.
-	closureFunctionPointer := SLVMPointerType size: compilationTarget pointerSize baseType: closureFunctionType storage: SLVMType genericStorage.
 	
-	compilationTarget objectModel fillClosureStructure: closureStructureType functionPointerType: closureFunctionPointer capturedEnvironmentStructure: capturedEnvironmentStructure.
+	genericClosurePointer := compilationTarget objectModel genericClosurePointerForKind: kind.
+	genericClosureFunctionType := SLVMFunctionType callingConvention: functionType callingConvention
+		arguments: {genericClosurePointer} , functionType arguments returnType: functionType returnType.
+	genericClosureFunctionPointer := SLVMPointerType size: compilationTarget pointerSize baseType: genericClosureFunctionType storage: SLVMType genericStorage.
+	
+	compilationTarget objectModel fillClosureStructure: closureStructureType functionPointerType: genericClosureFunctionPointer capturedEnvironmentStructure: capturedEnvironmentStructure kind: kind.
 	
 	normalFunctionTypeInfo := { closureFunctionType . capturedEnvironmentStructure . closureStructureType }.
 	^ normalFunctionTypeInfo
@@ -87,7 +102,7 @@ SLVMClosureType >> normalFunctionTypeWith: compilationTarget [
 
 { #category : #comparing }
 SLVMClosureType >> printOn: aStream [
-	aStream nextPutAll: 'closure '; print: functionType; nextPut: $[.
+	aStream nextPutAll: 'closure('; print: kind; nextPutAll: ') '; print: functionType; nextPut: $[.
 	captures doWithIndex: [ :cap :index |
 		index > 1 ifTrue: [ aStream space ].
 		aStream print: cap

@@ -623,6 +623,13 @@ SLVMLLVMCodeGenerator >> visitBoolType: type [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitClosureDefinition: closureDefinition [
+	| prototype |
+	prototype := self target objectModel constructClosurePrototypeFor: closureDefinition.
+	^ self translateValue: prototype
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitConstantArrayBlob: constant [
 	| type |
 	type := self translateType: (constant type addCount: constant hasExtraNullCharacter asBit).
