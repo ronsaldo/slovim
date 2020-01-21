@@ -161,25 +161,7 @@ SLVMLLVMFunctionCodeGenerator >> call: calledFunction convention: callingConvent
 
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> callRuntimeFunction: runtimeFunctionOrSymbol arguments: arguments type: typeDefinition [
-	| runtimeFunction expectedTypes expectedType castedArguments |
-	runtimeFunction := moduleTranslator getOrCreateRuntimeFunction: runtimeFunctionOrSymbol type: typeDefinition.
-	
-	"We may need to cast the arguments."
-	expectedTypes := runtimeFunction functionType params.
-	(runtimeFunction functionType isVarArg and: [ arguments size < expectedTypes size ]) ifTrue: [ 
-		self error: 'Missing required arguments for runtime function call.'.
-	] ifFalse: [ 
-		expectedTypes size ~= arguments size ifTrue: [ 
-			self error: 'Runtime function call argument count mismatch'.
-		].
-	].
-
-	castedArguments := arguments collectWithIndex: [ :arg :index |
-		expectedType := expectedTypes at: index.
-		self castRuntimeCallArgument: arg into: expectedType
-	].
-
-	self halt.
+	^ self callRuntimeFunction: runtimeFunctionOrSymbol arguments: arguments type: typeDefinition name: nil
 ]
 
 { #category : #'code generation' }
@@ -1793,7 +1775,7 @@ SLVMLLVMFunctionCodeGenerator >> visitInstantiateClosure: instruction [
 		capture type isDynamicObjectPointerType ifTrue: [ 
 			dynamicCaptures add: {captureDefinitions at: index . self translateValue: capture}
 		] ifFalse: [ 
-			normalCaptures add: {captureDefinitions at: index  . self translateValue: capture}
+			normalCaptures add: {captureDefinitions at: index . self translateValue: capture}
 		].
 	].
 	
@@ -1804,15 +1786,20 @@ SLVMLLVMFunctionCodeGenerator >> visitInstantiateClosure: instruction [
 	
 	allocation := nil.
 	(self target objectModel isClosureKindAllocatedInTheStack: kind) ifTrue: [
-		allocation := self createSpillingAlloca: (self translateType: closureStructureType)
+		allocation := self createSpillingAlloca: (self translateType: closureStructureType).
+		self store: closurePrototype in: allocation.
 	] ifFalse: [
-		self halt
+		| uintType |
+		uintType := self translateType: self target uintPointer.
+		allocation := self callRuntimeFunction: self target objectModel gcBlockClosureAllocationFunction
+			arguments: {
+				uintType constant: closureStructureType size .
+				uintType constant: closureStructureType alignment .
+				closurePrototype }
+			type: [ self halt ].
 	].
 	
 	self assert: allocation isNotNil.
-	
-	"Basic initialize the closure."
-	self store: closurePrototype in: allocation.
 	
 	"Copy the captures"
 	environmentPtr := self getReference: allocation constElement: closureStructureType types size - 1.

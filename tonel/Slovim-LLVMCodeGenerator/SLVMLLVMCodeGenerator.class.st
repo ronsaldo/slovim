@@ -624,9 +624,16 @@ SLVMLLVMCodeGenerator >> visitBoolType: type [
 
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> visitClosureDefinition: closureDefinition [
-	| prototype |
+	| prototype prototypeValue |
 	prototype := self target objectModel constructClosurePrototypeFor: closureDefinition.
-	^ self translateValue: prototype
+	prototypeValue := self translateValue: prototype.
+	
+	(self target objectModel isClosureKindAllocatedInTheStack: closureDefinition kind) ifFalse: [ 
+		prototypeValue := (LLVMGlobalVariable createWithType: prototypeValue type module: self llvmModule isConstant: true linkage: LLVMGlobalValue privateLinkage)
+			alignment: prototype type alignment;
+			initialValue: prototypeValue.
+	].
+	^ prototypeValue
 ]
 
 { #category : #visiting }
