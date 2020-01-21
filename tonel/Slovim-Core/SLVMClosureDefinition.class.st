@@ -35,9 +35,15 @@ SLVMClosureDefinition >> asNormalFunction [
 	closureStructureType := normalFunctionTypes third.
 	
 	normalFunction := SLVMFunction pointerSize: type size functionType: normalFunctionType.
-	normalFunction makePrivate.
-	normalFunction compilationTarget: compilationTarget.
-	normalFunction gcStrategy: self gcStrategy.
+	normalFunction
+		makePrivate;
+		compilationTarget: compilationTarget;
+		gcStrategy: self gcStrategy;
+		name: name;
+		unmangledName: self unmangledName;
+		debugInformation: self debugInformation;
+		debugType: self debugType;
+		debugSourceLocation: self debugSourceLocation.
 	
 	valueMap := IdentityDictionary new.
 	arguments doWithIndex: [ :arg :index |
