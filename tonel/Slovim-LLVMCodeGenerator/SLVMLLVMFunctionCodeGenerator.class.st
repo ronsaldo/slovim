@@ -1797,6 +1797,8 @@ SLVMLLVMFunctionCodeGenerator >> visitInstantiateClosure: instruction [
 				uintType constant: closureStructureType alignment .
 				closurePrototype }
 			type: [ self halt ].
+		self convertDebugLocationFrom: instruction into: allocation.
+		allocation := self bitCast: allocation target: closurePrototype type name: nil.
 	].
 	
 	self assert: allocation isNotNil.
