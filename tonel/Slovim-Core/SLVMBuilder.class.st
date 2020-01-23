@@ -254,7 +254,7 @@ SLVMBuilder >> constBool: aValue [
 
 { #category : #constants }
 SLVMBuilder >> constCString: aValue [
-	^ SLVMConstant pointerToConstant: (SLVMConstant cstring: aValue) pointerType: (self pointerTypeFor: SLVMType charType)
+	^ SLVMConstant cstringPointer: aValue for: self compilationTarget
 ]
 
 { #category : #constants }

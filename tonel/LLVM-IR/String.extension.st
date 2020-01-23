@@ -38,7 +38,7 @@ String >> llvmPrintEscapedStringOn: aStream [
 String >> llvmPrintEscapedStringOn: aStream addNull: addNull [
 	aStream nextPut: $".
 	self do: [ :element |
-		(Character space <= element and: [ element <= $~ and: [element ~~ $\]]) ifTrue: [ 
+		(Character space <= element and: [ element <= $~ and: [('\"' includes: element) not]]) ifTrue: [ 
 			aStream nextPut: element
 		] ifFalse: [
 			aStream nextPut: $\; nextPutAll: (element asInteger printStringBase: 16 length: 2 padded: true)

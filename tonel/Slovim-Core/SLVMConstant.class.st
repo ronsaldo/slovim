@@ -38,6 +38,11 @@ SLVMConstant class >> cstring: value [
 ]
 
 { #category : #constructor }
+SLVMConstant class >> cstringPointer: aValue for: compilationTarget [
+	^ self pointerToConstant: (SLVMConstant cstring: aValue) pointerType: (compilationTarget pointerTo: SLVMType charType)
+]
+
+{ #category : #constructor }
 SLVMConstant class >> doubleAlign4: anInteger [
 	^ self type: SLVMType doubleAlign4Type value: anInteger
 ]
