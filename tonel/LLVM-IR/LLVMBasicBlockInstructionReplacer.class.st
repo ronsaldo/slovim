@@ -3,14 +3,15 @@ Class {
 	#superclass : #LLVMObject,
 	#instVars : [
 		'block',
-		'newInstructions'
+		'newBasicBlocks',
+		'perBlockInstructions'
 	],
 	#category : #'LLVM-IR'
 }
 
 { #category : #adding }
 LLVMBasicBlockInstructionReplacer >> add: anInstruction [
-	newInstructions add: anInstruction.
+	perBlockInstructions last add: anInstruction.
 	^ anInstruction
 ]
 
@@ -26,24 +27,44 @@ LLVMBasicBlockInstructionReplacer >> block: anObject [
 
 { #category : #replacing }
 LLVMBasicBlockInstructionReplacer >> insertAllocaInstruction: allocaInstruction [
-	newInstructions doWithIndex: [ :instruction :index |
+	| firstBlockNewInstructions |
+	firstBlockNewInstructions := perBlockInstructions first.
+	firstBlockNewInstructions doWithIndex: [ :instruction :index |
 		instruction isAlloca ifFalse: [
-			newInstructions add: allocaInstruction beforeIndex: index .
+			firstBlockNewInstructions add: allocaInstruction beforeIndex: index .
 			^ self
 		].
 	].
 
-	newInstructions add: allocaInstruction
+	firstBlockNewInstructions add: allocaInstruction
 ]
 
-{ #category : #accessing }
-LLVMBasicBlockInstructionReplacer >> newInstructions [
-	^ newInstructions
+{ #category : #'instance creation' }
+LLVMBasicBlockInstructionReplacer >> newBasicBlock [
+	| newBasicBlock |
+	newBasicBlock := LLVMBasicBlock new parent: block parent.
+	newBasicBlocks add: newBasicBlock.
+	perBlockInstructions add: OrderedCollection new.
+	^ newBasicBlock
+]
+
+{ #category : #'as yet unclassified' }
+LLVMBasicBlockInstructionReplacer >> newBasicBlocks [
+	^ newBasicBlocks
 ]
 
 { #category : #replacing }
 LLVMBasicBlockInstructionReplacer >> replaceWith: aBlock [
-	newInstructions := OrderedCollection new.
+	newBasicBlocks := OrderedCollection new.
+	newBasicBlocks add: block.
+	perBlockInstructions := OrderedCollection new.
+	perBlockInstructions add: OrderedCollection new.
+
 	block instructions do: aBlock.
-	block instructions: newInstructions
+	
+	perBlockInstructions doWithIndex: [ :newBlockInstructions :newBlockIndex |
+		(newBasicBlocks at: newBlockIndex)
+			instructions: newBlockInstructions
+	].
+
 ]

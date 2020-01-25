@@ -10,7 +10,8 @@ Class {
 		'hasArgumentNames',
 		'labelSymbolGenerationCount',
 		'gcStrategy',
-		'personalityFunction'
+		'personalityFunction',
+		'returnAttributes'
 	],
 	#category : #'LLVM-IR-GlobalValues'
 }
@@ -52,6 +53,11 @@ LLVMFunction >> basicBlocks [
 	^ basicBlocks
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMFunction >> basicBlocksReplacedWith: replacement [
+	basicBlocks := replacement
+]
+
 { #category : #printing }
 LLVMFunction >> fullPrintOn: aStream [
 	self sanitizeNames.
@@ -70,6 +76,7 @@ LLVMFunction >> fullPrintOn: aStream [
 		].
 		
 		aStream << ' )'.
+		returnAttributes do: [ :attr | aStream space; nextPutAll: attr ].
 		^ self
 	].
 
@@ -87,6 +94,8 @@ LLVMFunction >> fullPrintOn: aStream [
 	].
 
 	aStream << ' )'.
+	returnAttributes do: [ :attr | aStream space; nextPutAll: attr ].
+	
 	personalityFunction ifNotNil: [
 		aStream nextPutAll: ' personality '; print: personalityFunction type; space; print: personalityFunction
 	].
@@ -135,6 +144,11 @@ LLVMFunction >> hasArgumentNames [
 	^ hasArgumentNames
 ]
 
+{ #category : #testing }
+LLVMFunction >> hasReturnAttribute: attributeName [
+	^ returnAttributes includes: attributeName
+]
+
 { #category : #initialization }
 LLVMFunction >> initialize [
 	super initialize.
@@ -143,6 +157,7 @@ LLVMFunction >> initialize [
 	symbolGenerationCount := 0.
 	labelSymbolGenerationCount := 0.
 	hasArgumentNames := false.
+	returnAttributes := #().
 	
 ]
 
@@ -167,6 +182,16 @@ LLVMFunction >> initializeWithType: theFunctionType linkage: theLinkage name: th
 
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMFunction >> isFunction [
+	^ true
+]
+
+{ #category : #testing }
+LLVMFunction >> isNoUnwind [
+	^ self hasReturnAttribute: #nounwind
+]
+
 { #category : #accessing }
 LLVMFunction >> personalityFunction [
 	^ personalityFunction
@@ -185,6 +210,16 @@ LLVMFunction >> printMetadataOn: aStream [
 		metadataValue := metadataNamePair second.
 		aStream space; nextPut: $!; nextPutAll: metadataName; space; print: metadataValue
 	]
+]
+
+{ #category : #accessing }
+LLVMFunction >> returnAttributes [
+	^ returnAttributes
+]
+
+{ #category : #accessing }
+LLVMFunction >> returnAttributes: anObject [
+	returnAttributes := anObject
 ]
 
 { #category : #accessing }

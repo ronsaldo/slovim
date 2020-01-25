@@ -34,6 +34,11 @@ LLVMValue >> isAlloca [
 	^ false
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMValue >> isFunction [
+	^ false
+]
+
 { #category : #accessing }
 LLVMValue >> name [
 	^ name

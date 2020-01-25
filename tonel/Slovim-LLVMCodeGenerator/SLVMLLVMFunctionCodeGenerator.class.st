@@ -9,7 +9,8 @@ Class {
 		'valueDictionary',
 		'usedNames',
 		'functionDebugScope',
-		'currentBlockBuilder'
+		'currentBlockBuilder',
+		'currentUnwindBlock'
 	],
 	#classVars : [
 		'BinaryFloatComparisonOperationMap',
@@ -150,6 +151,20 @@ SLVMLLVMFunctionCodeGenerator >> call: calledFunction arguments: arguments retur
 
 { #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> call: calledFunction convention: callingConvention arguments: arguments returnType: returnType name: name [
+	| invokeInstruction |
+	(self shouldUseInvokeForCalling: calledFunction) ifTrue: [
+		invokeInstruction := self addInstruction: (LLVMInvokeInst new
+			name: name;
+			calledFunction: calledFunction;
+			arguments: arguments;
+			type: returnType;
+			callingConvention: callingConvention;
+			unwindDestination: currentUnwindBlock;
+			yourself).
+		invokeInstruction normalDestination: currentBlockBuilder newBasicBlock.
+		^ invokeInstruction
+	].
+
 	^ self addInstruction: (LLVMCallInst new
 		name: name;
 		calledFunction: calledFunction;
@@ -461,6 +476,13 @@ SLVMLLVMFunctionCodeGenerator >> createProxyValues [
 			llvmBasicBlock addNext: proxy
 		]
 	].
+
+	function basicBlocks do: [ :bb |
+		bb unwindBlock ifNotNil: [ :unwindBlock |
+			(self translateValue: bb)
+				implicitUnwindBlock: (self translateValue: unwindBlock)
+		].
+	]
 ]
 
 { #category : #'as yet unclassified' }
@@ -1375,6 +1397,17 @@ SLVMLLVMFunctionCodeGenerator >> select: condition trueValue: trueValue falseVal
 			yourself)
 ]
 
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> shouldUseInvokeForCalling: functionValue [
+	currentUnwindBlock ifNil: [ ^ false ].
+	
+	functionValue isFunction ifTrue: [
+		functionValue isNoUnwind ifTrue: [ ^ false ].
+	].
+
+	^ true
+]
+
 { #category : #'as yet unclassified' }
 SLVMLLVMFunctionCodeGenerator >> si: sourceValue toFP: targetType name: name [
 	^self addInstruction: (LLVMSIToFPInst new
@@ -1414,10 +1447,20 @@ SLVMLLVMFunctionCodeGenerator >> target: anObject [
 
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> translateBasicBlocks [
-	llvmFunction basicBlocks do: [ :bb |
+	
+	| originalBasicBlocks newBasicBlocks |
+	originalBasicBlocks := llvmFunction basicBlocks asArray.
+	newBasicBlocks := OrderedCollection new.
+	originalBasicBlocks do: [ :bb |
+		currentUnwindBlock := bb implicitUnwindBlock.
+		bb implicitUnwindBlock: nil.
+		
 		currentBlockBuilder := bb newReplacer.
-		currentBlockBuilder replaceWith: [ :instruction | self translateProxyInstruction: instruction ]
-	]
+		currentBlockBuilder replaceWith: [ :instruction | self translateProxyInstruction: instruction ].
+		newBasicBlocks addAll: currentBlockBuilder newBasicBlocks
+	].
+
+	llvmFunction basicBlocksReplacedWith: newBasicBlocks
 ]
 
 { #category : #visiting }

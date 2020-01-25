@@ -3,7 +3,8 @@ Class {
 	#superclass : #LLVMValue,
 	#instVars : [
 		'parent',
-		'instructions'
+		'instructions',
+		'implicitUnwindBlock'
 	],
 	#category : #'LLVM-IR'
 }
@@ -37,6 +38,16 @@ LLVMBasicBlock >> fullPrintOn: aStream [
 		instruction fullPrintOn: aStream.
 		aStream lf
 	]
+]
+
+{ #category : #accessing }
+LLVMBasicBlock >> implicitUnwindBlock [
+	^ implicitUnwindBlock
+]
+
+{ #category : #accessing }
+LLVMBasicBlock >> implicitUnwindBlock: anObject [
+	implicitUnwindBlock := anObject
 ]
 
 { #category : #initialization }

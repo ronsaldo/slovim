@@ -140,7 +140,9 @@ LLVMModule >> getDebugValueIntrinsic [
 
 { #category : #intrinsic }
 LLVMModule >> getIntrinsic: intrinsicName orCreateWithType: typeBlock [
-	^ valueSymbolTable at: intrinsicName ifAbsent: [ LLVMFunction createWithType: typeBlock value linkage: LLVMGlobalValue externalLinkage name: intrinsicName module: self  ]
+	^ valueSymbolTable at: intrinsicName ifAbsent: [
+		self setKnownIntrinsicAttributes: (LLVMFunction createWithType: typeBlock value linkage: LLVMGlobalValue externalLinkage name: intrinsicName module: self)
+	]
 ]
 
 { #category : #'as yet unclassified' }
@@ -317,6 +319,12 @@ LLVMModule >> runLLCWithArguments: arguments [
 { #category : #writing }
 LLVMModule >> runLinkerWithArguments: arguments [
 	^ self runCommand: self linkerProgram withArguments: arguments
+]
+
+{ #category : #initialization }
+LLVMModule >> setKnownIntrinsicAttributes: intrinsic [
+	intrinsic returnAttributes: #(nounwind).
+	^ intrinsic
 ]
 
 { #category : #accessing }

@@ -69,7 +69,7 @@ LLVMInvokeInst >> printParametersOn: aStream [
 
 	aStream nextPut: $).
 	
-	aStream nextPutAll: ' to '; print: normalDestination; nextPutAll: ' unwind '; print: unwindDestination
+	aStream nextPutAll: ' to label '; print: normalDestination; nextPutAll: ' unwind label '; print: unwindDestination
 ]
 
 { #category : #accessing }
