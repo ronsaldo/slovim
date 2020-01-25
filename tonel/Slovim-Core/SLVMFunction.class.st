@@ -15,7 +15,8 @@ Class {
 		'haveDominance',
 		'dynamicLiterals',
 		'compilationTarget',
-		'needsCompiledMethodObject'
+		'needsCompiledMethodObject',
+		'personalityFunction'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -659,6 +660,16 @@ SLVMFunction >> needsCompiledMethodObject [
 { #category : #accessing }
 SLVMFunction >> needsCompiledMethodObject: aBoolean [
 	needsCompiledMethodObject := aBoolean
+]
+
+{ #category : #accessing }
+SLVMFunction >> personalityFunction [
+	^ personalityFunction
+]
+
+{ #category : #accessing }
+SLVMFunction >> personalityFunction: anObject [
+	personalityFunction := anObject
 ]
 
 { #category : #accessing }

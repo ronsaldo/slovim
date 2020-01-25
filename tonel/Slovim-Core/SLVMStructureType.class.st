@@ -87,7 +87,7 @@ SLVMStructureType >> defaultConstant [
 
 { #category : #'as yet unclassified' }
 SLVMStructureType >> defaultFullConstant [
-	^ SLVMConstant structure: self slots: (types collect: #defaultFullConstant)
+	^ SLVMConstant structure: self slots: (types collect: [:each | each defaultFullConstant])
 ]
 
 { #category : #printing }

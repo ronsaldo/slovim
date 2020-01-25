@@ -366,7 +366,7 @@ SLVMOpalASTTranslator >> visitBlockNode: aBlockNode [
 	objectType := compilationTarget dynamicObjectType.
 	blockArgumentTypes := {"receiver" objectType} , aBlockNode arguments collect: [ :arg | objectType ].
 	blockFunctionType := SLVMFunctionType callingConvention: #smalltalk arguments: blockArgumentTypes returnType: objectType.
-	copiedNames := aBlockNode scope inComingCopiedVars asArray collect: #name.
+	copiedNames := aBlockNode scope inComingCopiedVars asArray collect: [:each | each name].
 	
 	blockFunction := SLVMFunction pointerSize: compilationTarget pointerSize functionType: blockFunctionType.
 	blockFunction

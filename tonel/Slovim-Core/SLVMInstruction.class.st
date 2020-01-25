@@ -240,6 +240,11 @@ SLVMInstruction >> isIntToPointerCast [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isInvoke [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isJump [
 	^ false
 ]
@@ -271,6 +276,11 @@ SLVMInstruction >> isPointerToIntCast [
 
 { #category : #testing }
 SLVMInstruction >> isPureInstruction [
+	^ false
+]
+
+{ #category : #testing }
+SLVMInstruction >> isResumeException [
 	^ false
 ]
 
@@ -432,7 +442,7 @@ SLVMInstruction >> removeFromBlock [
 
 { #category : #modifying }
 SLVMInstruction >> removeFromBlockWithAllReferences [
-	instructionReferences copy do: #removeFromBlockWithAllReferences.
+	instructionReferences copy do: [:each | each removeFromBlockWithAllReferences].
 	self removeFromBlock
 ]
 

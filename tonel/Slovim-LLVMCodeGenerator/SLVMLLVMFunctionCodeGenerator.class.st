@@ -1897,6 +1897,17 @@ SLVMLLVMFunctionCodeGenerator >> visitJump: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitLandingPath: instruction [
+	| resultType |
+	resultType := self translateType: instruction type.
+	^ self addInstruction: (LLVMLandingPadInst new
+		name: (self convertName: instruction name);
+		type: resultType;
+		cleanup: instruction cleanup;
+		yourself)
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitLoad: instruction [
 	| pointer type |
 	type := self translateType: instruction type.
@@ -2019,6 +2030,15 @@ SLVMLLVMFunctionCodeGenerator >> visitPointerToIntCast: instruction [
 	^ self pointerToIntCast: (self translateValue: instruction source)
 		target: (self translateType: instruction type)
 		name: (self convertName: instruction name)
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitResumeException: instruction [
+	^ self addInstruction: (LLVMResumeInst new
+		name: (self convertName: instruction name);
+		type: self context voidTy;
+		value: (self translateValue: instruction value);
+		yourself)
 ]
 
 { #category : #visiting }

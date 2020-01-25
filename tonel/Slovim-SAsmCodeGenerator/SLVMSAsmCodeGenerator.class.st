@@ -240,7 +240,7 @@ SLVMSAsmCodeGenerator >> translateModule: module exportList: exportList [
 { #category : #'as yet unclassified' }
 SLVMSAsmCodeGenerator >> translateModule: module exportList: exportList packageRegistration: packageRegistration [
 	classVariableClassMap := module classVariableClassMap.
-	self applyPassesIn: module functionList: (exportList select: #isFunction).
+	self applyPassesIn: module functionList: (exportList select: [:each | each isFunction]).
 	sasmModule := SAsmModule new target: target target.
 	translatedElements := Dictionary new.
 	translatedDebugElements := Dictionary new.

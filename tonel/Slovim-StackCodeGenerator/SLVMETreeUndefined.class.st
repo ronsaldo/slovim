@@ -6,7 +6,7 @@ Class {
 
 { #category : #visiting }
 SLVMETreeUndefined >> accept: aVisitor [
-	^ aVisitor visitUndefinedInstruction: self
+	^ aVisitor visitConstantUndefined: self
 ]
 
 { #category : #accessing }

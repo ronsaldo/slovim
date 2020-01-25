@@ -99,7 +99,7 @@ SLVMClosureDefinition >> captures [
 
 { #category : #accessing }
 SLVMClosureDefinition >> closureType [
-	^ closureType ifNil: [closureType := SLVMClosureType functionType: functionType kind: kind captures: (captures collect: #type)]
+	^ closureType ifNil: [closureType := SLVMClosureType functionType: functionType kind: kind captures: (captures collect: [:each | each type])]
 ]
 
 { #category : #initialization }

@@ -47,7 +47,7 @@ LLVMCallInst >> mnemonic [
 { #category : #printing }
 LLVMCallInst >> printParametersOn: aStream [
 	| calledFunctionType |
-	callingConvention ifNotNil: [ aStream nextPutAll: callingConvention; space ].
+	callingConvention ifNotNil: [ aStream space; nextPutAll: callingConvention ].
 	calledFunctionType := calledFunction type elementType.
 	aStream space; print: calledFunctionType; space; print: calledFunction; nextPut: $(.
 	arguments doWithIndex: [ :arg :index |

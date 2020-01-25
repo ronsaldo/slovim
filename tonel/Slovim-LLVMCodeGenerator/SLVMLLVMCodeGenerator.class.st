@@ -461,7 +461,7 @@ SLVMLLVMCodeGenerator >> translateDynamicLiteral: aLiteral [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
-	self applyPassesIn: module functionList: (exportList select: #isFunction).
+	self applyPassesIn: module functionList: (exportList select: [:each | each isFunction]).
 	self translateModuleDebugInformation: module.
 	
 	module structures do: [ :structures |
@@ -731,6 +731,15 @@ SLVMLLVMCodeGenerator >> visitConstantStructureValue: constantStructureValue [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantUndefined: aConstant [
+	| type |
+	type := self translateType: aConstant type.
+	^ LLVMUndefValue new
+		type: type;
+		yourself
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitConstantUnionBlobValue: constantUnionValue [
 	^ self visitConstantArrayBlob: constantUnionValue
 ]
@@ -814,6 +823,10 @@ SLVMLLVMCodeGenerator >> visitFunction: aFunction [
 	
 	aFunction propertyAt: #llvmGCStrategy ifPresent: [ :gcStrategyName |
 		function gcStrategy: gcStrategyName
+	].
+
+	aFunction personalityFunction ifNotNil: [ :pf |
+		function personalityFunction: (self translateValue: pf)
 	].
 
 	translatedModuleElements at: aFunction put: function.

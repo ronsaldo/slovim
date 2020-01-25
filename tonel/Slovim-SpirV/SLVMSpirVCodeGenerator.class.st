@@ -771,6 +771,19 @@ SLVMSpirVCodeGenerator >> visitConstantStructureValue: constantVectorValue [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitConstantUndefined: undefined [
+	| resultType |
+	^ self instructionTranslation: undefined do: [ :id |
+		resultType := self translateValue: undefined type.
+		builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpUndef
+			type: resultType
+			result: id
+		)
+	]
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitConstantValue: constantValue [
 	| value type encodedValue |
 	^ self valueTranslation: constantValue do: [ :id |
@@ -1544,19 +1557,6 @@ SLVMSpirVCodeGenerator >> visitUnaryOperation: unaryOp [
 			type: resultType
 			result: id
 			operands: { operand }
-		)
-	]
-]
-
-{ #category : #visitor }
-SLVMSpirVCodeGenerator >> visitUndefinedInstruction: undefined [
-	| resultType |
-	^ self instructionTranslation: undefined do: [ :id |
-		resultType := self translateValue: undefined type.
-		builder addFunctionInstruction: (SpirVInstruction
-			opcode: SpvOpUndef
-			type: resultType
-			result: id
 		)
 	]
 ]

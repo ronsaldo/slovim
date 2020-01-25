@@ -990,6 +990,15 @@ SLVMSAsmFunctionCodeGenerator >> visitClosureToDynamicObject: anInstruction [
 	blockBuilder tacMove: closure into: result
 ]
 
+{ #category : #visiting }
+SLVMSAsmFunctionCodeGenerator >> visitConstantUndefined: instruction [
+	| result |
+	result := self translateValue: instruction.
+	instruction type isDynamicObjectPointerType ifTrue: [
+		^ blockBuilder tacMove: 0 into: result
+	]
+]
+
 { #category : #'debug instructions' }
 SLVMSAsmFunctionCodeGenerator >> visitDebugInstructionDeclareVariable: instruction [
 ]
@@ -1744,15 +1753,6 @@ SLVMSAsmFunctionCodeGenerator >> visitUnaryOperation: instruction [
 	selector := OperationCodeGeneratorMap at: instruction operation.
 	^ self perform: selector with: instruction
 
-]
-
-{ #category : #visiting }
-SLVMSAsmFunctionCodeGenerator >> visitUndefinedInstruction: instruction [
-	| result |
-	result := self translateValue: instruction.
-	instruction type isDynamicObjectPointerType ifTrue: [
-		^ blockBuilder tacMove: 0 into: result
-	]
 ]
 
 { #category : #comparisons }

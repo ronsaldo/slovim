@@ -126,6 +126,11 @@ SLVMConstant class >> ulong: anInteger [
 ]
 
 { #category : #constructor }
+SLVMConstant class >> undefined: type [
+	^ SLVMConstantUndefined new type: type
+]
+
+{ #category : #constructor }
 SLVMConstant class >> union: anUnionType blob: encodedBlobData [
 	self assert: anUnionType isUnionType.
 	^ SLVMConstantUnionBlobValue new type: anUnionType; data: encodedBlobData

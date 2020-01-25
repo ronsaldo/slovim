@@ -1054,6 +1054,16 @@ SLVMBuilder >> jump: destination name: resultName [
 	^ self addInstruction: (SLVMJump destination: destination) name: resultName
 ]
 
+{ #category : #instructions }
+SLVMBuilder >> landingPath: valueType [
+	^ self landingPath: valueType name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> landingPath: valueType name: variableName [
+	^ self addInstruction: (SLVMLandingPath valueType: valueType) name: variableName
+]
+
 { #category : #accessing }
 SLVMBuilder >> lastInstruction [
 	^ currentBlock lastInstruction
@@ -1395,6 +1405,16 @@ SLVMBuilder >> rem: left with: right [
 { #category : #arithmetic }
 SLVMBuilder >> rem: left with: right name: resultName [
 	^ self addOperation: #rem left: left right: right name: resultName
+]
+
+{ #category : #instructions }
+SLVMBuilder >> resumeException: exception [
+	^ self resumeException: exception name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> resumeException: exception name: resultName [
+	^ self addInstruction: (SLVMResumeException value: exception) name: resultName
 ]
 
 { #category : #instructions }

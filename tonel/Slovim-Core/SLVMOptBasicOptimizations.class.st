@@ -42,7 +42,7 @@ SLVMOptBasicOptimizations >> foldBranchAtBlock: block [
 	branch removeFromBlock.
 	block add: jump.
 	
-	destinations do: #predecessorsCouldBeRemoved.
+	destinations do: [:each | each predecessorsCouldBeRemoved ].
 
 	pendingWork
 		add: block;
@@ -113,7 +113,7 @@ SLVMOptBasicOptimizations >> mergeWithNextBlockOf: block [
 
 	block computeSuccessors.
 	removedBlock computeSuccessors; predecessorsCouldBeRemoved.
-	block successors do: #predecessorsCouldBeRemoved.
+	block successors do: [:each | each predecessorsCouldBeRemoved ].
 		
 	block successors do: [ :succ |
 		succ phiInstructionsDo: [ :phi | phi replaceParent: removedBlock with: block ]

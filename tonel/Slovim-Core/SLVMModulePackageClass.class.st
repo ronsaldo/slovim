@@ -47,7 +47,7 @@ SLVMModulePackageClass >> emitFor: module registrationWithAllocaBuilder: allocaB
 		codeBuilder addDynamicLiteral: actualClass class instanceVariables.
 		codeBuilder addDynamicLiteral: actualClass class format.
 		codeBuilder addDynamicLiteral: actualClass classPool associations.
-		codeBuilder addDynamicLiteral: (actualClass sharedPools collect: #binding).
+		codeBuilder addDynamicLiteral: (actualClass sharedPools collect: [:each | each binding]).
 		codeBuilder addDynamicLiteral: actualClass category.
 	}.
 

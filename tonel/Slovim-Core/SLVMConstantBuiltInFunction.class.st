@@ -122,7 +122,7 @@ SLVMConstantBuiltInFunction class >> initialize [
 		'gc.root'
 		'gc.read'
 		'gc.write'
-	) collect: #asSymbol).
+	) collect: [:each | each asSymbol]).
 ]
 
 { #category : #construction }

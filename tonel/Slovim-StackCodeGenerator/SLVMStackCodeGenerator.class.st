@@ -59,7 +59,7 @@ SLVMStackCodeGenerator >> translateFinalModuleElement: element [
 
 { #category : #'code generation' }
 SLVMStackCodeGenerator >> translateModule: module exportList: exportList [
-	self applyPassesIn: module functionList: (exportList select: #isFunction).
+	self applyPassesIn: module functionList: (exportList select: [:each | each isFunction]).
 	
 	exportList do: [ :element |
 		self translateModuleElement: element

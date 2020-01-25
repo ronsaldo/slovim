@@ -180,6 +180,11 @@ SLVMStackFunctionCodeGenerator >> visitConstantStructureValue: constant [
 ]
 
 { #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitConstantUndefined: anInstruction [
+	^ SLVMETreeUndefined new type: anInstruction type
+]
+
+{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitConstantValue: constant [
 	^ SLVMETreeConstantValue new type: constant type; value: constant value
 ]
@@ -327,11 +332,6 @@ SLVMStackFunctionCodeGenerator >> visitUnaryOperation: anInstruction [
 		into: (SLVMETreeUnaryExpression new
 		operation: anInstruction operation;
 		type: anInstruction type)
-]
-
-{ #category : #visiting }
-SLVMStackFunctionCodeGenerator >> visitUndefinedInstruction: anInstruction [
-	^ SLVMETreeUndefined new type: anInstruction type
 ]
 
 { #category : #visiting }

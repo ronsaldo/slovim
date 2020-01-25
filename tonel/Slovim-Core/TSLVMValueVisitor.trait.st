@@ -34,6 +34,11 @@ TSLVMValueVisitor >> visitCombineSamplerWithTexture: instruction [
 ]
 
 { #category : #visiting }
+TSLVMValueVisitor >> visitConstantUndefined: instruction [
+	self explicitRequirement
+]
+
+{ #category : #visiting }
 TSLVMValueVisitor >> visitExtractVectorElement: instruction [
 	self explicitRequirement
 ]
@@ -135,11 +140,6 @@ TSLVMValueVisitor >> visitSwitch: instruction [
 
 { #category : #visiting }
 TSLVMValueVisitor >> visitUnaryOperation: instruction [
-	self explicitRequirement
-]
-
-{ #category : #visiting }
-TSLVMValueVisitor >> visitUndefinedInstruction: instruction [
 	self explicitRequirement
 ]
 

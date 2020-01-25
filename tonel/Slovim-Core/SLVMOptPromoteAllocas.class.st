@@ -248,7 +248,7 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 
 	(hasLoad not) ifTrue: [
 		"This variable is not used"
-		allocaInstruction instructionReferences asArray do: #removeFromBlock.
+		allocaInstruction instructionReferences asArray do: [:each | each removeFromBlock].
 		allocaInstruction removeFromBlock.
 		^ self
 	].
@@ -362,5 +362,5 @@ SLVMOptPromoteAllocas >> sortNode: node definitions: definitions allocaInstructi
 { #category : #'as yet unclassified' }
 SLVMOptPromoteAllocas >> undefinedFor: type name: instructionName [
 	"type isDynamicObjectType ifTrue: [ ^ SLVMConstantValue type: type value: nil ]."
-	^ (SLVMUndefined type: type) name: instructionName
+	^ (SLVMConstantUndefined type: type) name: instructionName
 ]

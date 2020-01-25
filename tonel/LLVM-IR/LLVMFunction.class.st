@@ -9,7 +9,8 @@ Class {
 		'symbolGenerationCount',
 		'hasArgumentNames',
 		'labelSymbolGenerationCount',
-		'gcStrategy'
+		'gcStrategy',
+		'personalityFunction'
 	],
 	#category : #'LLVM-IR-GlobalValues'
 }
@@ -86,7 +87,10 @@ LLVMFunction >> fullPrintOn: aStream [
 	].
 
 	aStream << ' )'.
-	gcStrategy ifNotNil: [ aStream  << ' gc "' << gcStrategy << '"' ].
+	personalityFunction ifNotNil: [
+		aStream nextPutAll: ' personality '; print: personalityFunction type; space; print: personalityFunction
+	].
+	gcStrategy ifNotNil: [ aStream << ' gc "' << gcStrategy << '"' ].
 	self printMetadataOn: aStream.
 	aStream nextPutAll: ' {'; lf.
 	basicBlocks do: [ :bb | bb fullPrintOn: aStream ].
@@ -161,6 +165,16 @@ LLVMFunction >> initializeWithType: theFunctionType linkage: theLinkage name: th
 			yourself
 	].
 
+]
+
+{ #category : #accessing }
+LLVMFunction >> personalityFunction [
+	^ personalityFunction
+]
+
+{ #category : #accessing }
+LLVMFunction >> personalityFunction: anObject [
+	personalityFunction := anObject
 ]
 
 { #category : #printing }

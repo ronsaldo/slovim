@@ -21,6 +21,7 @@ Class {
 		'structuredControlFlowHeader',
 		'mergeBlock',
 		'continueBlock',
+		'unwindBlock',
 		'unreachableSuccessors'
 	],
 	#category : #'Slovim-Core-SSA'
@@ -40,7 +41,7 @@ SLVMBasicBlock >> add: anInstruction [
 
 { #category : #adding }
 SLVMBasicBlock >> add: anInstruction after: instructionPoint [
-	instructionPoint ifNil: [ ^ self addFirst: instructionPoint ].
+	instructionPoint ifNil: [ ^ self addFirst: anInstruction ].
 	
 	self assert: anInstruction previousInstruction isNil.
 	self assert: anInstruction nextInstruction isNil.
@@ -177,6 +178,11 @@ SLVMBasicBlock >> addUnreachableStructuredSuccessors [
 
 	(continueBlock isNotNil and: [ continueBlock predecessors isEmpty]) ifTrue: [
 		unreachableSuccessors := unreachableSuccessors , { continueBlock }.
+		changed := true.
+	].
+
+	(unwindBlock isNotNil and: [ unwindBlock predecessors isEmpty]) ifTrue: [
+		unreachableSuccessors := unreachableSuccessors , { unwindBlock }.
 		changed := true.
 	].
 
@@ -366,6 +372,9 @@ SLVMBasicBlock >> fullPrintOn: aStream [
 	self printArray: predecessors on: aStream.
 	aStream space.
 	self printArray: successors on: aStream.
+	unwindBlock ifNotNil: [ 
+		aStream nextPutAll: ' unwindTo '; print: unwindBlock
+	].
 	aStream cr.
 	self instructionsDo: [ :ins | aStream tab. ins fullPrintOn: aStream. aStream cr ]
 ]
@@ -816,6 +825,16 @@ SLVMBasicBlock >> unreachablePredecessorRemoved: oldPredecessor [
 { #category : #'structured control flow' }
 SLVMBasicBlock >> unreachableSuccessors [
 	^ unreachableSuccessors
+]
+
+{ #category : #accessing }
+SLVMBasicBlock >> unwindBlock [
+	^ unwindBlock
+]
+
+{ #category : #accessing }
+SLVMBasicBlock >> unwindBlock: anObject [
+	unwindBlock := anObject
 ]
 
 { #category : #accessing }

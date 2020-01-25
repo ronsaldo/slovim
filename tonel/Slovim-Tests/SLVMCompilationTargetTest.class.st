@@ -56,7 +56,7 @@ SLVMCompilationTargetTest >> testCreateFunction [
 	module := target newModule.
 	minf := module functionName: #minf arguments: { target float . target float } returnType: target float.
 	self assert: minf arguments size equals: 2.
-	self assert: (minf arguments collect: #type) equals: {SLVMType floatType . SLVMType floatType}.
+	self assert: (minf arguments collect: [:each | each type]) equals: {SLVMType floatType . SLVMType floatType}.
 	self assert: minf functionType returnType equals: SLVMType floatType.
 ]
 
