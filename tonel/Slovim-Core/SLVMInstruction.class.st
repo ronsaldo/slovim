@@ -200,6 +200,11 @@ SLVMInstruction >> isGetElementPointer [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isGetExceptionSelectorFromTypeInfo [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isGetThisContext [
 	^ false
 ]

@@ -38,6 +38,7 @@ SLVMBuilder >> addDynamicLiteral: literal [
 
 { #category : #adding }
 SLVMBuilder >> addInstruction: anInstruction name: theInstructionName [
+	self assert: currentBlock isLastTerminator not.
 	anInstruction name: theInstructionName.
 	debugPositionStack ifNotEmpty: [
 		anInstruction debugSourceLocation: debugPositionStack top
@@ -707,6 +708,16 @@ SLVMBuilder >> function [
 { #category : #accessing }
 SLVMBuilder >> function: anObject [
 	function := anObject
+]
+
+{ #category : #instructions }
+SLVMBuilder >> getExceptionSelectorForTypeInfo: valueType [
+	^ self getExceptionSelectorForTypeInfo: valueType name: function generateSymbol
+]
+
+{ #category : #instructions }
+SLVMBuilder >> getExceptionSelectorForTypeInfo: valueType name: variableName [
+	^ self addInstruction: (SLVMGetExceptionSelectorFromTypeInfo typeInfoPointer: valueType) name: variableName
 ]
 
 { #category : #instructions }

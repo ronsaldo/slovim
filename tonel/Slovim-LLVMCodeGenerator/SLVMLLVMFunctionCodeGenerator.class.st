@@ -1785,6 +1785,22 @@ SLVMLLVMFunctionCodeGenerator >> visitGetElementPointer: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitGetExceptionSelectorFromTypeInfo: instruction [
+	| typeInfo intrinsic voidPointerType |
+	typeInfo := self translateValue: instruction typeInfoPointer.
+	voidPointerType := self translateType: self target voidPointerType.
+	typeInfo := LLVMBitCastConstantExpr new
+						type: voidPointerType;
+						source: typeInfo;
+						yourself.
+	intrinsic := self llvmModule getIntrinsic: #'llvm.eh.typeid.for' orCreateWithType: [
+		LLVMFunctionType get: self context int32Ty params: {voidPointerType} isVarArg: false
+	].
+
+	^ self call: intrinsic arguments: { typeInfo } returnType: self context int32Ty name: (self convertName: instruction name)
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitInsertValue: instruction [
 	^ self addInstruction: (LLVMInsertValueInst new
 		name: (self convertName: instruction name);
@@ -1941,12 +1957,14 @@ SLVMLLVMFunctionCodeGenerator >> visitJump: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitLandingPath: instruction [
-	| resultType |
+	| resultType catchedExceptions |
 	resultType := self translateType: instruction type.
+	catchedExceptions := instruction catchedExceptions collect: [ :each | self translateValue: each ].
 	^ self addInstruction: (LLVMLandingPadInst new
 		name: (self convertName: instruction name);
 		type: resultType;
 		cleanup: instruction cleanup;
+		catchedExceptions: catchedExceptions;
 		yourself)
 ]
 

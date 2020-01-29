@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMInstruction,
 	#instVars : [
 		'type',
-		'cleanup'
+		'cleanup',
+		'catchedExceptions'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -19,6 +20,16 @@ SLVMLandingPath >> accept: aVisitor [
 ]
 
 { #category : #accessing }
+SLVMLandingPath >> catchedExceptions [
+	^ catchedExceptions
+]
+
+{ #category : #accessing }
+SLVMLandingPath >> catchedExceptions: anObject [
+	catchedExceptions := anObject
+]
+
+{ #category : #accessing }
 SLVMLandingPath >> cleanup [
 	^ cleanup
 ]
@@ -26,6 +37,14 @@ SLVMLandingPath >> cleanup [
 { #category : #accessing }
 SLVMLandingPath >> cleanup: anObject [
 	cleanup := anObject
+]
+
+{ #category : #initialization }
+SLVMLandingPath >> initialize [
+	super initialize.
+	cleanup := false.
+	catchedExceptions := #().
+
 ]
 
 { #category : #visitor }
