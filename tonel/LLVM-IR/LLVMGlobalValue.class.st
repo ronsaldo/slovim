@@ -60,6 +60,11 @@ LLVMGlobalValue class >> externalWeakLinkage [
 	^ ExternalWeakLinkage
 ]
 
+{ #category : #'thread local model' }
+LLVMGlobalValue class >> generalDynamicTLSModel [
+	^ GeneralDynamicTLSModel
+]
+
 { #category : #initialization }
 LLVMGlobalValue class >> initialize [
 
@@ -113,7 +118,7 @@ LLVMGlobalValue class >> linkOnceODRLinkage [
 	^ LinkOnceODRLinkage
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'thread local model' }
 LLVMGlobalValue class >> notThreadLocal [
 	^ NotThreadLocal
 ]
@@ -294,13 +299,13 @@ LLVMGlobalValue >> printOn: aStream [
 ]
 
 { #category : #accessing }
-LLVMGlobalValue >> threadLocalMode [
-	^ threadLocalMode
+LLVMGlobalValue >> threadLocalMode: anObject [
+	threadLocalMode := anObject
 ]
 
 { #category : #accessing }
-LLVMGlobalValue >> threadLocalMode: anObject [
-	threadLocalMode := anObject
+LLVMGlobalValue >> threadLocalModel [
+	^ threadLocalMode
 ]
 
 { #category : #accessing }

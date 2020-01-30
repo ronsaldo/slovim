@@ -24,7 +24,8 @@ Class {
 		'translatedCompiledMethodMetadata'
 	],
 	#classVars : [
-		'DebugLanguageMap'
+		'DebugLanguageMap',
+		'ThreadLocalModelMap'
 	],
 	#pools : [
 		'SAsmDWConstants'
@@ -37,6 +38,10 @@ SLVMLLVMCodeGenerator class >> initialize [
 	DebugLanguageMap := Dictionary newFromPairs: { 
 		'C' . DW_LANG_C.
 		'C++' . DW_LANG_C_plus_plus.
+	}.
+	
+	ThreadLocalModelMap := Dictionary newFromPairs: {
+		#generalDynamicTLSModel . LLVMGlobalValue generalDynamicTLSModel
 	}.
 ]
 
@@ -857,6 +862,9 @@ SLVMLLVMCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 	variableType := self translateType: aGlobalVariable valueType.
 	variable := LLVMGlobalVariable createWithType: variableType module: self llvmModule isConstant: aGlobalVariable readOnly linkage: (self convertLinkage: aGlobalVariable) name: (self convertName: aGlobalVariable name) threadLocalMode: LLVMGlobalValue notThreadLocal addressSpace: 0.
 	variable alignment: aGlobalVariable valueType alignment.
+	aGlobalVariable threadLocalModel ifNotNil: [ :modelName |
+		variable threadLocalMode: (ThreadLocalModelMap at: modelName)
+	].
 	aGlobalVariable minimalAlignment ifNotNil: [ :align |
 		variable alignment: (variable alignment max: align)
 	].

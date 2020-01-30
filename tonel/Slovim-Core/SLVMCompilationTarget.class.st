@@ -6,8 +6,24 @@ Class {
 		'emittingDebugInformation',
 		'targetTriple'
 	],
+	#classVars : [
+		'LandingPadSelectorRegisterIndexMap',
+		'LandingPadStructurePointerIndexMap'
+	],
 	#category : #'Slovim-Core-Type'
 }
+
+{ #category : #'class initialization' }
+SLVMCompilationTarget class >> initialize [
+	LandingPadStructurePointerIndexMap := Dictionary newFromPairs: #(
+		x86_64 0
+		i686 0
+	).
+	LandingPadSelectorRegisterIndexMap := Dictionary newFromPairs: #(
+		x86_64 1
+		i686 2
+	).
+]
 
 { #category : #accessing }
 SLVMCompilationTarget >> abiName [
@@ -209,6 +225,16 @@ SLVMCompilationTarget >> isOSX [
 { #category : #testing }
 SLVMCompilationTarget >> isWin32 [
 	^ self operatingSystemName = #win32
+]
+
+{ #category : #'as yet unclassified' }
+SLVMCompilationTarget >> landingPadSelectorRegisterIndex [
+	^ LandingPadSelectorRegisterIndexMap at: self canonicalArchitecture ifAbsent: [ 1 ]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMCompilationTarget >> landingPadStructurePointerRegisterIndex [
+	^ LandingPadStructurePointerIndexMap at: self canonicalArchitecture ifAbsent: [ 0 ]
 ]
 
 { #category : #accessing }

@@ -41,7 +41,14 @@ LLVMGlobalVariable >> fullPrintOn: aStream [
 	(linkage second ~= #external or: [ initialValue isNil ]) ifTrue: [
 		aStream << linkage second
 	].
+
 	aStream << ' ' << visibility second.
+	dllStorageClass second ifNotEmpty: [ 
+		aStream << ' ' << dllStorageClass second
+	].
+	threadLocalMode second ifNotEmpty: [ 
+		aStream << ' ' << threadLocalMode second
+	].
 	type addressSpace ~= 0 ifTrue: [ 
 		aStream << 'addrspace(' << type addressSpace << ')'
 	].

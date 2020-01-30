@@ -10,7 +10,8 @@ Class {
 		'initialValue',
 		'readOnly',
 		'headerValue',
-		'minimalAlignment'
+		'minimalAlignment',
+		'threadLocalModel'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -127,6 +128,16 @@ SLVMGlobalVariable >> shouldBePromotedToConstant: aBoolean [
 ]
 
 { #category : #accessing }
+SLVMGlobalVariable >> threadLocalModel [
+	^ threadLocalModel
+]
+
+{ #category : #accessing }
+SLVMGlobalVariable >> threadLocalModel: anObject [
+	threadLocalModel := anObject
+]
+
+{ #category : #accessing }
 SLVMGlobalVariable >> type [
 	^ type
 ]
@@ -134,4 +145,9 @@ SLVMGlobalVariable >> type [
 { #category : #accessing }
 SLVMGlobalVariable >> valueType [
 	^ valueType
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGlobalVariable >> withGeneralDynamicTLSModel [
+	threadLocalModel := #generalDynamicTLSModel
 ]
