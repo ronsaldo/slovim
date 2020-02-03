@@ -30,6 +30,12 @@ SLVMPointerType >> alignment [
 ]
 
 { #category : #converting }
+SLVMPointerType >> asCanonicalType [
+	storage == #generic ifTrue: [ ^ self ].
+	^ self copy storage: #generic; yourself
+]
+
+{ #category : #converting }
 SLVMPointerType >> asGenericMessageType [
 	self flag: 'TODO: Use a singleton for the dynobject type.'.
 	self isDynamicObjectPointerType ifTrue: [ ^ SLVMDynamicObjectType new size: self size  ].

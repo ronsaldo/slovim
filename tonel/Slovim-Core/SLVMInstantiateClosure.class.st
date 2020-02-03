@@ -50,7 +50,7 @@ SLVMInstantiateClosure >> definition: definition captures: captures [
 	self parameters: { definition } , captures.
 	self assert: definition isClosureDefinition.
 	self assert: captures size = definition captures size.
-	1 to: captures size do: [ :i | self assert: (captures at: i) type = (definition captures at: i) requiredInitialValueType].
+	1 to: captures size do: [ :i | self assert: (captures at: i) type asCanonicalType = (definition captures at: i) requiredInitialValueType asCanonicalType].
 	
 	functionType := definition functionType.
 	captureTypes := captures collect: [:each | each type].

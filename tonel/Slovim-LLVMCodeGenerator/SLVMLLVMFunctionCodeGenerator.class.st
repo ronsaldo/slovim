@@ -1801,6 +1801,24 @@ SLVMLLVMFunctionCodeGenerator >> visitGetExceptionSelectorFromTypeInfo: instruct
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitGetThisContext: instruction [
+	| resultType intrinsic |
+	resultType := self translateType: instruction type.
+	self assert: instruction type = self target voidPointerType.
+	self flag: 'TODO: Make sure this is always the canonical frame address CFA.'.
+	intrinsic := self llvmModule getIntrinsic: #'llvm.localaddress' orCreateWithType: [
+		LLVMFunctionType get: resultType params: #() isVarArg: false
+	].
+
+	"Functions that use thisContext cannot be inlined."
+	(llvmFunction returnAttributes includes: #noinline) ifFalse: [
+		llvmFunction returnAttributes: ((llvmFunction returnAttributes copyWithout: #alwaysinline) copyWith: #noinline)
+	].
+
+	^ self call: intrinsic arguments: #() returnType: resultType name: (self convertName: instruction name)
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitInsertValue: instruction [
 	^ self addInstruction: (LLVMInsertValueInst new
 		name: (self convertName: instruction name);

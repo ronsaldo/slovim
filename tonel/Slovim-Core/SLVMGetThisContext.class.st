@@ -45,6 +45,6 @@ SLVMGetThisContext >> type [
 { #category : #accessing }
 SLVMGetThisContext >> type: anObject [
 	type := anObject.
-	self assert: type isDynamicObjectPointerType.
+	self assert: (type isDynamicObjectPointerType or: [type isPointerType]).
 	
 ]

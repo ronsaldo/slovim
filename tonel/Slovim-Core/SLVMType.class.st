@@ -447,6 +447,11 @@ SLVMType >> alignment [
 	self subclassResponsibility
 ]
 
+{ #category : #converting }
+SLVMType >> asCanonicalType [
+	^ self
+]
+
 { #category : #accessing }
 SLVMType >> asGenericMessageType [
 	^ self
