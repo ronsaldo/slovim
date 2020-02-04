@@ -1712,6 +1712,74 @@ SLVMLLVMFunctionCodeGenerator >> visitDebugInstructionSetVariableValue: instruct
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitDynamicObjectToCharCast: instruction [
+	^ self visitDynamicObjectToIntCast: instruction
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitDynamicObjectToFloatCast: instruction [
+	| sourceValue targetType conversionFunction conversionResult targetSLVMType |
+	sourceValue := self translateValue: instruction source.
+	targetType := self translateType: instruction type.
+	targetSLVMType := instruction type.
+
+	self assert: instruction type isIntegerType.
+
+	conversionFunction := target objectModel objectToFloat64Function.
+	conversionResult := self callRuntimeFunction: conversionFunction
+		arguments: {sourceValue}
+		type: [ self halt ]
+		name: (self convertName: instruction name).
+	self convertDebugLocationFrom: instruction into: conversionResult.
+	
+	"We may need to truncate the result."
+	targetSLVMType size < 8 ifTrue: [
+		conversionResult := self castFloat: conversionResult into: targetType name: nil
+	].
+
+	^ conversionResult
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitDynamicObjectToIntCast: instruction [
+	| sourceValue targetType conversionFunction conversionResult targetSLVMType |
+	sourceValue := self translateValue: instruction source.
+	targetType := self translateType: instruction type.
+	targetSLVMType := instruction type.
+
+	self assert: instruction type isIntegerType.
+
+	"Select the conversion function"
+	conversionFunction := targetSLVMType size <= 4 ifTrue: [
+		targetSLVMType isUnsigned ifTrue: [ 
+			target objectModel objectToUInt32Function.
+		] ifFalse: [ 
+			target objectModel objectToInt32Function.
+		].
+	] ifFalse: [
+		self assert: targetSLVMType = 8.
+		targetSLVMType isUnsigned ifTrue: [ 
+			target objectModel objectToUInt64Function.
+		] ifFalse: [ 
+			target objectModel objectToInt64Function.
+		].
+	].
+
+	conversionResult := self callRuntimeFunction: conversionFunction
+		arguments: {sourceValue}
+		type: [ self halt ]
+		name: (self convertName: instruction name).
+	self convertDebugLocationFrom: instruction into: conversionResult.
+	
+	"We may need to truncate the result."
+	targetSLVMType size < 4 ifTrue: [
+		conversionResult := self truncate: conversionResult target: targetType name: nil
+	].
+
+	^ conversionResult
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitExtractValue: instruction [
 	^ self addInstruction: (LLVMExtractValueInst new
 		name: (self convertName: instruction name);
