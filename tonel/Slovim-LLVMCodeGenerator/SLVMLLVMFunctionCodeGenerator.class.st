@@ -1777,7 +1777,7 @@ SLVMLLVMFunctionCodeGenerator >> visitDynamicObjectToIntCast: instruction [
 			target objectModel objectToInt32Function.
 		].
 	] ifFalse: [
-		self assert: targetSLVMType = 8.
+		self assert: targetSLVMType size = 8.
 		targetSLVMType isUnsigned ifTrue: [ 
 			target objectModel objectToUInt64Function.
 		] ifFalse: [ 

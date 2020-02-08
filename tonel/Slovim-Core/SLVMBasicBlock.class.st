@@ -65,7 +65,7 @@ SLVMBasicBlock >> add: anInstruction after: instructionPoint [
 
 { #category : #adding }
 SLVMBasicBlock >> add: anInstruction before: instructionPoint [
-	instructionPoint ifNil: [ ^ self addLast: instructionPoint ].
+	instructionPoint ifNil: [ ^ self addLast: anInstruction ].
 	
 	self assert: anInstruction previousInstruction isNil.
 	self assert: anInstruction nextInstruction isNil.
