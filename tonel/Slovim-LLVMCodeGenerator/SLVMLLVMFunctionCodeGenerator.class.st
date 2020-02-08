@@ -1712,6 +1712,26 @@ SLVMLLVMFunctionCodeGenerator >> visitDebugInstructionSetVariableValue: instruct
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitDynamicObjectToBoolCast: instruction [
+	| sourceValue targetType conversionFunction conversionResult targetSLVMType |
+	sourceValue := self translateValue: instruction source.
+	targetType := self translateType: instruction type.
+	targetSLVMType := instruction type.
+
+	self assert: instruction type isBooleanType.
+
+	conversionFunction := target objectModel objectToBoolean8Function.
+	conversionResult := self callRuntimeFunction: conversionFunction
+		arguments: {sourceValue}
+		type: [ self halt ]
+		name: (self convertName: instruction name).
+	self convertDebugLocationFrom: instruction into: conversionResult.
+	self assert: conversionResult type = targetType.
+
+	^ conversionResult
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitDynamicObjectToCharCast: instruction [
 	^ self visitDynamicObjectToIntCast: instruction
 ]

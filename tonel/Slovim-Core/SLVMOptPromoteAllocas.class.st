@@ -48,12 +48,9 @@ SLVMOptPromoteAllocas >> addPhi: phi previousDefinitions: definitionsPerNode all
 SLVMOptPromoteAllocas >> addUndefinedTo: definitionsPerNode allocaInstruction: allocaInstruction [
 	| function entryBlock undefinedInstruction |
 	function := allocaInstruction block function.
-	undefinedInstruction := self undefinedFor: allocaInstruction valueType name: function generateSymbol.
+	undefinedInstruction := self undefinedFor: allocaInstruction valueType.
 
 	entryBlock := undefinedInsertionPoint block.
-	entryBlock add: undefinedInstruction before: undefinedInsertionPoint.
-	(definitionsPerNode at: entryBlock ifAbsentPut: [ OrderedCollection new ])
-		addFirst: undefinedInstruction.
 	^ undefinedInstruction
 ]
 
@@ -255,8 +252,7 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 
 	(hasStore not) ifTrue: [
 		"This variable is never set. It always contains the undefined value."
-		undefined := self undefinedFor: allocaInstruction valueType name: allocaInstruction name.
-		undefinedInsertionPoint block add: undefined before: undefinedInsertionPoint.
+		undefined := self undefinedFor: allocaInstruction valueType.
 		allocaInstruction instructionReferences asArray do: [ :load |
 			load replaceWith: undefined.
 		].
@@ -360,7 +356,7 @@ SLVMOptPromoteAllocas >> sortNode: node definitions: definitions allocaInstructi
 ]
 
 { #category : #'as yet unclassified' }
-SLVMOptPromoteAllocas >> undefinedFor: type name: instructionName [
+SLVMOptPromoteAllocas >> undefinedFor: type [
 	"type isDynamicObjectType ifTrue: [ ^ SLVMConstantValue type: type value: nil ]."
-	^ (SLVMConstantUndefined type: type) name: instructionName
+	^ SLVMConstantUndefined type: type
 ]
