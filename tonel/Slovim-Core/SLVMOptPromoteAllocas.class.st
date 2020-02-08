@@ -2,8 +2,7 @@ Class {
 	#name : #SLVMOptPromoteAllocas,
 	#superclass : #SLVMFunctionOptimizationPass,
 	#instVars : [
-		'currentFunction',
-		'undefinedInsertionPoint'
+		'currentFunction'
 	],
 	#category : #'Slovim-Core-Optimizations'
 }
@@ -42,16 +41,6 @@ SLVMOptPromoteAllocas >> addPhi: phi previousDefinitions: definitionsPerNode all
 		].
 	].
 
-]
-
-{ #category : #'as yet unclassified' }
-SLVMOptPromoteAllocas >> addUndefinedTo: definitionsPerNode allocaInstruction: allocaInstruction [
-	| function entryBlock undefinedInstruction |
-	function := allocaInstruction block function.
-	undefinedInstruction := self undefinedFor: allocaInstruction valueType.
-
-	entryBlock := undefinedInsertionPoint block.
-	^ undefinedInstruction
 ]
 
 { #category : #testing }
@@ -184,7 +173,10 @@ SLVMOptPromoteAllocas >> lastDefinitionValueAt: node for: definitionsPerNode all
 		currentNode := currentNode immediateDominator
 	].
 
-	self assert: currentNode isNotNil.
+	currentNode ifNil: [ 
+		^ self undefinedFor: alloca valueType
+	].
+
 	instructionResult := (definitionsPerNode at: currentNode) last.
 	^ instructionResult isStore ifTrue: [ instructionResult value ] ifFalse: [ instructionResult ]
 ]
@@ -212,10 +204,8 @@ SLVMOptPromoteAllocas >> passOnFunction: aFunction [
 	self promoteAggregates.
 	
 	toBePromoted := OrderedCollection new.
-	undefinedInsertionPoint := aFunction basicBlocks first firstInstruction.
 	aFunction basicBlocks first instructionsDo: [ :ins |
 		ins isAlloca ifTrue: [
-			undefinedInsertionPoint := ins nextInstruction.
 			(self canBePromoted: ins) ifTrue: [ 
 				toBePromoted add: ins
 			].
@@ -262,7 +252,7 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 	].
 
 	"Make sure the variable is at least undefined on the entry block."
-	undefined := self addUndefinedTo: definitionsPerNode allocaInstruction: allocaInstruction.
+	undefined := self undefinedFor: allocaInstruction valueType.
 
 	"Gather the basic blocks with the definitions."
 	originalDefinitionSites := Set new.
@@ -311,10 +301,6 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 	].
 
 	allocaInstruction removeFromBlock.
-	"Remove the unused undefined instruction"
-	undefined hasReferences ifFalse: [
-		undefined removeFromBlock
-	]
 
 ]
 

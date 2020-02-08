@@ -4,6 +4,9 @@ A SLVMOptPromoteAllocasTest is a test class for testing the behavior of SLVMOptP
 Class {
 	#name : #SLVMOptPromoteAllocasTest,
 	#superclass : #SLVMFunctionOptimizationTest,
+	#instVars : [
+		'matrixStruct'
+	],
 	#category : #'Slovim-Tests'
 }
 

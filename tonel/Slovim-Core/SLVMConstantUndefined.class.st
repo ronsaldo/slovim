@@ -27,6 +27,11 @@ SLVMConstantUndefined >> mnemonic [
 	^ #undefined
 ]
 
+{ #category : #printing }
+SLVMConstantUndefined >> printOn: aStream [
+	aStream nextPutAll: 'constUndef '; print: type
+]
+
 { #category : #accessing }
 SLVMConstantUndefined >> type [
 	^ type
