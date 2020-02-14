@@ -404,7 +404,7 @@ SLVMLLVMCodeGenerator >> getOrCreateDynamicsRootsDescriptor [
 	"Create the descritor for the instances roots."
 	dynamicPointerRoots add: (rootPointerDescriptor constant: {
 		LLVMBitCastConstantExpr new type: voidPointerTy; source: dynamicInstanceRootGlobal; yourself .
-		uintPointerTy constant: 1
+		uintPointerTy constant: dynamicInstanceRoots size
 	}).
 
 	pointerRootsArrayType := LLVMArrayType get: rootPointerDescriptor elements: dynamicPointerRoots size.
