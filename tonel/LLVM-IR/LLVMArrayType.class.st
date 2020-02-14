@@ -20,6 +20,16 @@ LLVMArrayType >> createName [
 	]
 ]
 
+{ #category : #testing }
+LLVMArrayType >> isArrayTy [
+	^ true
+]
+
+{ #category : #accessing }
+LLVMArrayType >> totalElementCount [
+	^ elementType totalElementCount * elements
+]
+
 { #category : #'as yet unclassified' }
 LLVMArrayType >> validateNonRecursiveChildrenWith: visitedSet [
 	(visitedSet includes: self) ifTrue: [ self error: 'Recursive array definition.' ].

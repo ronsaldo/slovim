@@ -48,6 +48,21 @@ LLVMIRBuilder >> binaryOperation: operation left: left right: right name: name [
 		yourself)
 ]
 
+{ #category : #instructions }
+LLVMIRBuilder >> call: calledFunction arguments: arguments [
+	^ self call: calledFunction arguments: arguments name: nil
+]
+
+{ #category : #instructions }
+LLVMIRBuilder >> call: calledFunction arguments: arguments name: name [
+	^ self addInstruction: (LLVMCallInst new
+		name: name;
+		type: calledFunction type elementType returnType;
+		calledFunction: calledFunction;
+		arguments: arguments;
+		yourself)
+]
+
 { #category : #accessing }
 LLVMIRBuilder >> context [
 	^ context

@@ -194,6 +194,11 @@ LLVMType >> printOn: aStream [
 	aStream nextPutAll: self name
 ]
 
+{ #category : #accessing }
+LLVMType >> totalElementCount [
+	^ 1
+]
+
 { #category : #'as yet unclassified' }
 LLVMType >> validateNonRecursion [
 	| visitedSet |

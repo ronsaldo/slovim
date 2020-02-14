@@ -139,6 +139,11 @@ SLVMType class >> functionStorage [
 ]
 
 { #category : #'storage classes' }
+SLVMType class >> gcStorage [
+	^ DynobjectStorage
+]
+
+{ #category : #'storage classes' }
 SLVMType class >> genericStorage [
 	^ GenericStorage
 ]

@@ -17,6 +17,14 @@ LLVMStructType class >> context: context elements: elements [
 				yourself ]
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMStructType >> constant: constantElements [
+	^ LLVMConstantStruct new
+		type: self;
+		elements: constantElements;
+		yourself
+]
+
 { #category : #printing }
 LLVMStructType >> createName [
 	self validateNonRecursion.

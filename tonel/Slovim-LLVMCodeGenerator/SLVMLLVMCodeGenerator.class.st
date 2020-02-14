@@ -21,7 +21,9 @@ Class {
 		'doesNotUnderstandTrampolines',
 		'debugAnonymousCount',
 		'translatedLiterals',
-		'translatedCompiledMethodMetadata'
+		'translatedCompiledMethodMetadata',
+		'moduleDynamicRoots',
+		'dynamicsRootsDescriptorVar'
 	],
 	#classVars : [
 		'DebugLanguageMap',
@@ -279,6 +281,54 @@ SLVMLLVMCodeGenerator >> createDoesNotUnderstandTrampolineWithType: functionType
 	^ self translateValue: slvmFunction
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLLVMCodeGenerator >> createGlobalDynamicRootsCtor [
+	| descriptorVar ctorFunction bb moduleRootRegistrationFunction descriptorPointer descriptorCount |
+	descriptorVar := self getOrCreateDynamicsRootsDescriptor.
+	moduleRootRegistrationFunction := self translateValue: self target objectModel moduleRootRegistrationFunction.
+	descriptorPointer := LLVMBitCastConstantExpr new
+		type: moduleRootRegistrationFunction functionType params first;
+		source: descriptorVar;
+		yourself.
+	descriptorCount := moduleRootRegistrationFunction functionType params second constant: descriptorVar valueType elements.
+	
+	ctorFunction := LLVMFunction createWithType: (LLVMFunctionType get: self context voidTy params: #() isVarArg: false) linkage: LLVMGlobalValue privateLinkage name: nil module: self llvmModule..
+	bb := LLVMBasicBlock for: self context name: #entry parent: ctorFunction.
+	(LLVMIRBuilder forBasicBlock: bb)
+		call: moduleRootRegistrationFunction arguments: { descriptorPointer . descriptorCount};
+		returnVoid.
+	^ ctorFunction
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMCodeGenerator >> createGlobalDynamicRootsCtorOrDtorFor: llvmGlobalName [
+	^ llvmGlobalName = #'llvm.global_ctors' ifTrue: [
+		self createGlobalDynamicRootsCtor
+	] ifFalse: [
+		self assert: llvmGlobalName = #'llvm.global_dtors'.
+		self createGlobalDynamicRootsDtor
+	]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMCodeGenerator >> createGlobalDynamicRootsDtor [
+	| descriptorVar dtorFunction bb moduleRootUnregistrationFunction descriptorPointer descriptorCount |
+	descriptorVar := self getOrCreateDynamicsRootsDescriptor.
+	moduleRootUnregistrationFunction := self translateValue: self target objectModel moduleRootUnregistrationFunction.
+	descriptorPointer := LLVMBitCastConstantExpr new
+		type: moduleRootUnregistrationFunction functionType params first;
+		source: descriptorVar;
+		yourself.
+	descriptorCount := moduleRootUnregistrationFunction functionType params second constant: descriptorVar valueType elements.
+	
+	dtorFunction := LLVMFunction createWithType: (LLVMFunctionType get: self context voidTy params: #() isVarArg: false) linkage: LLVMGlobalValue privateLinkage name: nil module: self llvmModule..
+	bb := LLVMBasicBlock for: self context name: #entry parent: dtorFunction.
+	(LLVMIRBuilder forBasicBlock: bb)
+		call: moduleRootUnregistrationFunction arguments: { descriptorPointer . descriptorCount};
+		returnVoid.
+	^ dtorFunction
+]
+
 { #category : #accessing }
 SLVMLLVMCodeGenerator >> debugCompileUnit [
 	^ debugCompileUnit
@@ -318,6 +368,52 @@ SLVMLLVMCodeGenerator >> generateDebugAnonymousName [
 	^ '__anonymous' , debugAnonymousCount asString
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLLVMCodeGenerator >> getOrCreateDynamicsRootsDescriptor [
+	| dynamicInstanceRoots dynamicPointerRoots voidPointerTy uintPointerTy rootPointerDescriptor dynamicInstanceRootArrayType dynamicInstanceRootConstant dynamicInstanceRootGlobal pointerRootsArrayType pointerRootsConstant |
+	dynamicsRootsDescriptorVar ifNotNil: [ ^ dynamicsRootsDescriptorVar ].
+	
+	voidPointerTy := LLVMPointerType getUnqual: self context int8Ty.
+	uintPointerTy := self target pointerSize = 4 ifTrue: [ self context int32Ty ] ifFalse: [ self context int64Ty ].
+	
+	rootPointerDescriptor := LLVMStructType context: self context elements: { voidPointerTy . uintPointerTy }.
+	
+	dynamicInstanceRoots := OrderedCollection new.
+	dynamicPointerRoots := OrderedCollection new.
+	moduleDynamicRoots do: [ :each |
+		| castedPointer |
+		castedPointer := LLVMBitCastConstantExpr new type: voidPointerTy; source: each; yourself.
+		each valueType isPointerTy ifTrue: [ 
+			dynamicPointerRoots add: (rootPointerDescriptor constant: {castedPointer . uintPointerTy constant: 1}).
+		] ifFalse: [
+			each valueType isArrayTy ifTrue: [
+				dynamicPointerRoots add: (rootPointerDescriptor constant: {castedPointer . uintPointerTy constant: each valueType totalElementCount}).
+			] ifFalse: [ 
+				self assert: each valueType isStructTy.
+				dynamicInstanceRoots add: castedPointer.
+			].
+		].
+	].
+
+	"Create a root array with pointers to all the instances."
+	dynamicInstanceRootArrayType := LLVMArrayType get: voidPointerTy elements: dynamicInstanceRoots size.
+	dynamicInstanceRootConstant := dynamicInstanceRootArrayType constant: dynamicInstanceRoots.
+	dynamicInstanceRootGlobal := LLVMGlobalVariable createWithType: dynamicInstanceRootArrayType module: self llvmModule isConstant: false linkage: LLVMGlobalValue privateLinkage.
+	dynamicInstanceRootGlobal initialValue: dynamicInstanceRootConstant.
+	
+	"Create the descritor for the instances roots."
+	dynamicPointerRoots add: (rootPointerDescriptor constant: {
+		LLVMBitCastConstantExpr new type: voidPointerTy; source: dynamicInstanceRootGlobal; yourself .
+		uintPointerTy constant: 1
+	}).
+
+	pointerRootsArrayType := LLVMArrayType get: rootPointerDescriptor elements: dynamicPointerRoots size.
+	pointerRootsConstant := pointerRootsArrayType constant: dynamicPointerRoots.
+	dynamicsRootsDescriptorVar := LLVMGlobalVariable createWithType: pointerRootsArrayType module: self llvmModule isConstant: false linkage: LLVMGlobalValue privateLinkage.
+	dynamicsRootsDescriptorVar initialValue: pointerRootsConstant.
+	^ dynamicsRootsDescriptorVar
+]
+
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> getOrCreateRuntimeFunction: runtimeFunctionOrSymbol type: typeDefinition [
 	runtimeFunctionOrSymbol isSymbol ifTrue: [ 
@@ -337,6 +433,7 @@ SLVMLLVMCodeGenerator >> initialize [
 	translatedCompiledMethodMetadata := IdentityDictionary new.
 	doesNotUnderstandTrampolines := Dictionary new.
 	usedNames := Set new.
+	moduleDynamicRoots := OrderedCollection new.
 	debugAnonymousCount := 0.
 ]
 
@@ -458,6 +555,7 @@ SLVMLLVMCodeGenerator >> translateDynamicLiteral: aLiteral [
 	variable
 		alignment: target objectModel objectAlignment;
 		initialValue: llvmConstant.
+	moduleDynamicRoots add: variable.
 	
 	translatedLiterals at: aLiteral put: variable.
 	^ variable
@@ -493,8 +591,6 @@ SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> translateModuleConstructorsOrDestructors: constructorsOrDestructors name: llvmGlobalName [
 	| ctorFunctionType ctorFunctionPointerType int32Ty varPointerType descriptorType descriptors descriptorsType variable |
-	constructorsOrDestructors ifEmpty: [ ^ self ].
-	
 	ctorFunctionType := LLVMFunctionType get: llvmContext voidTy params: #() isVarArg: false.
 	ctorFunctionPointerType := LLVMPointerType getUnqual: ctorFunctionType.
 	int32Ty := llvmContext int32Ty.
@@ -502,21 +598,29 @@ SLVMLLVMCodeGenerator >> translateModuleConstructorsOrDestructors: constructorsO
 	
 	descriptorType := LLVMStructType context: llvmContext elements: { int32Ty . ctorFunctionPointerType . varPointerType }.
 	descriptors := constructorsOrDestructors collect: [ :desc |
-		LLVMConstantStruct new
-			type: descriptorType;
-			elements: {
-				int32Ty constant: desc priority .
-				self translateModuleElement: desc function .
-				desc global
-					ifNil: [ LLVMConstantPointerNull new type: varPointerType ]
-					ifNotNil: [ LLVMBitCastConstantExpr new
-						type: varPointerType;
-						source: (self translateModuleElement: desc global);
-						yourself ]
-				};
-			yourself 
+		descriptorType constant: {
+			int32Ty constant: desc priority .
+			self translateModuleElement: desc function .
+			desc global
+				ifNil: [ LLVMConstantPointerNull new type: varPointerType ]
+				ifNotNil: [ LLVMBitCastConstantExpr new
+					type: varPointerType;
+					source: (self translateModuleElement: desc global);
+					yourself ]
+		}
 	].
 
+	moduleDynamicRoots ifNotEmpty: [
+		(self createGlobalDynamicRootsCtorOrDtorFor: llvmGlobalName) ifNotNil: [ :ctorOrDtor |
+			descriptors add: (descriptorType constant: {
+				int32Ty constant: self target objectModel gcModuleRootRegistrationPriority .
+				ctorOrDtor .
+				LLVMBitCastConstantExpr new type: varPointerType; source: dynamicsRootsDescriptorVar; yourself
+			})
+		].
+	].
+
+	descriptors ifEmpty: [ ^ self ].
 	descriptorsType := LLVMArrayType get: descriptorType elements: descriptors size.
 	
 	variable := LLVMGlobalVariable createWithType: descriptorsType module: self llvmModule isConstant: false linkage: LLVMGlobalValue appendingLinkage name: llvmGlobalName.
@@ -862,7 +966,11 @@ SLVMLLVMCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 	variableType := self translateType: aGlobalVariable valueType.
 	variable := LLVMGlobalVariable createWithType: variableType module: self llvmModule isConstant: aGlobalVariable readOnly linkage: (self convertLinkage: aGlobalVariable) name: (self convertName: aGlobalVariable name) threadLocalMode: LLVMGlobalValue notThreadLocal addressSpace: 0.
 	variable alignment: aGlobalVariable valueType alignment.
-	aGlobalVariable threadLocalModel ifNotNil: [ :modelName |
+	aGlobalVariable threadLocalModel ifNil: [ 
+		aGlobalVariable type storage == SLVMType gcStorage ifTrue: [
+			moduleDynamicRoots add: variable
+		].
+	] ifNotNil: [ :modelName |
 		variable threadLocalMode: (ThreadLocalModelMap at: modelName)
 	].
 	aGlobalVariable minimalAlignment ifNotNil: [ :align |
