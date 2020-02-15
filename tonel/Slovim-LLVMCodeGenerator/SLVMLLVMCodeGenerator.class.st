@@ -18,12 +18,13 @@ Class {
 		'translatedDebugElements',
 		'convertedDebugVariables',
 		'emptyDebugExpression',
-		'doesNotUnderstandTrampolines',
 		'debugAnonymousCount',
 		'translatedLiterals',
 		'translatedCompiledMethodMetadata',
 		'moduleDynamicRoots',
-		'dynamicsRootsDescriptorVar'
+		'dynamicsRootsDescriptorVar',
+		'objectMethodDispatchTrampolines',
+		'nativeMethodDispatchTrampolines'
 	],
 	#classVars : [
 		'DebugLanguageMap',
@@ -329,6 +330,20 @@ SLVMLLVMCodeGenerator >> createGlobalDynamicRootsDtor [
 	^ dtorFunction
 ]
 
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> createNativeMethodDispatchTrampolineWithType: functionType [
+	| slvmFunction |
+	slvmFunction := target objectModel createNativeMethodDispatchTrampolineWithType: functionType.
+	^ self translateValue: slvmFunction
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> createObjectMethodDispatchTrampolineWithType: functionType [
+	| slvmFunction |
+	slvmFunction := target objectModel createObjectMethodDispatchTrampolineWithType: functionType.
+	^ self translateValue: slvmFunction
+]
+
 { #category : #accessing }
 SLVMLLVMCodeGenerator >> debugCompileUnit [
 	^ debugCompileUnit
@@ -350,11 +365,6 @@ SLVMLLVMCodeGenerator >> declareNamedStructure: aNamedStructure [
 	translatedTypes at: aNamedStructure put: convertedStructure.
 	self llvmModule addNamedStructure: convertedStructure
 	
-]
-
-{ #category : #'code generation' }
-SLVMLLVMCodeGenerator >> doesNotUnderstandTrampolineWithType: trampolineFunctionType [
-	^ doesNotUnderstandTrampolines at: trampolineFunctionType ifAbsentPut: [ self createDoesNotUnderstandTrampolineWithType: trampolineFunctionType]
 ]
 
 { #category : #'debug information' }
@@ -431,7 +441,8 @@ SLVMLLVMCodeGenerator >> initialize [
 	translatedConstants := IdentityDictionary new.
 	translatedLiterals := IdentityDictionary new.
 	translatedCompiledMethodMetadata := IdentityDictionary new.
-	doesNotUnderstandTrampolines := Dictionary new.
+	objectMethodDispatchTrampolines := Dictionary new.
+	nativeMethodDispatchTrampolines := Dictionary new.
 	usedNames := Set new.
 	moduleDynamicRoots := OrderedCollection new.
 	debugAnonymousCount := 0.
@@ -464,6 +475,11 @@ SLVMLLVMCodeGenerator >> llvmModule [
 		]
 ]
 
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> nativeMethodDispatchTrampolineWithType: trampolineFunctionType [
+	^ nativeMethodDispatchTrampolines at: trampolineFunctionType ifAbsentPut: [ self createNativeMethodDispatchTrampolineWithType: trampolineFunctionType]
+]
+
 { #category : #testing }
 SLVMLLVMCodeGenerator >> needStructuredControlFlow [
 	^ false
@@ -475,6 +491,11 @@ SLVMLLVMCodeGenerator >> newFunctionCodeGenerator [
 		target: target;
 		moduleTranslator: self;
 		yourself
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> objectMethodDispatchTrampolineForWithType: trampolineFunctionType [
+	^ objectMethodDispatchTrampolines at: trampolineFunctionType ifAbsentPut: [ self createObjectMethodDispatchTrampolineWithType: trampolineFunctionType]
 ]
 
 { #category : #visiting }

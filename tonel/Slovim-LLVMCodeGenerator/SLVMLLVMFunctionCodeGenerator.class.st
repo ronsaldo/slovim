@@ -1263,6 +1263,13 @@ void matrixMultiply(float vector[4], float matrix[4][4], float result[4])
 	^ result
 ]
 
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> getOrCreateInlineCacheFor: instruction [
+	| inlineCachePointerType |
+	inlineCachePointerType := target objectModel messageLookupFunction functionType arguments last.
+	^ self translateValue: inlineCachePointerType defaultConstant
+]
+
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> getOverloadedIntrinsic: intrinsicName argumentTypes: argumentTypes returnType: returnType [
 	| fullName |
@@ -1372,8 +1379,18 @@ SLVMLLVMFunctionCodeGenerator >> moduleTranslator: anObject [
 ]
 
 { #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> nativeMethodDispatchTrampolineFor: instruction [
+	^ moduleTranslator nativeMethodDispatchTrampolineWithType: instruction sendDispatchTrampolineType
+]
+
+{ #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> nullVoidPointer [
 	^ LLVMConstantPointerNull new type: (self translateType: (target pointerTo: target void))
+]
+
+{ #category : #'code generation' }
+SLVMLLVMFunctionCodeGenerator >> objectMethodDispatchTrampolineFor: instruction [
+	^ moduleTranslator objectMethodDispatchTrampolineForWithType: instruction sendDispatchTrampolineType
 ]
 
 { #category : #'instruction building' }
@@ -1743,7 +1760,7 @@ SLVMLLVMFunctionCodeGenerator >> visitDynamicObjectToFloatCast: instruction [
 	targetType := self translateType: instruction type.
 	targetSLVMType := instruction type.
 
-	self assert: instruction type isIntegerType.
+	self assert: instruction type isFloatType.
 
 	conversionFunction := target objectModel objectToFloat64Function.
 	conversionResult := self callRuntimeFunction: conversionFunction
@@ -2143,23 +2160,40 @@ SLVMLLVMFunctionCodeGenerator >> visitMakeVector: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitMessageSend: instruction [
-	| returnType receiver arguments selector lookupResult calledFunctionType calledType functionPointer lookupArguments lookupFunction methodClassBinding selfClass |
+	| returnType receiver arguments selector lookupResult calledFunctionType calledType functionPointer lookupArguments lookupFunction typeInfo lookupResultMethod lookupResultTrampoline |
 
 	returnType := self translateType: instruction type.	
 	receiver := self translateValue: instruction receiver.
 	arguments := instruction arguments collect: [ :arg | self translateValue: arg ].
 	selector := self translateValue: instruction selector.
 	
-	"Lookup the message"
-	lookupArguments := { receiver . selector . self doesNotUnderstandTrampolineFor: instruction }.
-	lookupFunction := target objectModel messageLookupFunction.
+	"Fetch the lookup typeinfo."
 	instruction isSuperSend ifTrue: [
+		| methodClassBinding methodClass typeInfoFetcher|
 		methodClassBinding := self translateValue: function dynamicLiterals last.
-		selfClass := self loadLiteralVariableValue: methodClassBinding.
-		lookupArguments := { receiver . selector . selfClass . self doesNotUnderstandTrampolineFor: instruction }.
-		lookupFunction := target objectModel superMessageLookupFunction.
-	].
+		methodClass := self loadLiteralVariableValue: methodClassBinding.
+		typeInfoFetcher := target objectModel methodSuperClassGetter.
+		typeInfo := self callRuntimeFunction: typeInfoFetcher
+			arguments: {methodClass}
+			type: [ self halt ]
+			name: nil.
 
+	] ifFalse: [
+		| typeInfoFetcher |
+		typeInfoFetcher := target objectModel receiverClassGetter.
+		typeInfo := self callRuntimeFunction: typeInfoFetcher
+			arguments: {receiver}
+			type: [ self halt ]
+			name: nil.
+	].
+	self convertDebugLocationFrom: instruction into: typeInfo.
+
+	"Lookup the message"
+	lookupArguments := { receiver . selector . typeInfo.
+		self nativeMethodDispatchTrampolineFor: instruction .
+		self objectMethodDispatchTrampolineFor: instruction .
+		self getOrCreateInlineCacheFor: instruction .}.
+	lookupFunction := target objectModel messageLookupFunction.
 	lookupResult := self callRuntimeFunction: lookupFunction
 		arguments: lookupArguments
 		type: [ self halt ]
@@ -2167,14 +2201,17 @@ SLVMLLVMFunctionCodeGenerator >> visitMessageSend: instruction [
 	self convertDebugLocationFrom: instruction into: lookupResult.
 	
 	"Cast the found message"
-	self flag: 'TODO: Support the smalltalk calling conventions'.
-	calledFunctionType := SLVMFunctionType callingConvention: SLVMFunctionType stdcallCallingConvention arguments: {instruction receiver type} , (instruction arguments collect: #type) returnType: instruction type.
+	lookupResultMethod := self aggregate: lookupResult extractValueAt: 0.
+	lookupResultTrampoline := self aggregate: lookupResult extractValueAt: 1.
+	calledFunctionType := SLVMFunctionType callingConvention: SLVMFunctionType cdeclCallingConvention
+		arguments: {self target voidPointerType . instruction selector type . instruction receiver type} , (instruction arguments collect: #type)
+		returnType: instruction type.
 	calledType := self translateType: (target pointerTo: calledFunctionType).
 
-	functionPointer := self bitCast: lookupResult target: calledType name: nil.
+	functionPointer := self bitCast: lookupResultTrampoline target: calledType name: nil.
 	^ self call: functionPointer
 		convention: (self convertCallingConvention: calledFunctionType callingConvention)
-		arguments: {receiver}, arguments returnType: returnType name: nil.
+		arguments: {lookupResultMethod . selector . receiver}, arguments returnType: returnType name: nil.
 	
 ]
 

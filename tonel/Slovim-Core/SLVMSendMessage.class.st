@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMInstruction,
 	#instVars : [
 		'type',
-		'flags'
+		'flags',
+		'highLevelMessageSendFunctionType'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -34,16 +35,20 @@ SLVMSendMessage >> callingConvention [
 	^ SLVMFunctionType smalltalkCallingConvention
 ]
 
-{ #category : #accessing }
-SLVMSendMessage >> doesNotUnderstandTrampolineFunctionType [
-	^ SLVMFunctionType callingConvention: self callingConvention
-		arguments: {self receiver type asGenericMessageType} , (self arguments collect: [:arg | arg type asGenericMessageType]) returnType: type asGenericMessageType
-]
-
 { #category : #testing }
 SLVMSendMessage >> hasFlag: flag [
 	^ flags includes: flag
 	
+]
+
+{ #category : #accessing }
+SLVMSendMessage >> highLevelMessageSendFunctionType [
+	^ highLevelMessageSendFunctionType
+]
+
+{ #category : #accessing }
+SLVMSendMessage >> highLevelMessageSendFunctionType: anObject [
+	highLevelMessageSendFunctionType := anObject
 ]
 
 { #category : #initialization }
@@ -98,6 +103,13 @@ SLVMSendMessage >> returnType: returnType receiver: receiver selector: selector 
 { #category : #accessing }
 SLVMSendMessage >> selector [
 	^ parameters second
+]
+
+{ #category : #accessing }
+SLVMSendMessage >> sendDispatchTrampolineType [
+	highLevelMessageSendFunctionType ifNotNil: [ ^ highLevelMessageSendFunctionType ].
+	^ SLVMFunctionType callingConvention: self callingConvention
+		arguments: {self receiver type asGenericMessageType} , (self arguments collect: [:arg | arg type asGenericMessageType]) returnType: type asGenericMessageType
 ]
 
 { #category : #initialization }
