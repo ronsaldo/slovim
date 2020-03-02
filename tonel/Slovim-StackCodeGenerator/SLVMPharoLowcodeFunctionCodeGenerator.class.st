@@ -85,6 +85,11 @@ SLVMPharoLowcodeFunctionCodeGenerator >> add: anInstruction [
 ]
 
 { #category : #'code generation' }
+SLVMPharoLowcodeFunctionCodeGenerator >> allocateTemporaryPointer [
+	^ self allocateTemporarySize: self compilationTarget pointerSize alignment: self compilationTarget pointerAlignment
+]
+
+{ #category : #'code generation' }
 SLVMPharoLowcodeFunctionCodeGenerator >> allocateTemporarySize: size alignment: alignment [
 	| offset |
 	offset := localFrameInstruction extendA alignedTo: alignment.
@@ -101,8 +106,19 @@ SLVMPharoLowcodeFunctionCodeGenerator >> convertBooleanValueToOop: value [
 
 { #category : #'code generation' }
 SLVMPharoLowcodeFunctionCodeGenerator >> createArgumentTemporary: rawName type: type [
-	type isDynamicObjectPointerType ifTrue: [ ^ self createObjectTemporary: rawName type: type ].
-	self halt
+	| tempMap name index |
+	type isDynamicObjectPointerType ifTrue: [ ^ super createArgumentTemporary: rawName type: type ].
+	
+	tempMap := self currentScope tempMap.
+	name := rawName asSymbol.
+	index := tempMap size + 1.
+	tempMap at: name put: index.
+	
+	^ SLVMPharoFunctionArgument new
+		name: name;
+		location: name;
+		type: type;
+		yourself
 ]
 
 { #category : #'code generation' }
@@ -233,6 +249,108 @@ SLVMPharoLowcodeFunctionCodeGenerator >> emitFloatSubtract: binary [
 	] ifFalse: [
 		self assert: type size = 8.
 		self lowcodeFloat64Sub
+	]
+]
+
+{ #category : #operations }
+SLVMPharoLowcodeFunctionCodeGenerator >> emitFloatUnorderedEqual: binary [
+	| type |
+	self assert: binary left type = binary right type.
+	self assert: binary left type isFloatType.
+	self assert: binary type isBooleanType.
+	self visitExpression: binary left.
+	self visitExpression: binary right.
+	type := binary left type.
+	type size <= 4 ifTrue: [ 
+		self lowcodeFloat32Equal
+	] ifFalse: [
+		self assert: type size = 8.
+		self lowcodeFloat64Equal
+	]
+]
+
+{ #category : #operations }
+SLVMPharoLowcodeFunctionCodeGenerator >> emitFloatUnorderedGreaterOrEqual: binary [
+	| type |
+	self assert: binary left type = binary right type.
+	self assert: binary left type isFloatType.
+	self assert: binary type isBooleanType.
+	self visitExpression: binary left.
+	self visitExpression: binary right.
+	type := binary left type.
+	type size <= 4 ifTrue: [ 
+		self lowcodeFloat32GreatEqual
+	] ifFalse: [
+		self assert: type size = 8.
+		self lowcodeFloat64GreatEqual
+	]
+]
+
+{ #category : #operations }
+SLVMPharoLowcodeFunctionCodeGenerator >> emitFloatUnorderedGreaterThan: binary [
+	| type |
+	self assert: binary left type = binary right type.
+	self assert: binary left type isFloatType.
+	self assert: binary type isBooleanType.
+	self visitExpression: binary left.
+	self visitExpression: binary right.
+	type := binary left type.
+	type size <= 4 ifTrue: [ 
+		self lowcodeFloat32Great
+	] ifFalse: [
+		self assert: type size = 8.
+		self lowcodeFloat64Great
+	]
+]
+
+{ #category : #operations }
+SLVMPharoLowcodeFunctionCodeGenerator >> emitFloatUnorderedLessOrEqual: binary [
+	| type |
+	self assert: binary left type = binary right type.
+	self assert: binary left type isFloatType.
+	self assert: binary type isBooleanType.
+	self visitExpression: binary left.
+	self visitExpression: binary right.
+	type := binary left type.
+	type size <= 4 ifTrue: [ 
+		self lowcodeFloat32LessEqual
+	] ifFalse: [
+		self assert: type size = 8.
+		self lowcodeFloat64LessEqual
+	]
+]
+
+{ #category : #operations }
+SLVMPharoLowcodeFunctionCodeGenerator >> emitFloatUnorderedLessThan: binary [
+	| type |
+	self assert: binary left type = binary right type.
+	self assert: binary left type isFloatType.
+	self assert: binary type isBooleanType.
+	self visitExpression: binary left.
+	self visitExpression: binary right.
+	type := binary left type.
+	type size <= 4 ifTrue: [ 
+		self lowcodeFloat32Less
+	] ifFalse: [
+		self assert: type size = 8.
+		self lowcodeFloat64Less
+	]
+]
+
+{ #category : #operations }
+SLVMPharoLowcodeFunctionCodeGenerator >> emitFloatUnorderedNotEqual: binary [
+	| type |
+	self assert: binary left type = binary right type.
+	self assert: binary left type isFloatType.
+	self assert: binary type isBooleanType.
+	self visitExpression: binary left.
+	self visitExpression: binary right.
+	type := binary left type.
+	type size <= 4 ifTrue: [ 
+		self lowcodeFloat32NotEqual
+	] ifFalse: [
+		self assert: type size = 8.
+		self lowcodeFloat64NotEqual
 	]
 ]
 
@@ -437,6 +555,11 @@ SLVMPharoLowcodeFunctionCodeGenerator >> initialize [
 	lowcodeUsed := false.
 ]
 
+{ #category : #testing }
+SLVMPharoLowcodeFunctionCodeGenerator >> isLowcodeGenerator [
+	^ true
+]
+
 { #category : #operations }
 SLVMPharoLowcodeFunctionCodeGenerator >> isObjectBinaryExpression: binaryExpression [
 	^ binaryExpression left type isDynamicObjectPointerType
@@ -444,8 +567,12 @@ SLVMPharoLowcodeFunctionCodeGenerator >> isObjectBinaryExpression: binaryExpress
 
 { #category : #variables }
 SLVMPharoLowcodeFunctionCodeGenerator >> loadValueFromPointer: anInstruction [
-	self visitExpression: anInstruction variable.
-	anInstruction value type pushFromMemoryUsingLowcodeWith: self.
+	anInstruction value type isStructureType ifTrue: [ 
+		self visitExpression: anInstruction variable.
+	] ifFalse: [ 
+		self visitExpression: anInstruction variable.
+		anInstruction value type pushFromMemoryUsingLowcodeWith: self.
+	].
 
 ]
 
@@ -1901,9 +2028,24 @@ SLVMPharoLowcodeFunctionCodeGenerator >> storeAndPopStackTopIntoVariable: aVaria
 
 { #category : #variables }
 SLVMPharoLowcodeFunctionCodeGenerator >> storeAndPopValueIntoPointer: anInstruction [
-	self visitExpression: anInstruction value.
-	self visitExpression: anInstruction variable.
-	anInstruction value type storeAndPopStackTopIntoMemoryUsingLowcodeWith: self.
+	anInstruction value type isStructureType ifTrue: [ 
+		self visitExpression: anInstruction variable.
+		self visitExpression: anInstruction value.
+		self lowcodeMemcpyFixed: anInstruction value type size
+	] ifFalse: [ 
+		self visitExpression: anInstruction value.
+		self visitExpression: anInstruction variable.
+		anInstruction value type storeAndPopStackTopIntoMemoryUsingLowcodeWith: self.
+	].
+
+]
+
+{ #category : #visiting }
+SLVMPharoLowcodeFunctionCodeGenerator >> visitAlloca: allocaExpression [
+	| valueType location |
+	valueType := allocaExpression valueType.
+	location := self allocateTemporarySize: valueType size alignment: valueType alignment.
+	^ self lowcodeLoadLocalAddress: location
 ]
 
 { #category : #visiting }
@@ -1948,6 +2090,13 @@ SLVMPharoLowcodeFunctionCodeGenerator >> visitBoolToDynamicObjectCast: cast [
 ]
 
 { #category : #visiting }
+SLVMPharoLowcodeFunctionCodeGenerator >> visitConstantStructureValue: constant [
+	| value |
+	value := constant evaluate.
+	constant type pushConstant: value usingLowcodeWith: self
+]
+
+{ #category : #visiting }
 SLVMPharoLowcodeFunctionCodeGenerator >> visitConstantValue: aConstant [
 	aConstant type pushConstant: aConstant value usingLowcodeWith: self
 ]
@@ -1973,7 +2122,8 @@ SLVMPharoLowcodeFunctionCodeGenerator >> visitDynamicObjectToIntCast: cast [
 { #category : #visiting }
 SLVMPharoLowcodeFunctionCodeGenerator >> visitDynamicObjectToStructureCast: cast [
 	self visitExpression: cast source.
-	self halt
+	self flag: 'TODO: Check type type'.
+	^ self lowcodeFirstFieldPointer
 ]
 
 { #category : #visiting }
@@ -2019,9 +2169,34 @@ SLVMPharoLowcodeFunctionCodeGenerator >> visitIntToFloatCast: cast [
 ]
 
 { #category : #visiting }
+SLVMPharoLowcodeFunctionCodeGenerator >> visitReturn: anInstruction [
+	self visitExpression: anInstruction value.
+
+	anInstruction value type isVoidType ifTrue: [
+		self pushReceiver
+	] ifFalse: [ 
+		anInstruction value type isDynamicObjectPointerType ifFalse: [
+			anInstruction value type toOopUsingLowcodeWith: self
+		].
+	].
+	self returnTop
+]
+
+{ #category : #visiting }
 SLVMPharoLowcodeFunctionCodeGenerator >> visitSignExtend: cast [
 	self visitExpression: cast source.
 	self halt
+]
+
+{ #category : #visiting }
+SLVMPharoLowcodeFunctionCodeGenerator >> visitStore: anInstruction [
+	| variable |
+	variable := self convertPointerIntoVariable: anInstruction variable.
+	variable ifNil: [ 
+		^ self storeAndPopValueIntoPointer: anInstruction
+	].
+
+	variable storeAndPopValue: anInstruction value usingLowcodeWith: self
 ]
 
 { #category : #visiting }

@@ -9,8 +9,12 @@ Class {
 
 { #category : #'code generation' }
 SLVMPharoVariable >> emitPushUsingLowcodeWith: aCodeGenerator [
-	self assert: type isDynamicObjectPointerType.
-	^ self emitPushWith: aCodeGenerator
+	self emitPushWith: aCodeGenerator.
+	type isDynamicObjectPointerType ifFalse: [
+		^ type fromOopUsingLowcodeWith: aCodeGenerator
+	].
+
+	^ nil
 ]
 
 { #category : #'code generation' }
@@ -28,6 +32,11 @@ SLVMPharoVariable >> emitStoreAndPopStackTopUsingLowcodeWith: aCodeGenerator [
 { #category : #'code generation' }
 SLVMPharoVariable >> emitStoreStackTopWith: aCodeGenerator [
 	self subclassResponsibility
+]
+
+{ #category : #'as yet unclassified' }
+SLVMPharoVariable >> storeAndPopValue: value usingLowcodeWith: functionCodeGenerator [ 
+	^ self storeAndPopValue: value with: functionCodeGenerator
 ]
 
 { #category : #'as yet unclassified' }

@@ -7,6 +7,12 @@ SLVMBoolType >> fromOopUsingLowcodeWith: builder [
 ]
 
 { #category : #'*Slovim-StackCodeGenerator' }
+SLVMBoolType >> popTopUsingLowcodeWith: builder [
+	self assert: size = 1.
+	builder lowcodePopInt32
+]
+
+{ #category : #'*Slovim-StackCodeGenerator' }
 SLVMBoolType >> pushFromMemoryUsingLowcodeWith: builder [
 	self assert: size = 1.
 	builder lowcodeLoadInt8FromMemory.

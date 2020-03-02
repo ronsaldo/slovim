@@ -90,6 +90,11 @@ SLVMStructureType >> defaultFullConstant [
 	^ SLVMConstant structure: self slots: (types collect: [:each | each defaultFullConstant])
 ]
 
+{ #category : #'instance creation' }
+SLVMStructureType >> fromOopUsingLowcodeWith: builder [
+	^ builder lowcodeFirstFieldPointer
+]
+
 { #category : #printing }
 SLVMStructureType >> fullPrintOn: aStream [
 	self fullPrintOn: aStream fromPrint: false
@@ -229,6 +234,23 @@ SLVMStructureType >> printOn: aStream [
 	self fullPrintOn: aStream fromPrint: true
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> pushConstant: constant usingLowcodeWith: builder [
+	builder
+		pushLiteral: constant;
+		lowcodeFirstFieldPointer
+]
+
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> pushFromMemoryUsingLowcodeWith: builder [
+	self error: 'I should not be called'
+]
+
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> pushLocal: location usingLowcodeWith: aCodeGenerator [
+	^ aCodeGenerator lowcodeLoadLocalAddress: location
+]
+
 { #category : #'pointer accessing' }
 SLVMStructureType >> readFromPointer: pointer [
 	behavior ifNil: [ ^ super readFromPointer: pointer ].
@@ -243,6 +265,11 @@ SLVMStructureType >> shortName [
 { #category : #accessing }
 SLVMStructureType >> size [
 	^ size
+]
+
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> storeAndPopStackTopIntoMemoryUsingLowcodeWith: builder [
+	builder lowcodeMemcpyFixed: size
 ]
 
 { #category : #'as yet unclassified' }
@@ -299,6 +326,21 @@ SLVMStructureType >> storeValueWith: irBuilder [
 SLVMStructureType >> strideWithIndex: index [
 	self assert: index isConstantValue.
 	^ 0
+]
+
+{ #category : #'instance creation' }
+SLVMStructureType >> toOopUsingLowcodeWith: builder [
+	| pointerLocation |
+	self assert: behavior isNotNil.
+	pointerLocation := builder allocateTemporaryPointer.
+	builder
+		lowcodeStoreLocalPointer: pointerLocation;
+		pushLiteralVariable: behavior binding;
+		send: #basicNew;
+		pushDup;
+		lowcodeFirstFieldPointer;
+		lowcodeLoadLocalPointer: pointerLocation;
+		lowcodeMemcpyFixed: self size
 ]
 
 { #category : #accessing }

@@ -31,3 +31,15 @@ SLVMPharoFunctionLocal >> emitStoreStackTopWith: aCodeGenerator [
 
 	^ aCodeGenerator storeTemp: name
 ]
+
+{ #category : #'code generation' }
+SLVMPharoFunctionLocal >> storeAndPopValue: value usingLowcodeWith: functionCodeGenerator [
+	type isStructureType ifTrue: [ 
+		^ functionCodeGenerator
+			lowcodeLoadLocalAddress: location;
+			visitExpression: value;
+			lowcodeMemcpyFixed: type size.
+	].
+
+	^ super storeAndPopValue: value usingLowcodeWith: functionCodeGenerator
+]

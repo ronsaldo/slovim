@@ -79,6 +79,11 @@ SLVMPointerType >> encodeConstant: value bigEndian: bigEndian intoByteStream: st
 
 ]
 
+{ #category : #'instance creation' }
+SLVMPointerType >> fromOopUsingLowcodeWith: builder [
+	self halt
+]
+
 { #category : #comparing }
 SLVMPointerType >> internalHash [
 	^ (self class hash bitXor: (baseType hash)) bitXor: storage hash
@@ -159,6 +164,11 @@ SLVMPointerType >> storage: aSymbol [
 { #category : #'element accessing' }
 SLVMPointerType >> strideWithIndex: index [
 	^ index isConstantValue ifTrue: [ 0 ] ifFalse: [ baseType size ]
+]
+
+{ #category : #'instance creation' }
+SLVMPointerType >> toOopUsingLowcodeWith: builder [
+	self halt
 ]
 
 { #category : #accessing }

@@ -159,13 +159,23 @@ SLVMPharoFunctionCodeGenerator >> convertPointerIntoVariable: aVariableExpressio
 	
 	aVariableExpression isGlobalVariable ifTrue: [
 		binding := moduleTranslator translateElement: aVariableExpression.
-		^ SLVMPharoLiteralVariable new binding: binding
+		^ SLVMPharoLiteralVariable new
+			type: aVariableExpression type baseType;
+			binding: binding
 	].
 
-	(self isObjectConstantSlotPointer: aVariableExpression) ifTrue: [ 
+	(self isObjectConstantSlotPointer: aVariableExpression) ifTrue: [
+		| indicesWithStrides offset |
+		offset := 0.
+		aVariableExpression indicesWithStrides do: [ :indexWithStride |
+			self assert: indexWithStride second = 0.
+			offset := offset + indexWithStride third.
+		].
 		^ SLVMPharoObjectSlot new
+			type: aVariableExpression type baseType;
 			pointer: aVariableExpression pointer;
-			slotIndex: (aVariableExpression indexAt: 2) value; yourself
+			slotIndex: (aVariableExpression indexAt: 2) value;
+			slotOffset: offset; yourself
 	].
 
 	^ nil
@@ -353,14 +363,22 @@ SLVMPharoFunctionCodeGenerator >> initialize [
 	useSecondaryBytecodeSet := true.
 ]
 
+{ #category : #testing }
+SLVMPharoFunctionCodeGenerator >> isLowcodeGenerator [
+	^ false
+]
+
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> isObjectConstantSlotPointer: expression [
-	^ expression isGetElementPointer and: [ expression pointer type isDynamicObjectPointerType and: [expression indexCount = 2] ]
+	^ expression isGetElementPointer and:
+	[ expression pointer type isDynamicObjectPointerType and:
+	[ expression hasConstantIndices ] ]
 ]
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> isObjectElementPointer: expression [
-	^ expression isGetElementPointer and: [ expression pointer type isDynamicObjectPointerType ]
+	^ expression isGetElementPointer and:
+	[ expression pointer type isDynamicObjectPointerType ]
 ]
 
 { #category : #visiting }
@@ -578,12 +596,12 @@ SLVMPharoFunctionCodeGenerator >> translateFunction: aFunction [
 	].
 
 	"etreeFunction selector = #hash ifTrue: [
-		self halt.
+		Stdio stdout nextPutAll: etreeFunction selector printString; nextPutAll: ' >> '; nextPutAll: etreeFunction classBinding printString; lf.
 		etreeFunction classBinding printString = '#WMComplexF->WMComplexF' ifTrue: [ 
 			self halt
 		]
-	].
-
+	]."
+"
 	etreeFunction selector = #initializeWithRows:columns: ifTrue: [ self halt ]."
 	compiledMethod := ir optimize compiledMethodWith: trailer.
 	self setupCompiledMethod: compiledMethod.
@@ -820,7 +838,7 @@ SLVMPharoFunctionCodeGenerator >> visitFunctionArgument: anArgument [
 
 { #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitGetElementPointer: anInstruction [
-	self assert: anInstruction type isDynamicObjectPointerType not.
+	self assert: anInstruction type isDynamicObjectType not.
 
 	self visitExpression: anInstruction pointer.
 	self emitGetElementPointerOffsets: anInstruction.

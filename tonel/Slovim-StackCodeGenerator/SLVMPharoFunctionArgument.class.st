@@ -10,6 +10,11 @@ SLVMPharoFunctionArgument >> emitPushWith: aCodeGenerator [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMPharoFunctionArgument >> emitStoreAndPopStackTopUsingLowcodeWith: aCodeGenerator [
+	self error: 'Cannot store into an argument.'
+]
+
+{ #category : #'as yet unclassified' }
 SLVMPharoFunctionArgument >> emitStoreStackTopWith: aCodeGenerator [
 	self error: 'Cannot store into an argument.'
 ]
