@@ -636,6 +636,16 @@ SLVMFunction >> isFunction [
 ]
 
 { #category : #testing }
+SLVMFunction >> isNoReturn [
+	^ self hasFlag: #noreturn
+]
+
+{ #category : #testing }
+SLVMFunction >> isNoUnwind [
+	^ self hasFlag: #nounwind
+]
+
+{ #category : #testing }
 SLVMFunction >> isNotEmpty [
 	^ self isEmpty not
 ]
@@ -732,6 +742,16 @@ SLVMFunction >> removeRuntimeLiterals [
 { #category : #testing }
 SLVMFunction >> selectorValue [
 	^ (dynamicLiterals at: dynamicLiterals size - 1) value
+]
+
+{ #category : #testing }
+SLVMFunction >> setNoReturn: value [
+	^ self setFlag: #noreturn value: value
+]
+
+{ #category : #testing }
+SLVMFunction >> setNoUnwind: value [
+	^ self setFlag: #nounwind value: value
 ]
 
 { #category : #accessing }

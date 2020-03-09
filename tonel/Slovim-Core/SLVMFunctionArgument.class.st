@@ -9,8 +9,7 @@ Class {
 		'type',
 		'index',
 		'name',
-		'livenessIndex',
-		'flags'
+		'livenessIndex'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -18,21 +17,6 @@ Class {
 { #category : #visitor }
 SLVMFunctionArgument >> accept: aVisitor [
 	^ aVisitor visitFunctionArgument: self
-]
-
-{ #category : #accessing }
-SLVMFunctionArgument >> addFlag: aFlag [
-	flags := flags copyWith: aFlag
-]
-
-{ #category : #accessing }
-SLVMFunctionArgument >> flags [
-	^ flags
-]
-
-{ #category : #accessing }
-SLVMFunctionArgument >> flags: anObject [
-	flags := anObject
 ]
 
 { #category : #accessing }
@@ -46,11 +30,6 @@ SLVMFunctionArgument >> function: anObject [
 ]
 
 { #category : #accessing }
-SLVMFunctionArgument >> hasFlag: aFlag [
-	^ flags includes: aFlag
-]
-
-{ #category : #accessing }
 SLVMFunctionArgument >> index [
 	^ index
 ]
@@ -58,12 +37,6 @@ SLVMFunctionArgument >> index [
 { #category : #accessing }
 SLVMFunctionArgument >> index: anObject [
 	index := anObject
-]
-
-{ #category : #initialization }
-SLVMFunctionArgument >> initialize [
-	super initialize.
-	flags := #().
 ]
 
 { #category : #testing }

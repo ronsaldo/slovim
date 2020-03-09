@@ -15,7 +15,8 @@ Class {
 		'basicInitialValue',
 		'copyFunction',
 		'moveFunction',
-		'finalizeFunction'
+		'finalizeFunction',
+		'properties'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -88,6 +89,21 @@ SLVMClosureCapture >> moveFunction: anObject [
 { #category : #printing }
 SLVMClosureCapture >> printOn: aStream [
 	aStream nextPutAll: 'closureCapture '; print: index
+]
+
+{ #category : #accessing }
+SLVMClosureCapture >> properties [
+	^ properties ifNil: [ properties := Dictionary new ]
+]
+
+{ #category : #accessing }
+SLVMClosureCapture >> propertyAt: aSymbol [ 
+	^ self properties at: aSymbol
+]
+
+{ #category : #accessing }
+SLVMClosureCapture >> propertyAt: aSymbol put: anObject [
+	^ self properties at: aSymbol put: anObject
 ]
 
 { #category : #'as yet unclassified' }

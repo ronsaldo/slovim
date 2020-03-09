@@ -6,8 +6,7 @@ Class {
 	#superclass : #SLVMInstruction,
 	#instVars : [
 		'type',
-		'functionType',
-		'flags'
+		'functionType'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -58,21 +57,9 @@ SLVMCall >> functionValue [
 	^ parameters first
 ]
 
-{ #category : #flags }
-SLVMCall >> hasFlag: flag [
-	^ flags includes: flag
-	
-]
-
 { #category : #testing }
 SLVMCall >> hasOutputs [
 	^ type isVoidType not
-]
-
-{ #category : #initialization }
-SLVMCall >> initialize [
-	super initialize.
-	flags := #()
 ]
 
 { #category : #testing }

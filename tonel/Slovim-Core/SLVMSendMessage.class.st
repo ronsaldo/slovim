@@ -3,7 +3,6 @@ Class {
 	#superclass : #SLVMInstruction,
 	#instVars : [
 		'type',
-		'flags',
 		'highLevelMessageSendFunctionType'
 	],
 	#category : #'Slovim-Core-SSA'
@@ -19,12 +18,6 @@ SLVMSendMessage >> accept: aVisitor [
 	^ aVisitor visitMessageSend: self
 ]
 
-{ #category : #adding }
-SLVMSendMessage >> addFlag: flag [
-	flags := flags copyWith: flag
-	
-]
-
 { #category : #accessing }
 SLVMSendMessage >> arguments [
 	^ parameters allButFirst: 2
@@ -35,12 +28,6 @@ SLVMSendMessage >> callingConvention [
 	^ SLVMFunctionType smalltalkCallingConvention
 ]
 
-{ #category : #testing }
-SLVMSendMessage >> hasFlag: flag [
-	^ flags includes: flag
-	
-]
-
 { #category : #accessing }
 SLVMSendMessage >> highLevelMessageSendFunctionType [
 	^ highLevelMessageSendFunctionType
@@ -49,13 +36,6 @@ SLVMSendMessage >> highLevelMessageSendFunctionType [
 { #category : #accessing }
 SLVMSendMessage >> highLevelMessageSendFunctionType: anObject [
 	highLevelMessageSendFunctionType := anObject
-]
-
-{ #category : #initialization }
-SLVMSendMessage >> initialize [
-	super initialize.
-	flags := #().
-	
 ]
 
 { #category : #testing }

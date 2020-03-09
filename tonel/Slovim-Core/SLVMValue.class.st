@@ -4,12 +4,20 @@ I represent a value in SSA form.
 Class {
 	#name : #SLVMValue,
 	#superclass : #SLVMObject,
+	#instVars : [
+		'flags'
+	],
 	#category : #'Slovim-Core-SSA'
 }
 
 { #category : #visitor }
 SLVMValue >> accept: aVisitor [
 	self subclassResponsibility
+]
+
+{ #category : #flags }
+SLVMValue >> addFlag: aFlag [
+	flags := (self flags copyWithout: aFlag) copyWith: aFlag
 ]
 
 { #category : #adding }
@@ -27,6 +35,16 @@ SLVMValue >> childrenNodes [
 	^ #()
 ]
 
+{ #category : #flags }
+SLVMValue >> flags [
+	^ flags ifNil: [ #() ]
+]
+
+{ #category : #flags }
+SLVMValue >> flags: newFlags [
+	flags := newFlags asArray
+]
+
 { #category : #printing }
 SLVMValue >> fullPrintOn: aStream [
 	self printOn: aStream
@@ -40,6 +58,11 @@ SLVMValue >> fullPrintString [
 { #category : #printing }
 SLVMValue >> fullPrintText [
 	^ SLVMPrintingTextStream fullPrintString: self
+]
+
+{ #category : #flags }
+SLVMValue >> hasFlag: aFlag [
+	^ self flags includes: aFlag
 ]
 
 { #category : #testing }
@@ -196,9 +219,24 @@ SLVMValue >> nodeTitle [
 SLVMValue >> notVisitedParameters: visitedElements recursivelyDo: aBlock [
 ]
 
+{ #category : #flags }
+SLVMValue >> removeFlag: flag [
+	self flags ifEmpty: [ ^ self ].
+	flags := flags copyWithout: flag.
+]
+
 { #category : #adding }
 SLVMValue >> removeInstructionReference: anInstruction [
 	"By default, do nothing"
+]
+
+{ #category : #flags }
+SLVMValue >> setFlag: flag value: newValue [
+	newValue ifTrue: [
+		self addFlag: flag
+	] ifFalse: [
+		self removeFlag: flag
+	]
 ]
 
 { #category : #accessing }
