@@ -181,8 +181,12 @@ SLVMMessagePackDecoder >> decodeExtension: extensionDataSize type: extensionType
 
 	].
 
-	extensionType  == MessagePackExtensionCodeSymbol ifTrue: [
+	extensionType == MessagePackExtensionCodeSymbol ifTrue: [
 		^ extensionBinaryData utf8Decoded asSymbol
+	].
+
+	extensionType == MessagePackExtensionCodeCharacter ifTrue: [
+		^ extensionBinaryData utf8Decoded first
 	].
 
 	^ SLVMMessagePackExtensionData data: extensionBinaryData type: extensionType

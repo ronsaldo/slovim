@@ -329,6 +329,11 @@ SLVMModule >> highLevelMapToSymbol [
 	^ highLevelMapToSymbol
 ]
 
+{ #category : #adding }
+SLVMModule >> includesGlobalNamed: globalName [
+	^ globalValues includesKey: globalName
+]
+
 { #category : #initialization }
 SLVMModule >> initialize [
 	structures := OrderedCollection new.

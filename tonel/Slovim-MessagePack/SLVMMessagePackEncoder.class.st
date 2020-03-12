@@ -73,6 +73,11 @@ SLVMMessagePackEncoder >> encodeByteArray: byteArray [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMMessagePackEncoder >> encodeCharacter: character [
+	^ self encodeExtension: character asString utf8Encoded type: MessagePackExtensionCodeCharacter
+]
+
+{ #category : #'as yet unclassified' }
 SLVMMessagePackEncoder >> encodeExtension: extensionData type: type [
 	| size powerIndex |
 	size := extensionData size.
