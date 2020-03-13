@@ -82,6 +82,11 @@ SLVMBinaryOperation class >> initialize [
 
 ]
 
+{ #category : #printing }
+SLVMBinaryOperation class >> mnemonic [
+	^ nil
+]
+
 { #category : #construction }
 SLVMBinaryOperation class >> operation: operation left: leftOperand right: rightOperand [
 	^ self new operation: operation left: leftOperand right: rightOperand
@@ -291,7 +296,7 @@ SLVMBinaryOperation >> left [
 
 { #category : #printing }
 SLVMBinaryOperation >> mnemonic [
-	^ self operation
+	^ operation
 ]
 
 { #category : #'arithmetic optimizations' }

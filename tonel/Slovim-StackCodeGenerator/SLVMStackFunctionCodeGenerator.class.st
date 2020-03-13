@@ -167,11 +167,6 @@ SLVMStackFunctionCodeGenerator >> visitCall: anInstruction [
 ]
 
 { #category : #visiting }
-SLVMStackFunctionCodeGenerator >> visitConstantDynamicLiteral: constant [
-	^ SLVMETreeConstantDynamicLiteral new type: constant type; value: constant value
-]
-
-{ #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitConstantStructureValue: constant [
 	^ SLVMETreeConstantStructureValue new
 		type: constant type;
@@ -242,6 +237,11 @@ SLVMStackFunctionCodeGenerator >> visitFloatingPointCast: anInstruction [
 { #category : #visiting }
 SLVMStackFunctionCodeGenerator >> visitFunction: aFunction [
 	^ moduleCodeGenerator translateModuleElement: aFunction
+]
+
+{ #category : #visiting }
+SLVMStackFunctionCodeGenerator >> visitFunctionDynamicLiteral: constant [
+	^ SLVMETreeConstantDynamicLiteral new type: constant type; value: constant value
 ]
 
 { #category : #visiting }

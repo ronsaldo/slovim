@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMDebugInstructionSetVariableValue class >> mnemonic [
+	^ #dbgSetVariable
+]
+
 { #category : #'initialize-release' }
 SLVMDebugInstructionSetVariableValue class >> variable: aVariable value: aValue [
 	^ self new variable: aVariable value: aValue
@@ -15,11 +20,6 @@ SLVMDebugInstructionSetVariableValue class >> variable: aVariable value: aValue 
 { #category : #visiting }
 SLVMDebugInstructionSetVariableValue >> accept: aVisitor [
 	^ aVisitor visitDebugInstructionSetVariableValue: self
-]
-
-{ #category : #printing }
-SLVMDebugInstructionSetVariableValue >> mnemonic [
-	^ #dbgSetVariable
 ]
 
 { #category : #accessing }

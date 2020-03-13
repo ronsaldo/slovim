@@ -16,6 +16,11 @@ SLVMCall class >> function: functionValue arguments: arguments [
 	^ self new function: functionValue arguments: arguments
 ]
 
+{ #category : #printing }
+SLVMCall class >> mnemonic [
+	^ #call
+]
+
 { #category : #visitor }
 SLVMCall >> accept: aVisitor [
 	^ aVisitor visitCall: self
@@ -75,11 +80,6 @@ SLVMCall >> isDynamicObjectReferenceCreator [
 { #category : #flags }
 SLVMCall >> isPrimitiveCall [
 	^ self hasFlag: #primitiveCall
-]
-
-{ #category : #printing }
-SLVMCall >> mnemonic [
-	^ #call
 ]
 
 { #category : #flags }

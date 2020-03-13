@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMMakeVector class >> mnemonic [
+	^ #makeVector
+]
+
 { #category : #construction }
 SLVMMakeVector class >> type: vectorType parameters: arguments [
 	^ self new type: vectorType parameters: arguments
@@ -25,11 +30,6 @@ SLVMMakeVector >> isMakeVector [
 { #category : #testing }
 SLVMMakeVector >> isPureInstruction [
 	^ true
-]
-
-{ #category : #printing }
-SLVMMakeVector >> mnemonic [
-	^ #makeVector
 ]
 
 { #category : #accessing }

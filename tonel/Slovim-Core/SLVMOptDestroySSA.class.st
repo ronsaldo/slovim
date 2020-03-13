@@ -21,7 +21,7 @@ SLVMOptDestroySSA >> addAllocaInstructionsTo: aFunction [
 					instruction removeFromBlock
 				] ifNotEmpty: [ 
 					alloca := SLVMAlloca pointerSize: pointerSize valueType: instruction type.
-					alloca name: instruction name , '_phivar'.
+					alloca name: (instruction name ifNotNil: [:instructionName | (instructionName , '_phivar') asSymbol]).
 				
 					firstBlock addFirst: alloca.
 					phiAllocaDictionary at: instruction put: alloca.

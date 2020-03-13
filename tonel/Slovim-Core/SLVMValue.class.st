@@ -10,6 +10,16 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMValue class >> mnemonic [
+	^ self subclassResponsibility
+]
+
+{ #category : #printing }
+SLVMValue class >> mnemonics [
+	^ {self mnemonic}
+]
+
 { #category : #visitor }
 SLVMValue >> accept: aVisitor [
 	self subclassResponsibility
@@ -28,6 +38,16 @@ SLVMValue >> addInstructionReference: anInstruction [
 { #category : #converting }
 SLVMValue >> asCanonicalLocalReference [
 	^ self
+]
+
+{ #category : #printing }
+SLVMValue >> asFullSExpression [
+	^ self asSExpression
+]
+
+{ #category : #printing }
+SLVMValue >> asSExpression [
+	self subclassResponsibility
 ]
 
 { #category : #accessing }
@@ -208,6 +228,11 @@ SLVMValue >> isZeroConstant [
 { #category : #accessing }
 SLVMValue >> livenessIndex [
 	^ nil
+]
+
+{ #category : #printing }
+SLVMValue >> mnemonic [
+	^ self class mnemonic
 ]
 
 { #category : #'as yet unclassified' }

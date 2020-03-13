@@ -14,6 +14,11 @@ SLVMInstantiateClosure class >> definition: definition captures: captures [
 ]
 
 { #category : #printing }
+SLVMInstantiateClosure class >> mnemonic [
+	^ #instantiateClosure
+]
+
+{ #category : #printing }
 SLVMInstantiateClosure >> accept: aVisitor [
 	^ aVisitor visitInstantiateClosure: self
 ]
@@ -62,11 +67,6 @@ SLVMInstantiateClosure >> definition: definition captures: captures [
 { #category : #testing }
 SLVMInstantiateClosure >> isInstantiateClosure [
 	^ true
-]
-
-{ #category : #printing }
-SLVMInstantiateClosure >> mnemonic [
-	^ #instantiateClosure
 ]
 
 { #category : #accessing }

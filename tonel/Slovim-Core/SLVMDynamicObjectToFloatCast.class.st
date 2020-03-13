@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMDynamicObjectToFloatCast class >> mnemonic [
+	^ #dynobject2float
+]
+
 { #category : #visiting }
 SLVMDynamicObjectToFloatCast >> accept: aVisitor [
 	^ aVisitor visitDynamicObjectToFloatCast: self
@@ -15,9 +20,4 @@ SLVMDynamicObjectToFloatCast >> accept: aVisitor [
 { #category : #testing }
 SLVMDynamicObjectToFloatCast >> isDynamicObjectToFloatCast [
 	^ true
-]
-
-{ #category : #printing }
-SLVMDynamicObjectToFloatCast >> mnemonic [
-	^ #dynobject2float
 ]

@@ -9,6 +9,11 @@ SLVMFloatType >> accept: aVisitor [
 	^ aVisitor visitFloatType: self
 ]
 
+{ #category : #converting }
+SLVMFloatType >> asFullSExpression [
+	^ sname ifNil: [ sname := ('f' , (self size * 8) asString) asSymbol]
+]
+
 { #category : #'as yet unclassified' }
 SLVMFloatType >> defaultConstant [
 	^ SLVMConstant type: self value: 0.0

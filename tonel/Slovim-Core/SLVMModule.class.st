@@ -6,8 +6,6 @@ Class {
 	#superclass : #SLVMObject,
 	#instVars : [
 		'compilationTarget',
-		'globalValues',
-		'anonymousGlobals',
 		'packages',
 		'classVariableClassMap',
 		'debugInformation',
@@ -19,7 +17,9 @@ Class {
 		'highLevelMapToSymbol',
 		'symbolMapToHighLevel',
 		'sourceLanguageName',
-		'disableSLVMOptimizations'
+		'disableSLVMOptimizations',
+		'globalValueDictionary',
+		'globalValues'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -27,8 +27,11 @@ Class {
 { #category : #adding }
 SLVMModule >> add: aGlobalValue [
 	aGlobalValue module: self.
-	aGlobalValue name ifNil: [ ^ anonymousGlobals add: aGlobalValue ].
-	globalValues at: aGlobalValue name put: aGlobalValue
+	globalValues add: aGlobalValue.
+	aGlobalValue name ifNotNil: [ :name |
+		globalValueDictionary at: name ifAbsentPut: aGlobalValue
+	].
+
 ]
 
 { #category : #adding }
@@ -99,13 +102,12 @@ SLVMModule >> addStructure: aStructure [
 
 { #category : #accessing }
 SLVMModule >> allGlobalValues [
-	^ globalValues values , anonymousGlobals
+	^ globalValues
 ]
 
 { #category : #accessing }
 SLVMModule >> allGlobalValuesDo: aBlock [
-	globalValues valuesDo: aBlock.
-	anonymousGlobals do: aBlock
+	globalValues do: aBlock
 ]
 
 { #category : #enumerating }
@@ -119,8 +121,17 @@ SLVMModule >> allInstructionsDo: aBlock [
 
 { #category : #optimizations }
 SLVMModule >> applyFunctionOptimizationPasses: passes [
-	globalValues valuesDo: [ :val | val isFunction ifTrue: [ val applyFunctionOptimizationPasses: passes ] ].
-	anonymousGlobals do: [ :val | val isFunction ifTrue: [ val applyFunctionOptimizationPasses: passes ] ].
+	globalValues do: [ :val | val isFunction ifTrue: [ val applyFunctionOptimizationPasses: passes ] ].
+]
+
+{ #category : #converting }
+SLVMModule >> asFullSExpression [
+	^ {
+		#structures . structures collect: [:each | each asFullSExpression ] as: Array.
+		#globals . globalValues collect: [:each | each asFullSExpression ] as: Array.
+		#constructors . globalConstructors collect: [:each | each asFullSExpression ] as: Array.
+		#destructors . globalDestructors collect: [:each | each asFullSExpression ] as: Array.
+	}
 ]
 
 { #category : #converting }
@@ -133,9 +144,29 @@ SLVMModule >> asLowLevelModuleWithOptimizationLevel: anOptimizationLevel [
 	^ compilationTarget generateLowLevelModule: self optimizationLevel: anOptimizationLevel
 ]
 
+{ #category : #converting }
+SLVMModule >> asPublicInterfaceDeclarationModule [
+	| result |
+	result := self class new compilationTarget: self compilationTarget.
+	structures do: [ :structure |
+		result addStructure: structure
+	].
+
+	globalValues do: [ :globalValue |
+		globalValue createPublicInterfaceDeclarationVersionIn: result.
+	].
+
+	^ result
+]
+
+{ #category : #converting }
+SLVMModule >> asSExpression [
+	^ self asFullSExpression
+]
+
 { #category : #accessing }
 SLVMModule >> childrenNodes [
-	^ (anonymousGlobals , globalValues values) sorted: [ :a :b | a printString <= b printString ]
+	^ globalValues
 ]
 
 { #category : #accessing }
@@ -174,6 +205,7 @@ SLVMModule >> debugInformation [
 
 { #category : #accessing }
 SLVMModule >> debugInformation: anObject [
+	self halt.
 	debugInformation := anObject
 ]
 
@@ -190,8 +222,8 @@ SLVMModule >> disableSLVMOptimizations: aBoolean [
 { #category : #printing }
 SLVMModule >> fullPrintOn: aStream [
 	structures do: [ :struct | struct fullPrintOn: aStream ].
-	anonymousGlobals do: [ :val | val fullPrintOn: aStream ].
-	globalValues values do: [ :val | val fullPrintOn: aStream ].
+	globalValues do: [ :val | val fullPrintOn: aStream ].
+	globalValueDictionary values do: [ :val | val fullPrintOn: aStream ].
 
 ]
 
@@ -282,12 +314,12 @@ SLVMModule >> globalDestructors [
 
 { #category : #adding }
 SLVMModule >> globalNamed: aSymbol [
-	^ globalValues at: aSymbol
+	^ globalValueDictionary at: aSymbol
 ]
 
 { #category : #adding }
 SLVMModule >> globalNamed: aSymbol ifPresent: aBlock [
-	^ globalValues at: aSymbol ifPresent: aBlock
+	^ globalValueDictionary at: aSymbol ifPresent: aBlock
 ]
 
 { #category : #optimizations }
@@ -303,7 +335,7 @@ SLVMModule >> globalOptimizeWithLevel: optimizationLevel keepStructuredControlFl
 
 { #category : #accessing }
 SLVMModule >> globalValues [
-	^ globalValues
+	^ globalValueDictionary
 ]
 
 { #category : #'gt inspector extensions' }
@@ -331,14 +363,14 @@ SLVMModule >> highLevelMapToSymbol [
 
 { #category : #adding }
 SLVMModule >> includesGlobalNamed: globalName [
-	^ globalValues includesKey: globalName
+	^ globalValueDictionary includesKey: globalName
 ]
 
 { #category : #initialization }
 SLVMModule >> initialize [
 	structures := OrderedCollection new.
-	anonymousGlobals := OrderedCollection new.
-	globalValues := OrderedDictionary new.
+	globalValues := OrderedCollection new.
+	globalValueDictionary := OrderedDictionary new.
 	packages := OrderedCollection new.
 	inlineAssemblyFragments := OrderedCollection new.
 	globalConstructors := OrderedCollection new.
@@ -385,6 +417,13 @@ SLVMModule >> pointerTypeFor: baseType [
 { #category : #types }
 SLVMModule >> pointerTypeFor: baseType storage: storage [
 	^ SLVMPointerType size: compilationTarget pointerSize baseType: baseType storage: storage
+]
+
+{ #category : #'as yet unclassified' }
+SLVMModule >> recomputeGlobalValueIndices [
+	globalValues doWithIndex: [ :globalValue :index |
+		globalValue globalValueIndex: index - 1
+	].
 ]
 
 { #category : #'as yet unclassified' }

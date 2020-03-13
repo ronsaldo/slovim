@@ -16,6 +16,11 @@ SLVMBranch class >> condition: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlo
 	^ self new condition: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock
 ]
 
+{ #category : #printing }
+SLVMBranch class >> mnemonic [
+	^ #branch
+]
+
 { #category : #visitor }
 SLVMBranch >> accept: aVisitor [
 	^ aVisitor visitBranch: self
@@ -38,6 +43,11 @@ SLVMBranch >> condition: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock [
 	self parameters: { condition }.
 	trueBlock := ifTrueBlock.
 	falseBlock := ifFalseBlock.
+]
+
+{ #category : #printing }
+SLVMBranch >> extraParametersSExpression [
+	^ {trueBlock asSExpression . falseBlock asSExpression}
 ]
 
 { #category : #accessing }
@@ -70,11 +80,6 @@ SLVMBranch >> isBranch [
 { #category : #testing }
 SLVMBranch >> isTerminator [
 	^ true
-]
-
-{ #category : #printing }
-SLVMBranch >> mnemonic [
-	^ #branch
 ]
 
 { #category : #'as yet unclassified' }

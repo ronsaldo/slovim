@@ -5,10 +5,8 @@ Class {
 	#name : #SLVMFunctionArgument,
 	#superclass : #SLVMFunctionLocalValue,
 	#instVars : [
-		'function',
 		'type',
 		'index',
-		'name',
 		'livenessIndex'
 	],
 	#category : #'Slovim-Core-SSA'
@@ -19,14 +17,9 @@ SLVMFunctionArgument >> accept: aVisitor [
 	^ aVisitor visitFunctionArgument: self
 ]
 
-{ #category : #accessing }
-SLVMFunctionArgument >> function [
-	^ function
-]
-
-{ #category : #accessing }
-SLVMFunctionArgument >> function: anObject [
-	function := anObject
+{ #category : #printing }
+SLVMFunctionArgument >> asFullSExpression [
+	^ { name . type asSExpression . self flags sorted }
 ]
 
 { #category : #accessing }
@@ -82,11 +75,6 @@ SLVMFunctionArgument >> name [
 { #category : #accessing }
 SLVMFunctionArgument >> name: anObject [
 	name := anObject
-]
-
-{ #category : #printing }
-SLVMFunctionArgument >> printOn: aStream [
-	^ aStream nextPut: $%; nextPutAll: name
 ]
 
 { #category : #accessing }

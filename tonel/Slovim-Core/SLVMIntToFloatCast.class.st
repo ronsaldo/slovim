@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMIntToFloatCast class >> mnemonic [
+	^ #int2fp
+]
+
 { #category : #visiting }
 SLVMIntToFloatCast >> accept: aVisitor [
 	^ aVisitor visitIntToFloatCast: self
@@ -15,9 +20,4 @@ SLVMIntToFloatCast >> accept: aVisitor [
 { #category : #testing }
 SLVMIntToFloatCast >> isIntToFloatCast [
 	^ true
-]
-
-{ #category : #printing }
-SLVMIntToFloatCast >> mnemonic [
-	^ #int2fp
 ]

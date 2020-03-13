@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMStoreInstruction class >> mnemonic [
+	^ #store
+]
+
 { #category : #construction }
 SLVMStoreInstruction class >> value: value variable: variable [
 	^ self new value: value variable: variable
@@ -31,11 +36,6 @@ SLVMStoreInstruction >> initialize [
 { #category : #testing }
 SLVMStoreInstruction >> isStore [
 	^ true
-]
-
-{ #category : #printing }
-SLVMStoreInstruction >> mnemonic [
-	^ #store
 ]
 
 { #category : #accessing }

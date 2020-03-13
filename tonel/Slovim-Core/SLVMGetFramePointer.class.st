@@ -8,6 +8,11 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SLVMGetFramePointer class >> mnemonic [
+	^ #getFramePointer
+]
+
+{ #category : #'as yet unclassified' }
 SLVMGetFramePointer class >> type: type [
 	^ self new type: type
 ]
@@ -20,11 +25,6 @@ SLVMGetFramePointer >> accept: visitor [
 { #category : #testing }
 SLVMGetFramePointer >> isPureInstruction [
 	^ true
-]
-
-{ #category : #'as yet unclassified' }
-SLVMGetFramePointer >> mnemonic [
-	^ #getFramePointer
 ]
 
 { #category : #accessing }

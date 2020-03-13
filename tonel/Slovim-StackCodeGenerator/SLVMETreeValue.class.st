@@ -33,11 +33,6 @@ SLVMETreeValue >> isConstantAggregateValue [
 ]
 
 { #category : #testing }
-SLVMETreeValue >> isConstantDynamicLiteral [
-	^ false
-]
-
-{ #category : #testing }
 SLVMETreeValue >> isConstantValue [
 	^ false
 ]
@@ -49,6 +44,11 @@ SLVMETreeValue >> isExtractValue [
 
 { #category : #testing }
 SLVMETreeValue >> isFunctionArgument [
+	^ false
+]
+
+{ #category : #testing }
+SLVMETreeValue >> isFunctionDynamicLiteral [
 	^ false
 ]
 

@@ -5,7 +5,6 @@ Class {
 	#name : #SLVMInstruction,
 	#superclass : #SLVMFunctionLocalValue,
 	#instVars : [
-		'name',
 		'block',
 		'parameters',
 		'previousInstruction',
@@ -30,6 +29,13 @@ SLVMInstruction >> applySubstitutions: substitutionDictionary [
 	]
 ]
 
+{ #category : #printing }
+SLVMInstruction >> asFullSExpression [
+	^ { name . self mnemonic . self type asSExpression . self flags sorted .
+		parameters collect: [ :each | each asSExpression ] as: Array.
+	} , (self extraParametersSExpression ifNil: [#()] ifNotNil: [:params | {params} ])
+]
+
 { #category : #accessing }
 SLVMInstruction >> block [
 	^ block
@@ -37,7 +43,8 @@ SLVMInstruction >> block [
 
 { #category : #accessing }
 SLVMInstruction >> block: anObject [
-	block := anObject
+	block := anObject.
+	self function: (block ifNotNil: [ block function])
 ]
 
 { #category : #accessing }
@@ -47,6 +54,11 @@ SLVMInstruction >> dominates: anotherInstruction [
 	].
 
 	^ block isInstruction: self beforeThan: anotherInstruction
+]
+
+{ #category : #printing }
+SLVMInstruction >> extraParametersSExpression [
+	^ nil
 ]
 
 { #category : #'basic optimizations' }
@@ -65,16 +77,6 @@ SLVMInstruction >> fullPrintOn: aStream [
 		index > 1 ifTrue: [  aStream nextPutAll: ', ' ].
 		aStream print: param
 	]
-]
-
-{ #category : #accessing }
-SLVMInstruction >> function [
-	^ self block function
-]
-
-{ #category : #testing }
-SLVMInstruction >> hasAnonName [
-	^ name isNil or: [ name detect: [:c | c isDigit not] ifFound: [false] ifNone: [ true ] ]
 ]
 
 { #category : #testing }
@@ -359,21 +361,6 @@ SLVMInstruction >> livenessIndex: anObject [
 	livenessIndex := anObject
 ]
 
-{ #category : #printing }
-SLVMInstruction >> mnemonic [
-	self subclassResponsibility
-]
-
-{ #category : #accessing }
-SLVMInstruction >> name [
-	^ name
-]
-
-{ #category : #accessing }
-SLVMInstruction >> name: anObject [
-	name := anObject
-]
-
 { #category : #accessing }
 SLVMInstruction >> nextInstruction [
 	^ nextInstruction
@@ -433,11 +420,6 @@ SLVMInstruction >> previousInstruction: anObject [
 	previousInstruction := anObject
 ]
 
-{ #category : #printing }
-SLVMInstruction >> printOn: aStream [
-	aStream nextPut: $%; nextPutAll: self validName
-]
-
 { #category : #modifying }
 SLVMInstruction >> removeFromBlock [
 	self assert: instructionReferences isEmpty.
@@ -487,7 +469,7 @@ SLVMInstruction >> signature [
 { #category : #'as yet unclassified' }
 SLVMInstruction >> splitBasicBlock [
 	| nextBlock nextChain |
-	nextBlock := SLVMBasicBlock new name: (block name , '_split').
+	nextBlock := SLVMBasicBlock new name: (block name ifNotNil: [:blockName | (blockName , '_split') asSymbol]).
 	block function addBasicBlock: nextBlock.
 	
 	"Update the phis"
@@ -516,11 +498,6 @@ SLVMInstruction >> splitBasicBlock [
 { #category : #accessing }
 SLVMInstruction >> successors [
 	^ #()
-]
-
-{ #category : #accessing }
-SLVMInstruction >> validName [
-	^ name ifNil: [ #anon ]
 ]
 
 { #category : #testing }

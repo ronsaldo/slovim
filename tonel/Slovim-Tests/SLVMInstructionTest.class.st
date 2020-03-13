@@ -17,6 +17,8 @@ SLVMInstructionTest >> testBinaryOperation [
 	self assert: instruction left = left.
 	self assert: instruction right = right.
 	self assert: instruction type isIntegerType.
+	self assert: instruction asFullSExpression equals: 
+		#(nil add i32 () ((const i32 1) (const i32 2))).
 ]
 
 { #category : #tests }
@@ -27,6 +29,8 @@ SLVMInstructionTest >> testReturn [
 	self assert: instruction isTerminator.
 	self assert: instruction value = value.
 	self assert: instruction type isVoidType.
+	self assert: instruction asFullSExpression equals: 
+		#(nil return void () ((const i32 1))).
 ]
 
 { #category : #tests }
@@ -35,6 +39,8 @@ SLVMInstructionTest >> testReturnVoid [
 	instruction := SLVMReturnVoid new.
 	self assert: instruction isTerminator.
 	self assert: instruction type isVoidType.
+	self assert: instruction asFullSExpression equals: 
+		#(nil returnVoid void () ()).
 ]
 
 { #category : #tests }
@@ -44,4 +50,6 @@ SLVMInstructionTest >> testUnreachable [
 	self assert: instruction isTerminator.
 	self assert: instruction isUnreachable.
 	self assert: instruction type isVoidType.
+	self assert: instruction asFullSExpression equals: 
+		#(nil unreachable void () ()).
 ]

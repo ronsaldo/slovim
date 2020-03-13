@@ -267,7 +267,8 @@ SLVMOptPromoteAllocas >> promote: allocaInstruction [
 		
 		workNode dominanceFrontier do: [ :frontierNode |
 			phiNodeDictionary at: frontierNode ifAbsentPut: [
-				phiNode := (SLVMPhi type: allocaInstruction valueType) name: (allocaInstruction block function generateSymbol, allocaInstruction name) asSymbol.
+				phiNode := (SLVMPhi type: allocaInstruction valueType) name: 
+				(allocaInstruction name ifNotNil: [:n | (n , #_phi) asSymbol]).
 				frontierNode addFirst: phiNode.
 				(definitionsPerNode at: frontierNode ifAbsentPut: [ OrderedCollection new. ])
 					add: phiNode.

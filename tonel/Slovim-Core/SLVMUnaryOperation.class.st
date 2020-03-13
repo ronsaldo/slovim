@@ -29,6 +29,11 @@ SLVMUnaryOperation class >> initialize [
 
 ]
 
+{ #category : #printing }
+SLVMUnaryOperation class >> mnemonic [
+	^ self operation
+]
+
 { #category : #construction }
 SLVMUnaryOperation class >> operation: operation operand: operand [
 	^ self new operation: operation operand: operand
@@ -107,7 +112,7 @@ SLVMUnaryOperation >> isUnaryOperation [
 
 { #category : #printing }
 SLVMUnaryOperation >> mnemonic [
-	^ self operation
+	^ operation
 ]
 
 { #category : #accessing }

@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMReturnFromContext class >> mnemonic [
+	^ #returnFromContext
+]
+
 { #category : #'as yet unclassified' }
 SLVMReturnFromContext class >> value: aReturnValue context: aContext [
 	^ self new value: aReturnValue context: aContext
@@ -32,11 +37,6 @@ SLVMReturnFromContext >> isReturnFromContext [
 { #category : #testing }
 SLVMReturnFromContext >> isTerminator [
 	^ true
-]
-
-{ #category : #printing }
-SLVMReturnFromContext >> mnemonic [
-	^ #returnFromContext
 ]
 
 { #category : #accessing }

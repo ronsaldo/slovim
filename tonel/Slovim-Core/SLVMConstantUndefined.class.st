@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMConstantUndefined class >> mnemonic [
+	^ #undef
+]
+
 { #category : #'as yet unclassified' }
 SLVMConstantUndefined class >> type: aType [
 	^ self new type: aType
@@ -17,14 +22,14 @@ SLVMConstantUndefined >> accept: aVisitor [
 	^ aVisitor visitConstantUndefined: self
 ]
 
+{ #category : #printing }
+SLVMConstantUndefined >> asSExpression [
+	^ { self mnemonic . type asSExpression }
+]
+
 { #category : #testing }
 SLVMConstantUndefined >> isUndefined [
 	^ true
-]
-
-{ #category : #printing }
-SLVMConstantUndefined >> mnemonic [
-	^ #undefined
 ]
 
 { #category : #printing }

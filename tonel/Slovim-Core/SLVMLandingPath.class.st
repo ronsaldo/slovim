@@ -9,6 +9,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #visitor }
+SLVMLandingPath class >> mnemonic [
+	^ #landingpath
+]
+
 { #category : #'as yet unclassified' }
 SLVMLandingPath class >> valueType: aType [
 	^ self new type: aType
@@ -45,11 +50,6 @@ SLVMLandingPath >> initialize [
 	cleanup := false.
 	catchedExceptions := #().
 
-]
-
-{ #category : #visitor }
-SLVMLandingPath >> mnemonic [
-	^ #landingpath
 ]
 
 { #category : #accessing }

@@ -4,3 +4,8 @@ Extension { #name : #Boolean }
 Boolean >> isSLVMDynamicInlineLiteral [
 	^ true
 ]
+
+{ #category : #'*Slovim-Core' }
+Boolean >> slvmEncodeAsSExpression [
+	^ self
+]

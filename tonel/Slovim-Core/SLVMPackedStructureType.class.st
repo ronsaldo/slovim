@@ -26,3 +26,8 @@ SLVMPackedStructureType >> computeLayout [
 SLVMPackedStructureType >> isPacked [
 	^ true
 ]
+
+{ #category : #printing }
+SLVMPackedStructureType >> mnemonic [
+	^ #packedStruct
+]

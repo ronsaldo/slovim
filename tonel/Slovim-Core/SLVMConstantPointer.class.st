@@ -13,6 +13,11 @@ SLVMConstantPointer class >> constant: constant pointerType: pointerType [
 	^ self new constant: constant; type: pointerType; yourself
 ]
 
+{ #category : #printing }
+SLVMConstantPointer class >> mnemonic [
+	^ #constPointer
+]
+
 { #category : #'as yet unclassified' }
 SLVMConstantPointer >> = other [
 	^ self class = other class and: [ self type = other type and: [ self constant = other constant ] ]
@@ -21,6 +26,11 @@ SLVMConstantPointer >> = other [
 { #category : #'as yet unclassified' }
 SLVMConstantPointer >> accept: aVisitor [
 	^ aVisitor visitConstantPointer: self
+]
+
+{ #category : #printing }
+SLVMConstantPointer >> asSExpression [
+	^ { self mnemonic . type asSExpression . constant asSExpression }
 ]
 
 { #category : #accessing }

@@ -5,7 +5,8 @@ Class {
 		'baseType',
 		'elements',
 		'size',
-		'alignment'
+		'alignment',
+		'fullSExpression'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -49,6 +50,11 @@ SLVMVectorType >> alignment [
 { #category : #accessing }
 SLVMVectorType >> alignment: anObject [
 	alignment := anObject
+]
+
+{ #category : #converting }
+SLVMVectorType >> asFullSExpression [
+	^ fullSExpression ifNil: [ fullSExpression := { #vector . baseType asSExpression . elements } ]
 ]
 
 { #category : #accessing }

@@ -9,6 +9,11 @@ SLVMBoolType >> accept: aVisitor [
 	^ aVisitor visitBoolType: self
 ]
 
+{ #category : #converting }
+SLVMBoolType >> asFullSExpression [
+	^ sname ifNil: [ sname := ('b' , (self size * 8) asString) asSymbol]
+]
+
 { #category : #'as yet unclassified' }
 SLVMBoolType >> defaultConstant [
 	^ SLVMConstant type: self value: false

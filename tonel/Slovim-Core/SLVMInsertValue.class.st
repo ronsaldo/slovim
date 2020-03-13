@@ -13,6 +13,11 @@ SLVMInsertValue class >> aggregate: anAggregateValue value: value indices: indic
 	^ self new aggregate: anAggregateValue value: value indices: indicesValue
 ]
 
+{ #category : #printing }
+SLVMInsertValue class >> mnemonic [
+	^ #insertValue
+]
+
 { #category : #visiting }
 SLVMInsertValue >> accept: aVisitor [
 	^ aVisitor visitInsertValue: self
@@ -30,6 +35,11 @@ SLVMInsertValue >> aggregate: anAggregateValue value: value indices: newIndices 
 	self parameters: { anAggregateValue . value}.
 	type := anAggregateValue type.
 	self validate.
+]
+
+{ #category : #printing }
+SLVMInsertValue >> extraParametersSExpression [
+	^ indices
 ]
 
 { #category : #'basic optimizations' }
@@ -67,11 +77,6 @@ SLVMInsertValue >> isInsertValue [
 { #category : #testing }
 SLVMInsertValue >> isPureInstruction [
 	^ true
-]
-
-{ #category : #printing }
-SLVMInsertValue >> mnemonic [
-	^ #insertValue
 ]
 
 { #category : #accessing }

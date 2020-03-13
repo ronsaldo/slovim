@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMBitCast class >> mnemonic [
+	^ #bitcast
+]
+
 { #category : #visiting }
 SLVMBitCast >> accept: aVisitor [
 	^ aVisitor visitBitCast: self
@@ -31,11 +36,6 @@ SLVMBitCast >> canBeNop [
 { #category : #testing }
 SLVMBitCast >> isBitCast [
 	^ true
-]
-
-{ #category : #printing }
-SLVMBitCast >> mnemonic [
-	^ #bitcast
 ]
 
 { #category : #'as yet unclassified' }

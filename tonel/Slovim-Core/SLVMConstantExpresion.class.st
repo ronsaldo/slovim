@@ -9,8 +9,8 @@ Class {
 }
 
 { #category : #printing }
-SLVMConstantExpresion >> mnemonic [
-	self subclassResponsibility
+SLVMConstantExpresion >> asSExpression [
+	^ { self mnemonic . type asSExpression . parameters collect: [ :each | each asSExpression ] }
 ]
 
 { #category : #accessing }

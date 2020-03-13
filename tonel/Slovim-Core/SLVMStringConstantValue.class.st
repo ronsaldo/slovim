@@ -10,6 +10,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMStringConstantValue class >> mnemonic [
+	^ #constString
+]
+
 { #category : #converting }
 SLVMStringConstantValue >> asBlob [
 	^ ByteArray streamContents: [ :out |

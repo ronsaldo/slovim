@@ -20,7 +20,7 @@ SLVMBuilder class >> on: aFunction [
 
 { #category : #arithmetic }
 SLVMBuilder >> add: left with: right [
-	^ self add: left with: right name: function generateSymbol
+	^ self add: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -49,7 +49,7 @@ SLVMBuilder >> addInstruction: anInstruction name: theInstructionName [
 
 { #category : #adding }
 SLVMBuilder >> addOperation: operation left: left right: right [
-	^ self addOperation: operation left: left right: right name: function generateSymbol
+	^ self addOperation: operation left: left right: right name: nil
 ]
 
 { #category : #adding }
@@ -59,7 +59,7 @@ SLVMBuilder >> addOperation: operation left: left right: right name: name [
 
 { #category : #adding }
 SLVMBuilder >> addOperation: operation operand: operand [
-	^ self addOperation: operation operand: operand name: function generateSymbol
+	^ self addOperation: operation operand: operand name: nil
 ]
 
 { #category : #adding }
@@ -69,7 +69,7 @@ SLVMBuilder >> addOperation: operation operand: operand name: name [
 
 { #category : #instructions }
 SLVMBuilder >> alloca: valueType [
-	^ self alloca: valueType name: function generateSymbol
+	^ self alloca: valueType name: nil
 ]
 
 { #category : #instructions }
@@ -95,7 +95,7 @@ SLVMBuilder >> areAllConstants: values [
 
 { #category : #'logical operations' }
 SLVMBuilder >> arithmeticShiftRight: left with: right [
-	^ self arithmeticShiftRight: left with: right name: function generateSymbol
+	^ self arithmeticShiftRight: left with: right name: nil
 ]
 
 { #category : #'logical operations' }
@@ -124,7 +124,7 @@ SLVMBuilder >> basicBlockNamed: basicBlockName do: aBlock [
 
 { #category : #'logical operations' }
 SLVMBuilder >> bitAnd: left with: right [
-	^ self bitAnd: left with: right name: function generateSymbol
+	^ self bitAnd: left with: right name: nil
 ]
 
 { #category : #'logical operations' }
@@ -134,7 +134,7 @@ SLVMBuilder >> bitAnd: left with: right name: resultName [
 
 { #category : #casting }
 SLVMBuilder >> bitCast: source target: targetType [
-	^ self bitCast: source target: targetType name: function generateSymbol
+	^ self bitCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -145,7 +145,7 @@ SLVMBuilder >> bitCast: source target: targetType name: resultName [
 
 { #category : #'logical operations' }
 SLVMBuilder >> bitOr: left with: right [
-	^ self bitOr: left with: right name: function generateSymbol
+	^ self bitOr: left with: right name: nil
 ]
 
 { #category : #'logical operations' }
@@ -155,7 +155,7 @@ SLVMBuilder >> bitOr: left with: right name: resultName [
 
 { #category : #'logical operations' }
 SLVMBuilder >> bitXor: left with: right [
-	^ self bitXor: left with: right name: function generateSymbol
+	^ self bitXor: left with: right name: nil
 ]
 
 { #category : #'logical operations' }
@@ -165,7 +165,7 @@ SLVMBuilder >> bitXor: left with: right name: resultName [
 
 { #category : #casting }
 SLVMBuilder >> boolToDynamicObjectCast: source target: targetType [
-	^ self boolToDynamicObjectCast: source target: targetType name: function generateSymbol
+	^ self boolToDynamicObjectCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -175,7 +175,7 @@ SLVMBuilder >> boolToDynamicObjectCast: source target: targetType name: resultNa
 
 { #category : #instructions }
 SLVMBuilder >> branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock [
-	^ self branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock name: function generateSymbol
+	^ self branch: condition ifTrue: ifTrueBlock ifFalse: ifFalseBlock name: nil
 ]
 
 { #category : #instructions }
@@ -196,7 +196,7 @@ SLVMBuilder >> builtInFunctionName: name argumentTypes: argumentTypes returnType
 
 { #category : #instructions }
 SLVMBuilder >> call: functionValue arguments: arguments [
-	^ self call: functionValue arguments: arguments name: function generateSymbol
+	^ self call: functionValue arguments: arguments name: nil
 ]
 
 { #category : #instructions }
@@ -206,7 +206,7 @@ SLVMBuilder >> call: functionValue arguments: arguments name: resultName [
 
 { #category : #casting }
 SLVMBuilder >> charToDynamicObjectCast: source target: targetType [
-	^ self charToDynamicObjectCast: source target: targetType name: function generateSymbol
+	^ self charToDynamicObjectCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -220,7 +220,7 @@ SLVMBuilder >> charToDynamicObjectCast: source target: targetType name: resultNa
 
 { #category : #casting }
 SLVMBuilder >> closureToDynamicObject: source target: targetType [
-	^ self closureToDynamicObject: source target: targetType name: function generateSymbol
+	^ self closureToDynamicObject: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -230,7 +230,7 @@ SLVMBuilder >> closureToDynamicObject: source target: targetType name: resultNam
 
 { #category : #instructions }
 SLVMBuilder >> combineSampler: sampler with: texture [
-	^ self combineSampler: sampler with: texture name: function generateSymbol
+	^ self combineSampler: sampler with: texture name: nil
 ]
 
 { #category : #instructions }
@@ -342,7 +342,7 @@ SLVMBuilder >> currentBlock: anObject [
 
 { #category : #'debug information' }
 SLVMBuilder >> debugDeclareVariable: variable [
-	^ self debugDeclareVariable: variable name: function generateSymbol
+	^ self debugDeclareVariable: variable name: nil
 ]
 
 { #category : #'debug information' }
@@ -352,7 +352,7 @@ SLVMBuilder >> debugDeclareVariable: variable name: resultName [
 
 { #category : #'debug information' }
 SLVMBuilder >> debugSetVariable: variable value: value [
-	^ self debugSetVariable: variable value: value name: function generateSymbol
+	^ self debugSetVariable: variable value: value name: nil
 ]
 
 { #category : #'debug information' }
@@ -362,7 +362,7 @@ SLVMBuilder >> debugSetVariable: variable value: value name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> discardFragment [
-	^ self discardFragment: function generateSymbol
+	^ self discardFragment: nil
 ]
 
 { #category : #instructions }
@@ -372,7 +372,7 @@ SLVMBuilder >> discardFragment: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> div: left with: right [
-	^ self div: left with: right name: function generateSymbol
+	^ self div: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -421,7 +421,7 @@ SLVMBuilder >> doWith: bodyBlock whileWith: conditionBlock [
 
 { #category : #comparisons }
 SLVMBuilder >> dynObjectIdentityEquals: left with: right [
-	^ self dynObjectIdentityEquals: left with: right name: function generateSymbol
+	^ self dynObjectIdentityEquals: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -431,7 +431,7 @@ SLVMBuilder >> dynObjectIdentityEquals: left with: right name: resultName [
 
 { #category : #comparisons }
 SLVMBuilder >> dynObjectIdentityNotEquals: left with: right [
-	^ self dynObjectIdentityNotEquals: left with: right name: function generateSymbol
+	^ self dynObjectIdentityNotEquals: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -441,7 +441,7 @@ SLVMBuilder >> dynObjectIdentityNotEquals: left with: right name: resultName [
 
 { #category : #casting }
 SLVMBuilder >> dynamicObjectToBoolCast: source target: targetType [
-	^ self dynamicObjectToBoolCast: source target: targetType name: function generateSymbol
+	^ self dynamicObjectToBoolCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -451,7 +451,7 @@ SLVMBuilder >> dynamicObjectToBoolCast: source target: targetType name: resultNa
 
 { #category : #casting }
 SLVMBuilder >> dynamicObjectToCharCast: source target: targetType [
-	^ self dynamicObjectToCharCast: source target: targetType name: function generateSymbol
+	^ self dynamicObjectToCharCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -461,7 +461,7 @@ SLVMBuilder >> dynamicObjectToCharCast: source target: targetType name: resultNa
 
 { #category : #casting }
 SLVMBuilder >> dynamicObjectToFloatCast: source target: targetType [
-	^ self dynamicObjectToFloatCast: source target: targetType name: function generateSymbol
+	^ self dynamicObjectToFloatCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -471,7 +471,7 @@ SLVMBuilder >> dynamicObjectToFloatCast: source target: targetType name: resultN
 
 { #category : #casting }
 SLVMBuilder >> dynamicObjectToIntCast: source target: targetType [
-	^ self dynamicObjectToIntCast: source target: targetType name: function generateSymbol
+	^ self dynamicObjectToIntCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -481,7 +481,7 @@ SLVMBuilder >> dynamicObjectToIntCast: source target: targetType name: resultNam
 
 { #category : #casting }
 SLVMBuilder >> dynamicObjectToPointerCast: source target: targetType typeObject: typeObject [
-	^ self dynamicObjectToPointerCast: source target: targetType typeObject: typeObject name: function generateSymbol
+	^ self dynamicObjectToPointerCast: source target: targetType typeObject: typeObject name: nil
 ]
 
 { #category : #casting }
@@ -491,7 +491,7 @@ SLVMBuilder >> dynamicObjectToPointerCast: source target: targetType typeObject:
 
 { #category : #casting }
 SLVMBuilder >> dynamicObjectToStructureCast: source target: targetType typeObject: typeObject [
-	^ self dynamicObjectToStructureCast: source target: targetType typeObject: typeObject name: function generateSymbol
+	^ self dynamicObjectToStructureCast: source target: targetType typeObject: typeObject name: nil
 ]
 
 { #category : #casting }
@@ -506,7 +506,7 @@ SLVMBuilder >> dynamicObjectType [
 
 { #category : #instructions }
 SLVMBuilder >> extractValue: anAggregateValue indices: indicesValue [
-	^ self extractValue: anAggregateValue indices: indicesValue name: function generateSymbol
+	^ self extractValue: anAggregateValue indices: indicesValue name: nil
 ]
 
 { #category : #instructions }
@@ -516,7 +516,7 @@ SLVMBuilder >> extractValue: anAggregateValue indices: indicesValue name: result
 
 { #category : #instructions }
 SLVMBuilder >> extractVector: aVectorValue element: indexValue [
-	^ self extractVector: aVectorValue element: indexValue name: function generateSymbol
+	^ self extractVector: aVectorValue element: indexValue name: nil
 ]
 
 { #category : #instructions }
@@ -526,7 +526,7 @@ SLVMBuilder >> extractVector: aVectorValue element: indexValue name: resultName 
 
 { #category : #arithmetic }
 SLVMBuilder >> fadd: left with: right [
-	^ self fadd: left with: right name: function generateSymbol
+	^ self fadd: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -536,7 +536,7 @@ SLVMBuilder >> fadd: left with: right name: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> fdiv: left with: right [
-	^ self fdiv: left with: right name: function generateSymbol
+	^ self fdiv: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -546,7 +546,7 @@ SLVMBuilder >> fdiv: left with: right name: resultName [
 
 { #category : #casting }
 SLVMBuilder >> floatToDynamicObjectCast: source target: targetType [
-	^ self floatToDynamicObjectCast: source target: targetType name: function generateSymbol
+	^ self floatToDynamicObjectCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -556,7 +556,7 @@ SLVMBuilder >> floatToDynamicObjectCast: source target: targetType name: resultN
 
 { #category : #casting }
 SLVMBuilder >> floatToIntCast: source target: targetType [
-	^ self floatToIntCast: source target: targetType name: function generateSymbol
+	^ self floatToIntCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -566,7 +566,7 @@ SLVMBuilder >> floatToIntCast: source target: targetType name: resultName [
 
 { #category : #casting }
 SLVMBuilder >> floatingPointCast: source target: targetType [
-	^ self floatingPointCast: source target: targetType name: function generateSymbol
+	^ self floatingPointCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -579,7 +579,7 @@ SLVMBuilder >> floatingPointCast: source target: targetType name: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> fmul: left with: right [
-	^ self fmul: left with: right name: function generateSymbol
+	^ self fmul: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -589,7 +589,7 @@ SLVMBuilder >> fmul: left with: right name: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> fneg: operand [
-	^ self fneg: operand name: function generateSymbol
+	^ self fneg: operand name: nil
 ]
 
 { #category : #arithmetic }
@@ -599,7 +599,7 @@ SLVMBuilder >> fneg: operand name: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> frem: left with: right [
-	^ self frem: left with: right name: function generateSymbol
+	^ self frem: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -682,7 +682,7 @@ SLVMBuilder >> from: startCount to: endCount doSequenceWith: bodyBlock [
 
 { #category : #arithmetic }
 SLVMBuilder >> fsqrt: operand [
-	^ self fsqrt: operand name: function generateSymbol
+	^ self fsqrt: operand name: nil
 ]
 
 { #category : #arithmetic }
@@ -692,7 +692,7 @@ SLVMBuilder >> fsqrt: operand name: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> fsub: left with: right [
-	^ self fsub: left with: right name: function generateSymbol
+	^ self fsub: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -712,7 +712,7 @@ SLVMBuilder >> function: anObject [
 
 { #category : #instructions }
 SLVMBuilder >> getExceptionSelectorForTypeInfo: valueType [
-	^ self getExceptionSelectorForTypeInfo: valueType name: function generateSymbol
+	^ self getExceptionSelectorForTypeInfo: valueType name: nil
 ]
 
 { #category : #instructions }
@@ -722,7 +722,7 @@ SLVMBuilder >> getExceptionSelectorForTypeInfo: valueType name: variableName [
 
 { #category : #instructions }
 SLVMBuilder >> getFramePointer [
-	^ self getFramePointer: function generateSymbol
+	^ self getFramePointer: nil
 ]
 
 { #category : #instructions }
@@ -732,7 +732,7 @@ SLVMBuilder >> getFramePointer: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> getPointer: pointer element: element [
-	^ self getPointer: pointer element: element resultName: function generateSymbol
+	^ self getPointer: pointer element: element resultName: nil
 ]
 
 { #category : #instructions }
@@ -742,7 +742,7 @@ SLVMBuilder >> getPointer: reference element: element resultName: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> getReference: reference element: element [
-	^ self getReference: reference element: element resultName: function generateSymbol
+	^ self getReference: reference element: element resultName: nil
 ]
 
 { #category : #instructions }
@@ -752,7 +752,7 @@ SLVMBuilder >> getReference: reference element: element resultName: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> getThisContext [
-	^ self getThisContext: function generateSymbol
+	^ self getThisContext: nil
 ]
 
 { #category : #instructions }
@@ -771,7 +771,7 @@ SLVMBuilder >> highBit: aValue [
 
 { #category : #comparisons }
 SLVMBuilder >> ieq: left with: right [
-	^ self ieq: left with: right name: function generateSymbol
+	^ self ieq: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -848,7 +848,7 @@ SLVMBuilder >> if: condition trueValueWith: trueBlock falseValueWith: falseBlock
 
 { #category : #comparisons }
 SLVMBuilder >> ige: left with: right [
-	^ self ige: left with: right name: function generateSymbol
+	^ self ige: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -858,7 +858,7 @@ SLVMBuilder >> ige: left with: right name: resultName [
 
 { #category : #comparisons }
 SLVMBuilder >> igt: left with: right [
-	^ self igt: left with: right name: function generateSymbol
+	^ self igt: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -868,7 +868,7 @@ SLVMBuilder >> igt: left with: right name: resultName [
 
 { #category : #comparisons }
 SLVMBuilder >> ile: left with: right [
-	^ self ile: left with: right name: function generateSymbol
+	^ self ile: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -878,7 +878,7 @@ SLVMBuilder >> ile: left with: right name: resultName [
 
 { #category : #comparisons }
 SLVMBuilder >> ilt: left with: right [
-	^ self ilt: left with: right name: function generateSymbol
+	^ self ilt: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -888,7 +888,7 @@ SLVMBuilder >> ilt: left with: right name: resultName [
 
 { #category : #comparisons }
 SLVMBuilder >> ine: left with: right [
-	^ self ine: left with: right name: function generateSymbol
+	^ self ine: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -904,7 +904,7 @@ SLVMBuilder >> initialize [
 
 { #category : #instructions }
 SLVMBuilder >> insertValue: anAggregateValue value: value indices: indicesValue [
-	^ self insertValue: anAggregateValue value: value indices: indicesValue name: function generateSymbol
+	^ self insertValue: anAggregateValue value: value indices: indicesValue name: nil
 ]
 
 { #category : #instructions }
@@ -914,7 +914,7 @@ SLVMBuilder >> insertValue: anAggregateValue value: value indices: indicesValue 
 
 { #category : #instructions }
 SLVMBuilder >> insertVector: aVectorValue element: indexValue value: value [
-	^ self insertVector: aVectorValue element: indexValue value: value name: function generateSymbol
+	^ self insertVector: aVectorValue element: indexValue value: value name: nil
 ]
 
 { #category : #instructions }
@@ -924,7 +924,7 @@ SLVMBuilder >> insertVector: aVectorValue element: indexValue value: value name:
 
 { #category : #closures }
 SLVMBuilder >> instantiateClosure: closureDefinition captures: captures [
-	^ self instantiateClosure: closureDefinition captures: captures name: function generateSymbol
+	^ self instantiateClosure: closureDefinition captures: captures name: nil
 ]
 
 { #category : #closures }
@@ -934,7 +934,7 @@ SLVMBuilder >> instantiateClosure: closureDefinition captures: captures name: re
 
 { #category : #casting }
 SLVMBuilder >> intCast: source target: targetType [
-	^ self intCast: source target: targetType name: function generateSymbol
+	^ self intCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -969,7 +969,7 @@ SLVMBuilder >> intCast: source target: targetType name: resultName [
 
 { #category : #casting }
 SLVMBuilder >> intToDynamicObjectCast: source target: targetType [
-	^ self intToDynamicObjectCast: source target: targetType name: function generateSymbol
+	^ self intToDynamicObjectCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -983,7 +983,7 @@ SLVMBuilder >> intToDynamicObjectCast: source target: targetType name: resultNam
 
 { #category : #casting }
 SLVMBuilder >> intToFloatCast: source target: targetType [
-	^ self intToFloatCast: source target: targetType name: function generateSymbol
+	^ self intToFloatCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -993,7 +993,7 @@ SLVMBuilder >> intToFloatCast: source target: targetType name: resultName [
 
 { #category : #casting }
 SLVMBuilder >> intToPointerCast: source target: targetType [
-	^ self intToPointerCast: source target: targetType name: function generateSymbol
+	^ self intToPointerCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -1056,8 +1056,7 @@ SLVMBuilder >> isUnsignedVector: vector [
 
 { #category : #instructions }
 SLVMBuilder >> jump: destination [
-	^ self jump: destination name: function generateSymbol
-
+	^ self jump: destination name: nil
 ]
 
 { #category : #instructions }
@@ -1067,7 +1066,7 @@ SLVMBuilder >> jump: destination name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> landingPath: valueType [
-	^ self landingPath: valueType name: function generateSymbol
+	^ self landingPath: valueType name: nil
 ]
 
 { #category : #instructions }
@@ -1082,7 +1081,7 @@ SLVMBuilder >> lastInstruction [
 
 { #category : #'logical operations' }
 SLVMBuilder >> lnot: operand [
-	^ self lnot: operand name: function generateSymbol
+	^ self lnot: operand name: nil
 ]
 
 { #category : #'logical operations' }
@@ -1092,7 +1091,7 @@ SLVMBuilder >> lnot: operand name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> load: variable [
-	^ self load: variable name: function generateSymbol
+	^ self load: variable name: nil
 ]
 
 { #category : #instructions }
@@ -1110,7 +1109,7 @@ SLVMBuilder >> lowBit: aValue [
 
 { #category : #instructions }
 SLVMBuilder >> makeMatrix: matrixType arguments: arguments [
-	^ self makeMatrix: matrixType arguments: arguments name: function generateSymbol
+	^ self makeMatrix: matrixType arguments: arguments name: nil
 ]
 
 { #category : #instructions }
@@ -1125,7 +1124,7 @@ SLVMBuilder >> makeMatrix: matrixType arguments: arguments name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> makeVector: vectorType arguments: arguments [
-	^ self makeVector: vectorType arguments: arguments name: function generateSymbol
+	^ self makeVector: vectorType arguments: arguments name: nil
 ]
 
 { #category : #instructions }
@@ -1139,7 +1138,7 @@ SLVMBuilder >> makeVector: vectorType arguments: arguments name: resultName [
 
 { #category : #'matrix operations' }
 SLVMBuilder >> matrixAdd: left with: right [
-	^ self matrixAdd: left with: right name: function generateSymbol
+	^ self matrixAdd: left with: right name: nil
 ]
 
 { #category : #'matrix operations' }
@@ -1153,7 +1152,7 @@ SLVMBuilder >> matrixAdd: left with: right name: name [
 
 { #category : #'matrix operations' }
 SLVMBuilder >> matrixDiv: left with: right [
-	^ self matrixDiv: left with: right name: function generateSymbol
+	^ self matrixDiv: left with: right name: nil
 ]
 
 { #category : #'matrix operations' }
@@ -1171,7 +1170,7 @@ SLVMBuilder >> matrixDiv: left with: right name: name [
 
 { #category : #'matrix operations' }
 SLVMBuilder >> matrixMul: left with: right [
-	^ self matrixMul: left with: right name: function generateSymbol
+	^ self matrixMul: left with: right name: nil
 ]
 
 { #category : #'matrix operations' }
@@ -1185,7 +1184,7 @@ SLVMBuilder >> matrixMul: left with: right name: name [
 
 { #category : #'matrix operations' }
 SLVMBuilder >> matrixRem: left with: right [
-	^ self matrixRem: left with: right name: function generateSymbol
+	^ self matrixRem: left with: right name: nil
 ]
 
 { #category : #'matrix operations' }
@@ -1203,7 +1202,7 @@ SLVMBuilder >> matrixRem: left with: right name: name [
 
 { #category : #'matrix operations' }
 SLVMBuilder >> matrixSub: left with: right [
-	^ self matrixSub: left with: right name: function generateSymbol
+	^ self matrixSub: left with: right name: nil
 ]
 
 { #category : #'matrix operations' }
@@ -1217,7 +1216,7 @@ SLVMBuilder >> matrixSub: left with: right name: name [
 
 { #category : #arithmetic }
 SLVMBuilder >> mul: left with: right [
-	^ self mul: left with: right name: function generateSymbol
+	^ self mul: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -1227,7 +1226,7 @@ SLVMBuilder >> mul: left with: right name: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> mulMatrix: left withMatrix: right [
-	^ self mulMatrix: left withMatrix: right name: function generateSymbol
+	^ self mulMatrix: left withMatrix: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -1237,7 +1236,7 @@ SLVMBuilder >> mulMatrix: left withMatrix: right name: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> mulMatrix: left withVector: right [
-	^ self mulMatrix: left withVector: right name: function generateSymbol
+	^ self mulMatrix: left withVector: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -1247,7 +1246,7 @@ SLVMBuilder >> mulMatrix: left withVector: right name: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> mulVector: left withMatrix: right [
-	^ self mulVector: left withMatrix: right name: function generateSymbol
+	^ self mulVector: left withMatrix: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -1257,7 +1256,7 @@ SLVMBuilder >> mulVector: left withMatrix: right name: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> neg: operand [
-	^ self neg: operand name: function generateSymbol
+	^ self neg: operand name: nil
 ]
 
 { #category : #arithmetic }
@@ -1267,7 +1266,7 @@ SLVMBuilder >> neg: operand name: resultName [
 
 { #category : #'instance creation' }
 SLVMBuilder >> newBasicBlock [
-	^ self newBasicBlock: function generateSymbol
+	^ self newBasicBlock: nil
 ]
 
 { #category : #'instance creation' }
@@ -1285,7 +1284,7 @@ SLVMBuilder >> newBasicBlockHere: aName [
 
 { #category : #'logical operations' }
 SLVMBuilder >> not: operand [
-	^ self not: operand name: function generateSymbol
+	^ self not: operand name: nil
 ]
 
 { #category : #'logical operations' }
@@ -1295,7 +1294,7 @@ SLVMBuilder >> not: operand name: resultName [
 
 { #category : #comparisons }
 SLVMBuilder >> ofeq: left with: right [
-	^ self ofeq: left with: right name: function generateSymbol
+	^ self ofeq: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -1305,7 +1304,7 @@ SLVMBuilder >> ofeq: left with: right name: resultName [
 
 { #category : #comparisons }
 SLVMBuilder >> ofge: left with: right [
-	^ self ofge: left with: right name: function generateSymbol
+	^ self ofge: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -1315,7 +1314,7 @@ SLVMBuilder >> ofge: left with: right name: resultName [
 
 { #category : #comparisons }
 SLVMBuilder >> ofgt: left with: right [
-	^ self ofgt: left with: right name: function generateSymbol
+	^ self ofgt: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -1325,7 +1324,7 @@ SLVMBuilder >> ofgt: left with: right name: resultName [
 
 { #category : #comparisons }
 SLVMBuilder >> ofle: left with: right [
-	^ self ofle: left with: right name: function generateSymbol
+	^ self ofle: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -1335,7 +1334,7 @@ SLVMBuilder >> ofle: left with: right name: resultName [
 
 { #category : #comparisons }
 SLVMBuilder >> oflt: left with: right [
-	^ self oflt: left with: right name: function generateSymbol
+	^ self oflt: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -1345,7 +1344,7 @@ SLVMBuilder >> oflt: left with: right name: resultName [
 
 { #category : #comparisons }
 SLVMBuilder >> ofne: left with: right [
-	^ self ofne: left with: right name: function generateSymbol
+	^ self ofne: left with: right name: nil
 ]
 
 { #category : #comparisons }
@@ -1355,7 +1354,7 @@ SLVMBuilder >> ofne: left with: right name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> phi: type [
-	^ self phi: type name: function generateSymbol
+	^ self phi: type name: nil
 ]
 
 { #category : #instructions }
@@ -1370,7 +1369,7 @@ SLVMBuilder >> pointerSize [
 
 { #category : #casting }
 SLVMBuilder >> pointerToDynamicObjectCast: source target: targetType typeObject: typeObject [
-	^ self pointerToDynamicObjectCast: source target: targetType typeObject: typeObject name: function generateSymbol
+	^ self pointerToDynamicObjectCast: source target: targetType typeObject: typeObject name: nil
 ]
 
 { #category : #casting }
@@ -1380,7 +1379,7 @@ SLVMBuilder >> pointerToDynamicObjectCast: source target: targetType typeObject:
 
 { #category : #casting }
 SLVMBuilder >> pointerToIntCast: source target: targetType [
-	^ self pointerToIntCast: source target: targetType name: function generateSymbol
+	^ self pointerToIntCast: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -1410,7 +1409,7 @@ SLVMBuilder >> registerClassVariable: classVariable class: classVariableClass [
 
 { #category : #arithmetic }
 SLVMBuilder >> rem: left with: right [
-	^ self rem: left with: right name: function generateSymbol
+	^ self rem: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -1420,7 +1419,7 @@ SLVMBuilder >> rem: left with: right name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> resumeException: exception [
-	^ self resumeException: exception name: function generateSymbol
+	^ self resumeException: exception name: nil
 ]
 
 { #category : #instructions }
@@ -1430,12 +1429,12 @@ SLVMBuilder >> resumeException: exception name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> return: value [
-	^ self return: value name: function generateSymbol
+	^ self return: value name: nil
 ]
 
 { #category : #instructions }
 SLVMBuilder >> return: value fromContext: context [
-	^ self return: value fromContext: context name: function generateSymbol
+	^ self return: value fromContext: context name: nil
 ]
 
 { #category : #instructions }
@@ -1451,7 +1450,7 @@ SLVMBuilder >> return: value name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> returnVoid [
-	^ self returnVoid: function generateSymbol
+	^ self returnVoid: nil
 ]
 
 { #category : #instructions }
@@ -1462,7 +1461,7 @@ SLVMBuilder >> returnVoid: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> returnVoidFromContext: context [
-	^ self returnVoidFromContext: context name: function generateSymbol
+	^ self returnVoidFromContext: context name: nil
 ]
 
 { #category : #instructions }
@@ -1472,7 +1471,7 @@ SLVMBuilder >> returnVoidFromContext: context name: resultName [
 
 { #category : #sampling }
 SLVMBuilder >> sample: combinedSampler atCoord: texcoord dtdx: dtdx dtdy: dtdy [
-	^ self sample: combinedSampler atCoord: texcoord dtdx: dtdx dtdy: dtdy name: function generateSymbol
+	^ self sample: combinedSampler atCoord: texcoord dtdx: dtdx dtdy: dtdy name: nil
 ]
 
 { #category : #sampling }
@@ -1482,7 +1481,7 @@ SLVMBuilder >> sample: combinedSampler atCoord: texcoord dtdx: dtdx dtdy: dtdy n
 
 { #category : #sampling }
 SLVMBuilder >> sample: combinedSampler explicitLod: lod atCoord: texcoord [
-	^ self sample: combinedSampler explicitLod: lod atCoord: texcoord name: function generateSymbol
+	^ self sample: combinedSampler explicitLod: lod atCoord: texcoord name: nil
 ]
 
 { #category : #sampling }
@@ -1492,12 +1491,12 @@ SLVMBuilder >> sample: combinedSampler explicitLod: lod atCoord: texcoord name: 
 
 { #category : #sampling }
 SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord [
-	^ self sample: combinedSampler implicitLodAtCoord: texcoord name: function generateSymbol
+	^ self sample: combinedSampler implicitLodAtCoord: texcoord name: nil
 ]
 
 { #category : #sampling }
 SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord depthReference: depthReference [
-	^ self sample: combinedSampler implicitLodAtCoord: texcoord depthReference: depthReference name: function generateSymbol
+	^ self sample: combinedSampler implicitLodAtCoord: texcoord depthReference: depthReference name: nil
 ]
 
 { #category : #sampling }
@@ -1512,7 +1511,7 @@ SLVMBuilder >> sample: combinedSampler implicitLodAtCoord: texcoord name: result
 
 { #category : #sampling }
 SLVMBuilder >> sampleDepth: combinedSampler implicitLodAtCoord: texcoord [
-	^ self sampleDepth: combinedSampler implicitLodAtCoord: texcoord name: function generateSymbol
+	^ self sampleDepth: combinedSampler implicitLodAtCoord: texcoord name: nil
 ]
 
 { #category : #sampling }
@@ -1522,7 +1521,7 @@ SLVMBuilder >> sampleDepth: combinedSampler implicitLodAtCoord: texcoord name: r
 
 { #category : #instructions }
 SLVMBuilder >> send: selector returnType: returnType receiver: receiver arguments: arguments [
-	^ self send: selector returnType: returnType receiver: receiver arguments: arguments name: function generateSymbol
+	^ self send: selector returnType: returnType receiver: receiver arguments: arguments name: nil
 ]
 
 { #category : #instructions }
@@ -1554,7 +1553,7 @@ SLVMBuilder >> sequenceWith: aBlock [
 
 { #category : #'logical operations' }
 SLVMBuilder >> shiftLeft: left with: right [
-	^ self shiftLeft: left with: right name: function generateSymbol
+	^ self shiftLeft: left with: right name: nil
 ]
 
 { #category : #'logical operations' }
@@ -1564,7 +1563,7 @@ SLVMBuilder >> shiftLeft: left with: right name: resultName [
 
 { #category : #'logical operations' }
 SLVMBuilder >> shiftRight: left with: right [
-	^ self shiftRight: left with: right name: function generateSymbol
+	^ self shiftRight: left with: right name: nil
 ]
 
 { #category : #'logical operations' }
@@ -1574,7 +1573,7 @@ SLVMBuilder >> shiftRight: left with: right name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> shuffleVector: firstVector with: secondVector components: components [
-	^ self shuffleVector: firstVector with: secondVector components: components name: function generateSymbol
+	^ self shuffleVector: firstVector with: secondVector components: components name: nil
 ]
 
 { #category : #instructions }
@@ -1584,7 +1583,7 @@ SLVMBuilder >> shuffleVector: firstVector with: secondVector components: compone
 
 { #category : #casting }
 SLVMBuilder >> signExtend: source target: targetType [
-	^ self signExtend: source target: targetType name: function generateSymbol
+	^ self signExtend: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -1594,7 +1593,7 @@ SLVMBuilder >> signExtend: source target: targetType name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> store: value in: variable [
-	^ self store: value in: variable name: function generateSymbol
+	^ self store: value in: variable name: nil
 ]
 
 { #category : #instructions }
@@ -1604,7 +1603,7 @@ SLVMBuilder >> store: value in: variable name: resultName [
 
 { #category : #casting }
 SLVMBuilder >> structureToDynamicObjectCast: source target: targetType typeObject: typeObject [
-	^ self structureToDynamicObjectCast: source target: targetType typeObject: typeObject name: function generateSymbol
+	^ self structureToDynamicObjectCast: source target: targetType typeObject: typeObject name: nil
 ]
 
 { #category : #casting }
@@ -1614,7 +1613,7 @@ SLVMBuilder >> structureToDynamicObjectCast: source target: targetType typeObjec
 
 { #category : #arithmetic }
 SLVMBuilder >> sub: left with: right [
-	^ self sub: left with: right name: function generateSymbol
+	^ self sub: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -1624,7 +1623,7 @@ SLVMBuilder >> sub: left with: right name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> switch: matchedValue caseConstants: casesConstants caseBlocks: casesBlocks defaultBlock: defaultBlock [ 
-	^ self switch: matchedValue caseConstants: casesConstants caseBlocks: casesBlocks defaultBlock: defaultBlock name: function generateSymbol
+	^ self switch: matchedValue caseConstants: casesConstants caseBlocks: casesBlocks defaultBlock: defaultBlock name: nil
 ]
 
 { #category : #instructions }
@@ -1634,7 +1633,7 @@ SLVMBuilder >> switch: matchedValue caseConstants: casesConstants caseBlocks: ca
 
 { #category : #casting }
 SLVMBuilder >> truncate: source target: targetType [
-	^ self truncate: source target: targetType name: function generateSymbol
+	^ self truncate: source target: targetType name: nil
 ]
 
 { #category : #casting }
@@ -1650,7 +1649,7 @@ SLVMBuilder >> truncate: source target: targetType name: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> udiv: left with: right [
-	^ self udiv: left with: right name: function generateSymbol
+	^ self udiv: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -1665,7 +1664,7 @@ SLVMBuilder >> ufeq: left with: right name: resultName [
 
 { #category : #instructions }
 SLVMBuilder >> unreachable [
-	^ self unreachable: function generateSymbol
+	^ self unreachable: nil
 ]
 
 { #category : #instructions }
@@ -1675,7 +1674,7 @@ SLVMBuilder >> unreachable: resultName [
 
 { #category : #arithmetic }
 SLVMBuilder >> urem: left with: right [
-	^ self urem: left with: right name: function generateSymbol
+	^ self urem: left with: right name: nil
 ]
 
 { #category : #arithmetic }
@@ -1685,7 +1684,7 @@ SLVMBuilder >> urem: left with: right name: resultName [
 
 { #category : #'vector arithmetic' }
 SLVMBuilder >> vectorAdd: left with: right [
-	^ self vectorAdd: left with: right name: function generateSymbol
+	^ self vectorAdd: left with: right name: nil
 ]
 
 { #category : #'vector arithmetic' }
@@ -1699,7 +1698,7 @@ SLVMBuilder >> vectorAdd: left with: right name: name [
 
 { #category : #casting }
 SLVMBuilder >> vectorCastFrom: source into: targetType [
-	^ self vectorCastFrom: source into: targetType name: function generateSymbol
+	^ self vectorCastFrom: source into: targetType name: nil
 ]
 
 { #category : #casting }
@@ -1728,7 +1727,7 @@ SLVMBuilder >> vectorCastFrom: source into: targetType name: name [
 
 { #category : #'vector arithmetic' }
 SLVMBuilder >> vectorDiv: left with: right [
-	^ self vectorDiv: left with: right name: function generateSymbol
+	^ self vectorDiv: left with: right name: nil
 ]
 
 { #category : #'vector arithmetic' }
@@ -1760,7 +1759,7 @@ SLVMBuilder >> vectorDotIntrinsicFor: aType [
 
 { #category : #'vector arithmetic' }
 SLVMBuilder >> vectorMul: left with: right [
-	^ self vectorMul: left with: right name: function generateSymbol
+	^ self vectorMul: left with: right name: nil
 ]
 
 { #category : #'vector arithmetic' }
@@ -1774,7 +1773,7 @@ SLVMBuilder >> vectorMul: left with: right name: name [
 
 { #category : #'vector arithmetic' }
 SLVMBuilder >> vectorRem: left with: right [
-	^ self vectorRem: left with: right name: function generateSymbol
+	^ self vectorRem: left with: right name: nil
 ]
 
 { #category : #'vector arithmetic' }
@@ -1792,7 +1791,7 @@ SLVMBuilder >> vectorRem: left with: right name: name [
 
 { #category : #'vector arithmetic' }
 SLVMBuilder >> vectorSub: left with: right [
-	^ self vectorSub: left with: right name: function generateSymbol
+	^ self vectorSub: left with: right name: nil
 ]
 
 { #category : #'vector arithmetic' }
@@ -1853,7 +1852,7 @@ SLVMBuilder >> withBasicBlock: aBasicBlock do: aBlock [
 
 { #category : #casting }
 SLVMBuilder >> zeroExtend: source target: targetType [
-	^ self zeroExtend: source target: targetType name: function generateSymbol
+	^ self zeroExtend: source target: targetType name: nil
 ]
 
 { #category : #casting }

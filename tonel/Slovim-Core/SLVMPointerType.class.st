@@ -36,6 +36,11 @@ SLVMPointerType >> asCanonicalType [
 ]
 
 { #category : #converting }
+SLVMPointerType >> asFullSExpression [
+	^ {#pointer . baseType asSExpression . storage}
+]
+
+{ #category : #converting }
 SLVMPointerType >> asGenericMessageType [
 	self flag: 'TODO: Use a singleton for the dynobject type.'.
 	self isDynamicObjectPointerType ifTrue: [ ^ SLVMDynamicObjectType new size: self size  ].

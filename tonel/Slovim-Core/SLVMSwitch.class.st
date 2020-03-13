@@ -13,6 +13,11 @@ SLVMSwitch class >> matchedValue: matchedValue caseConstants: casesConstants cas
 	^ self new matchedValue: matchedValue caseConstants: casesConstants caseBlocks: casesBlocks defaultBlock: defaultBlock
 ]
 
+{ #category : #printing }
+SLVMSwitch class >> mnemonic [
+	^ #switch
+]
+
 { #category : #visitor }
 SLVMSwitch >> accept: aVisitor [
 	^ aVisitor visitSwitch: self
@@ -38,6 +43,11 @@ SLVMSwitch >> caseConstants [
 { #category : #accessing }
 SLVMSwitch >> defaultBlock [
 	^ defaultBlock
+]
+
+{ #category : #printing }
+SLVMSwitch >> extraParametersSExpression [
+	^ {caseBlocks collect: [:each | each asSExpression] . defaultBlock asSExpression }
 ]
 
 { #category : #printing }
@@ -67,11 +77,6 @@ SLVMSwitch >> matchedValue: matchedValue caseConstants: casesConstants caseBlock
 	self parameters: { matchedValue } , casesConstants.
 	caseBlocks := theCaseBlocks asArray.
 	defaultBlock := theDefaultBlock
-]
-
-{ #category : #printing }
-SLVMSwitch >> mnemonic [
-	^ #switch
 ]
 
 { #category : #accessing }

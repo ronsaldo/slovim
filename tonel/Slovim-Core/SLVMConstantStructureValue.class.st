@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMConstantStructureValue class >> mnemonic [
+	^ #constStruct
+]
+
 { #category : #visiting }
 SLVMConstantStructureValue >> accept: aVisitor [
 	^ aVisitor visitConstantStructureValue: self
@@ -12,9 +17,4 @@ SLVMConstantStructureValue >> accept: aVisitor [
 { #category : #testing }
 SLVMConstantStructureValue >> isConstantStructureValue [
 	^ true
-]
-
-{ #category : #printing }
-SLVMConstantStructureValue >> mnemonic [
-	^ #conststruct
 ]

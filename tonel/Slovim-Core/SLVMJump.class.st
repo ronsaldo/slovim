@@ -12,6 +12,11 @@ SLVMJump class >> destination: aBasicBlock [
 	^ self new destination: aBasicBlock
 ]
 
+{ #category : #printing }
+SLVMJump class >> mnemonic [
+	^ #jump
+]
+
 { #category : #visitor }
 SLVMJump >> accept: aVisitor [
 	^ aVisitor visitJump: self
@@ -34,6 +39,11 @@ SLVMJump >> destination: anObject [
 ]
 
 { #category : #printing }
+SLVMJump >> extraParametersSExpression [
+	^ destination asSExpression
+]
+
+{ #category : #printing }
 SLVMJump >> fullPrintOn: aStream [
 	aStream putKeyword: #jump; space; print: destination
 ]
@@ -51,16 +61,6 @@ SLVMJump >> isJump [
 { #category : #testing }
 SLVMJump >> isTerminator [
 	^ true
-]
-
-{ #category : #printing }
-SLVMJump >> mnemonic [
-	^ #jump
-]
-
-{ #category : #printing }
-SLVMJump >> printOn: aStream [
-	aStream nextPutAll: self mnemonic; space; print: destination
 ]
 
 { #category : #accessing }

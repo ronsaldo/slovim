@@ -5,11 +5,11 @@ Class {
 }
 
 { #category : #printing }
-SLVMDynamicObjectToStructureCast >> accept: aVisitor [
-	^ aVisitor visitDynamicObjectToStructureCast: self
+SLVMDynamicObjectToStructureCast class >> mnemonic [
+	^ #dynobject2struct
 ]
 
 { #category : #printing }
-SLVMDynamicObjectToStructureCast >> mnemonic [
-	^ #dynobject2struct
+SLVMDynamicObjectToStructureCast >> accept: aVisitor [
+	^ aVisitor visitDynamicObjectToStructureCast: self
 ]

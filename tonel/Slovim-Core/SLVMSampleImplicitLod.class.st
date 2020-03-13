@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMSampleImplicitLod class >> mnemonic [
+	^ #sampleImplicitLOD
+]
+
 { #category : #construction }
 SLVMSampleImplicitLod class >> sampledTexture: sampledTexture texcoord: texcoord [
 	^ self new sampledTexture: sampledTexture texcoord: texcoord
@@ -12,11 +17,6 @@ SLVMSampleImplicitLod class >> sampledTexture: sampledTexture texcoord: texcoord
 { #category : #'as yet unclassified' }
 SLVMSampleImplicitLod >> accept: aVisitor [
 	^ aVisitor visitSampleImplicitLod: self
-]
-
-{ #category : #printing }
-SLVMSampleImplicitLod >> mnemonic [
-	^ #sampleImplicitLOD
 ]
 
 { #category : #construction }

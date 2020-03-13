@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMConstantExpresionBitCast class >> mnemonic [
+	^ #constExprBitcast
+]
+
 { #category : #visiting }
 SLVMConstantExpresionBitCast >> accept: aVisitor [
 	^ aVisitor visitConstantExpressionBitCast: self
@@ -12,9 +17,4 @@ SLVMConstantExpresionBitCast >> accept: aVisitor [
 { #category : #testing }
 SLVMConstantExpresionBitCast >> isConstantExpressionBitCast [
 	^ true
-]
-
-{ #category : #printing }
-SLVMConstantExpresionBitCast >> mnemonic [
-	^ #const_bitcast
 ]

@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMFloatingPointCast class >> mnemonic [
+	^ #fpcast
+]
+
 { #category : #visiting }
 SLVMFloatingPointCast >> accept: aVisitor [
 	^ aVisitor visitFloatingPointCast: self
@@ -15,9 +20,4 @@ SLVMFloatingPointCast >> accept: aVisitor [
 { #category : #testing }
 SLVMFloatingPointCast >> isFloatingPointCast [
 	^ true
-]
-
-{ #category : #printing }
-SLVMFloatingPointCast >> mnemonic [
-	^ #fpcast
 ]

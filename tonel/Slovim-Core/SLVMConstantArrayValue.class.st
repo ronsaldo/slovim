@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMConstantArrayValue class >> mnemonic [
+	^ #constArray
+]
+
 { #category : #visiting }
 SLVMConstantArrayValue >> accept: aVisitor [
 	^ aVisitor visitConstantArrayValue: self
@@ -12,9 +17,4 @@ SLVMConstantArrayValue >> accept: aVisitor [
 { #category : #testing }
 SLVMConstantArrayValue >> isConstantArrayValue [
 	^ true
-]
-
-{ #category : #printing }
-SLVMConstantArrayValue >> mnemonic [
-	^ #constarray
 ]

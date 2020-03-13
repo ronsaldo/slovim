@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMUnreacheable class >> mnemonic [
+	^ #unreachable
+]
+
 { #category : #visitor }
 SLVMUnreacheable >> accept: aVisitor [
 	^ aVisitor visitUnreachable: self
@@ -22,11 +27,6 @@ SLVMUnreacheable >> isTerminator [
 { #category : #testing }
 SLVMUnreacheable >> isUnreachable [
 	^ true
-]
-
-{ #category : #printing }
-SLVMUnreacheable >> mnemonic [
-	^ #unreachable
 ]
 
 { #category : #accessing }

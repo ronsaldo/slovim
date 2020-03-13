@@ -5,11 +5,11 @@ Class {
 }
 
 { #category : #visiting }
-SLVMStructureToDynamicObjectCast >> accept: aVisitor [
-	^ aVisitor visitStructureToDynamicObjectCast: self
+SLVMStructureToDynamicObjectCast class >> mnemonic [
+	^ #struct2dynobject
 ]
 
 { #category : #visiting }
-SLVMStructureToDynamicObjectCast >> mnemonic [
-	^ #struct2dynobject
+SLVMStructureToDynamicObjectCast >> accept: aVisitor [
+	^ aVisitor visitStructureToDynamicObjectCast: self
 ]

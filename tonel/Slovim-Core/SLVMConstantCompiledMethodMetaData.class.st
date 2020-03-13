@@ -18,6 +18,11 @@ SLVMConstantCompiledMethodMetaData >> accept: aVisitor [
 	^ aVisitor visitConstantCompiledMethodMetadata: self
 ]
 
+{ #category : #printing }
+SLVMConstantCompiledMethodMetaData >> asSExpression [
+	^ { self mnemonic . type asSExpression . sourceMethod asSExpression }
+]
+
 { #category : #comparing }
 SLVMConstantCompiledMethodMetaData >> hash [
 	^ self class hash bitXor: sourceMethod identityHash

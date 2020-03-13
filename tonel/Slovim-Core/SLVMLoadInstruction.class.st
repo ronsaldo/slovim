@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMLoadInstruction class >> mnemonic [
+	^ #load
+]
+
 { #category : #accessing }
 SLVMLoadInstruction class >> variable: variableReference [
 	^ self new variable: variableReference
@@ -44,11 +49,6 @@ SLVMLoadInstruction >> isLoad [
 SLVMLoadInstruction >> isPureInstruction [
 	"Remove non-volatile loads without references."
 	^ volatile not and: [self hasReferences not]
-]
-
-{ #category : #printing }
-SLVMLoadInstruction >> mnemonic [
-	^ #load
 ]
 
 { #category : #accessing }

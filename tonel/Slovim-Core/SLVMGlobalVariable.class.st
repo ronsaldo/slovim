@@ -34,6 +34,28 @@ SLVMGlobalVariable >> accept: aVisitor [
 	^ aVisitor visitGlobalVariable: self
 ]
 
+{ #category : #printing }
+SLVMGlobalVariable >> asFullSExpression [
+	^ { #variable . name . valueType asSExpression .
+		self globalValueAttributesAsSExpression.
+		#readOnly . readOnly.
+		#value . initialValue ifNotNil: [ initialValue asSExpression ].
+	}
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGlobalVariable >> createPublicInterfaceDeclarationVersionIn: targetModule [
+	| resultVar |
+	self isPubliclyExported ifFalse: [ ^ self ].
+	resultVar := self class module: targetModule name: name valueType: valueType storage: type storage.
+	resultVar makeExternal.
+	module symbolMapToHighLevel at: name ifPresent: [ :highLevelEntity |
+		targetModule addHighLevelEntity: highLevelEntity mapToGlobalValue: resultVar 
+	].
+
+	^ resultVar
+]
+
 { #category : #accessing }
 SLVMGlobalVariable >> customSection [
 	^ self propertyAt: #customSection ifAbsent: [ nil ]

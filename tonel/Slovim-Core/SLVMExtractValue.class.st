@@ -14,6 +14,11 @@ SLVMExtractValue class >> aggregate: anAggregateValue indices: indicesValue [
 ]
 
 { #category : #printing }
+SLVMExtractValue class >> mnemonic [
+	^ #extractValue
+]
+
+{ #category : #printing }
 SLVMExtractValue >> accept: aVisitor [
 	^ aVisitor visitExtractValue: self
 ]
@@ -45,6 +50,11 @@ SLVMExtractValue >> areIndices: currentIndices affectByModifiedIndices: modified
 	].
 
 	^ false
+]
+
+{ #category : #printing }
+SLVMExtractValue >> extraParametersSExpression [
+	^ indices asArray
 ]
 
 { #category : #'basic optimizations' }
@@ -118,11 +128,6 @@ SLVMExtractValue >> isExtractValue [
 { #category : #testing }
 SLVMExtractValue >> isPureInstruction [
 	^ true
-]
-
-{ #category : #printing }
-SLVMExtractValue >> mnemonic [
-	^ #extractValue
 ]
 
 { #category : #accessing }

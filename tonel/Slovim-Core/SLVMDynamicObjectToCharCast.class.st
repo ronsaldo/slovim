@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #visitor }
+SLVMDynamicObjectToCharCast class >> mnemonic [
+	^ #dynobject2char
+]
+
+{ #category : #visitor }
 SLVMDynamicObjectToCharCast >> accept: aVisitor [
 	^ aVisitor visitDynamicObjectToCharCast: self
 ]
@@ -12,9 +17,4 @@ SLVMDynamicObjectToCharCast >> accept: aVisitor [
 { #category : #visitor }
 SLVMDynamicObjectToCharCast >> isDynamicObjectToCharCast [
 	^ true
-]
-
-{ #category : #visitor }
-SLVMDynamicObjectToCharCast >> mnemonic [
-	^ #dynobject2char
 ]

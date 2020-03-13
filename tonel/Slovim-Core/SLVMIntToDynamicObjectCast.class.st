@@ -8,6 +8,11 @@ Class {
 }
 
 { #category : #visiting }
+SLVMIntToDynamicObjectCast class >> mnemonic [
+	^ #int2dynobject
+]
+
+{ #category : #visiting }
 SLVMIntToDynamicObjectCast >> accept: aVisitor [
 	^ aVisitor visitIntToDynamicObjectCast: self
 ]
@@ -15,9 +20,4 @@ SLVMIntToDynamicObjectCast >> accept: aVisitor [
 { #category : #testing }
 SLVMIntToDynamicObjectCast >> isIntToDynamicObjectCast [
 	^ true
-]
-
-{ #category : #visiting }
-SLVMIntToDynamicObjectCast >> mnemonic [
-	^ #int2dynobject
 ]

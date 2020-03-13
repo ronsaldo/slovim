@@ -9,7 +9,7 @@ Class {
 
 { #category : #visiting }
 SLVMETreeConstantDynamicLiteral >> accept: aVisitor [
-	^ aVisitor visitConstantDynamicLiteral: self
+	^ aVisitor visitFunctionDynamicLiteral: self
 ]
 
 { #category : #'public access' }
@@ -18,7 +18,7 @@ SLVMETreeConstantDynamicLiteral >> evaluate [
 ]
 
 { #category : #testing }
-SLVMETreeConstantDynamicLiteral >> isConstantDynamicLiteral [
+SLVMETreeConstantDynamicLiteral >> isFunctionDynamicLiteral [
 	^ true
 ]
 

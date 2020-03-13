@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMGetElementPointer class >> mnemonic [
+	^ #getElementPointer
+]
+
 { #category : #construction }
 SLVMGetElementPointer class >> pointer: reference indices: index [
 	^ self new pointer: reference indices: index
@@ -89,11 +94,6 @@ SLVMGetElementPointer >> isPureInstruction [
 { #category : #accessing }
 SLVMGetElementPointer >> lastIndex [
 	^ parameters last
-]
-
-{ #category : #printing }
-SLVMGetElementPointer >> mnemonic [
-	^ #getElementPointer
 ]
 
 { #category : #accessing }

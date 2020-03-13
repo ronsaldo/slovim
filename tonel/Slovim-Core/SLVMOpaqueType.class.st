@@ -12,6 +12,12 @@ SLVMOpaqueType >> alignment [
 	^ 1
 ]
 
+{ #category : #converting }
+SLVMOpaqueType >> asFullSExpression [
+	self assert: name isNotNil.
+	^ name
+]
+
 { #category : #comparing }
 SLVMOpaqueType >> internalHash [
 	"Answer a SmallInteger whose value is related to the receiver's identity.

@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMType,
 	#instVars : [
 		'baseType',
-		'elements'
+		'elements',
+		'fullSExpression'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -32,6 +33,11 @@ SLVMArrayType >> addCount: extraElements [
 { #category : #accessing }
 SLVMArrayType >> alignment [
 	^ baseType alignment
+]
+
+{ #category : #converting }
+SLVMArrayType >> asFullSExpression [
+	^ fullSExpression ifNil: [ fullSExpression := { #arrayType . baseType asSExpression . elements } ]
 ]
 
 { #category : #accessing }

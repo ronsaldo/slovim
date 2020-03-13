@@ -25,3 +25,8 @@ SLVMUnionType >> computeLayout [
 SLVMUnionType >> isUnionType [
 	^ true
 ]
+
+{ #category : #printing }
+SLVMUnionType >> mnemonic [
+	^ #union
+]

@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMGetExceptionSelectorFromTypeInfo class >> mnemonic [
+	^ #getExceptionSelectorFromTypeInfo
+]
+
 { #category : #'as yet unclassified' }
 SLVMGetExceptionSelectorFromTypeInfo class >> typeInfoPointer: aPointer [
 	^ self new typeInfoPointer: aPointer
@@ -17,11 +22,6 @@ SLVMGetExceptionSelectorFromTypeInfo >> accept: aVisitor [
 { #category : #testing }
 SLVMGetExceptionSelectorFromTypeInfo >> isGetExceptionSelectorFromTypeInfo [
 	^ true
-]
-
-{ #category : #printing }
-SLVMGetExceptionSelectorFromTypeInfo >> mnemonic [
-	^ #getExceptionSelectorFromTypeInfo
 ]
 
 { #category : #accessing }

@@ -10,7 +10,8 @@ Class {
 		'size',
 		'offsets',
 		'behavior',
-		'memberAnnotations'
+		'memberAnnotations',
+		'fullSExpression'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -53,6 +54,19 @@ SLVMStructureType >> accept: aVisitor [
 { #category : #accessing }
 SLVMStructureType >> alignment [
 	^ alignment
+]
+
+{ #category : #converting }
+SLVMStructureType >> asFullSExpression [
+	^ fullSExpression ifNil: [
+		fullSExpression := {self mnemonic . name . types collect: [:each | each asSExpression]. names}
+	]
+]
+
+{ #category : #converting }
+SLVMStructureType >> asSExpression [
+	name ifNotNil: [ ^ { #type . name } ].
+	^ super
 ]
 
 { #category : #accessing }
@@ -192,6 +206,11 @@ SLVMStructureType >> memberAt: constantValue [
 SLVMStructureType >> minimalAlignment: anAlignment [
 	alignment := alignment max: anAlignment.
 	size := size alignedTo: alignment.
+]
+
+{ #category : #printing }
+SLVMStructureType >> mnemonic [
+	^ #struct
 ]
 
 { #category : #accessing }

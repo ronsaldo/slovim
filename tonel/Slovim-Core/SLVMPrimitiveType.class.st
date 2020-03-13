@@ -2,6 +2,7 @@ Class {
 	#name : #SLVMPrimitiveType,
 	#superclass : #SLVMType,
 	#instVars : [
+		'sname',
 		'name',
 		'size',
 		'alignment'

@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMInsertVectorElement class >> mnemonic [
+	^ #insertelement
+]
+
 { #category : #'as yet unclassified' }
 SLVMInsertVectorElement class >> vector: aVectorValue value: value index: index [
 	^ self new vector: aVectorValue value: value index: index
@@ -30,11 +35,6 @@ SLVMInsertVectorElement >> isInsertVectorElement [
 { #category : #printing }
 SLVMInsertVectorElement >> isPureInstruction [
 	^ true
-]
-
-{ #category : #printing }
-SLVMInsertVectorElement >> mnemonic [
-	^ #insertelement
 ]
 
 { #category : #printing }

@@ -5,11 +5,11 @@ Class {
 	#name : #SLVMBasicBlock,
 	#superclass : #SLVMObject,
 	#instVars : [
+		'function',
 		'index',
 		'postOrderIndex',
 		'preOrderIndex',
 		'name',
-		'function',
 		'firstInstruction',
 		'lastInstruction',
 		'numberOfInstructions',
@@ -191,7 +191,6 @@ SLVMBasicBlock >> addUnreachableStructuredSuccessors [
 
 { #category : #adding }
 SLVMBasicBlock >> addWithName: anInstruction before: instructionPoint [
-	anInstruction name ifNil: [ anInstruction name: function generateSymbol ].
 	^ self add: anInstruction before: instructionPoint
 ]
 
@@ -229,6 +228,25 @@ SLVMBasicBlock >> applySubstitutions: substitutionDictionary [
 	structuredControlFlowHeader ifNotNil: [ structuredControlFlowHeader := substitutionDictionary at: structuredControlFlowHeader ].
 	mergeBlock ifNotNil: [ mergeBlock := substitutionDictionary at: mergeBlock ].
 	continueBlock ifNotNil: [ continueBlock := substitutionDictionary at: continueBlock ].
+]
+
+{ #category : #converting }
+SLVMBasicBlock >> asFullSExpression [
+	^ Array streamContents: [ :out |
+		out nextPut: (Array streamContents: [ :extraBlocks |
+			continueBlock ifNotNil: [ extraBlocks nextPut: #continue; nextPut: continueBlock asSExpression ].
+			mergeBlock ifNotNil: [ extraBlocks nextPut: #merge; nextPut: mergeBlock asSExpression ].
+			unwindBlock ifNotNil: [ extraBlocks nextPut: #unwind; nextPut: unwindBlock asSExpression ].
+		]).
+		self instructionsDo: [ :ins |
+			out nextPut: ins asFullSExpression
+		]
+	]
+]
+
+{ #category : #converting }
+SLVMBasicBlock >> asSExpression [
+	^ { #block . index . name }
 ]
 
 { #category : #accessing }
@@ -443,6 +461,7 @@ SLVMBasicBlock >> initialize [
 
 { #category : #adding }
 SLVMBasicBlock >> instructionAdded: anInstruction [ 
+	function ifNotNil: [ function invalidateLocalValueIndices ].
 	anInstruction block: self.
 	anInstruction isTerminator ifTrue: [
 		self computeSuccessors
@@ -647,6 +666,7 @@ SLVMBasicBlock >> printOn: aStream [
 
 { #category : #adding }
 SLVMBasicBlock >> remove: anInstruction [
+	function ifNotNil: [ function invalidateLocalValueIndices ].
 	(anInstruction previousInstruction isNil and: [ anInstruction nextInstruction isNil ]) ifTrue: [
 		anInstruction block: nil.
 		firstInstruction := lastInstruction := nil.
@@ -675,6 +695,7 @@ SLVMBasicBlock >> remove: anInstruction [
 { #category : #adding }
 SLVMBasicBlock >> removeChain: anInstructionChain [ 
 	| current |
+	function ifNotNil: [ function invalidateLocalValueIndices ].
 	current := anInstructionChain.
 	[ current isNotNil ] whileTrue: [
 		self assert: current block == self.

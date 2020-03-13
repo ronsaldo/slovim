@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMConstantAggregateValue >> asSExpression [
+	^ { self mnemonic . type asSExpression . slots collect: [ :each | each asSExpression ] as: Array }
+]
+
 { #category : #'as yet unclassified' }
 SLVMConstantAggregateValue >> extractValueAtIndices: indices [
 	| result |
@@ -46,11 +51,6 @@ SLVMConstantAggregateValue >> insertConstant: value atIndices: indices [
 { #category : #testing }
 SLVMConstantAggregateValue >> isConstantAggregateValue [
 	^ true
-]
-
-{ #category : #printing }
-SLVMConstantAggregateValue >> mnemonic [
-	self subclassResponsibility
 ]
 
 { #category : #copying }

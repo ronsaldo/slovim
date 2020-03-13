@@ -791,7 +791,7 @@ SLVMSAsmFunctionCodeGenerator >> translateConstant: value [
 	valueVariableMap at: value ifPresent: [ :oldValue | ^ oldValue ].
 	
 	result := self constantTranslator translate: value.
-	value isConstantDynamicLiteral ifTrue: [
+	value isFunctionDynamicLiteral ifTrue: [
 		loadedLiteral := blockBuilder tacIntRegister.
 		blockBuilder tacLoad: result into: loadedLiteral.
 		^ SLVMSAsmValue registers: { loadedLiteral }

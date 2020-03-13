@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMReturn class >> mnemonic [
+	^ #return
+]
+
 { #category : #accessing }
 SLVMReturn class >> value: aReturnValue [
 	^ self new value: aReturnValue
@@ -27,11 +32,6 @@ SLVMReturn >> isReturn [
 { #category : #testing }
 SLVMReturn >> isTerminator [
 	^ true
-]
-
-{ #category : #printing }
-SLVMReturn >> mnemonic [
-	^ #return
 ]
 
 { #category : #accessing }

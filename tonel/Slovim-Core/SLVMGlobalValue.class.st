@@ -5,6 +5,7 @@ Class {
 	#name : #SLVMGlobalValue,
 	#superclass : #SLVMConstant,
 	#instVars : [
+		'globalValueIndex',
 		'name',
 		'properties',
 		'visibility',
@@ -12,6 +13,16 @@ Class {
 	],
 	#category : #'Slovim-Core-SSA'
 }
+
+{ #category : #printing }
+SLVMGlobalValue >> asSExpression [
+	^ { #global . self validGlobalValueIndex . name }
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGlobalValue >> createPublicInterfaceDeclarationVersionIn: targetModule [
+	self subclassResponsibility
+]
 
 { #category : #accessing }
 SLVMGlobalValue >> debugInformation [
@@ -31,6 +42,22 @@ SLVMGlobalValue >> debugSourceLocation [
 { #category : #accessing }
 SLVMGlobalValue >> debugSourceLocation: aValue [
 	^ self propertyAt: #debugSourceLocation put: aValue
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGlobalValue >> globalValueAttributesAsSExpression [
+	^ #()
+
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> globalValueIndex [
+	^ globalValueIndex
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> globalValueIndex: anObject [
+	globalValueIndex := anObject
 ]
 
 { #category : #properties }
@@ -83,6 +110,11 @@ SLVMGlobalValue >> isPrivate [
 { #category : #visibility }
 SLVMGlobalValue >> isPublic [
 	^ visibility == #public
+]
+
+{ #category : #testing }
+SLVMGlobalValue >> isPubliclyExported [
+	^ name isNotNil and: [self isPrivate not]
 ]
 
 { #category : #visibility }
@@ -142,11 +174,14 @@ SLVMGlobalValue >> name: anObject [
 
 { #category : #printing }
 SLVMGlobalValue >> printOn: aStream [
-	self unmangledName ifNotNil: [ :prettyName |
-		^ aStream nextPut: $@; print: prettyName; space; print: (name ifNil: [#anonymous]).
+	aStream nextPut: $@; print: self validGlobalValueIndex.
+	name ifNotNil: [
+		aStream nextPut: $:; print: name
 	].
 
-	aStream nextPut: $@; print: (name ifNil: [#anonymous]).
+	self unmangledName ifNotNil: [ :prettyName |
+		aStream nextPutAll: '::'; print: prettyName
+	]
 ]
 
 { #category : #printing }
@@ -198,6 +233,13 @@ SLVMGlobalValue >> unmangledName [
 { #category : #accessing }
 SLVMGlobalValue >> unmangledName: aSymbol [
 	self propertyAt: #unmangledName put: aSymbol
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> validGlobalValueIndex [
+	module ifNil: [ ^ 0 ].
+	module recomputeGlobalValueIndices.
+	^ globalValueIndex
 ]
 
 { #category : #accessing }

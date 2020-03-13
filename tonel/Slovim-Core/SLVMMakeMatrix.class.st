@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMMakeMatrix class >> mnemonic [
+	^ #makeMatrix
+]
+
 { #category : #construction }
 SLVMMakeMatrix class >> type: matrixType parameters: arguments [
 	^ self new type: matrixType parameters: arguments
@@ -25,11 +30,6 @@ SLVMMakeMatrix >> isMakeMatrix [
 { #category : #testing }
 SLVMMakeMatrix >> isPureInstruction [
 	^ true
-]
-
-{ #category : #printing }
-SLVMMakeMatrix >> mnemonic [
-	^ #makeMatrix
 ]
 
 { #category : #accessing }

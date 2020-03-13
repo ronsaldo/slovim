@@ -9,7 +9,6 @@ Class {
 	#name : #SLVMClosureCapture,
 	#superclass : #SLVMFunctionLocalValue,
 	#instVars : [
-		'function',
 		'type',
 		'index',
 		'basicInitialValue',
@@ -20,6 +19,11 @@ Class {
 	],
 	#category : #'Slovim-Core-SSA'
 }
+
+{ #category : #printing }
+SLVMClosureCapture >> asFullSExpression [
+	^ { name . type asSExpression . self flags sorted }
+]
 
 { #category : #accessing }
 SLVMClosureCapture >> basicInitialValue [
@@ -52,16 +56,6 @@ SLVMClosureCapture >> finalizeFunction: anObject [
 ]
 
 { #category : #accessing }
-SLVMClosureCapture >> function [
-	^ function
-]
-
-{ #category : #accessing }
-SLVMClosureCapture >> function: anObject [
-	function := anObject
-]
-
-{ #category : #accessing }
 SLVMClosureCapture >> index [
 	^ index
 ]
@@ -84,11 +78,6 @@ SLVMClosureCapture >> moveFunction [
 { #category : #accessing }
 SLVMClosureCapture >> moveFunction: anObject [
 	moveFunction := anObject
-]
-
-{ #category : #printing }
-SLVMClosureCapture >> printOn: aStream [
-	aStream nextPutAll: 'closureCapture '; print: index
 ]
 
 { #category : #accessing }

@@ -6,7 +6,8 @@ Class {
 		'arguments',
 		'returnType',
 		'variadic',
-		'argumentAttributes'
+		'argumentAttributes',
+		'fullSExpression'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -105,6 +106,11 @@ SLVMFunctionType >> argumentsDescriptorWithTarget: aCompilationTarget [
 	].
 
 	^ dynObjectCount | (nativeArgumentSize << 8) | (((nativeArgumentAlignment highBit - aCompilationTarget pointerSize highBit) max: 0) << 24) | self argumentDescriptorFlags
+]
+
+{ #category : #converting }
+SLVMFunctionType >> asFullSExpression [
+	^ fullSExpression ifNil: [ fullSExpression := { #function . callingConvention . arguments collect: [ :each | each asSExpression ] . variadic . returnType asSExpression } ]
 ]
 
 { #category : #accessing }

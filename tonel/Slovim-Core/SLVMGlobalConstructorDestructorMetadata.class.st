@@ -9,6 +9,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #converting }
+SLVMGlobalConstructorDestructorMetadata >> asFullSExpression [
+	^ { priority . global asSExpression . function asSExpression}
+]
+
 { #category : #accessing }
 SLVMGlobalConstructorDestructorMetadata >> function [
 	^ function

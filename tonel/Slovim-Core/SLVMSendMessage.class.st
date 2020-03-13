@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMSendMessage class >> mnemonic [
+	^ #send
+]
+
 { #category : #'instance creation' }
 SLVMSendMessage class >> returnType: returnType receiver: receiver selector: selector arguments: arguments [
 	^ self new returnType: returnType receiver: receiver selector: selector arguments: arguments
@@ -44,7 +49,7 @@ SLVMSendMessage >> isDoesNotUnderstandMessage [
 	selector := self selector.
 	(selector isInstruction and: [selector isBitCast]) ifTrue: [ selector := selector source ]..
 
-	^ selector isConstant and: [selector isConstantDynamicLiteral and: [ selector value == #doesNotUnderstand: ]]
+	^ selector isConstant and: [selector isFunctionDynamicLiteral and: [ selector value == #doesNotUnderstand: ]]
 ]
 
 { #category : #testing }
@@ -60,11 +65,6 @@ SLVMSendMessage >> isMessageSend [
 { #category : #testing }
 SLVMSendMessage >> isSuperSend [
 	^ self hasFlag: #superSend
-]
-
-{ #category : #printing }
-SLVMSendMessage >> mnemonic [
-	^ #send
 ]
 
 { #category : #accessing }

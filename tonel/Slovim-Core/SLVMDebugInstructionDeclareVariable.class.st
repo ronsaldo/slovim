@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMDebugInstructionDeclareVariable class >> mnemonic [
+	^ #dbgDeclareVar
+]
+
 { #category : #accessing }
 SLVMDebugInstructionDeclareVariable class >> variable: aVariable [
 	^ self new variable: aVariable
@@ -12,11 +17,6 @@ SLVMDebugInstructionDeclareVariable class >> variable: aVariable [
 { #category : #visiting }
 SLVMDebugInstructionDeclareVariable >> accept: aVisitor [
 	^ aVisitor visitDebugInstructionDeclareVariable: self
-]
-
-{ #category : #printing }
-SLVMDebugInstructionDeclareVariable >> mnemonic [
-	^ #dbgDeclareVar
 ]
 
 { #category : #accessing }

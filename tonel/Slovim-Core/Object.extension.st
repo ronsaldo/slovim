@@ -9,3 +9,8 @@ Object >> isSLVMDynamicInlineLiteral [
 Object >> isSLVMObject [
 	^ false
 ]
+
+{ #category : #'*Slovim-Core' }
+Object >> slvmEncodeAsSExpression [
+	^ self subclassResponsibility
+]

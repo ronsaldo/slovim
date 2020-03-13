@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMExtractVectorElement class >> mnemonic [
+	^ #extractVectorElement
+]
+
 { #category : #'as yet unclassified' }
 SLVMExtractVectorElement class >> vector: aVectorValue index: indexValue [
 	^ self new vector: aVectorValue index: indexValue
@@ -30,11 +35,6 @@ SLVMExtractVectorElement >> isExtractVectorElement [
 { #category : #testing }
 SLVMExtractVectorElement >> isPureInstruction [
 	^ true
-]
-
-{ #category : #printing }
-SLVMExtractVectorElement >> mnemonic [
-	^ #extractVectorElement
 ]
 
 { #category : #accessing }

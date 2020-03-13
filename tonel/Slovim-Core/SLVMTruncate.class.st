@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMTruncate class >> mnemonic [
+	^ #truncate
+]
+
 { #category : #visiting }
 SLVMTruncate >> accept: aVisitor [
 	^ aVisitor visitTruncate: self
@@ -15,9 +20,4 @@ SLVMTruncate >> accept: aVisitor [
 { #category : #testing }
 SLVMTruncate >> isTruncate [
 	^ true
-]
-
-{ #category : #printing }
-SLVMTruncate >> mnemonic [
-	^ #truncate
 ]

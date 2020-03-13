@@ -738,11 +738,6 @@ SLVMPharoFunctionCodeGenerator >> visitCall: anInstruction [
 ]
 
 { #category : #visiting }
-SLVMPharoFunctionCodeGenerator >> visitConstantDynamicLiteral: aLiteralConstant [
-	self pushLiteral: aLiteralConstant value
-]
-
-{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitConstantStructureValue: constant [
 	| value |
 	value := constant evaluate.
@@ -837,6 +832,11 @@ SLVMPharoFunctionCodeGenerator >> visitFunctionArgument: anArgument [
 ]
 
 { #category : #visiting }
+SLVMPharoFunctionCodeGenerator >> visitFunctionDynamicLiteral: aLiteralConstant [
+	self pushLiteral: aLiteralConstant value
+]
+
+{ #category : #visiting }
 SLVMPharoFunctionCodeGenerator >> visitGetElementPointer: anInstruction [
 	self assert: anInstruction type isDynamicObjectType not.
 
@@ -901,7 +901,7 @@ SLVMPharoFunctionCodeGenerator >> visitMessageSend: anInstruction [
 	
 	selector := anInstruction selector.
 	arguments := anInstruction arguments.
-	(selector isConstantDynamicLiteral and: [selector value isSymbol]) ifTrue: [
+	(selector isFunctionDynamicLiteral and: [selector value isSymbol]) ifTrue: [
 		arguments do: [ :arg |
 			self visitExpression: arg
 		].

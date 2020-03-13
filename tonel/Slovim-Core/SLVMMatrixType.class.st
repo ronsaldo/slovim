@@ -7,7 +7,8 @@ Class {
 		'rows',
 		'columns',
 		'size',
-		'alignment'
+		'alignment',
+		'fullSExpression'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -53,6 +54,11 @@ SLVMMatrixType >> alignment [
 { #category : #accessing }
 SLVMMatrixType >> alignment: anObject [
 	alignment := anObject
+]
+
+{ #category : #converting }
+SLVMMatrixType >> asFullSExpression [
+	^ fullSExpression ifNil: [ fullSExpression := { #matrix . baseType asSExpression . rows . columns } ]
 ]
 
 { #category : #accessing }

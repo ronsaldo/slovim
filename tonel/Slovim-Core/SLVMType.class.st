@@ -457,9 +457,19 @@ SLVMType >> asCanonicalType [
 	^ self
 ]
 
+{ #category : #converting }
+SLVMType >> asFullSExpression [
+	^ self subclassResponsibility
+]
+
 { #category : #accessing }
 SLVMType >> asGenericMessageType [
 	^ self
+]
+
+{ #category : #converting }
+SLVMType >> asSExpression [
+	^ self asFullSExpression
 ]
 
 { #category : #testing }

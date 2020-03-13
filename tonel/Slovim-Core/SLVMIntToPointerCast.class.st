@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #visitor }
+SLVMIntToPointerCast class >> mnemonic [
+	^ #int2ptr
+]
+
+{ #category : #visitor }
 SLVMIntToPointerCast >> accept: aVisitor [
 	^ aVisitor visitIntToPointerCast: self
 ]
@@ -12,9 +17,4 @@ SLVMIntToPointerCast >> accept: aVisitor [
 { #category : #testing }
 SLVMIntToPointerCast >> isIntToPointerCast [
 	^ true
-]
-
-{ #category : #visitor }
-SLVMIntToPointerCast >> mnemonic [
-	^ #int2ptr
 ]

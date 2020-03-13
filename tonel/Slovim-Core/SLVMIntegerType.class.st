@@ -22,6 +22,11 @@ SLVMIntegerType >> accept: aVisitor [
 	^ aVisitor visitIntegerType: self
 ]
 
+{ #category : #converting }
+SLVMIntegerType >> asFullSExpression [
+	^ sname ifNil: [ sname := ((signed ifTrue: ['i'] ifFalse: ['u']) , (self size * 8) asString) asSymbol]
+]
+
 { #category : #'as yet unclassified' }
 SLVMIntegerType >> defaultConstant [
 	^ SLVMConstant type: self value: 0

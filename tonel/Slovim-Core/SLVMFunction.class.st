@@ -9,14 +9,14 @@ Class {
 		'functionType',
 		'type',
 		'arguments',
-		'gensymCount',
 		'postOrder',
 		'preOrder',
 		'haveDominance',
 		'dynamicLiterals',
 		'compilationTarget',
 		'needsCompiledMethodObject',
-		'personalityFunction'
+		'personalityFunction',
+		'localValueIndexComputationCount'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -50,7 +50,8 @@ SLVMFunction >> addBasicBlock: aBasicBlock [
 	basicBlocks add: aBasicBlock.
 	aBasicBlock index: basicBlocks size.
 	aBasicBlock function: self.
-	self invalidateControlFlowCaches
+	self invalidateLocalValueIndices.
+	self invalidateControlFlowCaches.
 ]
 
 { #category : #adding }
@@ -62,7 +63,7 @@ SLVMFunction >> addDynamicLiteral: literal [
 { #category : #adding }
 SLVMFunction >> addRequiredDynamicLiteral: literal [
 	| result |
-	result := SLVMConstantDynamicLiteral new value: literal; index: dynamicLiterals size + 1; type: compilationTarget dynamicObjectType.
+	result := SLVMFunctionDynamicLiteral new value: literal; index: dynamicLiterals size + 1; type: compilationTarget dynamicObjectType.
 	dynamicLiterals add: result.
 	^ result
 ]
@@ -119,6 +120,16 @@ SLVMFunction >> arguments [
 SLVMFunction >> argumentsDescriptor [
 	<compileTime>
 	^ functionType argumentsDescriptorWithTarget: compilationTarget
+]
+
+{ #category : #printing }
+SLVMFunction >> asFullSExpression [
+	^ { #function . name . functionType callingConvention . functionType returnType asSExpression .
+		self globalValueAttributesAsSExpression.
+		#arguments . arguments collect: [ :each | each asFullSExpression ].
+		#literals . dynamicLiterals collect: [ :each | each asFullSExpression ] as: Array.
+		#blocks . self instructionsSExpressions.
+	}
 ]
 
 { #category : #accessing }
@@ -349,7 +360,6 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 		
 		bb instructionsDo: [ :instr |
 			newInstruction := instr copy.
-			newInstruction hasAnonName ifTrue: [ newInstruction name: targetFunction generateSymbol ].
 			
 			substitutionDictionary at: instr put: newInstruction.
 			(newInstruction isAlloca and: [ bb == sourceFirstBlock ]) ifTrue: [
@@ -383,7 +393,7 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 		newBlocks do: [:bb |
 			bb lastInstruction isReturnVoid ifTrue: [
 				bb lastInstruction removeFromBlock.
-				bb add: ((SLVMJump destination: continuationBlock) name: bb function generateSymbol)
+				bb add: (SLVMJump destination: continuationBlock)
 			]
 		].
 	
@@ -394,13 +404,13 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 			return := bb lastInstruction.
 			return isReturn ifTrue: [
 				resultPhi ifNil: [
-					resultPhi := (SLVMPhi type: return value type) name: bb function generateSymbol.
+					resultPhi := (SLVMPhi type: return value type) name: nil.
 					continuationBlock addFirst: resultPhi
 				].
 		
 				resultPhi addValue: return value from: bb.
 				bb lastInstruction removeFromBlock.
-				bb add: ((SLVMJump destination: continuationBlock) name: bb function generateSymbol)
+				bb add: ((SLVMJump destination: continuationBlock) name: nil)
 			]
 		].
 	
@@ -417,6 +427,19 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 	
 		^ {newBlocks first . resultPhi}
 	]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMFunction >> createPublicInterfaceDeclarationVersionIn: targetModule [
+	| resultFunction |
+	self isPubliclyExported ifFalse: [ ^ self ].
+	resultFunction := self class module: targetModule name: name functionType: functionType.
+	resultFunction makeExternal.
+	module symbolMapToHighLevel at: name ifPresent: [ :highLevelEntity |
+		targetModule addHighLevelEntity: highLevelEntity mapToGlobalValue: resultFunction 
+	].
+
+	^ resultFunction
 ]
 
 { #category : #'as yet unclassified' }
@@ -530,14 +553,6 @@ SLVMFunction >> gcStrategy: aGCStrategyName [
 	^ self propertyAt: #gcStrategy put: aGCStrategyName
 ]
 
-{ #category : #private }
-SLVMFunction >> generateSymbol [
-	| result |
-	result := gensymCount asString asSymbol.
-	gensymCount := gensymCount + 1.
-	^ result
-]
-
 { #category : #'gt inspector extensions' }
 SLVMFunction >> gtTextViewIn: composite [
 	<gtInspectorPresentationOrder: 1>
@@ -599,10 +614,10 @@ SLVMFunction >> hasYesInlineMode [
 { #category : #initialization }
 SLVMFunction >> initialize [
 	super initialize.
+	localValueIndexComputationCount := 0.
 	basicBlocks := OrderedCollection new.
 	dynamicLiterals := OrderedCollection new.
 	arguments := #().
-	gensymCount := 0.
 	haveDominance := false.
 	needsCompiledMethodObject := false.
 ]
@@ -618,11 +633,21 @@ SLVMFunction >> inlineMode: anInlineMode [
 	^ self propertyAt: #inlineMode put: anInlineMode
 ]
 
+{ #category : #printing }
+SLVMFunction >> instructionsSExpressions [
+	^ basicBlocks collect: [ :each | each asFullSExpression ] as: Array
+]
+
 { #category : #'control flow' }
 SLVMFunction >> invalidateControlFlowCaches [
 	preOrder := nil.
 	postOrder := nil.
 	haveDominance := false.
+]
+
+{ #category : #'as yet unclassified' }
+SLVMFunction >> invalidateLocalValueIndices [
+	localValueIndexComputationCount := localValueIndexComputationCount + 1
 ]
 
 { #category : #testing }
@@ -650,6 +675,20 @@ SLVMFunction >> isNotEmpty [
 	^ self isEmpty not
 ]
 
+{ #category : #accessing }
+SLVMFunction >> localValueIndexComputationCount [
+	^ localValueIndexComputationCount
+]
+
+{ #category : #enumerating }
+SLVMFunction >> localValuesDo: aBlock [
+	arguments do: aBlock.
+	dynamicLiterals do: aBlock.
+	basicBlocks do: [ :bb |
+		basicBlocks instructionsDo: aBlock
+	].
+]
+
 { #category : #private }
 SLVMFunction >> makeArguments [
 	arguments := functionType arguments collectWithIndex: [ :argType :index |
@@ -657,7 +696,6 @@ SLVMFunction >> makeArguments [
 			function: self;
 			type: argType;
 			index: index;
-			name: (#arg , index printString) asSymbol;
 			yourself
 	]
 ]
@@ -719,6 +757,18 @@ SLVMFunction >> primitive [
 { #category : #accessing }
 SLVMFunction >> primitive: aPrimitive [
 	^ self propertyAt: #primitive put: aPrimitive
+]
+
+{ #category : #'as yet unclassified' }
+SLVMFunction >> recomputeLocalValueIndices [
+	| index |
+	index := 0.
+	self localValuesDo: [ :localValue |
+		localValue
+			localValueIndex: index;
+			localValueIndexComputationCount: localValueIndexComputationCount.
+		index := index + 1
+	].
 ]
 
 { #category : #removing }

@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMResumeException class >> mnemonic [
+	^ #resumeException
+]
+
 { #category : #accessing }
 SLVMResumeException class >> value: aReturnValue [
 	^ self new value: aReturnValue
@@ -22,11 +27,6 @@ SLVMResumeException >> isResumeException [
 { #category : #accessing }
 SLVMResumeException >> isTerminator [
 	^ true
-]
-
-{ #category : #printing }
-SLVMResumeException >> mnemonic [
-	^ #resumeException
 ]
 
 { #category : #accessing }

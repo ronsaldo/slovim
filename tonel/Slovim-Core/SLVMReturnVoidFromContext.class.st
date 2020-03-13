@@ -9,6 +9,11 @@ SLVMReturnVoidFromContext class >> context: aReturnContext [
 	^ self new context: aReturnContext
 ]
 
+{ #category : #printing }
+SLVMReturnVoidFromContext class >> mnemonic [
+	^ #returnVoidFromContext
+]
+
 { #category : #visitor }
 SLVMReturnVoidFromContext >> accept: aVisitor [
 	^ aVisitor visitReturnVoidFromContext: self
@@ -32,11 +37,6 @@ SLVMReturnVoidFromContext >> isReturnVoidFromContext [
 { #category : #testing }
 SLVMReturnVoidFromContext >> isTerminator [
 	^ true
-]
-
-{ #category : #printing }
-SLVMReturnVoidFromContext >> mnemonic [
-	^ #returnVoidFromContext
 ]
 
 { #category : #accessing }

@@ -167,11 +167,6 @@ SLVMSAsmConstantCodeGenerator >> visitClosureDefinition: aClosureDefinition [
 ]
 
 { #category : #visiting }
-SLVMSAsmConstantCodeGenerator >> visitConstantDynamicLiteral: value [
-	^ SLVMSAsmValue operand: (self getConstantDynamicLiteralLocation: value)
-]
-
-{ #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> visitConstantExpressionBitCast: constant [
 	^ self translate: constant value
 ]
@@ -198,6 +193,11 @@ SLVMSAsmConstantCodeGenerator >> visitConstantValue: value [
 { #category : #visiting }
 SLVMSAsmConstantCodeGenerator >> visitFunction: aFunction [
 	^ SLVMSAsmValue operands: {(moduleTranslator translateModuleElement: aFunction) asSAsmInstructionOperand}
+]
+
+{ #category : #visiting }
+SLVMSAsmConstantCodeGenerator >> visitFunctionDynamicLiteral: value [
+	^ SLVMSAsmValue operand: (self getConstantDynamicLiteralLocation: value)
 ]
 
 { #category : #visiting }

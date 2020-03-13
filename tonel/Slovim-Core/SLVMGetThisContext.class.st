@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMGetThisContext class >> mnemonic [
+	^ #getThisContext
+]
+
 { #category : #'as yet unclassified' }
 SLVMGetThisContext class >> type: type [
 	^ self new type: type
@@ -30,11 +35,6 @@ SLVMGetThisContext >> isGetThisContext [
 { #category : #testing }
 SLVMGetThisContext >> isPureInstruction [
 	^ true
-]
-
-{ #category : #printing }
-SLVMGetThisContext >> mnemonic [
-	^ #getThisContext
 ]
 
 { #category : #accessing }

@@ -19,13 +19,38 @@ SLVMOptBasicOptimizationsTest >> testFoldFalseBranch [
 		builder return: result.
 	].
 
+	self assert: function asFullSExpression equals: #(
+		function testFunction cdecl i32 ()
+			arguments ()
+		blocks (
+			((merge (block 4 #ifMerge)) 
+				(nil branch void () ((const b8 false)) ((block 2 ifTrue) (block 3 ifFalse)))
+			)
+			(() 
+				(nil jump void () () (block 4 ifMerge))
+			)
+			(()
+				(nil jump void () () (block 4 ifMerge))
+			)
+			(()
+				(nil phi i32 () ((const i32 1) #(const i32 2)) ((block 2 ifTrue) (block 3 ifFalse)))
+				(nil return void () ((local nil nil))))
+			)
+	).
+	
 	SLVMOptBasicOptimizations passOnFunction: function.
 	
 	entryBlock := function basicBlocks first.
-	self assert: entryBlock size equals: 1.
-	self assert: entryBlock firstInstruction isReturn.
-	self assert: entryBlock firstInstruction value isConstantValue.
-	self assert: entryBlock firstInstruction value value equals: 2.
+	self assert: function asFullSExpression equals: #(
+		function testFunction cdecl i32 ()
+		arguments ()
+		blocks (
+			(()
+				(nil return void () ((const i32 2)))
+			)
+		)
+	).
+
 ]
 
 { #category : #tests }
@@ -43,13 +68,38 @@ SLVMOptBasicOptimizationsTest >> testFoldTrueBranch [
 		builder return: result.
 	].
 
+	self assert: function asFullSExpression equals: #(
+		function testFunction cdecl i32 ()
+			arguments ()
+		blocks (
+			((merge (block 4 #ifMerge)) 
+				(nil branch void () ((const b8 true)) ((block 2 ifTrue) (block 3 ifFalse)))
+			)
+			(() 
+				(nil jump void () () (block 4 ifMerge))
+			)
+			(()
+				(nil jump void () () (block 4 ifMerge))
+			)
+			(()
+				(nil phi i32 () ((const i32 1) #(const i32 2)) ((block 2 ifTrue) (block 3 ifFalse)))
+				(nil return void () ((local nil nil))))
+			)
+	).
+	
 	SLVMOptBasicOptimizations passOnFunction: function.
 	
 	entryBlock := function basicBlocks first.
-	self assert: entryBlock size equals: 1.
-	self assert: entryBlock firstInstruction isReturn.
-	self assert: entryBlock firstInstruction value isConstantValue.
-	self assert: entryBlock firstInstruction value value equals: 1.
+	self assert: function asFullSExpression equals: #(
+		function testFunction cdecl i32 ()
+		arguments ()
+		blocks (
+			(()
+				(nil return void () ((const i32 1)))
+			)
+		)
+	).
+
 ]
 
 { #category : #tests }

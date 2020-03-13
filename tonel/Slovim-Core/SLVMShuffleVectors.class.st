@@ -13,6 +13,11 @@ SLVMShuffleVectors class >> firstVector: firstVector secondVector: secondVector 
 	^ self new firstVector: firstVector secondVector: secondVector components: components
 ]
 
+{ #category : #printing }
+SLVMShuffleVectors class >> mnemonic [
+	^ #shuffleVectors
+]
+
 { #category : #visitor }
 SLVMShuffleVectors >> accept: visitor [
 	^ visitor visitShuffleVectors: self
@@ -46,11 +51,6 @@ SLVMShuffleVectors >> isPureInstruction [
 { #category : #testing }
 SLVMShuffleVectors >> isShuffleVectors [
 	^ true
-]
-
-{ #category : #printing }
-SLVMShuffleVectors >> mnemonic [
-	^ #shuffleVectors
 ]
 
 { #category : #accessing }

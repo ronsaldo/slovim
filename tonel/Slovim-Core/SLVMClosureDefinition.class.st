@@ -26,6 +26,17 @@ SLVMClosureDefinition >> accept: aVisitor [
 	^ aVisitor visitClosureDefinition: self
 ]
 
+{ #category : #printing }
+SLVMClosureDefinition >> asFullSExpression [
+	^ { #function . name . functionType callingConvention . functionType returnType asSExpression .
+		self globalValueAttributesAsSExpression.
+		#captures . captures collect: [ :each | each asFullSExpression ] as: Array.
+		#arguments . arguments collect: [ :each | each asFullSExpression ].
+		#literals . dynamicLiterals collect: [ :each | each asFullSExpression ] as: Array.
+		#blocks . basicBlocks collect: [ :each | each asFullSExpression ] as: Array.
+	}
+]
+
 { #category : #converting }
 SLVMClosureDefinition >> asNormalFunction [
 	| normalFunctionType normalFunction valueMap environmentArg environmentPointer prologueInstructions dynamicCaptureCount dynamicCaptureIndex normalCaptureIndex captureIndex capturePointer captureLoad firstBlock closureStructureType |
@@ -133,6 +144,12 @@ SLVMClosureDefinition >> kind [
 { #category : #accessing }
 SLVMClosureDefinition >> kind: anObject [
 	kind := anObject
+]
+
+{ #category : #enumerating }
+SLVMClosureDefinition >> localValuesDo: aBlock [
+	captures do: aBlock.
+	super localValuesDo: aBlock
 ]
 
 { #category : #converting }

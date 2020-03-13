@@ -4,3 +4,8 @@ Extension { #name : #UndefinedObject }
 UndefinedObject >> isSLVMDynamicInlineLiteral [
 	^ true
 ]
+
+{ #category : #'*Slovim-Core' }
+UndefinedObject >> slvmEncodeAsSExpression [
+	^ self
+]

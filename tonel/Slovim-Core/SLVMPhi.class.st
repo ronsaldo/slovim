@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMPhi class >> mnemonic [
+	^ #phi
+]
+
 { #category : #construction }
 SLVMPhi class >> type: aType [
 	^ self new type: aType
@@ -30,6 +35,11 @@ SLVMPhi >> addValue: value from: incomingBlock [
 SLVMPhi >> applySubstitutions: substitutionDictionary [
 	super applySubstitutions: substitutionDictionary.
 	incomingBlocks := incomingBlocks collect: [ :bl | substitutionDictionary at: bl ]
+]
+
+{ #category : #printing }
+SLVMPhi >> extraParametersSExpression [
+	^ incomingBlocks collect: [ :each | each asSExpression ] as: Array
 ]
 
 { #category : #'basic optimizations' }
@@ -77,11 +87,6 @@ SLVMPhi >> isPhi [
 { #category : #testing }
 SLVMPhi >> isPureInstruction [
 	^ true
-]
-
-{ #category : #printing }
-SLVMPhi >> mnemonic [
-	^ #phi
 ]
 
 { #category : #optimizations }

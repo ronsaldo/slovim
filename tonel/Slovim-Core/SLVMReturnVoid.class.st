@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMReturnVoid class >> mnemonic [
+	^ #returnVoid
+]
+
 { #category : #visitor }
 SLVMReturnVoid >> accept: aVisitor [
 	^ aVisitor visitReturnVoid: self
@@ -22,11 +27,6 @@ SLVMReturnVoid >> isReturnVoid [
 { #category : #testing }
 SLVMReturnVoid >> isTerminator [
 	^ true
-]
-
-{ #category : #printing }
-SLVMReturnVoid >> mnemonic [
-	^ #returnVoid
 ]
 
 { #category : #accessing }

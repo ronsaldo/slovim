@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #printing }
+SLVMDynamicObjectToBoolCast class >> mnemonic [
+	^ #dynobject2bool
+]
+
+{ #category : #printing }
 SLVMDynamicObjectToBoolCast >> accept: aVisitor [
 	^ aVisitor visitDynamicObjectToBoolCast: self
 ]
@@ -12,9 +17,4 @@ SLVMDynamicObjectToBoolCast >> accept: aVisitor [
 { #category : #testing }
 SLVMDynamicObjectToBoolCast >> isDynamicObjectToBoolCast [
 	^ true
-]
-
-{ #category : #printing }
-SLVMDynamicObjectToBoolCast >> mnemonic [
-	^ #dynobject2bool
 ]

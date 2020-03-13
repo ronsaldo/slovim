@@ -7,12 +7,12 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMClosureToDynamicObject class >> mnemonic [
+	^ #closure2dynobject
+]
+
 { #category : #visiting }
 SLVMClosureToDynamicObject >> accept: aVisitor [
 	^ aVisitor visitClosureToDynamicObject: self
-]
-
-{ #category : #printing }
-SLVMClosureToDynamicObject >> mnemonic [
-	^ #closure2dynobject
 ]

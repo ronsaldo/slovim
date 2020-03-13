@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMSampleExplicitGradient class >> mnemonic [
+	^ #sampleExplicitGradient
+]
+
 { #category : #'as yet unclassified' }
 SLVMSampleExplicitGradient class >> sampledTexture: sampledTexture texcoord: texcoord dtdx: dtdx dtdy: dtdy [
 	^ self new sampledTexture: sampledTexture texcoord: texcoord dtdx: dtdx dtdy: dtdy
@@ -22,11 +27,6 @@ SLVMSampleExplicitGradient >> dtdx [
 { #category : #accessing }
 SLVMSampleExplicitGradient >> dtdy [
 	^ self parameters fourth
-]
-
-{ #category : #printing }
-SLVMSampleExplicitGradient >> mnemonic [
-	^ #sampleExplicitGradient
 ]
 
 { #category : #'as yet unclassified' }

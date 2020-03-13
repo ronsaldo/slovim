@@ -11,6 +11,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMConstantValue class >> mnemonic [
+	^ #const
+]
+
 { #category : #arithmetic }
 SLVMConstantValue >> + other [
 	self assert: other isConstantValue.
@@ -36,6 +41,11 @@ SLVMConstantValue >> accept: aVisitor [
 { #category : #converting }
 SLVMConstantValue >> asBlob [
 	^ ByteArray streamContents: [ :out | type encodeConstant: value bigEndian: false intoByteStream: out ]
+]
+
+{ #category : #printing }
+SLVMConstantValue >> asSExpression [
+	^ { self mnemonic . type asSExpression . value }
 ]
 
 { #category : #comparing }

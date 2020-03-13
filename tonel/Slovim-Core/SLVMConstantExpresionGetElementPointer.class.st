@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMConstantExpresionGetElementPointer class >> mnemonic [
+	^ #constExprGEP
+]
+
 { #category : #construction }
 SLVMConstantExpresionGetElementPointer class >> pointer: reference indices: index [
 	^ self new pointer: reference indices: index
@@ -30,11 +35,6 @@ SLVMConstantExpresionGetElementPointer >> inBounds: anObject [
 { #category : #printing }
 SLVMConstantExpresionGetElementPointer >> indices [
 	^ parameters allButFirst
-]
-
-{ #category : #printing }
-SLVMConstantExpresionGetElementPointer >> mnemonic [
-	^ #getelementptr
 ]
 
 { #category : #printing }

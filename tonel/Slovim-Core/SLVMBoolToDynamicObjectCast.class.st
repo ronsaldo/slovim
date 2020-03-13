@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMBoolToDynamicObjectCast class >> mnemonic [
+	^ #bool2dynobject
+]
+
 { #category : #visiting }
 SLVMBoolToDynamicObjectCast >> accept: aVisitor [
 	^ aVisitor visitBoolToDynamicObjectCast: self
@@ -12,9 +17,4 @@ SLVMBoolToDynamicObjectCast >> accept: aVisitor [
 { #category : #testing }
 SLVMBoolToDynamicObjectCast >> isBoolToDynamicObjectCast [
 	^ true
-]
-
-{ #category : #printing }
-SLVMBoolToDynamicObjectCast >> mnemonic [
-	^ #bool2dynobject
 ]

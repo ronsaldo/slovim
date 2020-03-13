@@ -1530,7 +1530,7 @@ SLVMLLVMFunctionCodeGenerator >> translateType: aType [
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> translateValue: aValue [
 	valueDictionary at: aValue ifPresent: [ :existent | ^ existent ].
-	aValue isConstantDynamicLiteral ifTrue: [ ^ self translateConstantDynamicLiteral: aValue ].
+	aValue isFunctionDynamicLiteral ifTrue: [ ^ self translateConstantDynamicLiteral: aValue ].
 	^ moduleTranslator translateValue: aValue
 ]
 

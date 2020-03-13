@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMSignExtend class >> mnemonic [
+	^ #sext
+]
+
 { #category : #visiting }
 SLVMSignExtend >> accept: aVisitor [
 	^ aVisitor visitSignExtend: self
@@ -15,9 +20,4 @@ SLVMSignExtend >> accept: aVisitor [
 { #category : #testing }
 SLVMSignExtend >> isSignExtend [
 	^ true
-]
-
-{ #category : #printing }
-SLVMSignExtend >> mnemonic [
-	^ #sext
 ]

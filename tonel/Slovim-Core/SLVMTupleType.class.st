@@ -52,6 +52,11 @@ SLVMTupleType >> isTupleType [
 	
 ]
 
+{ #category : #printing }
+SLVMTupleType >> mnemonic [
+	^ #tuple
+]
+
 { #category : #accessing }
 SLVMTupleType >> name [
 	^ name ifNil: [ name := self createTupleTypeName ]

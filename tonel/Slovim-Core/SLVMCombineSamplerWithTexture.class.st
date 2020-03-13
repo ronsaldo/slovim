@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMCombineSamplerWithTexture class >> mnemonic [ 
+	^ #combineSamplerWithTexture
+]
+
 { #category : #construction }
 SLVMCombineSamplerWithTexture class >> sampler: sampler texture: texture [
 	^ self new sampler: sampler texture: texture
@@ -15,11 +20,6 @@ SLVMCombineSamplerWithTexture class >> sampler: sampler texture: texture [
 { #category : #visitor }
 SLVMCombineSamplerWithTexture >> accept: visitor [
 	^ visitor visitCombineSamplerWithTexture: self
-]
-
-{ #category : #printing }
-SLVMCombineSamplerWithTexture >> mnemonic [ 
-	^ #combineSamplerWithTexture
 ]
 
 { #category : #accessing }

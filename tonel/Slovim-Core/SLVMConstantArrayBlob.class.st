@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMConstantArrayBlob class >> mnemonic [
+	^ #constArrayBlob
+]
+
 { #category : #visiting }
 SLVMConstantArrayBlob >> accept: aVisitor [
 	^ aVisitor visitConstantArrayBlob: self
@@ -16,6 +21,11 @@ SLVMConstantArrayBlob >> accept: aVisitor [
 { #category : #converting }
 SLVMConstantArrayBlob >> asBlob [
 	^ data
+]
+
+{ #category : #printing }
+SLVMConstantArrayBlob >> asSExpression [
+	^ { self mnemonic . self asBlob }
 ]
 
 { #category : #accessing }

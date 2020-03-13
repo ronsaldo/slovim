@@ -13,6 +13,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMAlloca class >> mnemonic [
+	^ #alloca
+]
+
 { #category : #construction }
 SLVMAlloca class >> pointerSize: pointerSize valueType: valueType [
 	^ self new pointerSize: pointerSize valueType: valueType
@@ -67,11 +72,6 @@ SLVMAlloca >> isOnlyUsedByLoadStoreAndGetElementPtrBase [
 	].
 
 	^ true
-]
-
-{ #category : #printing }
-SLVMAlloca >> mnemonic [
-	^ #alloca
 ]
 
 { #category : #accessing }

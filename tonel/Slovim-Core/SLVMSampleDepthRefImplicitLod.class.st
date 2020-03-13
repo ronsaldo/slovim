@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMSampleDepthRefImplicitLod class >> mnemonic [
+	^ #sampleDepthRefImplicitLOD
+]
+
 { #category : #'as yet unclassified' }
 SLVMSampleDepthRefImplicitLod class >> sampledTexture: sampledTexture texcoord: texcoord depthReference: depthReference [
 	^ self new sampledTexture: sampledTexture texcoord: texcoord depthReference: depthReference
@@ -17,11 +22,6 @@ SLVMSampleDepthRefImplicitLod >> accept: aVisitor [
 { #category : #'as yet unclassified' }
 SLVMSampleDepthRefImplicitLod >> depthReference [
 	^ parameters third
-]
-
-{ #category : #printing }
-SLVMSampleDepthRefImplicitLod >> mnemonic [
-	^ #sampleDepthRefImplicitLOD
 ]
 
 { #category : #'as yet unclassified' }

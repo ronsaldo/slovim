@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMZeroExtend class >> mnemonic [
+	^ #zext
+]
+
 { #category : #visiting }
 SLVMZeroExtend >> accept: aVisitor [
 	^ aVisitor visitZeroExtend: self
@@ -15,9 +20,4 @@ SLVMZeroExtend >> accept: aVisitor [
 { #category : #testing }
 SLVMZeroExtend >> isZeroExtend [
 	^ true
-]
-
-{ #category : #printing }
-SLVMZeroExtend >> mnemonic [
-	^ #zext
 ]

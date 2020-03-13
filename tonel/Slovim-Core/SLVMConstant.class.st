@@ -168,6 +168,6 @@ SLVMConstant >> isConstant [
 ]
 
 { #category : #testing }
-SLVMConstant >> isConstantDynamicLiteral [
+SLVMConstant >> isFunctionDynamicLiteral [
 	^ false
 ]

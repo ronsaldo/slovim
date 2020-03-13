@@ -5,7 +5,8 @@ Class {
 		'functionType',
 		'type',
 		'name',
-		'isPureFunction'
+		'isPureFunction',
+		'sexpression'
 	],
 	#classVars : [
 		'ValidBuiltInFunctionNames'
@@ -125,6 +126,11 @@ SLVMConstantBuiltInFunction class >> initialize [
 	) collect: [:each | each asSymbol]).
 ]
 
+{ #category : #printing }
+SLVMConstantBuiltInFunction class >> mnemonic [
+	^ #builtInFunction
+]
+
 { #category : #construction }
 SLVMConstantBuiltInFunction class >> pointerSize: pointerSize name: aName functionType: aFunctionType [
 	^ self new pointerSize: pointerSize name: aName functionType: aFunctionType
@@ -133,6 +139,11 @@ SLVMConstantBuiltInFunction class >> pointerSize: pointerSize name: aName functi
 { #category : #'as yet unclassified' }
 SLVMConstantBuiltInFunction >> accept: aVisitor [
 	^ aVisitor visitConstantBuiltInFunction: self
+]
+
+{ #category : #printing }
+SLVMConstantBuiltInFunction >> asSExpression [
+	^ sexpression ifNil: [sexpression := { self mnemonic . type asSExpression . name }]
 ]
 
 { #category : #accessing }
