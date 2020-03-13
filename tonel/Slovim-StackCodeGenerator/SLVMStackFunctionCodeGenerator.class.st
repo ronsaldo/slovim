@@ -51,8 +51,7 @@ SLVMStackFunctionCodeGenerator >> createTemporariesForBasicBlock: slvmBasicBlock
 	slvmBasicBlock instructionsDo: [ :instruction |
 		etreeStatement := SLVMETreeStatement new slvmInstruction: instruction; type: instruction type.
 		etreeBasicBlock add: etreeStatement.
-		instruction type isVoidType ifFalse: [ 
-			etreeStatement name: instruction name.
+		instruction type isVoidType ifFalse: [
 			translatedElements at: instruction put: etreeStatement
 		].
 	]

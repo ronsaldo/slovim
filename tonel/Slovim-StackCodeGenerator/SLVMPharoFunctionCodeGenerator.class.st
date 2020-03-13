@@ -182,6 +182,11 @@ SLVMPharoFunctionCodeGenerator >> convertPointerIntoVariable: aVariableExpressio
 
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMPharoFunctionCodeGenerator >> convertStatementName: statement [
+	^ ('<local: ' , statement validLocalValueIndex asString , (statement name ifNotNil: [:n | n ] ifNil: ['']) , '>') asSymbol
+]
+
 { #category : #'code generation' }
 SLVMPharoFunctionCodeGenerator >> createArgumentTemporary: rawName type: type [
 	^ self createObjectTemporary: rawName type: type
@@ -303,11 +308,11 @@ SLVMPharoFunctionCodeGenerator >> createTemporary: rawName type: type [
 SLVMPharoFunctionCodeGenerator >> createTemporaryForStatement: anStatement [
 	anStatement type isVoidType ifTrue: [ ^ self ].
 	anStatement isAllocaOnlyUsedByLoadsAndStores ifTrue: [
-		promotedAllocas at: anStatement put: (self createTemporary: anStatement name type: anStatement expression valueType).
+		promotedAllocas at: anStatement put: (self createTemporary: (self convertStatementName: anStatement) type: anStatement expression valueType).
 		^ self.
 	].
 
-	translatedElements at: anStatement put: (self createTemporary: anStatement name type: anStatement type).
+	translatedElements at: anStatement put: (self createTemporary: (self convertStatementName: anStatement) type: anStatement type).
 
 ]
 

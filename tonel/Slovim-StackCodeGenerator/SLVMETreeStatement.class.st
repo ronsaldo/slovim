@@ -2,7 +2,6 @@ Class {
 	#name : #SLVMETreeStatement,
 	#superclass : #SLVMETreeValue,
 	#instVars : [
-		'name',
 		'slvmInstruction',
 		'expression',
 		'references',
@@ -54,7 +53,7 @@ SLVMETreeStatement >> expression: anObject [
 
 { #category : #printing }
 SLVMETreeStatement >> fullPrintOn: aStream [
-	name ifNotNil: [ 
+	self name ifNotNil: [ 
 		aStream putIdentifier: self validName; nextPutAll: ' := '
 	].
 
@@ -121,12 +120,7 @@ SLVMETreeStatement >> mergePreviousExpressions [
 
 { #category : #accessing }
 SLVMETreeStatement >> name [
-	^ name
-]
-
-{ #category : #accessing }
-SLVMETreeStatement >> name: anObject [
-	name := anObject
+	^ slvmInstruction name
 ]
 
 { #category : #accessing }
@@ -180,6 +174,11 @@ SLVMETreeStatement >> slvmInstruction: anObject [
 ]
 
 { #category : #accessing }
+SLVMETreeStatement >> validLocalValueIndex [
+	^ slvmInstruction validLocalValueIndex
+]
+
+{ #category : #accessing }
 SLVMETreeStatement >> validName [
-	^ name ifNil: [ #anonv ]
+	^ self name ifNil: [ #anonv ]
 ]

@@ -685,7 +685,7 @@ SLVMFunction >> localValuesDo: aBlock [
 	arguments do: aBlock.
 	dynamicLiterals do: aBlock.
 	basicBlocks do: [ :bb |
-		basicBlocks instructionsDo: aBlock
+		bb instructionsDo: aBlock
 	].
 ]
 
