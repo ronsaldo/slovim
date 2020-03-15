@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #testing }
+SLVMDebugInstruction class >> isAbstract [
+	^ self == SLVMDebugInstruction
+]
+
+{ #category : #testing }
 SLVMDebugInstruction >> isDebugInstruction [
 	^ true
 ]

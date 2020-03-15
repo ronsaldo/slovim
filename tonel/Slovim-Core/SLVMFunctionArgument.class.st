@@ -12,6 +12,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMFunctionArgument class >> mnemonics [
+	^ #()
+]
+
 { #category : #visitor }
 SLVMFunctionArgument >> accept: aVisitor [
 	^ aVisitor visitFunctionArgument: self
@@ -20,6 +25,11 @@ SLVMFunctionArgument >> accept: aVisitor [
 { #category : #printing }
 SLVMFunctionArgument >> asFullSExpression [
 	^ { name . type asSExpression . self flags sorted }
+]
+
+{ #category : #'as yet unclassified' }
+SLVMFunctionArgument >> decodeFromSExpression: encodedValue context: context [
+	flags := encodedValue third.
 ]
 
 { #category : #accessing }

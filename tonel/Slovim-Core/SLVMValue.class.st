@@ -7,8 +7,23 @@ Class {
 	#instVars : [
 		'flags'
 	],
+	#classVars : [
+		'MnemonicToValueClass'
+	],
 	#category : #'Slovim-Core-SSA'
 }
+
+{ #category : #'class initialization' }
+SLVMValue class >> initialize [
+	MnemonicToValueClass := IdentityDictionary new.
+	self allSubclassesDo: [ :eachValueClass |
+		eachValueClass isAbstract ifFalse: [ 
+			eachValueClass mnemonics do: [ :mnemonic |
+				MnemonicToValueClass at: mnemonic put: eachValueClass
+			]
+		].
+	]
+]
 
 { #category : #printing }
 SLVMValue class >> mnemonic [
@@ -18,6 +33,11 @@ SLVMValue class >> mnemonic [
 { #category : #printing }
 SLVMValue class >> mnemonics [
 	^ {self mnemonic}
+]
+
+{ #category : #'as yet unclassified' }
+SLVMValue class >> valueClassFromMnemonic: mnemonic [
+	^ MnemonicToValueClass at: mnemonic ifAbsent: [ nil ]
 ]
 
 { #category : #visitor }
@@ -53,6 +73,11 @@ SLVMValue >> asSExpression [
 { #category : #accessing }
 SLVMValue >> childrenNodes [
 	^ #()
+]
+
+{ #category : #'as yet unclassified' }
+SLVMValue >> decodeFromSExpression: encodedValue context: context [
+	self subclassResponsibility
 ]
 
 { #category : #flags }

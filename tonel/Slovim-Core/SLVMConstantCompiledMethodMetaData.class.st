@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMConstantCompiledMethodMetaData class >> mnemonic [
+	^ #compiledMethodMetaData
+]
+
 { #category : #comparing }
 SLVMConstantCompiledMethodMetaData >> = other [
 	^ self class = other class and: [ sourceMethod == other sourceMethod ]

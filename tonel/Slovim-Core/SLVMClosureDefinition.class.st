@@ -13,6 +13,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMClosureDefinition class >> mnemonic [
+	^ #closure
+]
+
 { #category : #construction }
 SLVMClosureDefinition class >> module: module functionType: functionType [
 	| var |
@@ -28,7 +33,7 @@ SLVMClosureDefinition >> accept: aVisitor [
 
 { #category : #printing }
 SLVMClosureDefinition >> asFullSExpression [
-	^ { #function . name . functionType callingConvention . functionType returnType asSExpression .
+	^ { self mnemonic . self globalValueIndex . name . functionType callingConvention . functionType returnType asSExpression .
 		self globalValueAttributesAsSExpression.
 		#captures . captures collect: [ :each | each asFullSExpression ] as: Array.
 		#arguments . arguments collect: [ :each | each asFullSExpression ].
@@ -123,6 +128,15 @@ SLVMClosureDefinition >> createClosureCaptureOfType: aCaptureType [
 	captures add: capture.
 	closureType := nil.
 	^ capture
+]
+
+{ #category : #'as yet unclassified' }
+SLVMClosureDefinition >> decodeDefinitionFromSExpression: encodedGlobal context: context [
+	| dict encodedCaptures |
+	dict := Dictionary newFromPairs: (encodedGlobal allButFirst: 6).
+	encodedCaptures := dict at: #captures.
+	self halt.
+	super decodeDeclarationFromSExpression: encodedGlobal context: context
 ]
 
 { #category : #initialization }

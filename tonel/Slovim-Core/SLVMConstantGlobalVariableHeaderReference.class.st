@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMConstantGlobalVariableHeaderReference class >> mnemonic [
+	^ #globalVariableHeader
+]
+
 { #category : #comparing }
 SLVMConstantGlobalVariableHeaderReference >> = other [
 	^ self class = other class and: [ globalVariable == other globalVariable and: [ type = other type] ]

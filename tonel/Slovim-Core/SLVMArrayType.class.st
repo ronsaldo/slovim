@@ -14,6 +14,11 @@ SLVMArrayType class >> baseType: baseType elements: elements [
 	^ self new baseType: baseType; elements: elements; yourself
 ]
 
+{ #category : #printing }
+SLVMArrayType class >> mnemonic [
+	^ #array
+]
+
 { #category : #comparing }
 SLVMArrayType >> = other [
 	^ self class = other class and: [ baseType = other baseType and: [ elements = other elements ] ]
@@ -37,7 +42,7 @@ SLVMArrayType >> alignment [
 
 { #category : #converting }
 SLVMArrayType >> asFullSExpression [
-	^ fullSExpression ifNil: [ fullSExpression := { #arrayType . baseType asSExpression . elements } ]
+	^ fullSExpression ifNil: [ fullSExpression := { self mnemonic . baseType asSExpression . elements } ]
 ]
 
 { #category : #accessing }
@@ -48,6 +53,13 @@ SLVMArrayType >> baseType [
 { #category : #accessing }
 SLVMArrayType >> baseType: anObject [
 	baseType := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMArrayType >> decodeFromFullSExpression: encodedType context: decodingContext [
+	self assert: encodedType size = 3.
+	baseType := decodingContext decodeSExpressionType: encodedType second.
+	elements := encodedType third.
 ]
 
 { #category : #'as yet unclassified' }

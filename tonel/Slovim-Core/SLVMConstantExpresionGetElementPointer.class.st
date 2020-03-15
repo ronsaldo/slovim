@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #testing }
+SLVMConstantExpresionGetElementPointer class >> isAbstract [
+	^ self == SLVMConstantExpresionGetElementPointer
+]
+
 { #category : #printing }
 SLVMConstantExpresionGetElementPointer class >> mnemonic [
 	^ #constExprGEP

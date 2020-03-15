@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-Type'
 }
 
+{ #category : #printing }
+SLVMTupleType class >> mnemonic [
+	^ #tuple
+]
+
 { #category : #accessing }
 SLVMTupleType class >> types: aListOfTypes [
 	^ self name: nil types: aListOfTypes kind: self genericKind names: nil
@@ -50,11 +55,6 @@ SLVMTupleType >> hash [
 SLVMTupleType >> isTupleType [
 	^ true
 	
-]
-
-{ #category : #printing }
-SLVMTupleType >> mnemonic [
-	^ #tuple
 ]
 
 { #category : #accessing }

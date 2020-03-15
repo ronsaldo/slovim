@@ -10,6 +10,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #testing }
+SLVMDynamicObjectNativeCast class >> isAbstract [
+	^ self == SLVMDynamicObjectNativeCast
+]
+
 { #category : #initialization }
 SLVMDynamicObjectNativeCast >> initialize [
 	super initialize.

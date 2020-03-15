@@ -27,8 +27,13 @@ SLVMMatrixType class >> baseType: aBaseType rows: numRows columns: numColumns al
 		rows: numRows;
 		columns: numColumns;
 		alignment: anAlignment;
-		size: (aBaseType size * numColumns alignedTo: anAlignment) * numRows;
+		size: (aBaseType size * numRows alignedTo: anAlignment) * numColumns;
 		yourself
+]
+
+{ #category : #printing }
+SLVMMatrixType class >> mnemonic [
+	^ #matrix
 ]
 
 { #category : #comparing }
@@ -58,7 +63,7 @@ SLVMMatrixType >> alignment: anObject [
 
 { #category : #converting }
 SLVMMatrixType >> asFullSExpression [
-	^ fullSExpression ifNil: [ fullSExpression := { #matrix . baseType asSExpression . rows . columns } ]
+	^ fullSExpression ifNil: [ fullSExpression := { self mnemonic . baseType asSExpression . rows . columns } ]
 ]
 
 { #category : #accessing }
@@ -84,6 +89,17 @@ SLVMMatrixType >> columns [
 { #category : #accessing }
 SLVMMatrixType >> columns: anObject [
 	columns := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMMatrixType >> decodeFromFullSExpression: encodedType context: decodingContext [
+	self assert: encodedType size = 4.
+	baseType := decodingContext decodeSExpressionType: encodedType second.
+	rows := encodedType third.
+	columns := encodedType third.
+	alignment := baseType alignment * (rows ~= 3 ifTrue: [ rows ] ifFalse: [ 4 ]).
+	size := (baseType size * rows alignedTo: alignment) * columns.
+
 ]
 
 { #category : #comparing }

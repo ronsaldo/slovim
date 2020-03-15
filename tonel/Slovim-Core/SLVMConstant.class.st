@@ -72,6 +72,11 @@ SLVMConstant class >> int: anInteger [
 	^ self type: SLVMType intType value: anInteger
 ]
 
+{ #category : #testing }
+SLVMConstant class >> isAbstract [
+	^ self == SLVMConstant
+]
+
 { #category : #constructor }
 SLVMConstant class >> long: anInteger [
 	^ self type: SLVMType longType value: anInteger

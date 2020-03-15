@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMFakeValue class >> mnemonics [
+	^ #()
+]
+
 { #category : #adding }
 SLVMFakeValue >> addInstructionReference: anInstruction [
 	self error: 'Fake values should not be used.'

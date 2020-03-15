@@ -28,6 +28,11 @@ SLVMVectorType class >> baseType: aBaseType elements: numElements alignment: anA
 		yourself
 ]
 
+{ #category : #printing }
+SLVMVectorType class >> mnemonic [
+	^ #vector
+]
+
 { #category : #comparing }
 SLVMVectorType >> = other [
 	^ self class == other class
@@ -65,6 +70,15 @@ SLVMVectorType >> baseType [
 { #category : #accessing }
 SLVMVectorType >> baseType: anObject [
 	baseType := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMVectorType >> decodeFromFullSExpression: encodedType context: decodingContext [
+	self assert: encodedType size = 3.
+	baseType := decodingContext decodeSExpressionType: encodedType second.
+	elements := encodedType third.
+	size := baseType size * elements.
+	alignment := baseType alignment * (elements ~= 3 ifTrue: [ elements ] ifFalse: [ 4 ]).
 ]
 
 { #category : #accessing }

@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #testing }
+SLVMConstantExpresion class >> isAbstract [
+	^ self == SLVMConstantExpresion
+]
+
 { #category : #printing }
 SLVMConstantExpresion >> asSExpression [
 	^ { self mnemonic . type asSExpression . parameters collect: [ :each | each asSExpression ] }

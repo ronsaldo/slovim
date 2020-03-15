@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-Type'
 }
 
+{ #category : #printing }
+SLVMUnionType class >> mnemonic [
+	^ #union
+]
+
 { #category : #private }
 SLVMUnionType >> accept: aVisitor [
 	^ aVisitor visitUnionType: self
@@ -24,9 +29,4 @@ SLVMUnionType >> computeLayout [
 { #category : #testing }
 SLVMUnionType >> isUnionType [
 	^ true
-]
-
-{ #category : #printing }
-SLVMUnionType >> mnemonic [
-	^ #union
 ]

@@ -30,8 +30,8 @@ SLVMUnaryOperation class >> initialize [
 ]
 
 { #category : #printing }
-SLVMUnaryOperation class >> mnemonic [
-	^ self operation
+SLVMUnaryOperation class >> mnemonics [
+	^ OperationSignatures keys
 ]
 
 { #category : #construction }

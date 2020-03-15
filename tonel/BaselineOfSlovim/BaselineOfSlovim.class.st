@@ -19,7 +19,9 @@ BaselineOfSlovim >> baseline: spec [
 					repository: 'github://ronsaldo/lowcode/tonel';
 					loads: #(#'Core') ].
 		spec 
-			package: #'Slovim-Core';
+			package: #'Slovim-MessagePack';
+			package: #'Slovim-Core' with: [
+				spec requires: #(#'Slovim-MessagePack')];
 			package: #'Slovim-HighLevelCodeGenerator' with: [
 				spec requires: #(#'Slovim-Core' ). ];
 			package: 'Slovim-OpalCompiler' with: [

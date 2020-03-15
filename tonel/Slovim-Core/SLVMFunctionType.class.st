@@ -32,6 +32,11 @@ SLVMFunctionType class >> genericCallingConvention [
 	^ self cdeclCallingConvention
 ]
 
+{ #category : #printing }
+SLVMFunctionType class >> mnemonic [
+	^ #function
+]
+
 { #category : #'calling conventions' }
 SLVMFunctionType class >> smalltalkCallingConvention [
 	^ #smalltalk
@@ -110,7 +115,7 @@ SLVMFunctionType >> argumentsDescriptorWithTarget: aCompilationTarget [
 
 { #category : #converting }
 SLVMFunctionType >> asFullSExpression [
-	^ fullSExpression ifNil: [ fullSExpression := { #function . callingConvention . arguments collect: [ :each | each asSExpression ] . variadic . returnType asSExpression } ]
+	^ fullSExpression ifNil: [ fullSExpression := { self mnemonic . callingConvention . arguments collect: [ :each | each asSExpression ] . variadic . returnType asSExpression } ]
 ]
 
 { #category : #accessing }
@@ -121,6 +126,15 @@ SLVMFunctionType >> callingConvention [
 { #category : #accessing }
 SLVMFunctionType >> callingConvention: anObject [
 	callingConvention := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMFunctionType >> decodeFromFullSExpression: encodedType context: decodingContext [
+	self assert: encodedType size = 5.
+	callingConvention := encodedType second.
+	variadic := encodedType fourth.
+	arguments := encodedType third collect: [ :each | decodingContext decodeSExpressionType: each ].
+	returnType := decodingContext decodeSExpressionType: encodedType fifth
 ]
 
 { #category : #initialization }

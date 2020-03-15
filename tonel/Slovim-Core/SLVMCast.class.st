@@ -10,6 +10,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #testing }
+SLVMCast class >> isAbstract [
+	^ self == SLVMCast
+]
+
 { #category : #'as yet unclassified' }
 SLVMCast class >> source: source targetType: valueType [
 	^ self new source: source targetType: valueType

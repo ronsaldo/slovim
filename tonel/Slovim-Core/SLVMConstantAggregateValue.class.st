@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #testing }
+SLVMConstantAggregateValue class >> isAbstract [
+	^ self == SLVMConstantAggregateValue
+]
+
 { #category : #printing }
 SLVMConstantAggregateValue >> asSExpression [
 	^ { self mnemonic . type asSExpression . slots collect: [ :each | each asSExpression ] as: Array }

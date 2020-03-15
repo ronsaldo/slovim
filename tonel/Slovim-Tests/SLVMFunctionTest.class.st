@@ -16,10 +16,11 @@ SLVMFunctionTest >> testNew [
 	self assert: function type equals: (SLVMPointerType size: 4 baseType: functionType storage: SLVMType genericStorage).
 	self assert: function arguments size equals: 1.
 	self assert: function asFullSExpression equals:
-	#(function testFunction cdecl void ()
+	#(function nil testFunction cdecl void ()
 		arguments (
 			(nil i32 ())
 		)
+		literals #()
 		blocks ()
 	).
 ]

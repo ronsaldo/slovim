@@ -14,6 +14,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #testing }
+SLVMInstruction class >> isAbstract [
+	^ self == SLVMInstruction
+]
+
 { #category : #enumerating }
 SLVMInstruction >> allInstructionsDo: aBlock [
 	aBlock value: self

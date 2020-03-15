@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #testing }
+SLVMConstantBinaryExpresion class >> isAbstract [
+	^ self == SLVMConstantBinaryExpresion
+]
+
 { #category : #'initialize-release' }
 SLVMConstantBinaryExpresion class >> left: left right: right [
 	^ self new left: left right: right

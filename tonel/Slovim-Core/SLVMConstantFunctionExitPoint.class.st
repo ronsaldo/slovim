@@ -8,6 +8,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMConstantFunctionExitPoint class >> mnemonic [
+	^ #functionExitPoint
+]
+
 { #category : #comparing }
 SLVMConstantFunctionExitPoint >> = other [
 	^ self class = other class and: [ sourceMethod == other sourceMethod ]

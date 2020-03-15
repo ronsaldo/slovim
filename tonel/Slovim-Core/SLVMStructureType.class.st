@@ -36,6 +36,11 @@ SLVMStructureType class >> genericKind [
 	^ #generic
 ]
 
+{ #category : #printing }
+SLVMStructureType class >> mnemonic [
+	^ #struct
+]
+
 { #category : #construction }
 SLVMStructureType class >> name: structureName types: typeList kind: structureKind names: fieldNames [
 	^ self new name: structureName; types: typeList; kind: structureKind; names: fieldNames; yourself
@@ -53,20 +58,21 @@ SLVMStructureType >> accept: aVisitor [
 
 { #category : #accessing }
 SLVMStructureType >> alignment [
+	alignment ifNil: [ self computeLayout ].
 	^ alignment
 ]
 
 { #category : #converting }
 SLVMStructureType >> asFullSExpression [
 	^ fullSExpression ifNil: [
-		fullSExpression := {self mnemonic . name . types collect: [:each | each asSExpression]. names}
+		fullSExpression := {self mnemonic . name . kind . types collect: [:each | each asSExpression]. names . #() }
 	]
 ]
 
 { #category : #converting }
 SLVMStructureType >> asSExpression [
-	name ifNotNil: [ ^ { #type . name } ].
-	^ super
+	name ifNotNil: [ ^ { self mnemonic . name } ].
+	^ super asSExpression
 ]
 
 { #category : #accessing }
@@ -92,6 +98,14 @@ SLVMStructureType >> computeLayout [
 		offset.
 	].
 	size := currentOffset alignedTo: alignment.
+]
+
+{ #category : #converting }
+SLVMStructureType >> decodeFromFullSExpression: encodedType context: decodingContext [
+	self assert: encodedType size = 6.
+	kind := encodedType third.
+	names := encodedType fifth.
+	types := encodedType fourth collect: [:each | decodingContext decodeSExpressionType: each].
 ]
 
 { #category : #'as yet unclassified' }
@@ -208,11 +222,6 @@ SLVMStructureType >> minimalAlignment: anAlignment [
 	size := size alignedTo: alignment.
 ]
 
-{ #category : #printing }
-SLVMStructureType >> mnemonic [
-	^ #struct
-]
-
 { #category : #accessing }
 SLVMStructureType >> name [
 	^ name
@@ -283,6 +292,7 @@ SLVMStructureType >> shortName [
 
 { #category : #accessing }
 SLVMStructureType >> size [
+	size ifNil: [ self computeLayout ].
 	^ size
 ]
 

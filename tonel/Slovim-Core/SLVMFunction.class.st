@@ -21,6 +21,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMFunction class >> mnemonic [
+	^ #function
+]
+
 { #category : #construction }
 SLVMFunction class >> module: module name: varName functionType: functionType [
 	| var |
@@ -124,7 +129,7 @@ SLVMFunction >> argumentsDescriptor [
 
 { #category : #printing }
 SLVMFunction >> asFullSExpression [
-	^ { #function . name . functionType callingConvention . functionType returnType asSExpression .
+	^ { self mnemonic . self globalValueIndex . name . functionType callingConvention . functionType returnType asSExpression .
 		self globalValueAttributesAsSExpression.
 		#arguments . arguments collect: [ :each | each asFullSExpression ].
 		#literals . dynamicLiterals collect: [ :each | each asFullSExpression ] as: Array.
@@ -450,6 +455,45 @@ SLVMFunction >> debugType [
 { #category : #'as yet unclassified' }
 SLVMFunction >> debugType: debugType [
 	self propertyAt: #debugType put: debugType
+]
+
+{ #category : #'as yet unclassified' }
+SLVMFunction >> decodeBasicBlocksFromSExpressions: encodedBasicBlocks [
+	encodedBasicBlocks ifEmpty: [ ^ self ].
+	self halt
+]
+
+{ #category : #'as yet unclassified' }
+SLVMFunction >> decodeDeclarationFromSExpression: encodedGlobal context: context [
+	| callingConvention returnType dict encodedArguments argumentTypes |
+	name := encodedGlobal third.
+	callingConvention := encodedGlobal fourth.
+	returnType := (context decodeSExpressionType: encodedGlobal fifth).
+	dict := Dictionary newFromPairs: (encodedGlobal allButFirst: 6).
+	encodedArguments := dict at: #arguments ifAbsent: [ #() ].
+	argumentTypes := encodedArguments collect: [ :arg | context decodeSExpressionType: arg second].
+	
+	self pointerSize: context compilationTarget pointerSize functionType: (SLVMFunctionType callingConvention: callingConvention arguments: argumentTypes returnType: returnType).
+	self decodeGlobalValueAttributesFromSExpression: encodedGlobal sixth context: context.
+
+]
+
+{ #category : #'as yet unclassified' }
+SLVMFunction >> decodeDefinitionFromSExpression: encodedGlobal context: context [
+	| dict argDefinitions literalDefinitions |
+	self assert: context == module.
+	dict := Dictionary newFromPairs: (encodedGlobal allButFirst: 6).
+	argDefinitions := dict at: #arguments ifAbsent: [ #() ].
+	argDefinitions doWithIndex: [ :argDefinition :index |
+		(arguments at: index) decodeFromSExpression: argDefinition context: context
+	].
+
+	literalDefinitions := dict at: #literals ifAbsent: [ #() ].
+	literalDefinitions do: [ :literals |
+		self halt
+	].
+
+	self decodeBasicBlocksFromSExpressions: (dict at: #blocks).
 ]
 
 { #category : #'control flow' }

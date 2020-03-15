@@ -45,6 +45,11 @@ SLVMPrimitiveType >> isScalarType [
 	^ true
 ]
 
+{ #category : #printing }
+SLVMPrimitiveType >> mnemonic [
+	^ self asFullSExpression
+]
+
 { #category : #accessing }
 SLVMPrimitiveType >> name [
 	^ name

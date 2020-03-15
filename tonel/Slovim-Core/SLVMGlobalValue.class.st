@@ -9,10 +9,16 @@ Class {
 		'name',
 		'properties',
 		'visibility',
-		'module'
+		'module',
+		'dllStorageClass'
 	],
 	#category : #'Slovim-Core-SSA'
 }
+
+{ #category : #testing }
+SLVMGlobalValue class >> isAbstract [
+	^ self == SLVMGlobalValue
+]
 
 { #category : #printing }
 SLVMGlobalValue >> asSExpression [
@@ -45,9 +51,42 @@ SLVMGlobalValue >> debugSourceLocation: aValue [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMGlobalValue >> globalValueAttributesAsSExpression [
-	^ #()
+SLVMGlobalValue >> decodeDeclarationFromSExpression: encodedGlobal context: context [
+	self subclassResponsibility
+]
 
+{ #category : #'as yet unclassified' }
+SLVMGlobalValue >> decodeDefinitionFromSExpression: encodedGlobal context: context [
+	self subclassResponsibility
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGlobalValue >> decodeGlobalValueAttributesFromSExpression: encodedAttributes context: decodingContet [
+	| dict |
+	dict := Dictionary newFromPairs: encodedAttributes.
+	flags := dict at: #flags ifAbsent: [#()].
+	dllStorageClass := dict at: #dllStorageClass ifAbsent: [ dllStorageClass ].
+	visibility := dict at: #visibility ifAbsent: [ visibility ].
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> dllStorageClass [
+	^ dllStorageClass
+]
+
+{ #category : #accessing }
+SLVMGlobalValue >> dllStorageClass: anObject [
+	dllStorageClass := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGlobalValue >> globalValueAttributesAsSExpression [
+	^ {
+	#flags . self flags.
+	#dllStorageClass  . dllStorageClass.
+	#visibility . visibility.
+	#properties . properties slvmEncodeAsSExpression
+	}
 ]
 
 { #category : #accessing }
@@ -70,6 +109,17 @@ SLVMGlobalValue >> initialize [
 	super initialize.
 	properties := IdentityDictionary new.
 	visibility := #public.
+	dllStorageClass := nil.
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> isDLLExport [
+	^ dllStorageClass == #dllexport
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> isDLLImport [
+	^ dllStorageClass == #dllimport
 ]
 
 { #category : #visibility }

@@ -21,6 +21,11 @@ Class {
 }
 
 { #category : #printing }
+SLVMClosureCapture class >> mnemonics [
+	^ #()
+]
+
+{ #category : #printing }
 SLVMClosureCapture >> asFullSExpression [
 	^ { name . type asSExpression . self flags sorted }
 ]

@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMDiscardFragment class >> mnemonic [
+	^ #discard
+]
+
 { #category : #visiting }
 SLVMDiscardFragment >> accept: aVisitor [
 	^ aVisitor visitDiscardFragment: self

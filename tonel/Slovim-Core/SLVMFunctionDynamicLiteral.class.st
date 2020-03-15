@@ -9,6 +9,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMFunctionDynamicLiteral class >> mnemonics [
+	^ #()
+]
+
 { #category : #visitor }
 SLVMFunctionDynamicLiteral >> accept: aVisitor [
 	^ aVisitor visitFunctionDynamicLiteral: self

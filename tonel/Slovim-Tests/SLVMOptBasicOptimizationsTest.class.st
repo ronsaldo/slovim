@@ -20,35 +20,37 @@ SLVMOptBasicOptimizationsTest >> testFoldFalseBranch [
 	].
 
 	self assert: function asFullSExpression equals: #(
-		function testFunction cdecl i32 ()
+		function nil testFunction cdecl i32 ()
 			arguments ()
-		blocks (
-			((merge (block 4 #ifMerge)) 
-				(nil branch void () ((const b8 false)) ((block 2 ifTrue) (block 3 ifFalse)))
-			)
-			(() 
-				(nil jump void () () (block 4 ifMerge))
-			)
-			(()
-				(nil jump void () () (block 4 ifMerge))
-			)
-			(()
-				(nil phi i32 () ((const i32 1) #(const i32 2)) ((block 2 ifTrue) (block 3 ifFalse)))
-				(nil return void () ((local nil nil))))
-			)
-	).
+			literals ()
+			blocks (
+				((merge (block 4 #ifMerge)) 
+					(nil branch void () ((const b8 false)) ((block 2 ifTrue) (block 3 ifFalse)))
+				)
+				(() 
+					(nil jump void () () (block 4 ifMerge))
+				)
+				(()
+					(nil jump void () () (block 4 ifMerge))
+				)
+				(()
+					(nil phi i32 () ((const i32 1) #(const i32 2)) ((block 2 ifTrue) (block 3 ifFalse)))
+					(nil return void () ((local nil nil))))
+				)
+		).
 	
 	SLVMOptBasicOptimizations passOnFunction: function.
 	
 	entryBlock := function basicBlocks first.
-	self assert: function asFullSExpression equals: #(
-		function testFunction cdecl i32 ()
-		arguments ()
-		blocks (
-			(()
-				(nil return void () ((const i32 2)))
+	self assert: function asFullSExpression equals:
+	#(function nil testFunction cdecl i32 ()
+			arguments ()
+			literals ()
+			blocks (
+				(()
+					(nil return void () ((const i32 2)))
+				)
 			)
-		)
 	).
 
 ]
@@ -68,9 +70,10 @@ SLVMOptBasicOptimizationsTest >> testFoldTrueBranch [
 		builder return: result.
 	].
 
-	self assert: function asFullSExpression equals: #(
-		function testFunction cdecl i32 ()
+	self assert: function asFullSExpression equals:
+	#(function nil testFunction cdecl i32 ()
 			arguments ()
+			literals ()
 		blocks (
 			((merge (block 4 #ifMerge)) 
 				(nil branch void () ((const b8 true)) ((block 2 ifTrue) (block 3 ifFalse)))
@@ -90,9 +93,10 @@ SLVMOptBasicOptimizationsTest >> testFoldTrueBranch [
 	SLVMOptBasicOptimizations passOnFunction: function.
 	
 	entryBlock := function basicBlocks first.
-	self assert: function asFullSExpression equals: #(
-		function testFunction cdecl i32 ()
+	self assert: function asFullSExpression equals:
+	#(function nil testFunction cdecl i32 ()
 		arguments ()
+		literals ()
 		blocks (
 			(()
 				(nil return void () ((const i32 1)))

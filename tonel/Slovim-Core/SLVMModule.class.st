@@ -19,7 +19,9 @@ Class {
 		'sourceLanguageName',
 		'disableSLVMOptimizations',
 		'globalValueDictionary',
-		'globalValues'
+		'globalValues',
+		'structureDictionary',
+		'globalDecodeBaseIndex'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -97,7 +99,9 @@ SLVMModule >> addPackageElement: element topoSortResult: result topoSortAdded: a
 
 { #category : #adding }
 SLVMModule >> addStructure: aStructure [
-	structures add: aStructure
+	self assert: aStructure name isNotNil.
+	structures add: aStructure.
+	structureDictionary at: aStructure name ifAbsentPut: aStructure.
 ]
 
 { #category : #accessing }
@@ -207,6 +211,113 @@ SLVMModule >> debugInformation [
 SLVMModule >> debugInformation: anObject [
 	self halt.
 	debugInformation := anObject
+]
+
+{ #category : #deserialization }
+SLVMModule >> decodeConstructorsFrom: encodedConstructors [
+	encodedConstructors do: [ :encodedConstructor |
+		self halt.
+	].
+]
+
+{ #category : #deserialization }
+SLVMModule >> decodeDestructorsFrom: encodedDestructors [
+	encodedDestructors do: [ :encodedDestructor |
+		self halt.
+	].
+]
+
+{ #category : #deserialization }
+SLVMModule >> decodeFromFullSExpression: fullSExpression [
+	| dict |
+	dict := Dictionary newFromPairs: fullSExpression.
+	self
+		decodeStructuresFrom: (dict at: #structures ifAbsent: [#()]);
+		decodeGlobalsFrom: (dict at: #globals ifAbsent: [#()]);
+		decodeConstructorsFrom: (dict at: #constructors ifAbsent: [#()]);
+		decodeDestructorsFrom: (dict at: #constructors ifAbsent: [#()])
+]
+
+{ #category : #deserialization }
+SLVMModule >> decodeGlobalsFrom: encodedGlobals [
+	globalDecodeBaseIndex := globalValues size.
+	"First stage: declare the global values."
+	encodedGlobals do: [ :encodedGlobal |
+		| mnemonic valueClass globalValue |
+		self assert: encodedGlobal isArray.
+		mnemonic := encodedGlobal first.
+		valueClass := SLVMValue valueClassFromMnemonic: mnemonic.
+		self assert: valueClass isNotNil.
+
+		globalValue := valueClass new.
+		self assert: (globalValue isNotNil and: [globalValue isGlobalValue]).
+		self add: (globalValue decodeDeclarationFromSExpression: encodedGlobal context: self).
+	].
+
+	"Second stage: define the global values."
+	encodedGlobals doWithIndex: [ :encodedGlobal :index |
+		| globalValue |
+		globalValue := globalValues at: index + globalDecodeBaseIndex.
+		globalValue decodeDefinitionFromSExpression: encodedGlobal context: self
+	].
+
+
+	
+]
+
+{ #category : #deserialization }
+SLVMModule >> decodeSExpressionType: typeExpression [
+	| result mnemonic typeClass |
+	typeExpression isSymbol ifTrue: [ 
+		"HACK: for the double alignment."
+		typeExpression == #f64 ifTrue: [ ^ self compilationTarget double ].
+	
+		result := SLVMType builtInTypeFromMnemonic: typeExpression.
+		self assert: result isNotNil.
+		^ result
+	].
+
+	self assert: typeExpression isArray.
+	mnemonic := typeExpression first.
+	typeClass := SLVMType typeClassFromMnemonic: mnemonic.
+	self assert: typeClass isNotNil.
+	((typeClass includesBehavior: SLVMStructureType) and: [typeExpression size = 2]) ifTrue: [
+		^ structureDictionary at: typeExpression second.
+	].
+
+	^ typeClass new decodeFromFullSExpression: typeExpression context: self
+
+]
+
+{ #category : #deserialization }
+SLVMModule >> decodeSExpressionValue: encodedValue [
+	self halt
+]
+
+{ #category : #deserialization }
+SLVMModule >> decodeStructuresFrom: structuresList [
+	"First: declare the structures"
+	| baseIndex |
+	baseIndex := structures size.
+	structuresList do: [ :encodedStructure |
+		| structureClass |
+		self assert: encodedStructure isArray.
+		structureClass := SLVMType typeClassFromMnemonic: encodedStructure first.
+		self assert: structureClass isNotNil.
+		self addStructure: (structureClass new name: encodedStructure second; yourself)
+	].
+
+	"Second: parse the actual structure types."
+	structuresList doWithIndex: [ :encodedStructure :index |
+		| structure |
+		structure := structures at: index + baseIndex.
+		structure decodeFromFullSExpression: encodedStructure context: self
+	].
+
+	"Ensure the layout is computed."
+	baseIndex + 1 to: structures size do: [ :i |
+		(structures at: i) computeLayout
+	].
 ]
 
 { #category : #accessing }
@@ -369,8 +480,9 @@ SLVMModule >> includesGlobalNamed: globalName [
 { #category : #initialization }
 SLVMModule >> initialize [
 	structures := OrderedCollection new.
+	structureDictionary := Dictionary new.
 	globalValues := OrderedCollection new.
-	globalValueDictionary := OrderedDictionary new.
+	globalValueDictionary := Dictionary new.
 	packages := OrderedCollection new.
 	inlineAssemblyFragments := OrderedCollection new.
 	globalConstructors := OrderedCollection new.
@@ -454,6 +566,11 @@ SLVMModule >> sourceLanguageName [
 { #category : #accessing }
 SLVMModule >> sourceLanguageName: anObject [
 	sourceLanguageName := anObject
+]
+
+{ #category : #accessing }
+SLVMModule >> structureNamed: structureName [
+	^ structureDictionary at: structureName
 ]
 
 { #category : #accessing }

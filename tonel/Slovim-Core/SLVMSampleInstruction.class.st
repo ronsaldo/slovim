@@ -7,6 +7,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #testing }
+SLVMSampleInstruction class >> isAbstract [
+	^ self == SLVMSampleInstruction
+]
+
 { #category : #accessing }
 SLVMSampleInstruction >> sampledTexture [
 	^ parameters first

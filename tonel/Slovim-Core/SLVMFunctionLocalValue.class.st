@@ -16,6 +16,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #testing }
+SLVMFunctionLocalValue class >> isAbstract [
+	^ self == SLVMFunctionLocalValue
+]
+
 { #category : #adding }
 SLVMFunctionLocalValue >> addInstructionReference: anInstruction [
 	instructionReferences add: anInstruction

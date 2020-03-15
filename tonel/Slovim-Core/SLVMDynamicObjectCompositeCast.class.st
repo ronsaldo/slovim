@@ -10,6 +10,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #testing }
+SLVMDynamicObjectCompositeCast class >> isAbstract [
+	^ self == SLVMDynamicObjectCompositeCast
+]
+
 { #category : #'as yet unclassified' }
 SLVMDynamicObjectCompositeCast class >> source: source targetType: targetType typeObject: typeObject [
 	^ self new source: source targetType: targetType typeObject: typeObject

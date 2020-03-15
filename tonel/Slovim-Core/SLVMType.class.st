@@ -8,6 +8,7 @@ Class {
 		'AtomicCounterStorage',
 		'BoolType',
 		'BuiltInTypes',
+		'BuiltInTypesFromSExpressionMnemonic',
 		'CharType',
 		'CrossWorkgroupStorage',
 		'DepthTexture2DArrayType',
@@ -40,6 +41,7 @@ Class {
 		'Texture3DType',
 		'TextureCubeArrayType',
 		'TextureCubeType',
+		'TypeClassFromMnemonic',
 		'UCharType',
 		'UIntType',
 		'ULongType',
@@ -60,6 +62,11 @@ SLVMType class >> atomicCounterStorage [
 { #category : #'built in types' }
 SLVMType class >> boolType [
 	^ BoolType
+]
+
+{ #category : #'as yet unclassified' }
+SLVMType class >> builtInTypeFromMnemonic: mnemonic [
+	^ BuiltInTypesFromSExpressionMnemonic at: mnemonic ifAbsent: [ nil ]
 ]
 
 { #category : #'class initialization' }
@@ -158,7 +165,6 @@ SLVMType class >> initialize [
 	"
 	self initialize
 	"
-	super initialize.
 	
 	UniformConstantStorage := #uniformConstant.
 	UniformStorage := 	#uniform.
@@ -181,8 +187,23 @@ SLVMType class >> initialize [
 		self vectorTypes,
 		self matrixTypes,
 		self textureAndSamplerTypes
-	) do: [ :type | BuiltInTypes at: type name put: type ]
+	) do: [ :type | BuiltInTypes at: type name put: type ].
+	BuiltInTypesFromSExpressionMnemonic := IdentityDictionary new.
 	
+	BuiltInTypes valuesDo: [ :each |
+		| mnemonic |
+		mnemonic := each asSExpression.
+		mnemonic isSymbol ifTrue: [ 
+			BuiltInTypesFromSExpressionMnemonic at: mnemonic put: each
+		]
+	].
+	
+	TypeClassFromMnemonic := IdentityDictionary new.
+	self withAllSubclassesDo: [ :each |
+		each mnemonic ifNotNil: [ :mnemonic | 
+			TypeClassFromMnemonic at: mnemonic put: each
+		]
+	].
 ]
 
 { #category : #'storage classes' }
@@ -215,6 +236,11 @@ SLVMType class >> matrixTypes [
 		SLVMMatrixType baseType: DoubleAlign8Type rows: 3 columns: 3.
 		SLVMMatrixType baseType: DoubleAlign8Type rows: 4 columns: 4.
 	}
+]
+
+{ #category : #printing }
+SLVMType class >> mnemonic [
+	^ nil
 ]
 
 { #category : #'storage classes' }
@@ -357,6 +383,11 @@ SLVMType class >> textureCubeType [
 	^ TextureCubeType
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMType class >> typeClassFromMnemonic: mnemonic [
+	^ TypeClassFromMnemonic at: mnemonic ifAbsent: [ nil ]
+]
+
 { #category : #'built in types' }
 SLVMType class >> ucharType [
 	^ UCharType
@@ -480,6 +511,11 @@ SLVMType >> asSLVMType [
 { #category : #testing }
 SLVMType >> asSlovimType: compilationTarget [
 	^ self
+]
+
+{ #category : #'as yet unclassified' }
+SLVMType >> decodeFromFullSExpression: encodedType context: decodingContext [
+	self subclassResponsibility.
 ]
 
 { #category : #'as yet unclassified' }
@@ -660,6 +696,11 @@ SLVMType >> isVoidType [
 { #category : #'as yet unclassified' }
 SLVMType >> loadValueFromPointerWith: irBuilder [
 	^ irBuilder send: self selectorForLoadingFromPointer
+]
+
+{ #category : #printing }
+SLVMType >> mnemonic [
+	^ self class mnemonic
 ]
 
 { #category : #'as yet unclassified' }

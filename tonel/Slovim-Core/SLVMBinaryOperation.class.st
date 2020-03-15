@@ -87,6 +87,11 @@ SLVMBinaryOperation class >> mnemonic [
 	^ nil
 ]
 
+{ #category : #printing }
+SLVMBinaryOperation class >> mnemonics [
+	^ OperationSignatures keys
+]
+
 { #category : #construction }
 SLVMBinaryOperation class >> operation: operation left: leftOperand right: rightOperand [
 	^ self new operation: operation left: leftOperand right: rightOperand

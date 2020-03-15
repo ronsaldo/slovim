@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #testing }
+SLVMConstantExpresionCast class >> isAbstract [
+	^ self == SLVMConstantExpresionCast
+]
+
 { #category : #accessing }
 SLVMConstantExpresionCast >> source [
 	^ self value

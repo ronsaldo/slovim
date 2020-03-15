@@ -16,6 +16,11 @@ Class {
 	#category : #'Slovim-Core-SSA'
 }
 
+{ #category : #printing }
+SLVMGlobalVariable class >> mnemonic [
+	^ #variable
+]
+
 { #category : #construction }
 SLVMGlobalVariable class >> module: module name: varName valueType: valueType storage: storage [
 	| var |
@@ -36,7 +41,7 @@ SLVMGlobalVariable >> accept: aVisitor [
 
 { #category : #printing }
 SLVMGlobalVariable >> asFullSExpression [
-	^ { #variable . name . valueType asSExpression .
+	^ { self mnemonic . type storage .  self globalValueIndex . name . valueType asSExpression .
 		self globalValueAttributesAsSExpression.
 		#readOnly . readOnly.
 		#value . initialValue ifNotNil: [ initialValue asSExpression ].
@@ -64,6 +69,26 @@ SLVMGlobalVariable >> customSection [
 { #category : #accessing }
 SLVMGlobalVariable >> customSection: aSectionName [
 	self propertyAt: #customSection put: aSectionName
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGlobalVariable >> decodeDeclarationFromSExpression: encodedGlobal context: context [
+	name := encodedGlobal fourth.
+	self pointerSize: context compilationTarget pointerSize
+		valueType: (context decodeSExpressionType: encodedGlobal fifth)
+		storage: encodedGlobal second.
+	self decodeGlobalValueAttributesFromSExpression: encodedGlobal sixth context: context.
+
+]
+
+{ #category : #'as yet unclassified' }
+SLVMGlobalVariable >> decodeDefinitionFromSExpression: encodedGlobal context: context [
+	| dict |
+	dict := Dictionary newFromPairs: (encodedGlobal allButFirst: 6).
+	readOnly := dict at: #readOnly ifAbsent: [ false ].
+	(dict at: #value ifAbsent: [ nil ]) ifNotNil: [ :encodedInitialValue |
+		initialValue := context decodeSExpressionValue: encodedInitialValue
+	].
 ]
 
 { #category : #printing }

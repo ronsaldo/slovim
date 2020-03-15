@@ -9,6 +9,11 @@ Class {
 	#category : #'Slovim-Core-Type'
 }
 
+{ #category : #printing }
+SLVMPointerType class >> mnemonic [
+	^ #pointer
+]
+
 { #category : #construction }
 SLVMPointerType class >> size: size baseType: aBaseType storage: storage [
 	^ self new size: size; baseType: aBaseType; storage: storage; yourself
@@ -37,7 +42,7 @@ SLVMPointerType >> asCanonicalType [
 
 { #category : #converting }
 SLVMPointerType >> asFullSExpression [
-	^ {#pointer . baseType asSExpression . storage}
+	^ {self mnemonic . baseType asSExpression . storage}
 ]
 
 { #category : #converting }
@@ -56,6 +61,15 @@ SLVMPointerType >> baseType [
 SLVMPointerType >> baseType: aType [
 	self assert: aType isSlovimType.
 	baseType := aType
+]
+
+{ #category : #'as yet unclassified' }
+SLVMPointerType >> decodeFromFullSExpression: encodedType context: decodingContext [
+	self assert: encodedType size = 3.
+	size := decodingContext compilationTarget pointerSize.
+	storage := encodedType third.
+	baseType := decodingContext decodeSExpressionType: encodedType second.
+
 ]
 
 { #category : #'as yet unclassified' }

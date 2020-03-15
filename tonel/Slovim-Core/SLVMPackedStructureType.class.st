@@ -4,6 +4,11 @@ Class {
 	#category : #'Slovim-Core-Type'
 }
 
+{ #category : #printing }
+SLVMPackedStructureType class >> mnemonic [
+	^ #packedStruct
+]
+
 { #category : #private }
 SLVMPackedStructureType >> accept: aVisitor [
 	^ aVisitor visitPackedStructureType: self
@@ -25,9 +30,4 @@ SLVMPackedStructureType >> computeLayout [
 { #category : #testing }
 SLVMPackedStructureType >> isPacked [
 	^ true
-]
-
-{ #category : #printing }
-SLVMPackedStructureType >> mnemonic [
-	^ #packedStruct
 ]
