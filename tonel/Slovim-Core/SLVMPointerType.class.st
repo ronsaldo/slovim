@@ -103,6 +103,11 @@ SLVMPointerType >> fromOopUsingLowcodeWith: builder [
 	self halt
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMPointerType >> importIntoModule: targetModule fromModule: sourceModule [
+	baseType importIntoModule: targetModule fromModule: sourceModule
+]
+
 { #category : #comparing }
 SLVMPointerType >> internalHash [
 	^ (self class hash bitXor: (baseType hash)) bitXor: storage hash

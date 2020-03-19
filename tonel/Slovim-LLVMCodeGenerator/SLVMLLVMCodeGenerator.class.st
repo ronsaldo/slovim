@@ -612,7 +612,7 @@ SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> translateModuleConstructorsOrDestructors: constructorsOrDestructors name: llvmGlobalName [
 	| ctorFunctionType ctorFunctionPointerType int32Ty varPointerType descriptorType descriptors descriptorsType variable |
-	ctorFunctionType := LLVMFunctionType get: llvmContext voidTy params: #() isVarArg: false.
+	ctorFunctionType := LLVMFunctionType get: self context voidTy params: #() isVarArg: false.
 	ctorFunctionPointerType := LLVMPointerType getUnqual: ctorFunctionType.
 	int32Ty := llvmContext int32Ty.
 	varPointerType := LLVMPointerType getUnqual: llvmContext int8Ty.

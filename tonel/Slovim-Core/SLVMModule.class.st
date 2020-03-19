@@ -21,7 +21,9 @@ Class {
 		'globalValueDictionary',
 		'globalValues',
 		'structureDictionary',
-		'globalDecodeBaseIndex'
+		'globalDecodeBaseIndex',
+		'highLevelMapToStructureType',
+		'structureTypeNameToHighLevelMap'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -81,6 +83,13 @@ SLVMModule >> addHighLevelEntity: highLevelEntity mapToGlobalValue: globalValue 
 ]
 
 { #category : #adding }
+SLVMModule >> addHighLevelEntity: highLevelEntity mapToStructureType: structureType [
+	structureType name ifNil: [ ^ self ].
+	highLevelMapToStructureType at: highLevelEntity put: structureType.
+	structureTypeNameToHighLevelMap at: structureType put: highLevelEntity.
+]
+
+{ #category : #adding }
 SLVMModule >> addPackage: modulePackage [
 	packages add: modulePackage
 ]
@@ -100,6 +109,10 @@ SLVMModule >> addPackageElement: element topoSortResult: result topoSortAdded: a
 { #category : #adding }
 SLVMModule >> addStructure: aStructure [
 	self assert: aStructure name isNotNil.
+	structureDictionary at: aStructure name ifPresent: [ :existent |
+		^ self
+	].
+ 
 	structures add: aStructure.
 	structureDictionary at: aStructure name ifAbsentPut: aStructure.
 ]
@@ -153,7 +166,10 @@ SLVMModule >> asPublicInterfaceDeclarationModule [
 	| result |
 	result := self class new compilationTarget: self compilationTarget.
 	structures do: [ :structure |
-		result addStructure: structure
+		result addStructure: structure.
+		structureTypeNameToHighLevelMap at: structure ifPresent: [ :highLevelEntity |
+			result addHighLevelEntity: highLevelEntity mapToStructureType: structure
+		]
 	].
 
 	globalValues do: [ :globalValue |
@@ -429,6 +445,11 @@ SLVMModule >> globalNamed: aSymbol [
 ]
 
 { #category : #adding }
+SLVMModule >> globalNamed: aSymbol ifAbsent: aBlock [
+	^ globalValueDictionary at: aSymbol ifAbsent: aBlock
+]
+
+{ #category : #adding }
 SLVMModule >> globalNamed: aSymbol ifPresent: aBlock [
 	^ globalValueDictionary at: aSymbol ifPresent: aBlock
 ]
@@ -468,8 +489,23 @@ SLVMModule >> gtTreeViewIn: composite [
 ]
 
 { #category : #accessing }
+SLVMModule >> highLevelMapToStructureType [
+	^ highLevelMapToStructureType
+]
+
+{ #category : #accessing }
 SLVMModule >> highLevelMapToSymbol [
 	^ highLevelMapToSymbol
+]
+
+{ #category : #'as yet unclassified' }
+SLVMModule >> importGlobalValue: externalGlobalValue fromModule: importedSSAModule [
+	^ externalGlobalValue importIntoModule: self fromModule: importedSSAModule
+]
+
+{ #category : #'as yet unclassified' }
+SLVMModule >> importType: externalType fromModule: importedSSAModule [
+	externalType importIntoModule: self fromModule: importedSSAModule
 ]
 
 { #category : #adding }
@@ -487,6 +523,8 @@ SLVMModule >> initialize [
 	inlineAssemblyFragments := OrderedCollection new.
 	globalConstructors := OrderedCollection new.
 	globalDestructors := OrderedCollection new.
+	highLevelMapToStructureType := Dictionary new.
+	structureTypeNameToHighLevelMap := Dictionary new.
 	highLevelMapToSymbol := Dictionary new.
 	symbolMapToHighLevel := Dictionary new.
 	currentOptimizationLevel := 0.

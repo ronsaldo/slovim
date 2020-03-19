@@ -533,6 +533,11 @@ SLVMType >> hash [
 	^ hash ifNil: [hash := self internalHash ]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMType >> importIntoModule: targetModule fromModule: sourceModule [
+	"By default do nothing"
+]
+
 { #category : #comparing }
 SLVMType >> internalHash [
 	self subclassResponsibility

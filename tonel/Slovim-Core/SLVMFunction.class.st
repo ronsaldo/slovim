@@ -655,6 +655,14 @@ SLVMFunction >> hasYesInlineMode [
 	^ self inlineMode == true
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMFunction >> importIntoModule: targetModule fromModule: sourceModule [
+	| result |
+	result := super importIntoModule: targetModule fromModule: sourceModule.
+	targetModule importType: functionType fromModule: module. 
+	^ result
+]
+
 { #category : #initialization }
 SLVMFunction >> initialize [
 	super initialize.

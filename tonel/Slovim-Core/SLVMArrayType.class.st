@@ -82,6 +82,11 @@ SLVMArrayType >> elements: anObject [
 	elements := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMArrayType >> importIntoModule: targetModule fromModule: sourceModule [
+	baseType importIntoModule: targetModule fromModule: sourceModule
+]
+
 { #category : #comparing }
 SLVMArrayType >> internalHash [	
 	^ (self class hash bitXor: baseType hash) bitXor: elements hash

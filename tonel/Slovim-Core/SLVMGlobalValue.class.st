@@ -104,6 +104,14 @@ SLVMGlobalValue >> hasProperty: aSymbol [
 	^ properties includesKey: aSymbol
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMGlobalValue >> importIntoModule: targetModule fromModule: sourceModule [
+	name ifNil: [ self error: 'Cannot import anon values.' ].
+	^ targetModule globalNamed: name ifAbsent: [
+		self createPublicInterfaceDeclarationVersionIn: targetModule
+	]
+]
+
 { #category : #initialization }
 SLVMGlobalValue >> initialize [
 	super initialize.

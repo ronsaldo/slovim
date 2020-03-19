@@ -153,6 +153,15 @@ SLVMStructureType >> hash [
 	^ self identityHash
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMStructureType >> importIntoModule: targetModule fromModule: sourceModule [
+	name ifNotNil: [
+		targetModule addStructure: self.
+	].
+
+	types do: [ :each | each importIntoModule: targetModule fromModule: sourceModule ]
+]
+
 { #category : #testing }
 SLVMStructureType >> isAggregateType [
 	^ true

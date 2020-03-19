@@ -137,6 +137,12 @@ SLVMFunctionType >> decodeFromFullSExpression: encodedType context: decodingCont
 	returnType := decodingContext decodeSExpressionType: encodedType fifth
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMFunctionType >> importIntoModule: targetModule fromModule: sourceModule [
+	arguments do: [ :each | each importIntoModule: targetModule fromModule: sourceModule ].
+	returnType importIntoModule: targetModule fromModule: sourceModule
+]
+
 { #category : #initialization }
 SLVMFunctionType >> initialize [
 	super initialize.

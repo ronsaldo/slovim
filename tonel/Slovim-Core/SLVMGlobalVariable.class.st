@@ -116,6 +116,14 @@ SLVMGlobalVariable >> headerValue: anObject [
 	headerValue := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMGlobalVariable >> importIntoModule: targetModule fromModule: sourceModule [
+	| result |
+	result := super importIntoModule: targetModule fromModule: sourceModule.
+	targetModule importType: valueType fromModule: module. 
+	^ result
+]
+
 { #category : #accessing }
 SLVMGlobalVariable >> initialValue [
 	^ initialValue
