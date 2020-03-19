@@ -28,6 +28,11 @@ SLVMMessagePackExtensionData >> data: anObject [
 	data := anObject
 ]
 
+{ #category : #testing }
+SLVMMessagePackExtensionData >> isSLVMMessagePackExtensionData [
+	^ true
+]
+
 { #category : #'as yet unclassified' }
 SLVMMessagePackExtensionData >> slvmMessagePackEncodeWith: encoder [
 	encoder encodeExtension: data type: type

@@ -6,6 +6,11 @@ Object >> asSLVMMessagePackSerializableObject [
 ]
 
 { #category : #'*Slovim-MessagePack' }
+Object >> isSLVMMessagePackExtensionData [
+	^ false
+]
+
+{ #category : #'*Slovim-MessagePack' }
 Object >> slvmMessagePackEncodeWith: encoder [
 	^ self asSLVMMessagePackSerializableObject slvmMessagePackEncodeWith: encoder
 ]

@@ -138,6 +138,11 @@ SLVMMessagePackDecoder class >> initialize [
 	].
 ]
 
+{ #category : #converting }
+SLVMMessagePackDecoder >> decode: aByteArray [
+	^ self decodeFrom: aByteArray readStream
+]
+
 { #category : #encoding }
 SLVMMessagePackDecoder >> decodeArray: elementCount [
 	| result |
