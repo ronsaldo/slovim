@@ -59,7 +59,7 @@ SLVMMessagePackGraphDecoder >> objectInstanceProxy: objectId concretizeWith: con
 	proxy := objectIDTable at: objectId.
 	self assert: proxy class == Object.
 	objectIDTable at: objectId put: concreteObject.	
-	proxy becomeForward: concreteObject.
+	proxy becomeForward: concreteObject copyHash: false.
 
 ]
 
