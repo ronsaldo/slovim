@@ -156,7 +156,7 @@ SLVMStructureType >> hash [
 { #category : #'as yet unclassified' }
 SLVMStructureType >> importIntoModule: targetModule fromModule: sourceModule [
 	name ifNotNil: [
-		targetModule addStructure: self.
+		(targetModule addStructure: self) ifFalse: [ ^ self ]
 	].
 
 	types do: [ :each | each importIntoModule: targetModule fromModule: sourceModule ]

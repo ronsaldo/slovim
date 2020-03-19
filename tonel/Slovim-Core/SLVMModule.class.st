@@ -110,11 +110,12 @@ SLVMModule >> addPackageElement: element topoSortResult: result topoSortAdded: a
 SLVMModule >> addStructure: aStructure [
 	self assert: aStructure name isNotNil.
 	structureDictionary at: aStructure name ifPresent: [ :existent |
-		^ self
+		^ false
 	].
  
 	structures add: aStructure.
 	structureDictionary at: aStructure name ifAbsentPut: aStructure.
+	^ true
 ]
 
 { #category : #accessing }
