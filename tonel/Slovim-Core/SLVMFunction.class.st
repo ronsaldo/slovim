@@ -67,8 +67,15 @@ SLVMFunction >> addDynamicLiteral: literal [
 
 { #category : #adding }
 SLVMFunction >> addRequiredDynamicLiteral: literal [
-	| result |
-	result := SLVMFunctionDynamicLiteral new value: literal; index: dynamicLiterals size + 1; type: compilationTarget dynamicObjectType.
+	| result nonInlineLiteral |
+	nonInlineLiteral := (compilationTarget objectModel isInlineLiteral: literal)
+		ifTrue: [ nil ]
+		ifFalse: [ module getOrCreateNonInlineLiteralFor: literal ].
+	result := SLVMFunctionDynamicLiteral new
+		value: literal;
+		index: dynamicLiterals size + 1;
+		nonInlineLiteral: nonInlineLiteral;
+		type: compilationTarget dynamicObjectType.
 	dynamicLiterals add: result.
 	^ result
 ]

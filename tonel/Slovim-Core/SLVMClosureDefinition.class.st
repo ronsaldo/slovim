@@ -20,10 +20,12 @@ SLVMClosureDefinition class >> mnemonic [
 
 { #category : #construction }
 SLVMClosureDefinition class >> module: module functionType: functionType [
-	| var |
-	var := self pointerSize: module compilationTarget pointerSize functionType: functionType.
-	var compilationTarget: module compilationTarget.
-	^ var
+	| closureDefinition |
+	closureDefinition := self pointerSize: module compilationTarget pointerSize functionType: functionType.
+	closureDefinition
+		module: module;
+		compilationTarget: module compilationTarget.
+	^ closureDefinition
 ]
 
 { #category : #visiting }
@@ -53,6 +55,7 @@ SLVMClosureDefinition >> asNormalFunction [
 	normalFunction := SLVMFunction pointerSize: type size functionType: normalFunctionType.
 	normalFunction
 		makePrivate;
+		module: module;
 		compilationTarget: compilationTarget;
 		gcStrategy: self gcStrategy;
 		name: name;

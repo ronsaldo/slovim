@@ -23,7 +23,9 @@ Class {
 		'structureDictionary',
 		'globalDecodeBaseIndex',
 		'highLevelMapToStructureType',
-		'structureTypeNameToHighLevelMap'
+		'structureTypeNameToHighLevelMap',
+		'nonInlineLiterals',
+		'nonInlineLiteralsTable'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -430,6 +432,19 @@ SLVMModule >> generatePackageRegistration [
 	^ packageRegistrationFunction
 ]
 
+{ #category : #adding }
+SLVMModule >> getOrCreateNonInlineLiteralFor: literalValue [
+	^ nonInlineLiteralsTable at: literalValue ifAbsentPut: [
+		| nonInlineLiteral |
+		nonInlineLiteral := SLVMNonInlineLiteral new
+			literalValue: literalValue ;
+			index: nonInlineLiterals size;
+			yourself.
+		nonInlineLiterals add: nonInlineLiteral.
+		nonInlineLiteral
+	]
+]
+
 { #category : #accessing }
 SLVMModule >> globalConstructors [
 	^ globalConstructors
@@ -528,6 +543,8 @@ SLVMModule >> initialize [
 	structureTypeNameToHighLevelMap := Dictionary new.
 	highLevelMapToSymbol := Dictionary new.
 	symbolMapToHighLevel := Dictionary new.
+	nonInlineLiterals := OrderedCollection new.
+	nonInlineLiteralsTable := IdentityDictionary new.
 	currentOptimizationLevel := 0.
 ]
 
@@ -539,6 +556,11 @@ SLVMModule >> inlineAssemblyFragments [
 { #category : #'as yet unclassified' }
 SLVMModule >> nodeTitle [
 	^ #Module
+]
+
+{ #category : #accessing }
+SLVMModule >> nonInlineLiterals [
+	^ nonInlineLiterals
 ]
 
 { #category : #optimizations }

@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'index',
 		'value',
-		'type'
+		'type',
+		'nonInlineLiteral'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -37,6 +38,16 @@ SLVMFunctionDynamicLiteral >> index: anObject [
 { #category : #'as yet unclassified' }
 SLVMFunctionDynamicLiteral >> isFunctionDynamicLiteral [
 	^ true
+]
+
+{ #category : #accessing }
+SLVMFunctionDynamicLiteral >> nonInlineLiteral [
+	^ nonInlineLiteral
+]
+
+{ #category : #accessing }
+SLVMFunctionDynamicLiteral >> nonInlineLiteral: anObject [
+	nonInlineLiteral := anObject
 ]
 
 { #category : #printing }
