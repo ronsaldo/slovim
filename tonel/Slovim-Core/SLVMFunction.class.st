@@ -447,6 +447,11 @@ SLVMFunction >> createPublicInterfaceDeclarationVersionIn: targetModule [
 	self isPubliclyExported ifFalse: [ ^ self ].
 	resultFunction := self class module: targetModule name: name functionType: functionType.
 	resultFunction makeExternal.
+	resultFunction flags: flags copy.
+	arguments doWithIndex: [ :arg :index |
+		arg createPublicInterfaceVersionIn: (resultFunction arguments at: index)
+	].
+
 	module symbolMapToHighLevel at: name ifPresent: [ :highLevelEntity |
 		targetModule addHighLevelEntity: highLevelEntity mapToGlobalValue: resultFunction 
 	].

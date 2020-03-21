@@ -28,6 +28,14 @@ SLVMFunctionArgument >> asFullSExpression [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMFunctionArgument >> createPublicInterfaceVersionIn: targetVersion [
+	targetVersion
+		flags: flags copy;
+		name: name.
+	
+]
+
+{ #category : #'as yet unclassified' }
 SLVMFunctionArgument >> decodeFromSExpression: encodedValue context: context [
 	flags := encodedValue third.
 ]

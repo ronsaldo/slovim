@@ -54,6 +54,7 @@ SLVMGlobalVariable >> createPublicInterfaceDeclarationVersionIn: targetModule [
 	self isPubliclyExported ifFalse: [ ^ self ].
 	resultVar := self class module: targetModule name: name valueType: valueType storage: type storage.
 	resultVar makeExternal.
+	resultVar flags: flags copy.
 	module symbolMapToHighLevel at: name ifPresent: [ :highLevelEntity |
 		targetModule addHighLevelEntity: highLevelEntity mapToGlobalValue: resultVar 
 	].
