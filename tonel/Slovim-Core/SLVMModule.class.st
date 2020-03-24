@@ -353,8 +353,6 @@ SLVMModule >> disableSLVMOptimizations: aBoolean [
 SLVMModule >> fullPrintOn: aStream [
 	structures do: [ :struct | struct fullPrintOn: aStream ].
 	globalValues do: [ :val | val fullPrintOn: aStream ].
-	globalValueDictionary values do: [ :val | val fullPrintOn: aStream ].
-
 ]
 
 { #category : #printing }
