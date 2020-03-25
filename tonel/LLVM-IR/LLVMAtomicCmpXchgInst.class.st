@@ -55,9 +55,16 @@ LLVMAtomicCmpXchgInst >> newValue: anObject [
 
 { #category : #accessing }
 LLVMAtomicCmpXchgInst >> ordering: anOrdering [
-	self
-		failureOrdering: anOrdering;
-		successOrdering: anOrdering
+	(#(#release acq_rel) includes: anOrdering) ifTrue: [ 
+		self
+			failureOrdering: #acquire;
+			successOrdering: #release
+	] ifFalse: [ 
+		self
+			failureOrdering: anOrdering;
+			successOrdering: anOrdering
+	].
+
 ]
 
 { #category : #accessing }
