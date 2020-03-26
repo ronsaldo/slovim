@@ -4,7 +4,7 @@ Class {
 	#instVars : [
 		'typeTable',
 		'objectIDTable',
-		'objectIDCount'
+		'symbolTable'
 	],
 	#pools : [
 		'SLVMSerializationGraphEncodingConstants'
@@ -32,20 +32,37 @@ SLVMMessagePackGraphDecoder >> decodeArray: elementCount [
 
 { #category : #encoding }
 SLVMMessagePackGraphDecoder >> decodeExtension: extensionDataSize type: extensionType [
-	extensionType == MessagePackExtensionCodeGraphObjectReference ifTrue: [ 
-		self assert: extensionDataSize = 4.
-		^ objectIDTable at: ((inputStream next: extensionDataSize)
-			unsignedLongAt: 1 bigEndian: false)
+	extensionType == MessagePackExtensionCodeSymbolDefinition ifTrue: [
+		| symbol |
+		symbol := (inputStream next: extensionDataSize) utf8Decoded asSymbol.
+		^ symbolTable add: symbol
+	].
+	extensionType == MessagePackExtensionCodeSymbolReference ifTrue: [ 
+		^ symbolTable at: (self decodeLittleEndian: (inputStream next: extensionDataSize)) + 1
+	].
+
+	extensionType == MessagePackExtensionCodeGraphObjectReference ifTrue: [
+		^ objectIDTable at: (self decodeLittleEndian: (inputStream next: extensionDataSize)) + 1
 	].
 
 	^ super decodeExtension: extensionDataSize type: extensionType
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMMessagePackGraphDecoder >> decodeLittleEndian: byteArray [
+	| size |
+	size := byteArray size.
+	size == 1 ifTrue: [ ^ byteArray at: 1 ].
+	size == 2 ifTrue: [ ^ byteArray unsignedShortAt: 1 ].
+	size == 4 ifTrue: [ ^ byteArray unsignedLongAt: 1 ].
+	^ self error
+]
+
 { #category : #initialization }
 SLVMMessagePackGraphDecoder >> initialize [
 	super initialize.
-	objectIDTable := Dictionary new.
-	objectIDCount := 0.
+	objectIDTable := OrderedCollection new.
+	symbolTable := OrderedCollection new.
 ]
 
 { #category : #encoding }
@@ -56,9 +73,9 @@ SLVMMessagePackGraphDecoder >> objectClassForType: type [
 { #category : #encoding }
 SLVMMessagePackGraphDecoder >> objectInstanceProxy: objectId concretizeWith: concreteObject [
 	| proxy |
-	proxy := objectIDTable at: objectId.
+	proxy := objectIDTable at: objectId + 1.
 	self assert: proxy class == Object.
-	objectIDTable at: objectId put: concreteObject.	
+	objectIDTable at: objectId + 1 put: concreteObject.	
 	proxy becomeForward: concreteObject copyHash: false.
 
 ]
@@ -66,9 +83,8 @@ SLVMMessagePackGraphDecoder >> objectInstanceProxy: objectId concretizeWith: con
 { #category : #encoding }
 SLVMMessagePackGraphDecoder >> registerObjectInstance: objectInstance [
 	| objectID |
-	objectID := objectIDCount.
-	objectIDTable at: objectID put: objectInstance.
-	objectIDCount := objectIDCount + 1.
+	objectID := objectIDTable size.
+	objectIDTable add: objectInstance.
 	^ objectID
 	
 ]

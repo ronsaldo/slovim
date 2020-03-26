@@ -6,6 +6,8 @@ Class {
 		'MessagePackExtensionCodeGraphObjectDefinition',
 		'MessagePackExtensionCodeGraphObjectReference',
 		'MessagePackExtensionCodeSymbol',
+		'MessagePackExtensionCodeSymbolDefinition',
+		'MessagePackExtensionCodeSymbolReference',
 		'MessagePackExtensionCodeTimestamp',
 		'MessagePackExtensionCodeTimestampEpoch'
 	],
@@ -18,6 +20,8 @@ SLVMMessagePackConstants class >> initialize [
 	MessagePackExtensionCodeCharacter := 2.
 	MessagePackExtensionCodeGraphObjectDefinition := 3.
 	MessagePackExtensionCodeGraphObjectReference := 4.
+	MessagePackExtensionCodeSymbolDefinition := 5.
+	MessagePackExtensionCodeSymbolReference := 6.
 	MessagePackExtensionCodeTimestamp := 255.
 	MessagePackExtensionCodeTimestampEpoch := DateAndTime unixEpoch.
 ]
