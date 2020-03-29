@@ -662,6 +662,11 @@ SLVMFunction >> hasSelectorAndClassBinding: aBoolean [
 	^ self propertyAt: #selectorAndClassBinding put: aBoolean
 ]
 
+{ #category : #testing }
+SLVMFunction >> hasStructReturnPointer [
+	^ arguments isNotEmpty and: [ arguments first isStructReturnPointer ]
+]
+
 { #category : #inlining }
 SLVMFunction >> hasYesInlineMode [
 	^ self inlineMode == true

@@ -77,7 +77,7 @@ SLVMClosureType >> name [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMClosureType >> normalFunctionTypeWith: compilationTarget [
+SLVMClosureType >> normalFunctionTypeWith: compilationTarget hasStructReturnPointer: hasStructReturnPointer [
 	| capturedEnvironmentStructure closureStructureType closurePointer closureFunctionType genericClosurePointer genericClosureFunctionType genericClosureFunctionPointer |
 	normalFunctionTypeInfo ifNotNil: [ ^ normalFunctionTypeInfo ].
 	
@@ -86,8 +86,14 @@ SLVMClosureType >> normalFunctionTypeWith: compilationTarget [
 	closureStructureType := SLVMStructureType new kind: SLVMStructureType genericKind.
 	closurePointer := compilationTarget pointerTo: closureStructureType.
 
-	closureFunctionType := SLVMFunctionType callingConvention: functionType callingConvention
-		arguments: {closurePointer} , functionType arguments returnType: functionType returnType.
+	hasStructReturnPointer ifTrue: [ 
+		closureFunctionType := SLVMFunctionType callingConvention: functionType callingConvention
+			arguments: {functionType arguments first . closurePointer} , functionType arguments allButFirst returnType: functionType returnType.
+	] ifFalse: [ 
+		closureFunctionType := SLVMFunctionType callingConvention: functionType callingConvention
+			arguments: {closurePointer} , functionType arguments returnType: functionType returnType.
+	].
+
 	
 	genericClosurePointer := compilationTarget objectModel genericClosurePointerForKind: kind.
 	genericClosureFunctionType := SLVMFunctionType callingConvention: functionType callingConvention

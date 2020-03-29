@@ -1963,7 +1963,7 @@ SLVMLLVMFunctionCodeGenerator >> visitInstantiateClosure: instruction [
 	
 	captures := dynamicCaptures asArray, normalCaptures asArray.
 	kind := instruction closureType kind.
-	normalFunctionType := instruction closureType normalFunctionTypeWith: self target.
+	normalFunctionType := instruction closureType normalFunctionTypeWith: self target hasStructReturnPointer: instruction definition hasStructReturnPointer.
 	closureStructureType := normalFunctionType third.
 	
 	allocation := nil.

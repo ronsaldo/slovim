@@ -44,7 +44,7 @@ SLVMObjectModel >> compiledMethodMetadataLiteralOffsetWithIndex: index [
 SLVMObjectModel >> constructClosurePrototypeFor: closureDefinition [
 	| normalFunction normalFunctionTypeInfo prototype closureStructureType requiredFunctionPointerType prototypeCaptures |
 	normalFunction := closureDefinition asNormalFunction.
-	normalFunctionTypeInfo := closureDefinition closureType normalFunctionTypeWith: target.
+	normalFunctionTypeInfo := closureDefinition closureType normalFunctionTypeWith: target hasStructReturnPointer: closureDefinition hasStructReturnPointer.
 	
 	closureStructureType := normalFunctionTypeInfo third.
 	requiredFunctionPointerType := closureStructureType types at: closureStructureType types size - 1.

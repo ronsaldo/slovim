@@ -58,6 +58,7 @@ SLVMClosureDefinition >> asNormalFunction [
 		module: module;
 		compilationTarget: compilationTarget;
 		gcStrategy: self gcStrategy;
+		personalityFunction: self personalityFunction;
 		name: name;
 		unmangledName: self unmangledName;
 		debugInformation: self debugInformation;
@@ -65,11 +66,18 @@ SLVMClosureDefinition >> asNormalFunction [
 		debugSourceLocation: self debugSourceLocation.
 	
 	valueMap := IdentityDictionary new.
-	arguments doWithIndex: [ :arg :index |
-		valueMap at: arg put: (normalFunction arguments at: index + 1)
+	self hasStructReturnPointer ifTrue: [ 
+		valueMap at: arguments first put: normalFunction arguments first.
+		arguments allButFirst doWithIndex: [ :arg :index |
+			valueMap at: arg put: (normalFunction arguments at: index + 2)
+		].
+	] ifFalse: [
+		arguments doWithIndex: [ :arg :index |
+			valueMap at: arg put: (normalFunction arguments at: index + 1)
+		].
 	].
 
-	environmentArg := normalFunction arguments first.
+	environmentArg := self hasStructReturnPointer ifTrue: [ normalFunction arguments second ] ifFalse: [ normalFunction arguments first ].
 	environmentPointer := SLVMGetElementPointer pointer: environmentArg indices: { SLVMConstant int: 0 . SLVMConstant int: closureStructureType types size - 1 }.
 	environmentPointer name: #capturedEnvironmentPointer.
 
@@ -171,5 +179,5 @@ SLVMClosureDefinition >> localValuesDo: aBlock [
 
 { #category : #converting }
 SLVMClosureDefinition >> normalFunctionTypes [
-	^ normalFunctionTypes ifNil: [normalFunctionTypes := self closureType normalFunctionTypeWith: compilationTarget]
+	^ normalFunctionTypes ifNil: [normalFunctionTypes := self closureType normalFunctionTypeWith: compilationTarget hasStructReturnPointer: self hasStructReturnPointer]
 ]
