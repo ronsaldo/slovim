@@ -30,6 +30,14 @@ SLVMConstant class >> bool: aBoolean [
 ]
 
 { #category : #constructor }
+SLVMConstant class >> clstring: value [
+	^ SLVMStringConstantValue new
+		type: (SLVMArrayType baseType: SLVMType uintType elements: value size);
+		hasExtraNullCharacter: true;
+		data: value
+]
+
+{ #category : #constructor }
 SLVMConstant class >> cstring: value [
 	^ SLVMStringConstantValue new
 		type: (SLVMArrayType baseType: SLVMType charType elements: value size);
@@ -40,6 +48,14 @@ SLVMConstant class >> cstring: value [
 { #category : #constructor }
 SLVMConstant class >> cstringPointer: aValue for: compilationTarget [
 	^ self pointerToConstant: (SLVMConstant cstring: aValue) pointerType: (compilationTarget pointerTo: SLVMType charType)
+]
+
+{ #category : #constructor }
+SLVMConstant class >> cwstring: value [
+	^ SLVMStringConstantValue new
+		type: (SLVMArrayType baseType: SLVMType ushortType elements: value size);
+		hasExtraNullCharacter: true;
+		data: value
 ]
 
 { #category : #constructor }

@@ -81,6 +81,11 @@ SLVMVectorType >> decodeFromFullSExpression: encodedType context: decodingContex
 	alignment := baseType alignment * (elements ~= 3 ifTrue: [ elements ] ifFalse: [ 4 ]).
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMVectorType >> defaultFullConstant [
+	^ SLVMConstant vector: self elements: ((1 to: elements) collect: [:each | baseType defaultFullConstant])
+]
+
 { #category : #accessing }
 SLVMVectorType >> elements [
 	^ elements

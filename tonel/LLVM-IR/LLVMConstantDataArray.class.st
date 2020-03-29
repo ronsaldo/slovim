@@ -44,5 +44,11 @@ LLVMConstantDataArray >> printOn: aStream [
 		elementType printOn: aStream.
 		aStream space; print: el
 	].
+
+	addNull ifTrue: [
+		elements ifNotEmpty: [ aStream nextPutAll: ', ' ].
+		elementType printOn: aStream.
+		aStream nextPutAll: ' 0'
+	].
 	aStream nextPutAll: ' ]'.
 ]
