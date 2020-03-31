@@ -858,6 +858,11 @@ SLVMFunction >> removeRuntimeLiterals [
 	^ result
 ]
 
+{ #category : #accessing }
+SLVMFunction >> returnType [
+	^ functionType returnType
+]
+
 { #category : #testing }
 SLVMFunction >> selectorValue [
 	^ (dynamicLiterals at: dynamicLiterals size - 1) value
