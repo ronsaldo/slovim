@@ -144,6 +144,15 @@ SLVMFunction >> asFullSExpression [
 	}
 ]
 
+{ #category : #printing }
+SLVMFunction >> asFullSExpressionForTesting [
+	^ { self mnemonic . name . functionType callingConvention . functionType returnType asSExpression .
+		#arguments . arguments collect: [ :each | each asFullSExpression ].
+		#literals . dynamicLiterals collect: [ :each | each asFullSExpression ] as: Array.
+		#blocks . self instructionsSExpressions.
+	}
+]
+
 { #category : #accessing }
 SLVMFunction >> basicBlocks [
 	^ basicBlocks
