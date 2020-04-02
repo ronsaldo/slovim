@@ -306,6 +306,12 @@ SLVMLLVMBuiltInFunctionGenerator class >> vectorScalarMathBuiltIn [
 		addBuiltIn: #'math.fsign' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
 			functionCodeGenerator generateVectorOrScalarSign: callInstruction arguments first
 		];
+		addBuiltIn: #'math.ssign' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVectorOrScalarSign: callInstruction arguments first
+		];
+		addBuiltIn: #'math.sabs' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVectorOrScalarAbsoluteValue: callInstruction arguments first
+		];
 		addBuiltIn: #'math.fract' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
 			functionCodeGenerator generateVectorOrScalarFloorFract: callInstruction arguments first
 		];

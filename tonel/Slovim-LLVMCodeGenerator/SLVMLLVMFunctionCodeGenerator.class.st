@@ -1175,6 +1175,31 @@ SLVMLLVMFunctionCodeGenerator >> generateVectorOrScalar: vectorOrScalar constant
 ]
 
 { #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> generateVectorOrScalarAbsoluteValue: vectorOrScalar [
+	| vectorOrScalarValue zeroConstant resultType int1Ty comparisonType scalarType negatedVector isPositive |
+	vectorOrScalarValue := self translateValue: vectorOrScalar.
+	resultType := vectorOrScalarValue type.
+	int1Ty := self context int1Ty.
+	scalarType := resultType isVectorTy
+		ifTrue: [ resultType elementType ]
+		ifFalse: [ resultType ].
+	comparisonType := resultType isVectorTy
+		ifTrue: [ LLVMVectorType get: int1Ty elements: resultType elements ]
+		ifFalse: [ int1Ty ].
+
+	zeroConstant := vectorOrScalarValue type zeroConstant.
+
+	negatedVector := scalarType isFloatingPointTy
+		ifTrue: [ self binaryOperation: #fsub left: zeroConstant right: vectorOrScalarValue name: nil]
+		ifFalse: [self binaryOperation: #sub left: zeroConstant right: vectorOrScalarValue name: nil].
+
+	isPositive := scalarType isFloatingPointTy
+		ifTrue: [self fcmp: #uge left: vectorOrScalarValue right: zeroConstant type: comparisonType name: nil]
+		ifFalse: [self icmp: #sge left: vectorOrScalarValue right: zeroConstant type: comparisonType name: nil].
+	^ self select: isPositive trueValue: vectorOrScalarValue falseValue: negatedVector name: nil
+]
+
+{ #category : #'as yet unclassified' }
 SLVMLLVMFunctionCodeGenerator >> generateVectorOrScalarFloorFract: vectorOrScalar [
 	| vectorOrScalarValue resultType  floorFunction floorValue |
 	vectorOrScalarValue := self translateValue: vectorOrScalar.
@@ -1201,10 +1226,13 @@ SLVMLLVMFunctionCodeGenerator >> generateVectorOrScalarFloorMod: dividend diviso
 
 { #category : #'as yet unclassified' }
 SLVMLLVMFunctionCodeGenerator >> generateVectorOrScalarSign: vectorOrScalar [
-	| vectorOrScalarValue zeroConstant oneConstant minusOneConstant resultType int1Ty comparisonType lessThanZero greaterThanZero greaterThanZeroResult |
+	| vectorOrScalarValue zeroConstant oneConstant minusOneConstant resultType int1Ty comparisonType lessThanZero greaterThanZero greaterThanZeroResult scalarType |
 	vectorOrScalarValue := self translateValue: vectorOrScalar.
 	resultType := vectorOrScalarValue type.
 	int1Ty := self context int1Ty.
+	scalarType := resultType isVectorTy
+		ifTrue: [ resultType elementType ]
+		ifFalse: [ resultType ].
 	comparisonType := resultType isVectorTy
 		ifTrue: [ LLVMVectorType get: int1Ty elements: resultType elements ]
 		ifFalse: [ int1Ty ].
@@ -1213,10 +1241,14 @@ SLVMLLVMFunctionCodeGenerator >> generateVectorOrScalarSign: vectorOrScalar [
 	oneConstant := vectorOrScalarValue type oneConstant.
 	minusOneConstant := vectorOrScalarValue type minusOneConstant.
 
-	greaterThanZero := self fcmp: #ugt left: vectorOrScalarValue right: zeroConstant type: comparisonType name: nil.
+	greaterThanZero := scalarType isFloatingPointTy
+		ifTrue: [self fcmp: #ugt left: vectorOrScalarValue right: zeroConstant type: comparisonType name: nil]
+		ifFalse: [self icmp: #sgt left: vectorOrScalarValue right: zeroConstant type: comparisonType name: nil].
 	greaterThanZeroResult := self select: greaterThanZero trueValue: oneConstant falseValue: zeroConstant name: nil.
 	
-	lessThanZero := self fcmp: #ult left: vectorOrScalarValue right: zeroConstant type: comparisonType name: nil.
+	lessThanZero := scalarType isFloatingPointTy
+		ifTrue: [self fcmp: #ult left: vectorOrScalarValue right: zeroConstant type: comparisonType name: nil]
+		ifFalse: [self icmp: #slt left: vectorOrScalarValue right: zeroConstant type: comparisonType name: nil].
 	^ self select: lessThanZero trueValue: minusOneConstant falseValue: greaterThanZeroResult name: nil
 ]
 

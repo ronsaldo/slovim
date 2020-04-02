@@ -1765,9 +1765,9 @@ SLVMBuilder >> vectorMul: left with: right [
 { #category : #'vector arithmetic' }
 SLVMBuilder >> vectorMul: left with: right name: name [
 	(self isFloatingPointVector: left) ifTrue: [
-		^ self fsub: left with: right name: name
+		^ self fmul: left with: right name: name
 	] ifFalse: [ 
-		^ self sub: left with: right name: name
+		^ self mul: left with: right name: name
 	]
 ]
 

@@ -64,8 +64,8 @@ SLVMConstantBuiltInFunction class >> initialize [
 		'math.sqrt' 'math.inverseSqrt'
 		'math.floor' 'math.ceil' 'math.trunc' 'math.round' 'math.roundEven' 'math.fract'
 		'math.degrees' 'math.radians' 
-		'math.fabs'
-		'math.fsign'
+		'math.fabs' 'math.sabs'
+		'math.fsign' 'math.ssign'
 			
 		'math.umax'
 		'math.smax'

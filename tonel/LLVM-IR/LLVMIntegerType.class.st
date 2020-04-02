@@ -53,6 +53,11 @@ LLVMIntegerType >> isIntegerTy [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMIntegerType >> minusOneConstant [
+	^ self constant: -1
+]
+
+{ #category : #'as yet unclassified' }
 LLVMIntegerType >> oneConstant [
 	^ self constant: 1
 ]
