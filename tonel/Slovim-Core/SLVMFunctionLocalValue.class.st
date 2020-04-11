@@ -33,7 +33,7 @@ SLVMFunctionLocalValue >> asFullSExpression [
 
 { #category : #printing }
 SLVMFunctionLocalValue >> asSExpression [
-	^ { #local . localValueIndex . name }
+	^ { #local . self validLocalValueIndex . name }
 ]
 
 { #category : #accessing }
