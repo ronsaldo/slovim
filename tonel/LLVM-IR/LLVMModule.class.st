@@ -269,12 +269,8 @@ LLVMModule >> relocationModel: anObject [
 
 { #category : #writing }
 LLVMModule >> runCommand: command withArguments: arguments [
-	^ self runCommand: command withArguments: arguments stdinInput: nil
-]
-
-{ #category : #writing }
-LLVMModule >> runCommand: command withArguments: arguments stdinInput: stdinInput [
-	| process output errorString stdout stderr |
+	self halt
+	"| process output errorString stdout stderr |
 
 	process := OSSUnixSubprocess new
 		command: command;
@@ -308,7 +304,7 @@ LLVMModule >> runCommand: command withArguments: arguments stdinInput: stdinInpu
 			output
 		]
 		ifFalse: [ self error: errorString ]
-
+"
 ]
 
 { #category : #writing }

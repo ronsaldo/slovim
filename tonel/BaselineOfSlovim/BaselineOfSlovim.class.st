@@ -10,8 +10,6 @@ BaselineOfSlovim >> baseline: spec [
 
 	spec for: #'common' do: [
 		spec blessing: #'baseline'.
-		spec baseline: 'OSSubprocess' with: [
-			spec repository: 'github://pharo-contributions/OSSubprocess:v1.0.1/repository' ].
 		spec baseline: 'SAsm' with: [
 				spec repository: 'github://ronsaldo/sasm/tonel'].
 		spec baseline: 'Lowcode' with: [
@@ -31,7 +29,7 @@ BaselineOfSlovim >> baseline: spec [
 			package: 'Slovim-StackCodeGenerator' with: [
 				spec requires: #(#'Slovim-Core' ). ];
 			package: 'LLVM-IR' with: [
-				spec requires: #(#'SAsm' #'OSSubprocess'). ];
+				spec requires: #(#'SAsm'). ];
 			package: 'Slovim-LLVMCodeGenerator' with: [
 				spec requires: #(#'Slovim-Core' #'LLVM-IR'). ];
 			package: 'Slovim-Runtime' with: [
