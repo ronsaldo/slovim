@@ -1658,8 +1658,63 @@ SLVMBuilder >> udiv: left with: right name: resultName [
 ]
 
 { #category : #comparisons }
+SLVMBuilder >> ufeq: left with: right [
+	^ self ufeq: left with: right name: nil
+]
+
+{ #category : #comparisons }
 SLVMBuilder >> ufeq: left with: right name: resultName [
 	^ self addOperation: #ufeq left: left right: right name: resultName
+]
+
+{ #category : #comparisons }
+SLVMBuilder >> ufge: left with: right [
+	^ self ufge: left with: right name: nil
+]
+
+{ #category : #comparisons }
+SLVMBuilder >> ufge: left with: right name: resultName [
+	^ self addOperation: #ufge left: left right: right name: resultName
+]
+
+{ #category : #comparisons }
+SLVMBuilder >> ufgt: left with: right [
+	^ self ufgt: left with: right name: nil
+]
+
+{ #category : #comparisons }
+SLVMBuilder >> ufgt: left with: right name: resultName [
+	^ self addOperation: #ufgt left: left right: right name: resultName
+]
+
+{ #category : #comparisons }
+SLVMBuilder >> ufle: left with: right [
+	^ self ufle: left with: right name: nil
+]
+
+{ #category : #comparisons }
+SLVMBuilder >> ufle: left with: right name: resultName [
+	^ self addOperation: #ufle left: left right: right name: resultName
+]
+
+{ #category : #comparisons }
+SLVMBuilder >> uflt: left with: right [
+	^ self uflt: left with: right name: nil
+]
+
+{ #category : #comparisons }
+SLVMBuilder >> uflt: left with: right name: resultName [
+	^ self addOperation: #uflt left: left right: right name: resultName
+]
+
+{ #category : #comparisons }
+SLVMBuilder >> ufne: left with: right [
+	^ self ufne: left with: right name: nil
+]
+
+{ #category : #comparisons }
+SLVMBuilder >> ufne: left with: right name: resultName [
+	^ self addOperation: #ufne left: left right: right name: resultName
 ]
 
 { #category : #instructions }
