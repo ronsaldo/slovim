@@ -1645,7 +1645,6 @@ SpirVConstants class >> initialize [
 	
 	self enumNames do: [ :enumName |
 		enumData := self perform: (#dataFor , enumName) asSymbol.
-		Transcript show: enumData; cr.
 		enumData pairsDo: [ :constantName :value |
 			fullName := (constantName beginsWith: enumName)
 				ifTrue: [ ('Spv' , constantName) asSymbol ]
