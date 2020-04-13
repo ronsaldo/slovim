@@ -189,7 +189,15 @@ LLVMModule >> linkerArguments: aListOfFlags [
 
 { #category : #accessing }
 LLVMModule >> linkerProgram [
-	^ linkerProgram ifNil: [ linkerProgram := 'clang' ]
+	linkerProgram ifNil: [ 
+		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
+			linkerProgram := 'clang.exe'
+		].
+	
+		linkerProgram ifNil: [ linkerProgram := 'clang' ]
+	].
+
+	^ linkerProgram
 ]
 
 { #category : #accessing }
@@ -217,7 +225,15 @@ LLVMModule >> llcFlags [
 
 { #category : #accessing }
 LLVMModule >> llcProgram [
-	^ llcProgram ifNil: [llcProgram := 'llc']
+	llcProgram ifNil: [
+		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
+			llcProgram := 'llc.exe'
+		].
+	
+		llcProgram ifNil: [llcProgram := 'llc']
+	].
+
+	^ llcProgram
 ]
 
 { #category : #accessing }
@@ -269,47 +285,34 @@ LLVMModule >> relocationModel: anObject [
 
 { #category : #writing }
 LLVMModule >> runCommand: command withArguments: arguments [
-	self halt
-	"| process output errorString stdout stderr |
-
-	process := OSSUnixSubprocess new
-		command: command;
-		arguments: arguments;
-		redirectStdin;
-		redirectStdout;
-		redirectStderr;
-		run.
-	
-	stdinInput ifNotNil: [ 
-		process stdinStream
-			nextPutAll: stdinInput;
-			close.
-	].
-	
-	stdout := process stdoutStream.
-	stderr := process stderrStream.
-	output := ByteArray streamContents: [ :outputDest |
-		errorString := ByteString streamContents: [ :errorOutput |
-			process waitForExitPollingEvery: (Delay forMilliseconds: 50) doing: [
-				outputDest nextPutAll: (stdout upToEnd asByteArray).
-				errorOutput nextPutAll: stderr upToEnd
-			]
-		].
-	].
-
-	process closeAndCleanStreams.
-	^ process isSuccess
-		ifTrue: [
-			errorString ifNotEmpty: [ self notify: errorString ].
-			output
+	| formattedCommand exitCode |
+	formattedCommand := ByteString streamContents: [ :out |
+		out nextPutAll: command.
+		arguments do: [ :eachArgument |
+			out space; nextPut: $"; nextPutAll: (eachArgument copyReplaceAll: '"' with: '\"'); nextPut: $".
 		]
-		ifFalse: [ self error: errorString ]
-"
+	].
+
+	exitCode := LibC system: formattedCommand.
+	exitCode ~= 0 ifTrue: [
+		self error: 'Failed to invoke command: ' , formattedCommand 
+	]
+	
 ]
 
 { #category : #writing }
 LLVMModule >> runLLCWithArguments: arguments [
-	^ self runCommand: self llcProgram withArguments: arguments stdinInput: self asString
+	self halt
+]
+
+{ #category : #writing }
+LLVMModule >> runLLCWithArguments: arguments tempFileName: tempFileName [
+	tempFileName writeStreamDo: [ :out |
+		out truncate.
+		self fullPrintOn: out
+	].
+	
+	^ self runCommand: self llcProgram withArguments: arguments , { tempFileName fullName }
 ]
 
 { #category : #writing }
@@ -339,19 +342,26 @@ LLVMModule >> valueSymbolTable [
 ]
 
 { #category : #writing }
-LLVMModule >> withTemporaryObjectFileDo: aBlock [
-	| tempFileReference tempFileName |
-	tempFileReference := (FileSystem workingDirectory / ('temp_' , DateAndTime now asUnixTime asString , '.o')) asAbsolute.
-	tempFileName := tempFileReference fullName.
+LLVMModule >> withTemporaryFileInDirectory: directory suffix: suffix do: aBlock [
+	| tempFileReference |
+	tempFileReference := (directory asFileReference / ('temp_' , DateAndTime now asUnixTime asString , suffix)) asAbsolute.
 	^ [
-		
-		self writeObjectToFileNamed: tempFileName.
-		aBlock value: tempFileName
+		aBlock value: tempFileReference
 	] ensure: [
 		tempFileReference exists ifTrue: [
 			tempFileReference delete.
 		].
 	]
+]
+
+{ #category : #writing }
+LLVMModule >> withTemporaryFileInSameDirectoryOf: file suffix: suffix do: aBlock [
+	^ self withTemporaryFileInDirectory: file asFileReference parent suffix: suffix do: aBlock
+]
+
+{ #category : #writing }
+LLVMModule >> withTemporaryFileWithSuffix: suffix do: aBlock [
+	^ self withTemporaryFileInDirectory: FileSystem workingDirectory parent suffix: suffix do: aBlock
 ]
 
 { #category : #writing }
@@ -367,16 +377,19 @@ LLVMModule >> writeAssemblyToFileNamed: outputFileName [
 ]
 
 { #category : #writing }
-LLVMModule >> writeExecutableToFileNamed: aFileName [
-	^ self withTemporaryObjectFileDo: [ :temporaryObjectFile |
-		| arguments |
-		arguments := {
-			'-o' . aFileName .
-			temporaryObjectFile .
-		} , self linkerArguments.
+LLVMModule >> writeExecutableToFileNamed: outputFileName [
+	| outputFileRef objectFile arguments |
+	outputFileRef := outputFileName asFileReference asAbsolute.
+	objectFile := outputFileRef fullName , '.o'.
+	self writeObjectToFileNamed: objectFile.
+
+	arguments := {
+		'-o' . outputFileRef fullName.
+		objectFile.
+	} , self linkerArguments.
 		
-		self runLinkerWithArguments: arguments
-	]
+	^ self runLinkerWithArguments: arguments
+
 ]
 
 { #category : #printing }
@@ -389,14 +402,14 @@ LLVMModule >> writeIRAssemblyToFileNamed: aFileName [
 
 { #category : #writing }
 LLVMModule >> writeObjectToFileNamed: outputFileName [
-	| arguments |
+	| arguments outputFileRef |
+	outputFileRef := outputFileName asFileReference asAbsolute.
 	arguments := self llcFlags , {
 		'-filetype=obj' .
-		'-o' . outputFileName .
-		'-'.
+		'-o' . outputFileRef fullName.
 	}.
 
-	^ self runLLCWithArguments: arguments
+	^ self runLLCWithArguments: arguments tempFileName: (outputFileRef fullName , '.ll') asFileReference asAbsolute
 ]
 
 { #category : #writing }
@@ -405,17 +418,20 @@ LLVMModule >> writePluginToFileNamed: aFileName [
 ]
 
 { #category : #writing }
-LLVMModule >> writeSharedToFileNamed: aFileName [
-	^ self withTemporaryObjectFileDo: [ :temporaryObjectFile |
-		| arguments |
-		arguments := {
-			'-shared' .
-			'-o' . aFileName .
-			temporaryObjectFile .
-		} , self linkerArguments.
+LLVMModule >> writeSharedToFileNamed: outputFileName [
+	| outputFileRef objectFile arguments |
+	outputFileRef := outputFileName asFileReference asAbsolute.
+	objectFile := outputFileRef fullName , '.o'.
+	self writeObjectToFileNamed: objectFile.
+
+	arguments := {
+		'-shared'.
+		'-o' . outputFileRef fullName.
+		objectFile fullName.
+	} , self linkerArguments.
 		
-		self runLinkerWithArguments: arguments
-	]
+	^ self runLinkerWithArguments: arguments
+
 ]
 
 { #category : #printing }
