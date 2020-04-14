@@ -189,6 +189,7 @@ LLVMModule >> linkerArguments: aListOfFlags [
 
 { #category : #accessing }
 LLVMModule >> linkerProgram [
+	linkerProgram ifNil: [ linkerProgram := OSEnvironment current at: 'CC' ifAbsent: [nil]].
 	linkerProgram ifNil: [ 
 		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
 			linkerProgram := 'clang.exe'
@@ -225,6 +226,7 @@ LLVMModule >> llcFlags [
 
 { #category : #accessing }
 LLVMModule >> llcProgram [
+	llcProgram ifNil: [ OSEnvironment current at: 'LLC' ifAbsent: [nil] ].
 	llcProgram ifNil: [
 		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
 			llcProgram := 'llc.exe'
