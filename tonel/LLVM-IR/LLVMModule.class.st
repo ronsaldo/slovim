@@ -226,7 +226,7 @@ LLVMModule >> llcFlags [
 
 { #category : #accessing }
 LLVMModule >> llcProgram [
-	llcProgram ifNil: [ OSEnvironment current at: 'LLC' ifAbsent: [nil] ].
+	llcProgram ifNil: [ llcProgram := OSEnvironment current at: 'LLC' ifAbsent: [nil] ].
 	llcProgram ifNil: [
 		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
 			llcProgram := 'llc.exe'
