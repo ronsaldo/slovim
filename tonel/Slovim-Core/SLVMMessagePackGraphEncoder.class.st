@@ -21,16 +21,18 @@ SLVMMessagePackGraphEncoder >> encodeLittleEndianInteger: value [
 { #category : #'as yet unclassified' }
 SLVMMessagePackGraphEncoder >> encodeSerializationGraphObject: object [
 	object id ifNil: [
+		object id: #encoding.
+		self
+			encodeArraySize: 4;
+			encodeObject: (SLVMMessagePackExtensionData data: (ByteArray new: 1) type: MessagePackExtensionCodeGraphObjectDefinition);
+			encodeObject: object type;
+			encodeObject: object earlyFields.
+		
 		object id: objectIDCount.
 		objectIDCount := objectIDCount + 1.
-		self
-			encodeArray: {
-				SLVMMessagePackExtensionData data: (ByteArray new: 1) type: MessagePackExtensionCodeGraphObjectDefinition.
-				object type.
-				object earlyFields.
-				object fields
-			}.
+		self encodeObject: object fields.
 	] ifNotNil: [ :id |
+		self assert: id isInteger.
 		self
 			encodeExtension: (self encodeLittleEndianInteger: id)
 			type: MessagePackExtensionCodeGraphObjectReference

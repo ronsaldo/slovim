@@ -519,7 +519,7 @@ SLVMModule >> importGlobalValue: externalGlobalValue fromModule: importedSSAModu
 
 { #category : #'as yet unclassified' }
 SLVMModule >> importType: externalType fromModule: importedSSAModule [
-	externalType importIntoModule: self fromModule: importedSSAModule
+	^ externalType importIntoModule: self fromModule: importedSSAModule
 ]
 
 { #category : #adding }
@@ -630,6 +630,11 @@ SLVMModule >> sourceLanguageName: anObject [
 { #category : #accessing }
 SLVMModule >> structureNamed: structureName [
 	^ structureDictionary at: structureName
+]
+
+{ #category : #accessing }
+SLVMModule >> structureNamed: structureName ifAbsent: absentBlock [
+	^ structureDictionary at: structureName ifAbsent: absentBlock
 ]
 
 { #category : #accessing }

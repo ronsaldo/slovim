@@ -52,7 +52,7 @@ SLVMGlobalVariable >> asFullSExpression [
 SLVMGlobalVariable >> createPublicInterfaceDeclarationVersionIn: targetModule [
 	| resultVar |
 	self isPubliclyExported ifFalse: [ ^ self ].
-	resultVar := self class module: targetModule name: name valueType: valueType storage: type storage.
+	resultVar := self class module: targetModule name: name valueType: (targetModule importType: valueType fromModule: module) storage: type storage.
 	resultVar makeExternal.
 	resultVar flags: flags copy.
 	module symbolMapToHighLevel at: name ifPresent: [ :highLevelEntity |
@@ -115,14 +115,6 @@ SLVMGlobalVariable >> headerValue [
 { #category : #accessing }
 SLVMGlobalVariable >> headerValue: anObject [
 	headerValue := anObject
-]
-
-{ #category : #'as yet unclassified' }
-SLVMGlobalVariable >> importIntoModule: targetModule fromModule: sourceModule [
-	| result |
-	result := super importIntoModule: targetModule fromModule: sourceModule.
-	targetModule importType: valueType fromModule: module. 
-	^ result
 ]
 
 { #category : #accessing }

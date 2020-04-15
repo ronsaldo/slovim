@@ -27,8 +27,14 @@ SLVMMessagePackEncoder class >> encodeObject: anObject into: outputStream [
 
 { #category : #'as yet unclassified' }
 SLVMMessagePackEncoder >> encodeArray: aSequenceableCollection [
-	| size |
-	size := aSequenceableCollection size.
+	self encodeArraySize: aSequenceableCollection size.
+	aSequenceableCollection do: [:each |
+		self encodeObject: each
+	].
+]
+
+{ #category : #'as yet unclassified' }
+SLVMMessagePackEncoder >> encodeArraySize: size [
 	size <= 16rf ifTrue: [
 		outputStream nextPut: 16r90 + size.
 	] ifFalse: [ 
@@ -42,9 +48,6 @@ SLVMMessagePackEncoder >> encodeArray: aSequenceableCollection [
 		].
 	].
 
-	aSequenceableCollection do: [:each |
-		self encodeObject: each
-	].
 ]
 
 { #category : #'as yet unclassified' }

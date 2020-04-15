@@ -24,7 +24,8 @@ Class {
 		'moduleDynamicRoots',
 		'dynamicsRootsDescriptorVar',
 		'objectMethodDispatchTrampolines',
-		'nativeMethodDispatchTrampolines'
+		'nativeMethodDispatchTrampolines',
+		'namedStructures'
 	],
 	#classVars : [
 		'DebugLanguageMap',
@@ -363,6 +364,7 @@ SLVMLLVMCodeGenerator >> declareNamedStructure: aNamedStructure [
 		packed: aNamedStructure isPacked;
 		yourself.
 	translatedTypes at: aNamedStructure put: convertedStructure.
+	namedStructures at: aNamedStructure name ifPresent: [ self error ] ifAbsentPut: convertedStructure.
 	self llvmModule addNamedStructure: convertedStructure
 	
 ]
@@ -437,6 +439,7 @@ SLVMLLVMCodeGenerator >> getOrCreateRuntimeFunction: runtimeFunctionOrSymbol typ
 SLVMLLVMCodeGenerator >> initialize [
 	super initialize.
 	translatedModuleElements := IdentityDictionary new.
+	namedStructures := Dictionary new.
 	translatedTypes := IdentityDictionary new.
 	translatedConstants := IdentityDictionary new.
 	translatedLiterals := IdentityDictionary new.
@@ -1042,7 +1045,15 @@ SLVMLLVMCodeGenerator >> visitPointerType: type [
 
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> visitStructureType: structureType [
-	structureType name ifNotNil: [ self halt ].
+	structureType name ifNotNil: [
+		"Duplicated structure may be because of multiple imported/linked modules"
+		namedStructures at: structureType name ifPresent: [ :existentTranslation |
+			translatedTypes at: structureType put: existentTranslation.
+			^ existentTranslation
+		].
+	
+		self halt
+	].
 	^ self recursiveType: structureType translationDo: [
 		LLVMStructType context: llvmContext elements: (structureType types collect: [:type | self translateType: type])
 	]

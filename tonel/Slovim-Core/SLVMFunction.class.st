@@ -454,7 +454,7 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 SLVMFunction >> createPublicInterfaceDeclarationVersionIn: targetModule [
 	| resultFunction |
 	self isPubliclyExported ifFalse: [ ^ self ].
-	resultFunction := self class module: targetModule name: name functionType: functionType.
+	resultFunction := self class module: targetModule name: name functionType: (targetModule importType: functionType fromModule: module).
 	resultFunction makeExternal.
 	resultFunction flags: flags copy.
 	arguments doWithIndex: [ :arg :index |
@@ -679,14 +679,6 @@ SLVMFunction >> hasStructReturnPointer [
 { #category : #inlining }
 SLVMFunction >> hasYesInlineMode [
 	^ self inlineMode == true
-]
-
-{ #category : #'as yet unclassified' }
-SLVMFunction >> importIntoModule: targetModule fromModule: sourceModule [
-	| result |
-	result := super importIntoModule: targetModule fromModule: sourceModule.
-	targetModule importType: functionType fromModule: module. 
-	^ result
 ]
 
 { #category : #initialization }
