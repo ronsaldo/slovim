@@ -314,7 +314,7 @@ SLVMOpalASTTranslator >> getReceiverValue [
 
 { #category : #'primitive functions' }
 SLVMOpalASTTranslator >> getRuntimeSmalltalkFunction: name signature: signatureBlock [
-	^ module globalValues at: name ifAbsent: [ 
+	^ module globalValueDictionary at: name ifAbsent: [ 
 		| signature |
 		signature := signatureBlock value: compilationTarget.
 		(module functionName: name callingConvention: #smalltalk arguments: signature key returnType: signature value)

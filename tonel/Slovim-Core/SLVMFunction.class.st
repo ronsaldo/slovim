@@ -480,8 +480,42 @@ SLVMFunction >> debugType: debugType [
 
 { #category : #'as yet unclassified' }
 SLVMFunction >> decodeBasicBlocksFromSExpressions: encodedBasicBlocks [
+	| allDecodedInstructions |
 	encodedBasicBlocks ifEmpty: [ ^ self ].
-	self halt
+	allDecodedInstructions := OrderedCollection new.
+	self localValuesDo: [ :each | allDecodedInstructions add: each ].
+	
+	"First pass: Allocate the elements."
+	encodedBasicBlocks do: [ :encodedBB |
+		| basicBlock |
+		basicBlock := SLVMBasicBlock new.
+		basicBlocks add: basicBlock.
+		
+		encodedBB allButFirstDo: [ :eachInstruction |
+			|instruction |
+			instruction := (SLVMValue valueClassFromMnemonic: eachInstruction second) new.
+			instruction
+				createdWithMnemonic: eachInstruction second decodedType: (module decodeSExpressionType: eachInstruction third).
+			allDecodedInstructions add: instruction.
+			basicBlock addLast: instruction.
+		]
+	].
+
+	"Second pass: Decode and fixup the pointers."
+	encodedBasicBlocks doWithIndex: [ :encodedBB :index |
+		| basicBlock instructionIndex |
+		basicBlock := basicBlocks at: index.
+		instructionIndex := 2.
+		basicBlock instructionsDo: [ :instruction |
+			| encodedInstruction |
+			encodedInstruction := encodedBB at: instructionIndex.
+			instruction parameters: (encodedInstruction fifth collect: [:each |
+				each first = #local ifTrue: [self . allDecodedInstructions at: each second]
+					ifFalse: [module decodeSExpressionValue: each]]).
+			instruction decodeFromSExpression: encodedInstruction context: module.
+			instructionIndex := instructionIndex + 1
+		]
+	].
 ]
 
 { #category : #'as yet unclassified' }

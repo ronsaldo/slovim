@@ -418,7 +418,7 @@ SLVMGLSLCodeGenerator >> translateHLVariableDecl: variableDecl [
 
 { #category : #'code generation' }
 SLVMGLSLCodeGenerator >> translateModule: module [
-	^ self translateModule: module exportList: { module globalValues at: #main }
+	^ self translateModule: module exportList: { module globalNamed: #main }
 ]
 
 { #category : #'code generation' }

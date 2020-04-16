@@ -22,6 +22,12 @@ SLVMExtractVectorElement >> accept: aVisitor [
 	^ aVisitor visitExtractVectorElement: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMExtractVectorElement >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #accessing }
 SLVMExtractVectorElement >> index [
 	^ parameters second

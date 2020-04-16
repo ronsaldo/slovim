@@ -47,14 +47,12 @@ SLVMCall >> function: functionValue arguments: arguments [
 	self parameters: { functionValue } , arguments.
 	self assert: functionValue type isPointerType.
 	self assert: functionValue type baseType isFunctionType.
-	functionType := functionValue type baseType.
-	type := functionValue type baseType returnType.
 	
 ]
 
 { #category : #accessing }
 SLVMCall >> functionType [
-	^ functionType
+	^ functionType ifNil: [ functionType := self functionValue type baseType. ]
 ]
 
 { #category : #accessing }
@@ -89,5 +87,5 @@ SLVMCall >> setPrimitiveCall [
 
 { #category : #accessing }
 SLVMCall >> type [
-	^ type
+	^ type ifNil: [ type := self functionType returnType. ]
 ]

@@ -23,6 +23,12 @@ SLVMLoadInstruction >> accept: aVisitor [
 	^ aVisitor visitLoad: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLoadInstruction >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #'basic optimizations' }
 SLVMLoadInstruction >> foldConstant [
 	| var |

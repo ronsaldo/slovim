@@ -12,6 +12,12 @@ SLVMSampleInstruction class >> isAbstract [
 	^ self == SLVMSampleInstruction
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMSampleInstruction >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #accessing }
 SLVMSampleInstruction >> sampledTexture [
 	^ parameters first

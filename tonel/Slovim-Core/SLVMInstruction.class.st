@@ -52,6 +52,24 @@ SLVMInstruction >> block: anObject [
 	self function: (block ifNotNil: [ block function])
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMInstruction >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	self assert: theMnemonic = self class mnemonic
+]
+
+{ #category : #'as yet unclassified' }
+SLVMInstruction >> decodeExtraParametersFromSExpression: encodedExtraParameters context: context [
+	self subclassResponsibility
+]
+
+{ #category : #'as yet unclassified' }
+SLVMInstruction >> decodeFromSExpression: encodedInstruction context: context [
+	flags := encodedInstruction.
+	encodedInstruction size > 5 ifTrue: [
+		self decodeExtraParametersFromSExpression: encodedInstruction sixth context: context
+	]
+]
+
 { #category : #accessing }
 SLVMInstruction >> dominates: anotherInstruction [
 	block ~~ anotherInstruction block ifTrue: [

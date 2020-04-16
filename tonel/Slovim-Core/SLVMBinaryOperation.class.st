@@ -157,6 +157,13 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMBinaryOperation >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	operation := theMnemonic.
+	type := theDecodedType.
+	
+]
+
 { #category : #'constant folding' }
 SLVMBinaryOperation >> evaluateAdd [
 	^ SLVMConstant type: type value: (self left value + self right value)

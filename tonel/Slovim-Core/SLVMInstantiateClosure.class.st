@@ -44,6 +44,12 @@ SLVMInstantiateClosure >> closureType [
 	^ closureType
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMInstantiateClosure >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #accessing }
 SLVMInstantiateClosure >> definition [
 	^ parameters first

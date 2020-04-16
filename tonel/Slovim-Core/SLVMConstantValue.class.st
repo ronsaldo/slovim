@@ -48,6 +48,12 @@ SLVMConstantValue >> asSExpression [
 	^ { self mnemonic . type asSExpression . value }
 ]
 
+{ #category : #printing }
+SLVMConstantValue >> decodeFromSExpression: encodedValue context: context [
+	type := context decodeSExpressionType: encodedValue second.
+	value := encodedValue third.
+]
+
 { #category : #comparing }
 SLVMConstantValue >> hash [
 	^ ((self class hash bitXor: type hash) bitXor: value hash) bitXor: value class identityHash

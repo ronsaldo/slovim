@@ -28,6 +28,15 @@ SLVMAlloca >> accept: aVisitor [
 	^ aVisitor visitAlloca: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMAlloca >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+	self assert: type isPointerType.
+	valueType := type baseType.
+	
+]
+
 { #category : #printing }
 SLVMAlloca >> fullPrintOn: aStream [
 	self printOn: aStream.

@@ -22,6 +22,12 @@ SLVMGetFramePointer >> accept: visitor [
 	^ visitor visitGetFramePointer: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMGetFramePointer >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #testing }
 SLVMGetFramePointer >> isPureInstruction [
 	^ true

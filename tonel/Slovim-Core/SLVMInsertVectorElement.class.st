@@ -22,6 +22,12 @@ SLVMInsertVectorElement >> accept: aVisitor [
 	^ aVisitor visitInsertVectorElement: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMInsertVectorElement >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #printing }
 SLVMInsertVectorElement >> index [
 	^ parameters second

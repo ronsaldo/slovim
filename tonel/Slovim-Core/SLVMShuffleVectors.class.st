@@ -28,6 +28,12 @@ SLVMShuffleVectors >> components [
 	^ components
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMShuffleVectors >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #accessing }
 SLVMShuffleVectors >> firstVector [
 	^ parameters first

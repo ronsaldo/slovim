@@ -37,6 +37,12 @@ SLVMPhi >> applySubstitutions: substitutionDictionary [
 	incomingBlocks := incomingBlocks collect: [ :bl | substitutionDictionary at: bl ]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMPhi >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #printing }
 SLVMPhi >> extraParametersSExpression [
 	^ incomingBlocks collect: [ :each | each asSExpression ] as: Array

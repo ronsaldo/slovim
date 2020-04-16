@@ -25,7 +25,7 @@ SLVMModulePackageClass >> emitFor: module registrationWithAllocaBuilder: allocaB
 	| oopType registrationFunction |
 	oopType := module compilationTarget dynamicObjectType.
 	
-	registrationFunction := module globalValues at: #'slvm_dynrun_subclassWithSomeNames' ifAbsent: [ 
+	registrationFunction := module globalValueDictionary at: #'slvm_dynrun_subclassWithSomeNames' ifAbsent: [ 
 		(module functionName: #'slvm_dynrun_subclassWithSomeNames' arguments: {
 			"superclassName " oopType .
 			"name" oopType .

@@ -22,6 +22,12 @@ SLVMCombineSamplerWithTexture >> accept: visitor [
 	^ visitor visitCombineSamplerWithTexture: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMCombineSamplerWithTexture >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #accessing }
 SLVMCombineSamplerWithTexture >> sampler [
 	^ parameters first

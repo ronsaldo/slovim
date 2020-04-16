@@ -22,6 +22,12 @@ SLVMMakeMatrix >> accept: aVisitor [
 	^ aVisitor visitMakeMatrix: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMMakeMatrix >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #testing }
 SLVMMakeMatrix >> isMakeMatrix [
 	^ true

@@ -37,9 +37,15 @@ SLVMInsertValue >> aggregate: anAggregateValue value: value indices: newIndices 
 	self validate.
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMInsertValue >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #printing }
 SLVMInsertValue >> extraParametersSExpression [
-	^ indices
+	^ indices asArray
 ]
 
 { #category : #'basic optimizations' }

@@ -52,6 +52,12 @@ SLVMExtractValue >> areIndices: currentIndices affectByModifiedIndices: modified
 	^ false
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMExtractValue >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #printing }
 SLVMExtractValue >> extraParametersSExpression [
 	^ indices asArray

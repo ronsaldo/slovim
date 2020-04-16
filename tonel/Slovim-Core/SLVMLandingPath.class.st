@@ -44,6 +44,12 @@ SLVMLandingPath >> cleanup: anObject [
 	cleanup := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLandingPath >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #initialization }
 SLVMLandingPath >> initialize [
 	super initialize.

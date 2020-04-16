@@ -67,6 +67,12 @@ SLVMUnaryOperation >> computeTypeFor: anOperation operand: operand [
 
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMUnaryOperation >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	operation := theMnemonic.
+	type := theDecodedType.
+]
+
 { #category : #'constant folding' }
 SLVMUnaryOperation >> evaluateBitNot [
 	^ SLVMConstant type: type value: (self operand value bitInvert)

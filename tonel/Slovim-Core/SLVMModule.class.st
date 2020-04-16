@@ -310,7 +310,13 @@ SLVMModule >> decodeSExpressionType: typeExpression [
 
 { #category : #deserialization }
 SLVMModule >> decodeSExpressionValue: encodedValue [
-	self halt
+	| constantClass |
+	encodedValue first = #global ifTrue: [ self halt ].
+	"This must be a constant."
+	constantClass := SLVMValue valueClassFromMnemonic: encodedValue first.
+	^ constantClass new
+		decodeFromSExpression: encodedValue context: self;
+		yourself
 ]
 
 { #category : #deserialization }
@@ -480,8 +486,13 @@ SLVMModule >> globalOptimizeWithLevel: optimizationLevel keepStructuredControlFl
 ]
 
 { #category : #accessing }
-SLVMModule >> globalValues [
+SLVMModule >> globalValueDictionary [
 	^ globalValueDictionary
+]
+
+{ #category : #accessing }
+SLVMModule >> globalValues [
+	^ globalValues
 ]
 
 { #category : #'gt inspector extensions' }

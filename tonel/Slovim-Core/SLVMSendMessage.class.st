@@ -33,6 +33,12 @@ SLVMSendMessage >> callingConvention [
 	^ SLVMFunctionType smalltalkCallingConvention
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMSendMessage >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #accessing }
 SLVMSendMessage >> highLevelMessageSendFunctionType [
 	^ highLevelMessageSendFunctionType

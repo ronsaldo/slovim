@@ -22,6 +22,12 @@ SLVMGetThisContext >> accept: visitor [
 	^ visitor visitGetThisContext: self
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMGetThisContext >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #testing }
 SLVMGetThisContext >> isDynamicObjectReferenceCreator [
 	^ true

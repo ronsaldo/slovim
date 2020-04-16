@@ -23,3 +23,8 @@ SLVMDebugInformation >> isDebugType [
 SLVMDebugInformation >> scope [
 	^ nil
 ]
+
+{ #category : #'as yet unclassified' }
+SLVMDebugInformation >> slvmEncodeAsSExpression [
+	^ nil
+]

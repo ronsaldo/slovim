@@ -42,7 +42,7 @@ SLVMCodeGenerator class >> translateModule: module exportList: exportList [
 
 { #category : #'code generation' }
 SLVMCodeGenerator class >> translateModule: module function: shaderName [
-	^ self translateModule: module exportList: { module globalValues at: shaderName }
+	^ self translateModule: module exportList: { module globalNamed: shaderName }
 ]
 
 { #category : #'code generation' }

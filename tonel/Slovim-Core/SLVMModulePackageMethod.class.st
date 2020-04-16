@@ -37,7 +37,7 @@ SLVMModulePackageMethod >> emitFor: module registrationWithAllocaBuilder: alloca
 	| oopType registrationFunction |
 	oopType := module compilationTarget dynamicObjectType.
 	
-	registrationFunction := module globalValues at: #'slvm_dynrun_registerMethodWithNames' ifAbsent: [ 
+	registrationFunction := module globalValueDictionary at: #'slvm_dynrun_registerMethodWithNames' ifAbsent: [ 
 		(module functionName: #'slvm_dynrun_registerMethodWithNames' arguments: {
 			"method " oopType .
 			"selector " oopType .

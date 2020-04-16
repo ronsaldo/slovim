@@ -36,6 +36,12 @@ SLVMGetElementPointer >> aggregateInBoundIndices [
 	^ result
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMGetElementPointer >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
+	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
+	type := theDecodedType.
+]
+
 { #category : #accessing }
 SLVMGetElementPointer >> firstIndex [
 	^ parameters second
