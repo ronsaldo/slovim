@@ -190,12 +190,16 @@ LLVMModule >> linkerArguments: aListOfFlags [
 { #category : #accessing }
 LLVMModule >> linkerProgram [
 	linkerProgram ifNil: [ linkerProgram := OSEnvironment current at: 'CC' ifAbsent: [nil]].
-	linkerProgram ifNil: [ 
+	linkerProgram ifNil: [
 		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
 			linkerProgram := 'clang.exe'
 		].
 	
-		linkerProgram ifNil: [ linkerProgram := 'clang' ]
+		linkerProgram ifNil: [ linkerProgram := 'clang' ].
+		
+		(self targetTriple isNotNil and: [ self targetTriple includesSubstring: 'wasm' ]) ifTrue: [
+			linkerProgram := 'emcc'
+		]
 	].
 
 	^ linkerProgram
@@ -204,6 +208,12 @@ LLVMModule >> linkerProgram [
 { #category : #accessing }
 LLVMModule >> linkerProgram: aLinkerProgram [
 	linkerProgram := aLinkerProgram
+]
+
+{ #category : #writing }
+LLVMModule >> linkerTargetArguments [
+	(self linkerProgram includesSubstring: 'clang') ifTrue: [ ^ { '-target' . targetTriple } ].
+	^ #()
 ]
 
 { #category : #writing }
@@ -385,11 +395,11 @@ LLVMModule >> writeExecutableToFileNamed: outputFileName [
 	objectFile := outputFileRef fullName , '.o'.
 	self writeObjectToFileNamed: objectFile.
 
-	arguments := {
+	arguments := self linkerTargetArguments , {
 		'-o' . outputFileRef fullName.
 		objectFile.
 	} , self linkerArguments.
-		
+	
 	^ self runLinkerWithArguments: arguments
 
 ]
@@ -426,7 +436,7 @@ LLVMModule >> writeSharedToFileNamed: outputFileName [
 	objectFile := outputFileRef fullName , '.o'.
 	self writeObjectToFileNamed: objectFile.
 
-	arguments := {
+	arguments := self linkerTargetArguments , {
 		'-shared'.
 		'-o' . outputFileRef fullName.
 		objectFile fullName.

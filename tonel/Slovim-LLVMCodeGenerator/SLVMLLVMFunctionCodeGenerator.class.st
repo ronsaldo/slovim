@@ -10,7 +10,8 @@ Class {
 		'usedNames',
 		'functionDebugScope',
 		'currentBlockBuilder',
-		'currentUnwindBlock'
+		'currentUnwindBlock',
+		'thisContextLocalVariable'
 	],
 	#classVars : [
 		'BinaryFloatComparisonOperationMap',
@@ -1312,6 +1313,11 @@ SLVMLLVMFunctionCodeGenerator >> getOrCreateInlineCacheFor: instruction [
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> getOrCreateThisContextLocalVariable [
+	^ thisContextLocalVariable ifNil: [thisContextLocalVariable := self createSpillingAlloca: (self context int32Ty)]
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> getOverloadedIntrinsic: intrinsicName argumentTypes: argumentTypes returnType: returnType [
 	| fullName |
 	fullName := intrinsicName.
@@ -1959,17 +1965,23 @@ SLVMLLVMFunctionCodeGenerator >> visitGetThisContext: instruction [
 	| resultType intrinsic |
 	resultType := self translateType: instruction type.
 	self assert: instruction type = self target voidPointerType.
-	self flag: 'TODO: Make sure this is always the canonical frame address CFA.'.
-	intrinsic := self llvmModule getIntrinsic: #'llvm.localaddress' orCreateWithType: [
-		LLVMFunctionType get: resultType params: #() isVarArg: false
-	].
 
 	"Functions that use thisContext cannot be inlined."
 	(llvmFunction functionAttributes includes: #noinline) ifFalse: [
 		llvmFunction functionAttributes: ((llvmFunction functionAttributes copyWithout: #alwaysinline) copyWith: #noinline)
 	].
 
-	^ self call: intrinsic arguments: #() returnType: resultType name: (self convertName: instruction name)
+	self target supportsLocalAddressForThisContext ifTrue: [ 
+		self flag: 'TODO: Make sure this is always the canonical frame address CFA.'.
+		intrinsic := self llvmModule getIntrinsic: #'llvm.localaddress' orCreateWithType: [
+			LLVMFunctionType get: resultType params: #() isVarArg: false
+		].
+
+		^ self call: intrinsic arguments: #() returnType: resultType name: (self convertName: instruction name)
+	] ifFalse: [ 
+		^ self bitCast: self getOrCreateThisContextLocalVariable target: resultType name: (self convertName: instruction name)
+	].
+
 ]
 
 { #category : #visiting }

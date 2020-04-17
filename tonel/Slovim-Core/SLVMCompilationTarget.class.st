@@ -223,6 +223,11 @@ SLVMCompilationTarget >> isOSX [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isWebAssembly [
+	^ false
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isWin32 [
 	^ self operatingSystemName = #win32
 ]
@@ -321,6 +326,11 @@ SLVMCompilationTarget >> short [
 { #category : #accessing }
 SLVMCompilationTarget >> subarchitecture [
 	^ nil
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> supportsLocalAddressForThisContext [
+	^ false
 ]
 
 { #category : #accessing }

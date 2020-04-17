@@ -17,6 +17,29 @@ Class {
 }
 
 { #category : #construction }
+SLVMLLVMCompilationTarget class >> webAssembly [
+	^ self webAssembly32
+]
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> webAssembly32 [
+	^ self basicNew
+		webAssembly32;
+		pointerSize: 4;
+		initialize;
+		yourself
+]
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> webAssembly64 [
+	^ self basicNew
+		webAssembly32;
+		pointerSize: 8;
+		initialize;
+		yourself
+]
+
+{ #category : #construction }
 SLVMLLVMCompilationTarget class >> x86 [
 	^ self basicNew
 		x86;
@@ -123,12 +146,22 @@ SLVMLLVMCompilationTarget >> generateLowLevelModule: aModule optimizationLevel: 
 SLVMLLVMCompilationTarget >> initialize [
 	super initialize.
 	compilationPlugins := #().
-	self operatingSystemName: #linux.
+	self isWebAssembly ifTrue: [
+		self operatingSystemName: #wasi.
+	] ifFalse: [ 
+		self operatingSystemName: Smalltalk os slvmOperatingSystemName.
+	].
+
 ]
 
 { #category : #testing }
 SLVMLLVMCompilationTarget >> isLLVMCompilationTarget [
 	^ true
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> isWebAssembly [
+	^ architecture beginsWith: #wasm
 ]
 
 { #category : #accessing }
@@ -183,6 +216,11 @@ SLVMLLVMCompilationTarget >> subarchitecture: anObject [
 ]
 
 { #category : #accessing }
+SLVMLLVMCompilationTarget >> supportsLocalAddressForThisContext [
+	^ #(x86 x86_64) includes: self architecture
+]
+
+{ #category : #accessing }
 SLVMLLVMCompilationTarget >> systemVendor [
 	^ systemVendor
 ]
@@ -190,6 +228,20 @@ SLVMLLVMCompilationTarget >> systemVendor [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> systemVendor: anObject [
 	systemVendor := anObject
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> webAssembly32 [
+	self
+		architecture: #wasm32;
+		canonicalArchitecture: #wasm32
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> webAssembly64 [
+	self
+		architecture: #wasm64;
+		canonicalArchitecture: #wasm64
 ]
 
 { #category : #initialization }
