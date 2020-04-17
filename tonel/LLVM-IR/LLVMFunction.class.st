@@ -11,7 +11,8 @@ Class {
 		'labelSymbolGenerationCount',
 		'gcStrategy',
 		'personalityFunction',
-		'returnAttributes'
+		'returnAttributes',
+		'functionAttributes'
 	],
 	#category : #'LLVM-IR-GlobalValues'
 }
@@ -43,6 +44,16 @@ LLVMFunction >> addBasicBlock: basicBlock before: previousBasicBlock [
 
 ]
 
+{ #category : #initialization }
+LLVMFunction >> addFunctionAttribute: anAttribute [
+	functionAttributes := functionAttributes copyWith: anAttribute
+]
+
+{ #category : #initialization }
+LLVMFunction >> addReturnAttribute: anAttribute [
+	returnAttributes := returnAttributes copyWith: anAttribute
+]
+
 { #category : #accessing }
 LLVMFunction >> arguments [
 	^ arguments
@@ -62,8 +73,12 @@ LLVMFunction >> basicBlocksReplacedWith: replacement [
 LLVMFunction >> fullPrintOn: aStream [
 	self sanitizeNames.
 	basicBlocks ifEmpty: [
-		aStream << 'declare ' << linkage second << ' ' << visibility second << ' ' << dllStorageClass  second << callingConvenction << ' ' <<
-		functionType returnType name << ' @' << self name << ' ( '.
+		aStream << 'declare ' << linkage second << ' ' << visibility second << ' ' << dllStorageClass  second << callingConvenction.
+		returnAttributes do: [ :each |
+			aStream space; nextPutAll: each
+		].
+	
+		aStream  << ' ' << functionType returnType name << ' @' << self name << ' ( '.
 		
 		arguments doWithIndex: [ :arg :index |
 			index > 1 ifTrue: [ aStream << ', ' ].
@@ -76,12 +91,15 @@ LLVMFunction >> fullPrintOn: aStream [
 		].
 		
 		aStream << ' )'.
-		returnAttributes do: [ :attr | aStream space; nextPutAll: attr ].
+		functionAttributes do: [ :attr | aStream space; nextPutAll: attr ].
 		^ self
 	].
 
-	aStream << 'define ' << linkage second << ' ' << visibility second << ' ' << dllStorageClass  second << callingConvenction << ' ' <<
-	functionType returnType name << ' @' << self name << ' ( '.
+	aStream << 'define ' << linkage second << ' ' << visibility second << ' ' << dllStorageClass  second << callingConvenction.
+	returnAttributes do: [ :each |
+		aStream space; nextPutAll: each
+	].
+	aStream << ' ' << functionType returnType name << ' @' << self name << ' ( '.
 	
 	arguments doWithIndex: [ :arg :index |
 			index > 1 ifTrue: [ aStream << ', ' ].
@@ -94,7 +112,7 @@ LLVMFunction >> fullPrintOn: aStream [
 	].
 
 	aStream << ' )'.
-	returnAttributes do: [ :attr | aStream space; nextPutAll: attr ].
+	functionAttributes do: [ :attr | aStream space; nextPutAll: attr ].
 	
 	personalityFunction ifNotNil: [
 		aStream nextPutAll: ' personality '; print: personalityFunction type; space; print: personalityFunction
@@ -106,6 +124,16 @@ LLVMFunction >> fullPrintOn: aStream [
 	aStream << '}'; lf.
 
 	
+]
+
+{ #category : #accessing }
+LLVMFunction >> functionAttributes [
+	^ functionAttributes
+]
+
+{ #category : #accessing }
+LLVMFunction >> functionAttributes: anObject [
+	functionAttributes := anObject
 ]
 
 { #category : #accessing }
@@ -145,6 +173,11 @@ LLVMFunction >> hasArgumentNames [
 ]
 
 { #category : #testing }
+LLVMFunction >> hasFunctionAttribute: attributeName [
+	^ functionAttributes includes: attributeName
+]
+
+{ #category : #testing }
 LLVMFunction >> hasReturnAttribute: attributeName [
 	^ returnAttributes includes: attributeName
 ]
@@ -158,6 +191,7 @@ LLVMFunction >> initialize [
 	labelSymbolGenerationCount := 0.
 	hasArgumentNames := false.
 	returnAttributes := #().
+	functionAttributes := #().
 	
 ]
 
@@ -189,7 +223,7 @@ LLVMFunction >> isFunction [
 
 { #category : #testing }
 LLVMFunction >> isNoUnwind [
-	^ self hasReturnAttribute: #nounwind
+	^ self hasFunctionAttribute: #nounwind
 ]
 
 { #category : #accessing }

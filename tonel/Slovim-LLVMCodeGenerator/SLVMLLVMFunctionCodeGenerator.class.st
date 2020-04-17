@@ -694,6 +694,15 @@ SLVMLLVMFunctionCodeGenerator >> generateFunction: slvmFunction into: newLLVMFun
 	
 	function := slvmFunction.
 	llvmFunction := newLLVMFunction.
+	
+	function returnType isIntegerType ifTrue: [ 
+		function returnType isSigned ifTrue: [ 
+			llvmFunction addReturnAttribute: #signext
+		] ifFalse: [ 
+			llvmFunction addReturnAttribute: #zeroext
+		]
+	].
+
 	self
 		mapArguments;
 		createProxyValues;
@@ -1396,6 +1405,14 @@ SLVMLLVMFunctionCodeGenerator >> mapArguments [
 		llvmArgument := llvmFunction arguments at: index + argumentBaseOffset.
 		llvmArgument name: (self convertName: arg name).
 		arg isStructReturnPointer ifTrue: [ llvmArgument addFlag: #sret; addFlag: #noalias ].
+		arg type isIntegerType ifTrue: [ 
+			arg type isSigned ifTrue: [
+				llvmArgument addFlag: #signext
+			] ifFalse: [ 
+				llvmArgument addFlag: #zeroext
+			]
+		].
+	
 		valueDictionary at: arg put: llvmArgument
 	]
 ]
@@ -1948,8 +1965,8 @@ SLVMLLVMFunctionCodeGenerator >> visitGetThisContext: instruction [
 	].
 
 	"Functions that use thisContext cannot be inlined."
-	(llvmFunction returnAttributes includes: #noinline) ifFalse: [
-		llvmFunction returnAttributes: ((llvmFunction returnAttributes copyWithout: #alwaysinline) copyWith: #noinline)
+	(llvmFunction functionAttributes includes: #noinline) ifFalse: [
+		llvmFunction functionAttributes: ((llvmFunction functionAttributes copyWithout: #alwaysinline) copyWith: #noinline)
 	].
 
 	^ self call: intrinsic arguments: #() returnType: resultType name: (self convertName: instruction name)

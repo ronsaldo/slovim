@@ -324,7 +324,7 @@ LLVMModule >> runLinkerWithArguments: arguments [
 
 { #category : #initialization }
 LLVMModule >> setKnownIntrinsicAttributes: intrinsic [
-	intrinsic returnAttributes: #(nounwind).
+	intrinsic functionAttributes: #(nounwind).
 	^ intrinsic
 ]
 
