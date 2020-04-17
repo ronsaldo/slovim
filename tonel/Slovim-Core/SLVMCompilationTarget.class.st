@@ -308,6 +308,11 @@ SLVMCompilationTarget >> sampler [
 	^ types sampler
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMCompilationTarget >> sharedObjectsAreAlsoImports [
+	^ self isWin32 not
+]
+
 { #category : #types }
 SLVMCompilationTarget >> short [
 	^ types short
