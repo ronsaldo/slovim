@@ -7,6 +7,7 @@ Class {
 		'name',
 		'names',
 		'alignment',
+		'minimalAlignment',
 		'size',
 		'offsets',
 		'behavior',
@@ -153,7 +154,7 @@ SLVMStructureType >> fullPrintOn: aStream fromPrint: aBoolean [
 
 { #category : #comparing }
 SLVMStructureType >> hash [
-	name ifNotNil: [ ^ types hash ].
+	name ifNil: [ ^ types hash ].
 	^ self identityHash
 ]
 
@@ -229,8 +230,14 @@ SLVMStructureType >> memberAt: constantValue [
 	^ types at: constantValue value + 1
 ]
 
+{ #category : #accessing }
+SLVMStructureType >> minimalAlignment [
+	^ minimalAlignment ifNil: [ minimalAlignment := 1 ]
+]
+
 { #category : #private }
 SLVMStructureType >> minimalAlignment: anAlignment [
+	minimalAlignment := anAlignment.
 	alignment := alignment max: anAlignment.
 	size := size alignedTo: alignment.
 ]
