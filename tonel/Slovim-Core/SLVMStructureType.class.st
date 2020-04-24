@@ -51,7 +51,7 @@ SLVMStructureType class >> name: structureName types: typeList kind: structureKi
 SLVMStructureType >> = other [
 	self class == other class ifFalse: [ ^ false ].
 	
-	(name isNotNil or: [other name isNotNil]) ifTrue: [ ^ self == other ].
+	(name isNotNil or: [other name isNotNil]) ifTrue: [ ^ self == other or: [self name = other name and: [self types size = other types size]]].
 	^ types = other types
 ]
 
@@ -155,7 +155,7 @@ SLVMStructureType >> fullPrintOn: aStream fromPrint: aBoolean [
 { #category : #comparing }
 SLVMStructureType >> hash [
 	name ifNil: [ ^ types hash ].
-	^ self identityHash
+	^ name hash bitXor: types size hash
 ]
 
 { #category : #'as yet unclassified' }
