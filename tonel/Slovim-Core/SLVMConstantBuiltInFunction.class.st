@@ -45,6 +45,8 @@ SLVMConstantBuiltInFunction class >> initialize [
 		'vector.normalize'
 		'vector.reflect'
 		'vector.refract'
+		'vector.any'
+		'vector.all'
 		
 		"Math functions"
 		'math.smoothstep'

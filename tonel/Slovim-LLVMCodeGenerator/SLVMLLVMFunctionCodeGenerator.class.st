@@ -1102,6 +1102,16 @@ SLVMLLVMFunctionCodeGenerator >> generateVector: packedVectorInteger signed: isS
 ]
 
 { #category : #'vector intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateVectorAll: vector [
+	^ self generateVectorFold: (self translateValue: vector) with: #bitand
+]
+
+{ #category : #'vector intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateVectorAny: vector [
+	^ self generateVectorFold: (self translateValue: vector) with: #bitor
+]
+
+{ #category : #'vector intrinsics' }
 SLVMLLVMFunctionCodeGenerator >> generateVectorDot: leftVector with: rightVector [
 	| vectorType leftVectorValue rightVectorValue multiplyOperation additionOperation |
 	self assert: leftVector type = rightVector type.

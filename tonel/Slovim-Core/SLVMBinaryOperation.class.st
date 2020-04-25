@@ -141,12 +141,12 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 				self error: 'Binary operation ' , anOperation , ' requires integer operands.'
 			]
 		].
-		^ operationType == #integerComp ifTrue: [ SLVMType boolType ] ifFalse: [ leftType ]
+		^ operationType == #integerComp ifTrue: [ SLVMType boolType withRankOf: leftType ] ifFalse: [ leftType ]
 	].
 
 	((operationType == #float) or: [ operationType == #floatComp ]) ifTrue: [ 
 		(leftType isFloatType or: [leftType isFloatVectorType or: [leftType isFloatMatrixType ] ]) ifFalse: [ self error: 'Binary operation ' , anOperation , ' requires floating point operands.' ].
-		^ operationType == #floatComp ifTrue: [ SLVMType boolType ] ifFalse: [ leftType ]
+		^ operationType == #floatComp ifTrue: [ SLVMType boolType withRankOf: leftType ] ifFalse: [ leftType ]
 	].
 
 	((operationType == #dynObject) or: [ operationType == #dynObjectComp ]) ifTrue: [ 

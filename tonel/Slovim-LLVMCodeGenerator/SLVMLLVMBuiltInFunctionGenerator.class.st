@@ -180,6 +180,12 @@ SLVMLLVMBuiltInFunctionGenerator class >> vectorBuiltIn [
 		addBuiltIn: #'vector.dot' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
 			functionCodeGenerator generateVectorDot: callInstruction arguments first with: callInstruction arguments second
 		];
+		addBuiltIn: #'vector.all' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVectorAll: callInstruction arguments first
+		];
+		addBuiltIn: #'vector.any' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateVectorAny: callInstruction arguments first
+		];
 		addBuiltIn: #'vector.length' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
 			functionCodeGenerator generateVectorLength: callInstruction arguments first
 		];

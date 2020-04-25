@@ -147,6 +147,9 @@ SLVMSpirVCodeGenerator class >> initialize [
 		'vector.reflect' (glsl450 GLSLstd450Reflect)
 		'vector.refract' (glsl450 GLSLstd450Refract)
 	
+		'vector.any' (SpirV SpvOpAny)
+		'vector.all' (SpirV SpvOpAll)
+		
 		'math.smoothstep' (glsl450 GLSLstd450SmoothStep)
 		'math.step' (glsl450 GLSLstd450Step)
 		

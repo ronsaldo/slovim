@@ -1751,6 +1751,18 @@ SLVMBuilder >> vectorAdd: left with: right name: name [
 	]
 ]
 
+{ #category : #intrinsics }
+SLVMBuilder >> vectorAllIntrinsicFor: aType [
+	"Count population"
+	^ self builtInFunctionName: #'vector.all' argumentTypes: { aType } returnType: SLVMType boolType
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> vectorAnyIntrinsicFor: aType [
+	"Count population"
+	^ self builtInFunctionName: #'vector.any' argumentTypes: { aType } returnType: SLVMType boolType
+]
+
 { #category : #casting }
 SLVMBuilder >> vectorCastFrom: source into: targetType [
 	^ self vectorCastFrom: source into: targetType name: nil
@@ -1810,6 +1822,22 @@ SLVMBuilder >> vectorDot: leftVector with: rightVector [
 SLVMBuilder >> vectorDotIntrinsicFor: aType [
 	"Count population"
 	^ self builtInFunctionName: #'vector.dot' argumentTypes: { aType . aType} returnType: aType baseType
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> vectorIsAllSet: vector [
+	"Count leading zeros."
+	| intrinsic |
+	intrinsic := self vectorAllIntrinsicFor: vector type.
+	^ self call: intrinsic arguments: { vector }
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> vectorIsAnySet: vector [
+	"Count leading zeros."
+	| intrinsic |
+	intrinsic := self vectorAnyIntrinsicFor: vector type.
+	^ self call: intrinsic arguments: { vector }
 ]
 
 { #category : #'vector arithmetic' }

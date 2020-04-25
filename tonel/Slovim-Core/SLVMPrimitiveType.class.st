@@ -90,6 +90,18 @@ SLVMPrimitiveType >> size: anObject [
 	size := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMPrimitiveType >> withRankOf: otherType [
+	otherType isVectorType ifTrue: [
+		^ SLVMVectorType baseType: self elements: otherType elements
+	].
+	otherType isMatrixType ifTrue: [ 
+		^ SLVMMatrixType baseType: self rows: otherType rows columns: otherType columns
+	].
+
+	^ self
+]
+
 { #category : #writing }
 SLVMPrimitiveType >> write: value intoPointer: pointer [
 	^ value perform: self selectorForStoringIntoPointer with: pointer
