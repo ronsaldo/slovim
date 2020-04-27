@@ -279,6 +279,11 @@ SLVMBuilder >> constLong: aValue [
 ]
 
 { #category : #constants }
+SLVMBuilder >> constUChar: aValue [
+	^ SLVMConstant uchar: aValue
+]
+
+{ #category : #constants }
 SLVMBuilder >> constUInt: aValue [
 	^ SLVMConstant uint: aValue
 ]
