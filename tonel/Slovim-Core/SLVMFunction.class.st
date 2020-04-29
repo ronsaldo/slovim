@@ -153,6 +153,33 @@ SLVMFunction >> asFullSExpressionForTesting [
 	}
 ]
 
+{ #category : #printing }
+SLVMFunction >> asPrettyFullSExpressionForTesting [
+	^ (ByteString streamContents: [ :out |
+		| sexpr |
+		sexpr := self asFullSExpressionForTesting.
+		(sexpr first: 4) doWithIndex: [ :each :index |
+			index > 1 ifTrue: [ out space ].
+			out print: each.
+		].
+		out cr.
+	
+		(sexpr allButFirst: 4) pairsDo: [ :key :value |
+			out tab; print: key; nextPutAll: ' ('; cr.
+			key = #blocks ifTrue: [
+				value do: [ :each |
+					self prettyPrintBlockSExpression: each into: out.
+				].
+			] ifFalse: [
+				value do: [ :each |
+					out tab; tab; print: each; cr.
+				]
+			].
+			out tab; nextPutAll: ')'; cr.
+		]
+	]) copyReplaceAll: '#' with: ''
+]
+
 { #category : #accessing }
 SLVMFunction >> basicBlocks [
 	^ basicBlocks
@@ -850,6 +877,15 @@ SLVMFunction >> preOrder [
 	preOrder := OrderedCollection new.
 	self computePreOrderFor: basicBlocks first visited: visited.
 	^ preOrder
+]
+
+{ #category : #printing }
+SLVMFunction >> prettyPrintBlockSExpression: blockSExpression into: output [
+	output tab; tab; nextPut: $(; print: blockSExpression first; cr.
+	blockSExpression allButFirstDo: [ :instruction |
+		output tab; tab; tab; print: instruction; cr.
+	].
+	output tab; tab; nextPut: $); cr.
 ]
 
 { #category : #accessing }
