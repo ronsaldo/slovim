@@ -25,7 +25,7 @@ SLVMPhi >> accept: aVisitor [
 
 { #category : #optimizations }
 SLVMPhi >> addValue: value from: incomingBlock [
-	self assert: value type = type.
+	self assert: (value type = type or: [value type isPointerType and: [ type isPointerType and: [value type baseType = type baseType and: [ type storage = #generic] ]]]).
 	value addInstructionReference: self.
 	parameters add: value.
 	incomingBlocks add: incomingBlock.
