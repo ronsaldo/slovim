@@ -1433,6 +1433,15 @@ SLVMLLVMFunctionCodeGenerator >> mapArguments [
 	]
 ]
 
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> mapContainerType: containerType index: index [
+	containerType isUnionType ifTrue: [
+		^ {containerType . SLVMConstant int: 0}
+	].
+	
+	^ {containerType . index}
+]
+
 { #category : #accessing }
 SLVMLLVMFunctionCodeGenerator >> moduleTranslator [
 	^ moduleTranslator
@@ -1946,12 +1955,32 @@ SLVMLLVMFunctionCodeGenerator >> visitFloatingPointCast: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitGetElementPointer: instruction [
-	^ self addInstruction: (LLVMGetElementPtrInst new
-		type: (self translateType: instruction type);
-		name: (self convertName: instruction name);
-		pointer: (self translateValue: instruction pointer);
-		indices: (instruction indices collect: [ :index | self translateValue: index ]);
-		yourself)
+	| canonicalFragments result |
+	canonicalFragments := instruction canonicalFragmentsMappingIndicesWith: [:containerType :index |
+		self mapContainerType: containerType index: index
+	].
+
+	result := self translateValue: instruction pointer.
+	canonicalFragments do: [ :fragment |
+		| expectedFragmentType lastContainerType |
+		result := self addInstruction: (LLVMGetElementPtrInst new
+			type: (self translateType: fragment type);
+			pointer: result;
+			indices: (fragment indices collect: [ :containerAndIndex | self translateValue: containerAndIndex second ]);
+			yourself).
+		
+		expectedFragmentType := self translateType: fragment type.
+		lastContainerType := fragment indices last first.
+		lastContainerType isUnionType ifTrue: [
+			| expectedResultType |
+			expectedResultType := result type.
+			result type: (LLVMPointerType get: (self translateType: lastContainerType) elements first addressSpace: expectedResultType addressSpace).
+			result := self bitCast: result target: expectedResultType name: nil.
+		]
+	].
+
+	result name: (self convertName: instruction name).
+	^ result
 ]
 
 { #category : #visiting }

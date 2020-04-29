@@ -1060,6 +1060,14 @@ SLVMLLVMCodeGenerator >> visitStructureType: structureType [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitUnionType: type [
+	^ self type: type translationDo: [
+		LLVMStructType context: self context elements: {LLVMArrayType get: self context int8Ty elements: (type size alignedTo: type alignment)}
+	]
+
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitVectorType: type [
 	^ self type: type translationDo: [
 		LLVMVectorType get: (self translateType: type baseType) elements: type elements

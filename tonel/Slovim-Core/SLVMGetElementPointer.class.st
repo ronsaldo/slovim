@@ -37,6 +37,37 @@ SLVMGetElementPointer >> aggregateInBoundIndices [
 ]
 
 { #category : #'as yet unclassified' }
+SLVMGetElementPointer >> canonicalFragmentsMappingIndicesWith: indexMappingBlock [
+	| memberType currentFragment result |
+	result := OrderedCollection new.
+	currentFragment := SLVMGetElementPointerCanonicalFragment new.
+	result add: currentFragment.
+	
+	memberType := self pointer type.
+	self indices do: [ :index |
+		| previousMemberType |
+		previousMemberType := memberType.
+		currentFragment indices add: (indexMappingBlock value: memberType value: index).
+		memberType := memberType typeOfMemberAt: index.
+		
+		previousMemberType isUnionType ifTrue: [
+			| elementPointerType |
+			elementPointerType := type copy baseType: memberType.
+			currentFragment type: elementPointerType.
+
+			currentFragment := SLVMGetElementPointerCanonicalFragment new.
+			currentFragment indices add: (indexMappingBlock value: elementPointerType
+				value: (SLVMConstant int: 0)).
+			result add: currentFragment.
+		].
+	].
+
+	currentFragment type: type.
+	
+	^ result
+]
+
+{ #category : #'as yet unclassified' }
 SLVMGetElementPointer >> createdWithMnemonic: theMnemonic decodedType: theDecodedType [
 	super createdWithMnemonic: theMnemonic decodedType: theDecodedType.
 	type := theDecodedType.
