@@ -68,3 +68,10 @@ LLVMBasicBlockInstructionReplacer >> replaceWith: aBlock [
 	].
 
 ]
+
+{ #category : #adding }
+LLVMBasicBlockInstructionReplacer >> setEndingBlock [
+	newBasicBlocks size > 1 ifTrue: [
+		block endingBlock: newBasicBlocks last
+	]
+]

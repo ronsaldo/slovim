@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'parent',
 		'instructions',
-		'implicitUnwindBlock'
+		'implicitUnwindBlock',
+		'endingBlock'
 	],
 	#category : #'LLVM-IR'
 }
@@ -28,6 +29,16 @@ LLVMBasicBlock class >> for: context name: theName parent: theParentFunction ins
 LLVMBasicBlock >> addNext: anInstruction [
 	anInstruction parent: self.
 	instructions add: anInstruction
+]
+
+{ #category : #accessing }
+LLVMBasicBlock >> endingBlock [
+	^ endingBlock
+]
+
+{ #category : #accessing }
+LLVMBasicBlock >> endingBlock: anObject [
+	endingBlock := anObject
 ]
 
 { #category : #printing }
@@ -108,4 +119,9 @@ LLVMBasicBlock >> parent [
 { #category : #accessing }
 LLVMBasicBlock >> parent: anObject [
 	parent := anObject
+]
+
+{ #category : #'as yet unclassified' }
+LLVMBasicBlock >> validEndingBlock [
+	^ endingBlock ifNil: [ self ]
 ]

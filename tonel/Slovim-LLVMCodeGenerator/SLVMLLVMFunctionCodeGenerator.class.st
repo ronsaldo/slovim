@@ -1548,6 +1548,7 @@ SLVMLLVMFunctionCodeGenerator >> translateBasicBlocks [
 		
 		currentBlockBuilder := bb newReplacer.
 		currentBlockBuilder replaceWith: [ :instruction | self translateProxyInstruction: instruction ].
+		currentBlockBuilder setEndingBlock.
 		newBasicBlocks addAll: currentBlockBuilder newBasicBlocks
 	].
 

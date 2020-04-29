@@ -33,6 +33,6 @@ LLVMPHINode >> printParametersOn: aStream [
 		].
 	
 		aStream nextPutAll: '[ '; print: incoming first;
-				nextPutAll: ', '; print: incoming second; nextPutAll: ' ]'
+				nextPutAll: ', '; print: incoming second validEndingBlock; nextPutAll: ' ]'
 	].
 ]
