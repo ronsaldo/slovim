@@ -115,7 +115,7 @@ SLVMMessagePackEncoder >> encodeFloat: value [
 		self nextPutUInt32: floatEncoding
 	] ifFalse: [ 
 		outputStream nextPut: 16rCB.
-		self nextPutUInt64: (value basicAt: 1) | ((value basicAt: 2) << 32)
+		self nextPutUInt64: ((value basicAt: 1) << 32) | (value basicAt: 1)
 	].
 
 ]
