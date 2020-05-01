@@ -517,6 +517,49 @@ SLVMLLVMCodeGenerator >> register: value debugElement: debugElement [
 	self translatedDebugElements at: value put: debugElement
 ]
 
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> setLLVMFunction: llvmFunction flagsFrom: slvmFunction [
+	slvmFunction arguments doWithIndex: [ :arg :index |
+		| llvmArgument |
+		llvmArgument := llvmFunction arguments at: index.
+		arg isStructReturnPointer ifTrue: [ llvmArgument addFlag: #sret; addFlag: #noalias ].
+		arg type isIntegerType ifTrue: [ 
+			arg type isSigned ifTrue: [
+				llvmArgument addFlag: #signext
+			] ifFalse: [ 
+				llvmArgument addFlag: #zeroext
+			]
+		].
+	].
+
+	slvmFunction returnType isIntegerType ifTrue: [ 
+		slvmFunction returnType isSigned ifTrue: [ 
+			llvmFunction addReturnAttribute: #signext
+		] ifFalse: [ 
+			llvmFunction addReturnAttribute: #zeroext
+		]
+	].
+
+	slvmFunction isNoUnwind ifTrue: [ 
+		llvmFunction addFunctionAttribute: #nounwind
+	].
+	slvmFunction isNoReturn ifTrue: [ 
+		llvmFunction addFunctionAttribute: #noreturn
+	].
+
+	slvmFunction isEmpty ifFalse: [
+		slvmFunction hasYesInlineMode ifTrue: [ 
+			llvmFunction addFunctionAttribute: #inlinehint
+		]. 
+		slvmFunction hasNeverInlineMode ifTrue: [ 
+			llvmFunction addFunctionAttribute: #noinline
+		]. 
+		slvmFunction hasAlwaysInlineMode ifTrue: [ 
+			llvmFunction addFunctionAttribute: #alwaysinline
+		]. 
+	]
+]
+
 { #category : #accessing }
 SLVMLLVMCodeGenerator >> target [
 	^ target
@@ -964,6 +1007,8 @@ SLVMLLVMCodeGenerator >> visitFunction: aFunction [
 
 	translatedModuleElements at: aFunction put: function.
 	debugScope := self buildFunction: aFunction debugInformationInto: function.
+	
+	self setLLVMFunction: function flagsFrom: aFunction.
 	
 	aFunction isEmpty ifFalse: [ 
 		self newFunctionCodeGenerator

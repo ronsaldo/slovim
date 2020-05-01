@@ -696,14 +696,6 @@ SLVMLLVMFunctionCodeGenerator >> generateFunction: slvmFunction into: newLLVMFun
 	function := slvmFunction.
 	llvmFunction := newLLVMFunction.
 	
-	function returnType isIntegerType ifTrue: [ 
-		function returnType isSigned ifTrue: [ 
-			llvmFunction addReturnAttribute: #signext
-		] ifFalse: [ 
-			llvmFunction addReturnAttribute: #zeroext
-		]
-	].
-
 	self
 		mapArguments;
 		createProxyValues;
@@ -1415,19 +1407,10 @@ SLVMLLVMFunctionCodeGenerator >> loadLiteralVariableValue: literalVariable [
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> mapArguments [
 
-	| argumentBaseOffset llvmArgument |
-	argumentBaseOffset := 0.
+	| llvmArgument |
 	function arguments doWithIndex: [ :arg :index |
-		llvmArgument := llvmFunction arguments at: index + argumentBaseOffset.
+		llvmArgument := llvmFunction arguments at: index.
 		llvmArgument name: (self convertName: arg name).
-		arg isStructReturnPointer ifTrue: [ llvmArgument addFlag: #sret; addFlag: #noalias ].
-		arg type isIntegerType ifTrue: [ 
-			arg type isSigned ifTrue: [
-				llvmArgument addFlag: #signext
-			] ifFalse: [ 
-				llvmArgument addFlag: #zeroext
-			]
-		].
 	
 		valueDictionary at: arg put: llvmArgument
 	]

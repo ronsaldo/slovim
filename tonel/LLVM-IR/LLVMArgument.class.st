@@ -52,7 +52,8 @@ LLVMArgument >> parent: anObject [
 
 { #category : #printing }
 LLVMArgument >> printOnDeclaration: aStream [
-	aStream print: type
+	aStream print: type.
+	flags do: [ :flag | aStream space; nextPutAll: flag ].
 ]
 
 { #category : #printing }
