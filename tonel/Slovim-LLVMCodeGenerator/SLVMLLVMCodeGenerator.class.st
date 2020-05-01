@@ -365,7 +365,8 @@ SLVMLLVMCodeGenerator >> declareNamedStructure: aNamedStructure [
 		yourself.
 	translatedTypes at: aNamedStructure put: convertedStructure.
 	namedStructures at: aNamedStructure name ifPresent: [ self error ] ifAbsentPut: convertedStructure.
-	self llvmModule addNamedStructure: convertedStructure
+	self llvmModule addNamedStructure: convertedStructure.
+	^ convertedStructure
 	
 ]
 
@@ -1091,13 +1092,17 @@ SLVMLLVMCodeGenerator >> visitPointerType: type [
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> visitStructureType: structureType [
 	structureType name ifNotNil: [
+		| convertedStructure |
 		"Duplicated structure may be because of multiple imported/linked modules"
 		namedStructures at: structureType name ifPresent: [ :existentTranslation |
 			translatedTypes at: structureType put: existentTranslation.
 			^ existentTranslation
 		].
 	
-		self halt
+		"Some trampolines may reach to this case."
+		convertedStructure := self declareNamedStructure: structureType.
+		self translateNamedStructure: structureType.
+		^ convertedStructure
 	].
 	^ self recursiveType: structureType translationDo: [
 		LLVMStructType context: llvmContext elements: (structureType types collect: [:type | self translateType: type])
