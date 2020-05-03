@@ -39,6 +39,11 @@ SLVMSendMessage >> createdWithMnemonic: theMnemonic decodedType: theDecodedType 
 	type := theDecodedType.
 ]
 
+{ #category : #testing }
+SLVMSendMessage >> hasSRet [
+	^ self hasFlag: #sret
+]
+
 { #category : #accessing }
 SLVMSendMessage >> highLevelMessageSendFunctionType [
 	^ highLevelMessageSendFunctionType
@@ -96,6 +101,11 @@ SLVMSendMessage >> sendDispatchTrampolineType [
 	highLevelMessageSendFunctionType ifNotNil: [ ^ highLevelMessageSendFunctionType ].
 	^ SLVMFunctionType callingConvention: self callingConvention
 		arguments: {self receiver type asGenericMessageType} , (self arguments collect: [:arg | arg type asGenericMessageType]) returnType: type asGenericMessageType
+]
+
+{ #category : #testing }
+SLVMSendMessage >> setSRetPresence [
+	^ self addFlag: #sret
 ]
 
 { #category : #initialization }

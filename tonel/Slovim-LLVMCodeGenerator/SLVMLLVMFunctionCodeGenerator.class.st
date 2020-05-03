@@ -2244,11 +2244,21 @@ SLVMLLVMFunctionCodeGenerator >> visitMakeVector: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitMessageSend: instruction [
-	| returnType receiver arguments selector lookupResult calledFunctionType calledType functionPointer lookupArguments lookupFunction typeInfo lookupResultMethod lookupResultTrampoline |
+	| returnType receiver arguments selector lookupResult calledFunctionType calledType functionPointer lookupArguments lookupFunction typeInfo lookupResultMethod lookupResultTrampoline resultArguments slvmArguments slvmResultArguments |
 
 	returnType := self translateType: instruction type.	
 	receiver := self translateValue: instruction receiver.
 	arguments := instruction arguments collect: [ :arg | self translateValue: arg ].
+	resultArguments := #().
+	slvmArguments := instruction arguments.
+	slvmResultArguments := #().
+	instruction hasSRet ifTrue: [
+		resultArguments := {arguments first}.
+		arguments := arguments allButFirst.
+		slvmResultArguments := { slvmArguments first }.
+		slvmArguments := slvmArguments allButFirst.
+	].
+	
 	selector := self translateValue: instruction selector.
 	
 	"Fetch the lookup typeinfo."
@@ -2288,14 +2298,16 @@ SLVMLLVMFunctionCodeGenerator >> visitMessageSend: instruction [
 	lookupResultMethod := self aggregate: lookupResult extractValueAt: 0.
 	lookupResultTrampoline := self aggregate: lookupResult extractValueAt: 1.
 	calledFunctionType := SLVMFunctionType callingConvention: SLVMFunctionType cdeclCallingConvention
-		arguments: {self target voidPointerType . instruction selector type . instruction receiver type} , (instruction arguments collect: #type)
+		arguments: (slvmResultArguments collect: [:each | each type]) ,
+			{self target voidPointerType . instruction selector type . instruction receiver type} ,
+			(slvmArguments collect: [:each | each type])
 		returnType: instruction type.
 	calledType := self translateType: (target pointerTo: calledFunctionType).
 
 	functionPointer := self bitCast: lookupResultTrampoline target: calledType name: nil.
 	^ self call: functionPointer
 		convention: (self convertCallingConvention: calledFunctionType callingConvention)
-		arguments: {lookupResultMethod . selector . receiver}, arguments returnType: returnType name: nil.
+		arguments: resultArguments , {lookupResultMethod . selector . receiver}, arguments returnType: returnType name: nil.
 	
 ]
 
