@@ -997,7 +997,8 @@ SLVMLLVMCodeGenerator >> visitFunction: aFunction [
 	| functionType function debugScope |
 	functionType := self translateType: aFunction functionType.
 	function := LLVMFunction createWithType: functionType linkage: (self convertLinkage: aFunction) name: (self convertName: aFunction name) module: self llvmModule.
-	
+	translatedModuleElements at: aFunction put: function.
+		
 	aFunction propertyAt: #llvmGCStrategy ifPresent: [ :gcStrategyName |
 		function gcStrategy: gcStrategyName
 	].
@@ -1006,7 +1007,6 @@ SLVMLLVMCodeGenerator >> visitFunction: aFunction [
 		function personalityFunction: (self translateValue: pf)
 	].
 
-	translatedModuleElements at: aFunction put: function.
 	debugScope := self buildFunction: aFunction debugInformationInto: function.
 	
 	self setLLVMFunction: function flagsFrom: aFunction.
