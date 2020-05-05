@@ -1154,33 +1154,33 @@ SLVMLLVMFunctionCodeGenerator >> generateVectorDot: leftVector with: rightVector
 
 { #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateVectorFold: vectorOrScalar with: operation [
-	| vectorType firstShuffleVector secondShuffleVector halfVectorSize halfVectorType leftIndices rightIndices leftVector rightVector result leftValue rightValue |
+	| vectorType leftValue rightValue middlePoint leftIndices rightIndices leftVector rightVector leftVectorType result |
 	vectorType := vectorOrScalar type.
 	vectorOrScalar type isVectorTy ifFalse: [ ^ vectorOrScalar ].
-	
-	firstShuffleVector := vectorOrScalar.
-	secondShuffleVector := vectorType elements even ifTrue: [ vectorOrScalar ] ifFalse: [ vectorType zeroConstant ].
-	
-	halfVectorSize := (vectorType elements + 1) // 2.
-	halfVectorSize = 1 ifTrue: [
+	self assert: vectorType elements >= 2.
+	vectorType elements = 2 ifTrue: [ 
 		leftValue := self vector: vectorOrScalar extractElementAt: 0.
 		rightValue := self vector: vectorOrScalar extractElementAt: 1.
 
 		^ self generateScalarVectorBinaryOperation: operation resultType: vectorType elementType left: leftValue right: rightValue name: nil
 	].
 
-	halfVectorType := LLVMVectorType get: vectorType elementType elements: halfVectorSize.
-	
-	leftIndices := (0 to: halfVectorSize - 1) collect: [ :i | i*2 ].
-	rightIndices := (0 to: halfVectorSize - 1) collect: [ :i | i*2 + 1 ].
-	
-	leftVector := self vector: firstShuffleVector shuffleWith: secondShuffleVector mask: leftIndices.
+	self assert: vectorType elements >= 3.
+	middlePoint := vectorType elements // 2.
+	leftIndices := (0 to: middlePoint - 1) asArray.
+	rightIndices := (middlePoint to: vectorType elements - 1) asArray.
 
-	rightVector := self vector: firstShuffleVector shuffleWith: secondShuffleVector mask: rightIndices.
-	
-	result := self generateScalarVectorBinaryOperation: operation resultType: halfVectorType left: leftVector right: rightVector name: nil.
-	
-	^ self generateVectorFold: result with: operation
+	leftVector := self vector: vectorOrScalar shuffleOrExtractWith: vectorOrScalar mask: leftIndices.
+	rightVector := self vector: vectorOrScalar shuffleOrExtractWith: vectorOrScalar mask: rightIndices.
+	leftIndices size = rightIndices size ifTrue: [ 
+		result := self generateScalarVectorBinaryOperation: operation resultType: leftVector type left: leftVector right: rightVector name: nil.
+		^ self generateVectorFold: result with: operation
+	] ifFalse: [
+		| leftResult rightResult |
+		leftResult := self generateVectorFold: leftVector with: operation.
+		rightResult := self generateVectorFold: rightVector with: operation.
+		^ self generateScalarVectorBinaryOperation: operation resultType: vectorType elementType left: leftResult right: rightResult name: nil
+	].	
 ]
 
 { #category : #'vector intrinsics' }
@@ -1655,6 +1655,21 @@ SLVMLLVMFunctionCodeGenerator >> vector: sourceVector insertElement: element at:
 		element: element;
 		elementIndex: (self context int32Ty constant: destIndex);
 		yourself)
+]
+
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> vector: firstVector shuffleOrExtractWith: secondVector mask: shufleMask [
+	shufleMask size = 1 ifTrue: [
+		| index |
+		index := shufleMask first.
+		index < firstVector type elements ifTrue: [
+			^ self vector: firstVector extractElementAt: index
+		] ifFalse: [ 
+			^ self vector: secondVector extractElementAt: index - firstVector type elements
+		].
+	].
+
+	^ self vector: firstVector shuffleWith: secondVector mask: shufleMask
 ]
 
 { #category : #'instruction building' }
