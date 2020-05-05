@@ -729,6 +729,16 @@ SLVMLLVMFunctionCodeGenerator >> generateMatrix: transposedMatrixType byTranspos
 	^ result 
 ]
 
+{ #category : #'matrix intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateMatrixAll: vector [
+	^ self generateMatrixFold: (self translateValue: vector) with: #bitand
+]
+
+{ #category : #'matrix intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateMatrixAny: vector [
+	^ self generateMatrixFold: (self translateValue: vector) with: #bitor
+]
+
 { #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateMatrixBinaryOperation: instruction [
 	| leftMatrix rightMatrix resultType result columnType leftColumn rightColumn resultColumn |
@@ -751,6 +761,24 @@ SLVMLLVMFunctionCodeGenerator >> generateMatrixBinaryOperation: instruction [
 		result := self aggregate: result insertValue: resultColumn at: i -1.
 	].
 
+	^ result
+]
+
+{ #category : #'linear algebra' }
+SLVMLLVMFunctionCodeGenerator >> generateMatrixFold: matrix with: operation [
+	| matrixType result |
+	matrixType := matrix type.
+	self assert: matrixType isStructTy.
+	result := nil.
+	0 to: matrixType elements size - 1 do: [:columnIndex |
+		| column columnFold |
+		column := self aggregate: matrix extractValueAt: columnIndex.
+		columnFold := self generateVectorFold: column with: operation.
+		result := result
+			ifNil: [ columnFold ]
+			ifNotNil: [ self generateScalarVectorBinaryOperation: operation resultType: columnFold type left: result right: columnFold name: nil ]
+	].
+		
 	^ result
 ]
 

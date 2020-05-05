@@ -145,10 +145,14 @@ SLVMLLVMBuiltInFunctionGenerator class >> initialize [
 { #category : #initialization }
 SLVMLLVMBuiltInFunctionGenerator class >> matrixBuiltIn [
 	<builtInFunctions>
-	self addBuiltIn: #'matrix.transpose' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
-		functionCodeGenerator generateMatrix: builtInFunction functionType returnType byTransposing: callInstruction arguments first
-	]
-	
+	self
+		addBuiltIn: #'matrix.all' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateMatrixAll: callInstruction arguments first
+		];
+		addBuiltIn: #'matrix.any' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateMatrixAny: callInstruction arguments first
+		]
+		yourself
 ]
 
 { #category : #initialization }

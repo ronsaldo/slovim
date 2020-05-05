@@ -1155,6 +1155,16 @@ SLVMBuilder >> matrixAdd: left with: right name: name [
 	]
 ]
 
+{ #category : #intrinsics }
+SLVMBuilder >> matrixAllIntrinsicFor: aType [
+	^ self builtInFunctionName: #'matrix.all' argumentTypes: { aType } returnType: SLVMType boolType
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> matrixAnyIntrinsicFor: aType [
+	^ self builtInFunctionName: #'matrix.any' argumentTypes: { aType } returnType: SLVMType boolType
+]
+
 { #category : #'matrix operations' }
 SLVMBuilder >> matrixDiv: left with: right [
 	^ self matrixDiv: left with: right name: nil
@@ -1171,6 +1181,22 @@ SLVMBuilder >> matrixDiv: left with: right name: name [
 			^ self udiv: left with: right name: name
 		]
 	]
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> matrixIsAllSet: matrix [
+	"Count leading zeros."
+	| intrinsic |
+	intrinsic := self matrixAllIntrinsicFor: matrix type.
+	^ self call: intrinsic arguments: { matrix }
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> matrixIsAnySet: matrix [
+	"Count leading zeros."
+	| intrinsic |
+	intrinsic := self matrixAnyIntrinsicFor: matrix type.
+	^ self call: intrinsic arguments: { matrix }
 ]
 
 { #category : #'matrix operations' }
@@ -1217,6 +1243,19 @@ SLVMBuilder >> matrixSub: left with: right name: name [
 	] ifFalse: [ 
 		^ self sub: left with: right name: name
 	]
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> matrixTranspose: matrix [
+	"Count leading zeros."
+	| intrinsic |
+	intrinsic := self matrixTransposeIntrinsicFor: matrix type.
+	^ self call: intrinsic arguments: { matrix }
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> matrixTransposeIntrinsicFor: aType [
+	^ self builtInFunctionName: #'matrix.transpose' argumentTypes: { aType } returnType: aType
 ]
 
 { #category : #arithmetic }
@@ -1758,13 +1797,11 @@ SLVMBuilder >> vectorAdd: left with: right name: name [
 
 { #category : #intrinsics }
 SLVMBuilder >> vectorAllIntrinsicFor: aType [
-	"Count population"
 	^ self builtInFunctionName: #'vector.all' argumentTypes: { aType } returnType: SLVMType boolType
 ]
 
 { #category : #intrinsics }
 SLVMBuilder >> vectorAnyIntrinsicFor: aType [
-	"Count population"
 	^ self builtInFunctionName: #'vector.any' argumentTypes: { aType } returnType: SLVMType boolType
 ]
 
