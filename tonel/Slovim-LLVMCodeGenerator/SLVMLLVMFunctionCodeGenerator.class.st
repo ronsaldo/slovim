@@ -2474,7 +2474,7 @@ SLVMLLVMFunctionCodeGenerator >> visitUnaryLogicalNot: instruction [
 SLVMLLVMFunctionCodeGenerator >> visitUnaryNegation: instruction [
 	| resultType |
 	resultType := self translateType: instruction type.
-	self assert: resultType isIntegerTy.
+	self assert: (resultType isIntegerTy or: [resultType isVectorTy and: [resultType elementType isIntegerTy]]).
 	^ self addInstruction: (LLVMBinaryOperator new
 			name: (self convertName: instruction name);
 			operation: #sub;
@@ -2488,7 +2488,7 @@ SLVMLLVMFunctionCodeGenerator >> visitUnaryNegation: instruction [
 SLVMLLVMFunctionCodeGenerator >> visitUnaryNot: instruction [
 	| resultType |
 	resultType := self translateType: instruction type.
-	self assert: resultType isIntegerTy.
+	self assert: (resultType isIntegerTy or: [resultType isVectorTy and: [resultType elementType isIntegerTy]]).
 	^ self addInstruction: (LLVMBinaryOperator new
 			name: (self convertName: instruction name);
 			operation: #xor;
