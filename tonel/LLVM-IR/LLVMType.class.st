@@ -200,6 +200,11 @@ LLVMType >> totalElementCount [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMType >> undefinedConstant [
+	^ LLVMUndefValue new type: self; yourself
+]
+
+{ #category : #'as yet unclassified' }
 LLVMType >> validateNonRecursion [
 	| visitedSet |
 	isNotRecursive ifNotNil: [ ^ self ].

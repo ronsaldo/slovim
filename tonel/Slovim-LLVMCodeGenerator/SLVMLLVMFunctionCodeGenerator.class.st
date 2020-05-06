@@ -1453,6 +1453,22 @@ SLVMLLVMFunctionCodeGenerator >> mapContainerType: containerType index: index [
 	^ {containerType . index}
 ]
 
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> mapMatrixColumns: sourceMatrix into: targetType with: aBlock [
+	| targetColumnType resultType result |
+	targetColumnType := self translateType: targetType columnType.
+	resultType := self translateType: targetType.
+	result := resultType undefinedConstant.
+	
+	(self extractMatrixColumns: sourceMatrix) doWithIndex: [ :sourceColumn :columnIndex |
+		| targetColumn |
+		targetColumn := aBlock value: sourceColumn value: targetColumnType.
+		result := self aggregate: result insertValue: targetColumn at: columnIndex - 1
+	].
+
+	^ result
+]
+
 { #category : #accessing }
 SLVMLLVMFunctionCodeGenerator >> moduleTranslator [
 	^ moduleTranslator
@@ -1715,6 +1731,12 @@ SLVMLLVMFunctionCodeGenerator >> visitBinaryOperation: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitBitCast: instruction [
+	instruction type isMatrixType ifTrue: [
+		^ self mapMatrixColumns: instruction source into: instruction type with: [ :column :destColumnType |
+			self bitCast: column target: destColumnType name: nil
+		]
+	].
+
 	^ self bitCast: (self translateValue: instruction source)
 		target: (self translateType: instruction type)
 		name: (self convertName: instruction name)
@@ -1967,6 +1989,16 @@ SLVMLLVMFunctionCodeGenerator >> visitFloatToDynamicObjectCast: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitFloatToIntCast: instruction [
+	instruction type isMatrixType ifTrue: [
+		^ self mapMatrixColumns: instruction source into: instruction type with: [ :column :destColumnType |
+			instruction type isSigned ifTrue: [
+				self fp: column toSI: destColumnType name: nil
+			] ifFalse: [
+				self fp: column toUI: destColumnType name: nil
+			]
+		]
+	].
+
 	instruction type isSigned ifTrue: [ 
 		^ self fp: (self translateValue: instruction source) toSI: (self translateType: instruction type) name: (self convertName: instruction name)
 	].
@@ -1975,6 +2007,12 @@ SLVMLLVMFunctionCodeGenerator >> visitFloatToIntCast: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitFloatingPointCast: instruction [
+	instruction type isMatrixType ifTrue: [
+		^ self mapMatrixColumns: instruction source into: instruction type with: [ :column :destColumnType |
+			self castFloat: column into: destColumnType name: nil
+		]
+	].
+
 	^ self castFloat: (self translateValue: instruction source)
 		into: (self translateType: instruction type)
 		name: (self convertName: instruction name)
@@ -2180,6 +2218,16 @@ SLVMLLVMFunctionCodeGenerator >> visitIntToDynamicObjectCast: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitIntToFloatCast: instruction [
+	instruction type isMatrixType ifTrue: [
+		^ self mapMatrixColumns: instruction source into: instruction type with: [ :column :destColumnType |
+			instruction source type isSigned ifTrue: [
+				self si: column toFP: destColumnType name: nil
+			] ifFalse: [
+				self ui: column toFP: destColumnType name: nil
+			]
+		]
+	].
+
 	instruction source type isSigned ifTrue: [
 		^ self si: (self translateValue: instruction source) toFP: (self translateType: instruction type) name: (self convertName: instruction name)
 	].
@@ -2235,16 +2283,15 @@ SLVMLLVMFunctionCodeGenerator >> visitLoad: instruction [
 SLVMLLVMFunctionCodeGenerator >> visitMakeMatrix: instruction [
 	| matrixType resultInstruction destIndex |
 	matrixType := self translateType: instruction type.
-	resultInstruction := matrixType zeroConstant.
+	resultInstruction := matrixType undefinedConstant.
 	destIndex := 0.
-	^ Array streamContents: [ :out |
-		instruction parameters do: [ :param |
-			resultInstruction := self aggregate: resultInstruction
-					insertValue: (self translateValue: param) at: destIndex.
-				out nextPut: resultInstruction.
-				destIndex := destIndex + 1.
-		]
-	]
+	instruction parameters do: [ :param |
+		resultInstruction := self aggregate: resultInstruction
+			insertValue: (self translateValue: param) at: destIndex.
+		destIndex := destIndex + 1.
+	].
+
+	^ resultInstruction
 	
 ]
 
@@ -2252,37 +2299,35 @@ SLVMLLVMFunctionCodeGenerator >> visitMakeMatrix: instruction [
 SLVMLLVMFunctionCodeGenerator >> visitMakeVector: instruction [
 	| vectorType resultInstruction destIndex |
 	vectorType := self translateType: instruction type.
-	resultInstruction := vectorType zeroConstant.
+	resultInstruction := vectorType undefinedConstant.
 	destIndex := 0.
-	^ Array streamContents: [ :out |
-		instruction parameters do: [ :param |
-			param type isVectorType ifTrue: [
-				| vectorParam |
-				vectorParam := self translateValue: param.
-				"Expand the vector param to the target size."
-				(param type elements < vectorType elements) ifTrue: [ 
-					vectorParam := self vector: vectorParam shuffleWith: vectorParam
-						mask: ((0 to: vectorType elements - 1) collect: [ :mi | mi min: param type elements - 1 ])
-				].
+	instruction parameters do: [ :param |
+		param type isVectorType ifTrue: [
+			| vectorParam |
+			vectorParam := self translateValue: param.
+			"Expand the vector param to the target size."
+			(param type elements < vectorType elements) ifTrue: [ 
+				vectorParam := self vector: vectorParam shuffleWith: vectorParam
+					mask: ((0 to: vectorType elements - 1) collect: [ :mi | mi min: param type elements - 1 ])
+			].
 				
-				resultInstruction := self vector: resultInstruction shuffleWith: vectorParam
-						mask: ((0 to: vectorType elements - 1) collect: [:mi |
-							mi < destIndex ifTrue: [
-								mi
-							] ifFalse: [
-								mi - destIndex +  vectorType elements
-							]
-						]).
-				out nextPut: resultInstruction.
-				destIndex := destIndex + param type elements
-			] ifFalse: [
-				resultInstruction := self vector: resultInstruction
-					insertElement: (self translateValue: param) at: destIndex.
-				out nextPut: resultInstruction.
-				destIndex := destIndex + 1.
-			]
+			resultInstruction := self vector: resultInstruction shuffleWith: vectorParam
+					mask: ((0 to: vectorType elements - 1) collect: [:mi |
+						mi < destIndex ifTrue: [
+							mi
+						] ifFalse: [
+							mi - destIndex +  vectorType elements
+						]
+					]).
+			destIndex := destIndex + param type elements
+		] ifFalse: [
+			resultInstruction := self vector: resultInstruction
+				insertElement: (self translateValue: param) at: destIndex.
+			destIndex := destIndex + 1.
 		]
 	].
+	
+	^ resultInstruction
 ]
 
 { #category : #visiting }
@@ -2412,6 +2457,12 @@ SLVMLLVMFunctionCodeGenerator >> visitShuffleVectors: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitSignExtend: instruction [
+	instruction type isMatrixType ifTrue: [
+		^ self mapMatrixColumns: instruction source into: instruction type with: [ :column :destColumnType |
+			self signExtend: column target: destColumnType name: nil
+		]
+	].
+
 	^ self signExtend: (self translateValue: instruction source)
 		target: (self translateType: instruction type)
 		name: (self convertName: instruction name)
@@ -2523,6 +2574,12 @@ SLVMLLVMFunctionCodeGenerator >> visitUnreachable: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitZeroExtend: instruction [
+	instruction type isMatrixType ifTrue: [
+		^ self mapMatrixColumns: instruction source into: instruction type with: [ :column :destColumnType |
+			self zeroExtend: column target: destColumnType name: nil
+		]
+	].
+
 	^ self zeroExtend: (self translateValue: instruction source)
 		target: (self translateType: instruction type)
 		name: (self convertName: instruction name)
