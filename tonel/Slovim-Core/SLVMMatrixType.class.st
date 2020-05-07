@@ -182,6 +182,12 @@ SLVMMatrixType >> size: anObject [
 	size := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMMatrixType >> transposed [
+	rows = columns ifTrue: [ ^ self ].
+	^ self class baseType: baseType rows: columns columns: rows
+]
+
 { #category : #accessing }
 SLVMMatrixType >> typeOfMemberAt: index [
 	^ self memberAt: index

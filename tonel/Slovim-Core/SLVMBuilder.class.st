@@ -1255,7 +1255,7 @@ SLVMBuilder >> matrixTranspose: matrix [
 
 { #category : #intrinsics }
 SLVMBuilder >> matrixTransposeIntrinsicFor: aType [
-	^ self builtInFunctionName: #'matrix.transpose' argumentTypes: { aType } returnType: aType
+	^ self builtInFunctionName: #'matrix.transpose' argumentTypes: { aType } returnType: aType transposed
 ]
 
 { #category : #arithmetic }
