@@ -344,6 +344,79 @@ SLVMLLVMFunctionCodeGenerator >> compare: pointer with: comparisonValue andSwapW
 
 ]
 
+{ #category : #'linear algebra' }
+SLVMLLVMFunctionCodeGenerator >> compute4x4Row: row column: column cofactorFor: columnType columns: columns [
+	| minor |
+	minor := self compute4x4Row: row column: column minorFor: columnType columns: columns.
+	^ (row + column) odd ifTrue: [
+		self generateScalarVectorBinaryOperation: #fsub resultType: minor type left: minor type zeroConstant right: minor name: nil
+	] ifFalse: [
+		minor
+	]
+]
+
+{ #category : #'linear algebra' }
+SLVMLLVMFunctionCodeGenerator >> compute4x4Row: row column: column determinantCofactorFor: columnType columns: columns [
+	| minor |
+	minor := self compute4x4Row: row column: column determinantMinorFor: columnType columns: columns.
+	^ (row + column) odd ifTrue: [
+		self generateScalarVectorBinaryOperation: #fsub resultType: minor type left: minor type zeroConstant right: minor name: nil
+	] ifFalse: [
+		minor
+	]
+]
+
+{ #category : #'linear algebra' }
+SLVMLLVMFunctionCodeGenerator >> compute4x4Row: row column: column determinantMinorFor: columnType columns: columns [
+	| minorFactor minor |
+	minorFactor := self vector: (columns at: column) extractElementAt: row - 1.
+	minor := self compute4x4Row: row column: column minorFor: columnType columns: columns.
+	minor := self generateScalarVectorBinaryOperation: #fmul resultType: minorFactor type left: minorFactor right: minor name: nil.
+	^ minor
+
+]
+
+{ #category : #'linear algebra' }
+SLVMLLVMFunctionCodeGenerator >> compute4x4Row: row column: column minorFor: columnType columns: columns [
+	| shuffleMask minorColumns determinant |
+	shuffleMask := ((0 to: 3) reject: [ :i | i = (row - 1) ]) asArray.
+	minorColumns := ((columns first: column - 1) , (columns allButFirst: column)) collect: [ :each | self vector: each shuffleWith: each mask: shuffleMask ].
+	determinant := self computeDeterminant3x3ColumnType: (SLVMVectorType baseType: columnType baseType elements: columnType elements - 1) columns: minorColumns.
+	^ determinant
+
+]
+
+{ #category : #'linear algebra' }
+SLVMLLVMFunctionCodeGenerator >> computeDeterminant3x3ColumnType: columnType columns: columns [
+	"c1 dot: (c2 cross: c3)"
+	| c2cc3 |
+	c2cc3 := self generateVector: columnType cross: columns second with: columns third.
+	^ self generateDot: columns first with: c2cc3 mul: #fmul add: #fadd
+
+]
+
+{ #category : #'linear algebra' }
+SLVMLLVMFunctionCodeGenerator >> constructMatrix: matrixType components: components [
+	| result |
+	result := matrixType undefinedConstant.
+	components doWithIndex: [ :comp :index |
+		result := self aggregate: result insertValue: comp at: index - 1
+	].
+
+	^ result
+]
+
+{ #category : #'linear algebra' }
+SLVMLLVMFunctionCodeGenerator >> constructVector: vectorType components: components [
+	| result |
+	result := vectorType undefinedConstant.
+	components doWithIndex: [ :comp :index |
+		result := self vector: result insertElement: comp at: index - 1
+	].
+
+	^ result
+]
+
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> constructVectorOfType: resultVectorType byLoading: sourceIndices from: sourceVectors [
 	^ self constructVectorOfType: resultVectorType byLoading: sourceIndices withResultSize: sourceVectors size from: sourceVectors
@@ -531,22 +604,9 @@ SLVMLLVMFunctionCodeGenerator >> extractMatrixColumns: sourceMatrixValue [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> extractMatrixRows: sourceMatrixValue [
-	| sourceValue sourceColumnType columns rows sourceColumns sourceIndices rowType |
-	sourceValue := self translateValue: sourceMatrixValue.
-	sourceColumnType := self translateType: sourceMatrixValue type columnType.
-	rowType := self translateType: sourceMatrixValue type rowType.
-	columns := sourceMatrixValue type columns.
-	rows := sourceMatrixValue type rows.
-
+	| sourceColumns  |
 	sourceColumns := self extractMatrixColumns: sourceMatrixValue.
-	
-	^ (1 to: rows) collect: [ :rowIndex |
-		sourceIndices := (1 to: columns) collect: [ :columnIndex |
-			{ columnIndex - 1 . rowIndex - 1 }
-		].
-
-		self constructVectorOfType: rowType byLoading: sourceIndices from: sourceColumns
-	].
+	^ self transposeMatrix: sourceMatrixValue type columns: sourceColumns
 ]
 
 { #category : #'instruction building' }
@@ -765,6 +825,44 @@ SLVMLLVMFunctionCodeGenerator >> generateMatrixBinaryOperation: instruction [
 ]
 
 { #category : #'linear algebra' }
+SLVMLLVMFunctionCodeGenerator >> generateMatrixDeterminant: matrix [
+	| matrixType columns |
+	matrixType := matrix type.
+	self assert: matrixType rows = matrixType columns.
+	columns := self extractMatrixColumns: matrix.
+	^ self generateMatrixDeterminant: matrixType columns: columns
+]
+
+{ #category : #'linear algebra' }
+SLVMLLVMFunctionCodeGenerator >> generateMatrixDeterminant: matrixType columns: columns [
+	| columnType result |
+	self assert: matrixType rows = matrixType columns.
+	columnType := matrixType columnType.
+
+	"2x2"	
+	matrixType rows = 2 ifTrue: [ 
+		^ self generateVector: columnType cross2D: columns first with: columns second
+	].
+
+	"3x3"	
+	matrixType rows = 3 ifTrue: [
+		^ self computeDeterminant3x3ColumnType: columnType columns: columns
+	].
+
+	self assert: matrixType rows = 4.
+	result := nil.
+	1 to: 4 do: [ :columnIndex |
+		| cofactor |
+		cofactor := self compute4x4Row: 1 column: columnIndex determinantCofactorFor: columnType columns: columns.
+		result := result
+			ifNil: [ cofactor ]
+			ifNotNil: [ self generateScalarVectorBinaryOperation: #fadd resultType: cofactor type left: result right: cofactor name: nil ].
+	].
+	
+	^ result
+]
+
+{ #category : #'linear algebra' }
 SLVMLLVMFunctionCodeGenerator >> generateMatrixFold: matrix with: operation [
 	| matrixType result |
 	matrixType := matrix type.
@@ -780,6 +878,57 @@ SLVMLLVMFunctionCodeGenerator >> generateMatrixFold: matrix with: operation [
 	].
 		
 	^ result
+]
+
+{ #category : #'linear algebra' }
+SLVMLLVMFunctionCodeGenerator >> generateMatrixInverse: matrix [
+	| matrixType columns determinant reciprocal negatedReciprocal firstColumn secondColumn columnType reciprocalVector firstRow secondRow thirdRow adjugateColumns slvmColumnType |
+	matrixType := matrix type.
+	self assert: matrixType rows = matrixType columns.
+	columns := self extractMatrixColumns: matrix.
+	determinant := self generateMatrixDeterminant: matrixType columns: columns.
+	reciprocal := self generateScalarVectorBinaryOperation: #fdiv resultType: determinant type left: determinant type oneConstant right: determinant name: nil.
+	columnType := columns first type.
+	
+	matrixType rows = 2 ifTrue: [
+		negatedReciprocal := self generateScalarVectorBinaryOperation: #fsub resultType: reciprocal type left: reciprocal type zeroConstant right: reciprocal name: nil.
+		firstColumn := self vector: columns first shuffleWith: columns second mask: #(3 1).
+		firstColumn := self generateScalarVectorBinaryOperation: #fmul resultType: columnType left: firstColumn
+			right: (self constructVector: columnType components: {reciprocal . negatedReciprocal}) name: nil.
+			
+		secondColumn := self vector: columns first shuffleWith: columns second mask: #(2 0).
+		secondColumn := self generateScalarVectorBinaryOperation: #fmul resultType: columnType left: secondColumn
+			right: (self constructVector: columnType components: {negatedReciprocal . reciprocal}) name: nil.
+		^ self constructMatrix: (self translateType: matrixType) components: { firstColumn . secondColumn }
+	].
+
+	slvmColumnType := matrixType columnType.
+	matrixType rows = 3 ifTrue: [
+		reciprocalVector := self constructVector: columnType components: { reciprocal . reciprocal . reciprocal }.
+		firstRow := self generateVector: slvmColumnType cross: columns second with: columns third.
+		firstRow := self generateScalarVectorBinaryOperation: #fmul resultType: columnType left: firstRow right: reciprocalVector name: nil.
+
+		secondRow := self generateVector: slvmColumnType cross: columns third with: columns first.
+		secondRow := self generateScalarVectorBinaryOperation: #fmul resultType: columnType left: secondRow right: reciprocalVector name: nil.
+
+		thirdRow := self generateVector: slvmColumnType cross: columns first with: columns second.
+		thirdRow := self generateScalarVectorBinaryOperation: #fmul resultType: columnType left: thirdRow right: reciprocalVector name: nil.
+
+		^ self constructMatrix: (self translateType: matrixType)
+			components: (self transposeMatrix: matrixType columns: {firstRow  . secondRow . thirdRow })
+	].
+
+	self assert: matrixType rows = 4.
+	reciprocalVector := self constructVector: columnType components: { reciprocal . reciprocal . reciprocal . reciprocal }.
+	adjugateColumns := (1 to: 4) collect: [ :columnIndex |
+		| cofactorColumn |
+		cofactorColumn := self constructVector: columnType components: ((1 to: 4) collect: [ :rowIndex |
+				self compute4x4Row: columnIndex column: rowIndex cofactorFor: slvmColumnType columns: columns
+			]).
+		self generateScalarVectorBinaryOperation: #fmul resultType: columnType left: reciprocalVector right: cofactorColumn name: nil
+	].
+
+	^ self constructMatrix: (self translateType: matrixType) components: adjugateColumns
 ]
 
 { #category : #'linear algebra' }
@@ -1024,21 +1173,48 @@ SLVMLLVMFunctionCodeGenerator >> generateStepEdge: edge value: argument [
 ]
 
 { #category : #'vector intrinsics' }
-SLVMLLVMFunctionCodeGenerator >> generateVector: vectorType cross: leftVector with: rightVector [
+SLVMLLVMFunctionCodeGenerator >> generateVector: vectorType cross2D: leftVectorValue with: rightVectorValue [
+	"
+	https://en.wikipedia.org/wiki/Cross_product#Computing_the_cross_product [ 2018-07-04 23:08 ]
+	s3 = u1v2 - u2v1
+	"
+	| multiplyOperation subtractionOperation a b m sa sb |
+	self assert: vectorType elements = 2.
+	
+	vectorType isFloatVectorType ifTrue: [ 
+		multiplyOperation := #fmul.
+		subtractionOperation := #fsub.
+	] ifFalse: [ 
+		self assert: vectorType isIntegerVectorType.
+		multiplyOperation := #mul.
+		subtractionOperation := #sub.
+	].
+
+	"Multiply"
+	a := self vector: leftVectorValue shuffleWith: rightVectorValue mask: #(0 2).
+	b := self vector: leftVectorValue shuffleWith: rightVectorValue mask: #(3 1).
+
+	m := self generateScalarVectorBinaryOperation: multiplyOperation resultType: a type left: a right: b name: nil.
+	sa := self vector: m extractElementAt: 0.
+	sb := self vector: m extractElementAt: 1.
+		
+	"Subtraction"
+	^ self generateScalarVectorBinaryOperation: subtractionOperation resultType: sa type left: sa right: sb name: nil
+	
+]
+
+{ #category : #'vector intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateVector: vectorType cross: leftVectorValue with: rightVectorValue [
 	"
 	https://en.wikipedia.org/wiki/Cross_product#Computing_the_cross_product [ 2018-07-04 23:08 ]
 	s1 = u2v3 - u3v2
 	s2 = u3v1 - u1v3
 	s3 = u1v2 - u2v1
 	"
-	| leftVectorValue rightVectorValue multiplyOperation subtractionOperation lu lv lm ru rv rm result resultType |
-	self assert: leftVector type = rightVector type.
-	self assert: leftVector type = vectorType.
+	| multiplyOperation subtractionOperation lu lv lm ru rv rm resultType |
 	self assert: vectorType elements = 3.
 	
 	resultType := self translateType: vectorType.
-	leftVectorValue := self translateValue: leftVector.
-	rightVectorValue := self translateValue: rightVector.
 	
 	vectorType isFloatVectorType ifTrue: [ 
 		multiplyOperation := #fmul.
@@ -1064,6 +1240,24 @@ SLVMLLVMFunctionCodeGenerator >> generateVector: vectorType cross: leftVector wi
 	"Subtraction"
 	^ self generateScalarVectorBinaryOperation: subtractionOperation resultType: resultType left: lm right: rm name: nil
 	
+]
+
+{ #category : #'vector intrinsics' }
+SLVMLLVMFunctionCodeGenerator >> generateVector: vectorType intrinsicCross: leftVector with: rightVector [
+	"
+	https://en.wikipedia.org/wiki/Cross_product#Computing_the_cross_product [ 2018-07-04 23:08 ]
+	s1 = u2v3 - u3v2
+	s2 = u3v1 - u1v3
+	s3 = u1v2 - u2v1
+	"
+	| leftVectorValue rightVectorValue |
+	self assert: leftVector type = rightVector type.
+	self assert: leftVector type = vectorType.
+	self assert: vectorType elements = 3.
+	
+	leftVectorValue := self translateValue: leftVector.
+	rightVectorValue := self translateValue: rightVector.
+	^ self generateVector: vectorType cross: leftVectorValue with: rightVectorValue
 ]
 
 { #category : #'code generation' }
@@ -1634,6 +1828,23 @@ SLVMLLVMFunctionCodeGenerator >> translateValue: aValue [
 	valueDictionary at: aValue ifPresent: [ :existent | ^ existent ].
 	aValue isFunctionDynamicLiteral ifTrue: [ ^ self translateConstantDynamicLiteral: aValue ].
 	^ moduleTranslator translateValue: aValue
+]
+
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> transposeMatrix: matrixType columns: sourceColumns [
+	| rowType columns rows |
+	rowType := self translateType: matrixType rowType.
+	columns := matrixType columns.
+	rows := matrixType rows.
+
+	^ (1 to: rows) collect: [ :rowIndex |
+		| sourceIndices |
+		sourceIndices := (1 to: columns) collect: [ :columnIndex |
+			{ columnIndex - 1 . rowIndex - 1 }
+		].
+
+		self constructVectorOfType: rowType byLoading: sourceIndices from: sourceColumns
+	].
 ]
 
 { #category : #'instruction building' }

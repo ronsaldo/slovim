@@ -80,6 +80,8 @@ SLVMConstantBuiltInFunction class >> initialize [
 		'matrix.transpose'
 		'matrix.any'
 		'matrix.all'
+		'matrix.determinant'
+		'matrix.inverse'
 		
 		"Texture"
 		'texture.query.size'

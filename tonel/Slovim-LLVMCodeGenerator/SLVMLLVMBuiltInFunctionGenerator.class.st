@@ -154,7 +154,14 @@ SLVMLLVMBuiltInFunctionGenerator class >> matrixBuiltIn [
 		];
 		addBuiltIn: #'matrix.transpose' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
 			functionCodeGenerator generateMatrix: callInstruction type byTransposing: callInstruction arguments first
-		]
+		];
+		addBuiltIn: #'matrix.determinant' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateMatrixDeterminant: callInstruction arguments first
+		];
+		addBuiltIn: #'matrix.inverse' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateMatrixInverse: callInstruction arguments first
+		];
+
 		yourself
 ]
 
@@ -200,7 +207,7 @@ SLVMLLVMBuiltInFunctionGenerator class >> vectorBuiltIn [
 			functionCodeGenerator generateVectorNormalize: callInstruction arguments first
 		];
 		addBuiltIn: #'vector.cross' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
-			functionCodeGenerator generateVector: builtInFunction functionType returnType cross: callInstruction arguments first with: callInstruction arguments second
+			functionCodeGenerator generateVector: builtInFunction functionType returnType intrinsicCross: callInstruction arguments first with: callInstruction arguments second
 		];
 		yourself
 ]
