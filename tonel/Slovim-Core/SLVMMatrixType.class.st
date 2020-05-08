@@ -102,6 +102,11 @@ SLVMMatrixType >> decodeFromFullSExpression: encodedType context: decodingContex
 
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMMatrixType >> defaultFullConstant [
+	^ SLVMConstant matrix: self columns: ((1 to: columns) collect: [:each | self columnType defaultFullConstant])
+]
+
 { #category : #comparing }
 SLVMMatrixType >> internalHash [
 	^ (((self class hash bitXor: baseType hash) bitXor: rows hash) bitXor: columns hash) bitXor: alignment hash
