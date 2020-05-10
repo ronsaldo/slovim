@@ -22,6 +22,11 @@ SLVMConstantZeroInitializer >> asSExpression [
 	^ { self mnemonic . type asSExpression }
 ]
 
+{ #category : #printing }
+SLVMConstantZeroInitializer >> printOn: aStream [
+	aStream nextPutAll: 'zeroInitialize '; print: type
+]
+
 { #category : #accessing }
 SLVMConstantZeroInitializer >> type [
 	^ type
