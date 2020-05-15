@@ -25,6 +25,11 @@ SLVMStringConstantValue >> asBlob [
 	]
 ]
 
+{ #category : #printing }
+SLVMStringConstantValue >> asSExpression [
+	^ { self mnemonic . type asSExpression . hasExtraNullCharacter . data }
+]
+
 { #category : #accessing }
 SLVMStringConstantValue >> hasExtraNullCharacter [
 	^ hasExtraNullCharacter

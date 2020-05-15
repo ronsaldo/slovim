@@ -25,7 +25,7 @@ SLVMConstantArrayBlob >> asBlob [
 
 { #category : #printing }
 SLVMConstantArrayBlob >> asSExpression [
-	^ { self mnemonic . self asBlob }
+	^ { self mnemonic . type asSExpression . self asBlob }
 ]
 
 { #category : #accessing }
