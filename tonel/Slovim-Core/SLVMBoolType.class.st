@@ -50,6 +50,16 @@ SLVMBoolType >> isBooleanType [
 	^ true
 ]
 
+{ #category : #testing }
+SLVMBoolType >> isSigned [
+	^ false
+]
+
+{ #category : #testing }
+SLVMBoolType >> isUnsigned [
+	^ true
+]
+
 { #category : #accessing }
 SLVMBoolType >> registerClass [
 	^ #integer
