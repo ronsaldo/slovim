@@ -136,7 +136,7 @@ SLVMBinaryOperation >> computeTypeFor: anOperation left: leftOperand right: righ
 	leftType ~= rightType ifTrue: [ self error: 'Unsupported binary operation whose operands have a different type.' ].
 	
 	((operationType == #integer) or: [ operationType == #integerComp ]) ifTrue: [ 
-		(leftType isIntegerType or: [leftType isIntegerVectorType or: [leftType isIntegerMatrixType or: [leftType isBooleanType ] ] ]) ifFalse: [
+		(leftType isIntegerType or: [leftType isIntegerVectorType or: [leftType isIntegerMatrixType or: [leftType isBooleanType or: [leftType isBooleanVectorType or: [leftType isBooleanMatrixType]]] ] ]) ifFalse: [
 			(operationType == #integerComp and: [ leftType isPointerType ]) ifFalse: [ 
 				self error: 'Binary operation ' , anOperation , ' requires integer operands.'
 			]

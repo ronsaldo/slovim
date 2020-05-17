@@ -102,6 +102,11 @@ SLVMVectorType >> internalHash [
 ]
 
 { #category : #testing }
+SLVMVectorType >> isBooleanVectorType [
+	^ baseType isBooleanType
+]
+
+{ #category : #testing }
 SLVMVectorType >> isFloatVectorType [
 	^ baseType isFloatType
 ]

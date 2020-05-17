@@ -554,7 +554,17 @@ SLVMType >> isArrayType [
 ]
 
 { #category : #testing }
+SLVMType >> isBooleanMatrixType [
+	^ false
+]
+
+{ #category : #testing }
 SLVMType >> isBooleanType [
+	^ false
+]
+
+{ #category : #testing }
+SLVMType >> isBooleanVectorType [
 	^ false
 ]
 

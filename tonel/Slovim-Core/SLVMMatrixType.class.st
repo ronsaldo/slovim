@@ -113,6 +113,11 @@ SLVMMatrixType >> internalHash [
 ]
 
 { #category : #testing }
+SLVMMatrixType >> isBooleanMatrixType [
+	^ baseType isBooleanType
+]
+
+{ #category : #testing }
 SLVMMatrixType >> isColumnMajor [
 	^ true
 ]
