@@ -2,10 +2,16 @@ Class {
 	#name : #SLVMSampledTextureType,
 	#superclass : #SLVMOpaqueType,
 	#instVars : [
-		'texture'
+		'texture',
+		'fullSExpression'
 	],
 	#category : #'Slovim-Core-Type'
 }
+
+{ #category : #printing }
+SLVMSampledTextureType class >> mnemonic [
+	^ #sampledTexture
+]
 
 { #category : #comparing }
 SLVMSampledTextureType >> = other [
@@ -15,6 +21,11 @@ SLVMSampledTextureType >> = other [
 { #category : #visitor }
 SLVMSampledTextureType >> accept: aVisitor [
 	^ aVisitor visitSampledTextureType: self
+]
+
+{ #category : #converting }
+SLVMSampledTextureType >> asFullSExpression [
+	^ fullSExpression ifNil: [ fullSExpression := { self mnemonic . texture asSExpression } ]
 ]
 
 { #category : #comparing }
