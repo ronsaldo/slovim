@@ -188,6 +188,31 @@ SLVMLLVMBuiltInFunctionGenerator class >> shaderBarrierBuiltIn [
 ]
 
 { #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> texture [
+	<builtInFunctions>
+	self
+		addBuiltIn: #'texture.query.size' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateTexture: callInstruction arguments first intrinsic: builtInFunction callWith: callInstruction arguments allButFirst
+		];
+		addBuiltIn: #'texture.query.lod.size' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateTexture: callInstruction arguments first intrinsic: builtInFunction callWith: callInstruction arguments allButFirst
+		];
+		addBuiltIn: #'texture.query.lod.count' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateTexture: callInstruction arguments first intrinsic: builtInFunction callWith: callInstruction arguments allButFirst
+		];
+		addBuiltIn: #'texture.image.read' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateTexture: callInstruction arguments first intrinsic: builtInFunction callWith: callInstruction arguments allButFirst
+		];
+		addBuiltIn: #'texture.image.write' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateTexture: callInstruction arguments first intrinsic: builtInFunction callWith: callInstruction arguments allButFirst
+		];
+		addBuiltIn: #'texture.image.fetch' inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
+			functionCodeGenerator generateTexture: callInstruction arguments first intrinsic: builtInFunction callWith: callInstruction arguments allButFirst
+		];
+		yourself
+]
+
+{ #category : #initialization }
 SLVMLLVMBuiltInFunctionGenerator class >> vectorBuiltIn [
 	<builtInFunctions>
 	self

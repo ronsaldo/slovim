@@ -37,6 +37,11 @@ LLVMInstruction >> initialize [
 	
 ]
 
+{ #category : #testing }
+LLVMInstruction >> isInstruction [
+	^ true
+]
+
 { #category : #printing }
 LLVMInstruction >> mnemonic [
 	self subclassResponsibility

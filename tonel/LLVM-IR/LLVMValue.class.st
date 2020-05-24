@@ -39,6 +39,11 @@ LLVMValue >> isFunction [
 	^ false
 ]
 
+{ #category : #testing }
+LLVMValue >> isInstruction [
+	^ false
+]
+
 { #category : #accessing }
 LLVMValue >> name [
 	^ name

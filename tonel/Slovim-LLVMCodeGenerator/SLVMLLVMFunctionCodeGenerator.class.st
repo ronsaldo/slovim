@@ -491,6 +491,7 @@ SLVMLLVMFunctionCodeGenerator >> convertCallingConvention: callingConvention [
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> convertDebugLocationFrom: slvmInstruction into: llvmInstruction [
 	functionDebugScope ifNil: [ ^ self ].
+	llvmInstruction isInstruction ifFalse: [ ^ self ].
 	(self convertDebugSourceLocation: slvmInstruction debugSourceLocation debugInformation: slvmInstruction debugInformation) ifNotNil: [ :convertedLocation |
 		llvmInstruction addDebugMetadata: convertedLocation
 	]
@@ -1170,6 +1171,15 @@ SLVMLLVMFunctionCodeGenerator >> generateStepEdge: edge value: argument [
 
 	comparisonResult := self fcmp: #ult left: argumentValue right: edgeValue  type: comparisonType name: nil.
 	^ self select: comparisonResult trueValue: resultType zeroConstant falseValue: resultType oneConstant name: nil
+]
+
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> generateTexture: texture intrinsic: intrinsic callWith: callArguments [
+	| resultType |
+	resultType := intrinsic functionType returnType.
+	resultType isVoidType ifTrue: [ ^ nil ].
+	
+	^ self translateValue: (SLVMConstant zeroInitializer: resultType)
 ]
 
 { #category : #'vector intrinsics' }
