@@ -491,6 +491,7 @@ SLVMLLVMFunctionCodeGenerator >> convertCallingConvention: callingConvention [
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> convertDebugLocationFrom: slvmInstruction into: llvmInstruction [
 	functionDebugScope ifNil: [ ^ self ].
+	llvmInstruction ifNil: [ ^ nil ].
 	llvmInstruction isInstruction ifFalse: [ ^ self ].
 	(self convertDebugSourceLocation: slvmInstruction debugSourceLocation debugInformation: slvmInstruction debugInformation) ifNotNil: [ :convertedLocation |
 		llvmInstruction addDebugMetadata: convertedLocation
