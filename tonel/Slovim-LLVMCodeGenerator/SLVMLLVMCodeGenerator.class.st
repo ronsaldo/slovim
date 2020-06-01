@@ -475,6 +475,9 @@ SLVMLLVMCodeGenerator >> llvmModule [
 			targetTriple: target targetTriple;
 			machineAttributes: target machineAttributes;
 			compilationPlugins: target compilationPlugins;
+			cpu: target cpu;
+			fpu: target fpu;
+			floatAbiName: target floatAbiName;
 			yourself
 		]
 ]

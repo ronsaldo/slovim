@@ -12,6 +12,9 @@ Class {
 		'moduleLevelAssemblySources',
 		'optimizationLevel',
 		'targetTriple',
+		'cpu',
+		'fpu',
+		'floatAbiName',
 		'machineAttributes',
 		'compilationPlugins',
 		'linkerProgram',
@@ -90,6 +93,36 @@ LLVMModule >> compilationPlugins: anObject [
 { #category : #accessing }
 LLVMModule >> context [
 	^ context
+]
+
+{ #category : #accessing }
+LLVMModule >> cpu [
+	^ cpu
+]
+
+{ #category : #accessing }
+LLVMModule >> cpu: anObject [
+	cpu := anObject
+]
+
+{ #category : #accessing }
+LLVMModule >> floatAbiName [
+	^ floatAbiName
+]
+
+{ #category : #accessing }
+LLVMModule >> floatAbiName: anObject [
+	floatAbiName := anObject
+]
+
+{ #category : #accessing }
+LLVMModule >> fpu [
+	^ fpu
+]
+
+{ #category : #accessing }
+LLVMModule >> fpu: anObject [
+	fpu := anObject
 ]
 
 { #category : #printing }
@@ -212,7 +245,14 @@ LLVMModule >> linkerProgram: aLinkerProgram [
 
 { #category : #writing }
 LLVMModule >> linkerTargetArguments [
-	(self linkerProgram includesSubstring: 'clang') ifTrue: [ ^ { '-target' . targetTriple } ].
+	(self linkerProgram includesSubstring: 'clang') ifTrue: [
+		| flags|
+		flags := { '-target' . targetTriple }.
+		cpu ifNotNil: [ flags := flags , { '-mcpu=' , cpu } ].
+		fpu ifNotNil: [ flags := flags , { '-mfpu=' , fpu } ].
+		floatAbiName ifNotNil: [ flags := flags , { '-mfloat-abi=' , floatAbiName } ].
+		^ flags	
+	].
 	^ #()
 ]
 
@@ -222,6 +262,9 @@ LLVMModule >> llcFlags [
 	flags := #().
 	optimizationLevel ifNotNil: [ flags := { '-O=' , optimizationLevel asString} ].
 	relocationModel ifNotNil: [ flags := flags , { '-relocation-model=' , relocationModel } ].
+	cpu ifNotNil: [ flags := flags , { '-mcpu=' , cpu } ].
+	fpu ifNotNil: [ flags := flags , { '-mattr=' , fpu } ].
+	floatAbiName ifNotNil: [ flags := flags , { '-float-abi=' , floatAbiName } ].
 	(machineAttributes isNotNil and: [machineAttributes isNotEmpty]) ifTrue: [ 
 		flags := flags , { '-mattr=' , machineAttributes }
 	].

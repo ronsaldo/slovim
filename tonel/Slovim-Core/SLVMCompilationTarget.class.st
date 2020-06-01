@@ -183,6 +183,21 @@ SLVMCompilationTarget >> intPointer [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isARM [
+	^ self isARM32 or: [ self isARM64 ]
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> isARM32 [
+	^ false
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> isARM64 [
+	^ false
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isBigEndian [
 	^ self isLittleEndian not
 ]
@@ -213,6 +228,11 @@ SLVMCompilationTarget >> isLittleEndian [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isMIPS [
+	^ false
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isNoOperatingSystem [
 	^ self operatingSystemName = #none
 ]
@@ -230,6 +250,21 @@ SLVMCompilationTarget >> isWebAssembly [
 { #category : #testing }
 SLVMCompilationTarget >> isWin32 [
 	^ self operatingSystemName = #win32
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> isX86 [
+	^ self isX86_32 or: [ self isX86_64 ]
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> isX86_32 [
+	^ false
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> isX86_64 [
+	^ false
 ]
 
 { #category : #'as yet unclassified' }

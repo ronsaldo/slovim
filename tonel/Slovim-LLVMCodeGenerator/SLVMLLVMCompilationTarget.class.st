@@ -7,7 +7,10 @@ Class {
 		'canonicalArchitecture',
 		'pointerSize',
 		'operatingSystemName',
+		'cpu',
+		'fpu',
 		'abiName',
+		'floatAbiName',
 		'systemVendor',
 		'machineAttributes',
 		'compilationPlugins',
@@ -15,6 +18,87 @@ Class {
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> arm [
+	^ self basicNew
+		arm;
+		pointerSize: 4;
+		initialize;
+		yourself
+]
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> arm64 [
+	^ self basicNew
+		arm64;
+		pointerSize: 8;
+		initialize;
+		yourself
+]
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> armv5 [
+	^ self basicNew
+		armv5;
+		pointerSize: 4;
+		initialize;
+		yourself
+]
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> armv6 [
+	^ self basicNew
+		armv6;
+		pointerSize: 4;
+		initialize;
+		yourself
+]
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> armv6m [
+	^ self basicNew
+		armv6m;
+		pointerSize: 4;
+		initialize;
+		yourself
+]
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> armv7 [
+	^ self basicNew
+		armv7;
+		pointerSize: 4;
+		initialize;
+		yourself
+]
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> armv7a [
+	^ self basicNew
+		armv7a;
+		pointerSize: 4;
+		initialize;
+		yourself
+]
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> armv7m [
+	^ self basicNew
+		armv7m;
+		pointerSize: 4;
+		initialize;
+		yourself
+]
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> mipsel [
+	^ self basicNew
+		mipsel;
+		pointerSize: 4;
+		initialize;
+		yourself
+]
 
 { #category : #construction }
 SLVMLLVMCompilationTarget class >> webAssembly [
@@ -76,6 +160,15 @@ SLVMLLVMCompilationTarget >> applyABI [
 		^ self abiName: #elf
 	].
 
+	(self architecture beginsWith: #arm) ifTrue: [
+		self isLinux ifTrue: [ ^ self floatAbiName: #hard; abiName: #gnueabihf ].
+		^ self abiName: #eabi
+	].
+
+	(self architecture beginsWith: #mips) ifTrue: [
+		self isLinux ifTrue: [ ^ self abiName: #gnu ].
+	].
+
 	self abiName: nil
 ]
 
@@ -102,6 +195,54 @@ SLVMLLVMCompilationTarget >> architecture: aName [
 		applyABI
 ]
 
+{ #category : #architectures }
+SLVMLLVMCompilationTarget >> arm [
+	self
+		architecture: #arm
+]
+
+{ #category : #architectures }
+SLVMLLVMCompilationTarget >> arm64 [
+	self
+		architecture: #arm64
+]
+
+{ #category : #architectures }
+SLVMLLVMCompilationTarget >> armv5 [
+	self
+		architecture: #armv5
+]
+
+{ #category : #architectures }
+SLVMLLVMCompilationTarget >> armv6 [
+	self
+		architecture: #armv6
+]
+
+{ #category : #architectures }
+SLVMLLVMCompilationTarget >> armv6m [
+	self
+		architecture: #armv6m
+]
+
+{ #category : #architectures }
+SLVMLLVMCompilationTarget >> armv7 [
+	self
+		architecture: #armv7
+]
+
+{ #category : #architectures }
+SLVMLLVMCompilationTarget >> armv7a [
+	self
+		architecture: #armv7a
+]
+
+{ #category : #architectures }
+SLVMLLVMCompilationTarget >> armv7m [
+	self
+		architecture: #armv7m
+]
+
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> canonicalArchitecture [
 	^ canonicalArchitecture
@@ -123,10 +264,40 @@ SLVMLLVMCompilationTarget >> compilationPlugins: anObject [
 ]
 
 { #category : #accessing }
+SLVMLLVMCompilationTarget >> cpu [
+	^ cpu
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> cpu: anObject [
+	cpu := anObject
+]
+
+{ #category : #accessing }
 SLVMLLVMCompilationTarget >> createTargetTypes [
 	^ pointerSize = 4
 		ifTrue: [ SLVM32BitsPointerCompilationTargetTypes new ]
 		ifFalse: [ SLVM64BitsPointerCompilationTargetTypes new ]
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> floatAbiName [
+	^ floatAbiName
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> floatAbiName: anObject [
+	floatAbiName := anObject
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> fpu [
+	^ fpu
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> fpu: anObject [
+	fpu := anObject
 ]
 
 { #category : #convenience }
@@ -155,13 +326,38 @@ SLVMLLVMCompilationTarget >> initialize [
 ]
 
 { #category : #testing }
+SLVMLLVMCompilationTarget >> isARM32 [
+	^ (architecture beginsWith: #arm) and: [ (architecture beginsWith: #arm64) not ]
+]
+
+{ #category : #testing }
+SLVMLLVMCompilationTarget >> isARM64 [ 
+	^ architecture beginsWith: #arm64
+]
+
+{ #category : #testing }
 SLVMLLVMCompilationTarget >> isLLVMCompilationTarget [
 	^ true
 ]
 
-{ #category : #accessing }
+{ #category : #testing }
+SLVMLLVMCompilationTarget >> isMIPS [
+	^ architecture beginsWith: #mips
+]
+
+{ #category : #testing }
 SLVMLLVMCompilationTarget >> isWebAssembly [
 	^ architecture beginsWith: #wasm
+]
+
+{ #category : #testing }
+SLVMLLVMCompilationTarget >> isX86_32 [
+	^ architecture = #x86
+]
+
+{ #category : #testing }
+SLVMLLVMCompilationTarget >> isX86_64 [
+	^ architecture = #x86_64
 ]
 
 { #category : #accessing }
@@ -172,6 +368,12 @@ SLVMLLVMCompilationTarget >> machineAttributes [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> machineAttributes: anObject [
 	machineAttributes := anObject
+]
+
+{ #category : #architectures }
+SLVMLLVMCompilationTarget >> mipsel [
+	self
+		architecture: #mipsel
 ]
 
 { #category : #accessing }
@@ -217,7 +419,7 @@ SLVMLLVMCompilationTarget >> subarchitecture: anObject [
 
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> supportsLocalAddressForThisContext [
-	^ #(x86 x86_64) includes: self architecture
+	^ #(x86_64) includes: self architecture
 ]
 
 { #category : #accessing }
@@ -230,14 +432,14 @@ SLVMLLVMCompilationTarget >> systemVendor: anObject [
 	systemVendor := anObject
 ]
 
-{ #category : #accessing }
+{ #category : #architectures }
 SLVMLLVMCompilationTarget >> webAssembly32 [
 	self
 		architecture: #wasm32;
 		canonicalArchitecture: #wasm32
 ]
 
-{ #category : #accessing }
+{ #category : #architectures }
 SLVMLLVMCompilationTarget >> webAssembly64 [
 	self
 		architecture: #wasm64;
@@ -249,14 +451,14 @@ SLVMLLVMCompilationTarget >> withPositionIndependentCode [
 	relocationModel := #pic
 ]
 
-{ #category : #accessing }
+{ #category : #architectures }
 SLVMLLVMCompilationTarget >> x86 [
 	self
 		architecture: #x86;
 		canonicalArchitecture: #i686
 ]
 
-{ #category : #accessing }
+{ #category : #architectures }
 SLVMLLVMCompilationTarget >> x86_64 [
 	self architecture: #x86_64
 ]

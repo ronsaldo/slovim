@@ -39,6 +39,7 @@ SLVMClosureDefinition >> asFullSExpression [
 		self globalValueAttributesAsSExpression.
 		#captures . captures collect: [ :each | each asFullSExpression ] as: Array.
 		#arguments . arguments collect: [ :each | each asFullSExpression ].
+		#variadic . functionType variadic .
 		#literals . dynamicLiterals collect: [ :each | each asFullSExpression ] as: Array.
 		#blocks . basicBlocks collect: [ :each | each asFullSExpression ] as: Array.
 	}

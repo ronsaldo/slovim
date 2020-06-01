@@ -139,6 +139,7 @@ SLVMFunction >> asFullSExpression [
 	^ { self mnemonic . self globalValueIndex . name . functionType callingConvention . functionType returnType asSExpression .
 		self globalValueAttributesAsSExpression.
 		#arguments . arguments collect: [ :each | each asFullSExpression ].
+		#variadic . functionType variadic .
 		#literals . dynamicLiterals collect: [ :each | each asFullSExpression ] as: Array.
 		#blocks . self instructionsSExpressions.
 	}
@@ -148,6 +149,9 @@ SLVMFunction >> asFullSExpression [
 SLVMFunction >> asFullSExpressionForTesting [
 	^ { self mnemonic . name . functionType callingConvention . functionType returnType asSExpression .
 		#arguments . arguments collect: [ :each | each asFullSExpression ].
+	}
+	, (functionType variadic ifTrue: [ #( #variadic true ) ] ifFalse: [#()]) ,
+	{
 		#literals . dynamicLiterals collect: [ :each | each asFullSExpression ] as: Array.
 		#blocks . self instructionsSExpressions.
 	}
@@ -547,15 +551,19 @@ SLVMFunction >> decodeBasicBlocksFromSExpressions: encodedBasicBlocks [
 
 { #category : #'as yet unclassified' }
 SLVMFunction >> decodeDeclarationFromSExpression: encodedGlobal context: context [
-	| callingConvention returnType dict encodedArguments argumentTypes |
+	| callingConvention returnType dict encodedArguments argumentTypes variadic decodedFunctionType |
 	name := encodedGlobal third.
 	callingConvention := encodedGlobal fourth.
 	returnType := (context decodeSExpressionType: encodedGlobal fifth).
 	dict := Dictionary newFromPairs: (encodedGlobal allButFirst: 6).
 	encodedArguments := dict at: #arguments ifAbsent: [ #() ].
+	variadic := dict at: #variadic ifAbsent: [ false ].
 	argumentTypes := encodedArguments collect: [ :arg | context decodeSExpressionType: arg second].
 	
-	self pointerSize: context compilationTarget pointerSize functionType: (SLVMFunctionType callingConvention: callingConvention arguments: argumentTypes returnType: returnType).
+	decodedFunctionType := (SLVMFunctionType callingConvention: callingConvention arguments: argumentTypes returnType: returnType)
+		variadic: variadic;
+		yourself.
+	self pointerSize: context compilationTarget pointerSize functionType: decodedFunctionType.
 	self decodeGlobalValueAttributesFromSExpression: encodedGlobal sixth context: context.
 
 ]
