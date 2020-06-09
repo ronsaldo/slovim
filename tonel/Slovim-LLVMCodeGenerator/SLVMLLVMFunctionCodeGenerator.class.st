@@ -101,6 +101,15 @@ SLVMLLVMFunctionCodeGenerator class >> initialize [
 	).
 ]
 
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> abiAttributesFor: type [
+	type isIntegerType ifTrue: [
+		^ type isSigned ifTrue: [ #(signext) ] ifFalse: [ #(zeroext) ]
+	].
+
+	^ #()
+]
+
 { #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> addInstruction: anInstruction [
 	^ currentBlockBuilder add: anInstruction
@@ -151,8 +160,8 @@ SLVMLLVMFunctionCodeGenerator >> call: calledFunction arguments: arguments retur
 ]
 
 { #category : #'instruction building' }
-SLVMLLVMFunctionCodeGenerator >> call: calledFunction convention: callingConvention arguments: arguments returnType: returnType name: name [
-	| invokeInstruction |
+SLVMLLVMFunctionCodeGenerator >> call: calledFunction convention: callingConvention arguments: arguments returnType: returnType abiAttributes: abiParameters returnAbiAttributes: returnAbiAttributes name: name [
+	| invokeInstruction callInstruction |
 	(self shouldUseInvokeForCalling: calledFunction) ifTrue: [
 		invokeInstruction := self addInstruction: (LLVMInvokeInst new
 			name: name;
@@ -162,17 +171,27 @@ SLVMLLVMFunctionCodeGenerator >> call: calledFunction convention: callingConvent
 			callingConvention: callingConvention;
 			unwindDestination: currentUnwindBlock;
 			yourself).
+		abiParameters ifNotNil: [ invokeInstruction argumentAttributes: abiParameters ].
+		returnAbiAttributes ifNotNil: [ invokeInstruction returnAttributes: returnAbiAttributes ].
 		invokeInstruction normalDestination: currentBlockBuilder newBasicBlock.
 		^ invokeInstruction
 	].
 
-	^ self addInstruction: (LLVMCallInst new
+	callInstruction := LLVMCallInst new
 		name: name;
 		calledFunction: calledFunction;
 		arguments: arguments;
 		type: returnType;
 		callingConvention: callingConvention;
-		yourself)
+		yourself.
+	abiParameters ifNotNil: [ callInstruction argumentAttributes: abiParameters ].
+	returnAbiAttributes ifNotNil: [ callInstruction returnAttributes: returnAbiAttributes ].
+	^ self addInstruction: callInstruction
+]
+
+{ #category : #'instruction building' }
+SLVMLLVMFunctionCodeGenerator >> call: calledFunction convention: callingConvention arguments: arguments returnType: returnType name: name [
+	^ self call: calledFunction convention: callingConvention arguments: arguments returnType: returnType abiAttributes: nil returnAbiAttributes: nil name: name
 ]
 
 { #category : #'code generation' }
@@ -1995,7 +2014,7 @@ SLVMLLVMFunctionCodeGenerator >> visitBranch: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitCall: instruction [
-	| type calledFunction arguments |
+	| type calledFunction arguments calledFunctionType abiParameters |
 	instruction functionValue isConstantBuiltInFunction ifTrue: [
 		^ self generateBuiltInFunction: instruction functionValue call: instruction
 	].
@@ -2003,8 +2022,16 @@ SLVMLLVMFunctionCodeGenerator >> visitCall: instruction [
 	type := self translateType: instruction type.
 	
 	calledFunction := self translateValue: instruction functionValue.
+	calledFunctionType := instruction functionValue type baseType.
 	arguments := instruction arguments collect: [ :arg | self translateValue: arg ].
-	^ self call: calledFunction arguments: arguments returnType: type name: (self convertName: instruction name)
+	abiParameters := (instruction arguments collectWithIndex: [ :arg :index |
+			((index = 1 and: [ instruction hasSRet ]) ifTrue: [ #(sret) ] ifFalse: [#()]) ,
+			(self abiAttributesFor: arg type) ]).
+
+	^ self call: calledFunction convention: (self convertCallingConvention: calledFunctionType callingConvention) arguments: arguments returnType: type
+		abiAttributes: abiParameters
+		returnAbiAttributes: (self abiAttributesFor: instruction type)
+		name: (self convertName: instruction name)
 ]
 
 { #category : #visiting }
@@ -2554,7 +2581,7 @@ SLVMLLVMFunctionCodeGenerator >> visitMakeVector: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitMessageSend: instruction [
-	| returnType receiver arguments selector lookupResult calledFunctionType calledType functionPointer lookupArguments lookupFunction typeInfo lookupResultMethod lookupResultTrampoline resultArguments slvmArguments slvmResultArguments |
+	| returnType receiver arguments selector lookupResult calledFunctionType calledType functionPointer lookupArguments lookupFunction typeInfo lookupResultMethod lookupResultTrampoline resultArguments slvmArguments slvmResultArguments abiParameters |
 
 	returnType := self translateType: instruction type.	
 	receiver := self translateValue: instruction receiver.
@@ -2615,9 +2642,18 @@ SLVMLLVMFunctionCodeGenerator >> visitMessageSend: instruction [
 	calledType := self translateType: (target pointerTo: calledFunctionType).
 
 	functionPointer := self bitCast: lookupResultTrampoline target: calledType name: nil.
+	abiParameters := (resultArguments
+			ifEmpty: [#()]
+			ifNotEmpty: [(instruction hasSRet ifTrue: [ #((sret)) ] ifFalse: [ #(()) ])]) ,
+		#(() () ()) ,
+		(slvmArguments collect: [:each | self abiAttributesFor: each type ]).
+	
 	^ self call: functionPointer
 		convention: (self convertCallingConvention: calledFunctionType callingConvention)
-		arguments: resultArguments , {lookupResultMethod . selector . receiver}, arguments returnType: returnType name: nil.
+		arguments: resultArguments , {lookupResultMethod . selector . receiver}, arguments returnType: returnType
+		abiAttributes: abiParameters
+		returnAbiAttributes: (self abiAttributesFor: instruction type)
+		name: nil
 	
 ]
 

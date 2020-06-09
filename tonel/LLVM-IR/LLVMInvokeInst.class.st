@@ -4,12 +4,24 @@ Class {
 	#instVars : [
 		'calledFunction',
 		'arguments',
+		'argumentAttributes',
+		'returnAttributes',
 		'callingConvention',
 		'normalDestination',
 		'unwindDestination'
 	],
 	#category : #'LLVM-IR-Instructions'
 }
+
+{ #category : #accessing }
+LLVMInvokeInst >> argumentAttributes [
+	^ argumentAttributes ifNil: [ argumentAttributes := arguments collect: [:each | #() ]]
+]
+
+{ #category : #accessing }
+LLVMInvokeInst >> argumentAttributes: anObject [
+	argumentAttributes := anObject
+]
 
 { #category : #accessing }
 LLVMInvokeInst >> arguments [
@@ -60,16 +72,32 @@ LLVMInvokeInst >> normalDestination: anObject [
 LLVMInvokeInst >> printParametersOn: aStream [
 	| calledFunctionType |
 	callingConvention ifNotNil: [ aStream space; nextPutAll: callingConvention ].
+	returnAttributes ifNotNil: [ returnAttributes do: [ :each | aStream space; nextPutAll: each ] ].
 	calledFunctionType := calledFunction type elementType.
+
 	aStream space; print: calledFunctionType; space; print: calledFunction; nextPut: $(.
 	arguments doWithIndex: [ :arg :index |
 		index > 1 ifTrue: [ aStream nextPutAll: ', ' ].
-		aStream print: arg type; space; print: arg
+		aStream print: arg type; space.
+		argumentAttributes ifNotNil: [ (argumentAttributes at: index) do: [ :each |
+			aStream nextPutAll: each; space
+		] ].
+		aStream print: arg
 	].
 
 	aStream nextPut: $).
 	
 	aStream nextPutAll: ' to label '; print: normalDestination; nextPutAll: ' unwind label '; print: unwindDestination
+]
+
+{ #category : #accessing }
+LLVMInvokeInst >> returnAttributes [
+	^ returnAttributes ifNil: [ returnAttributes := #() ]
+]
+
+{ #category : #accessing }
+LLVMInvokeInst >> returnAttributes: anObject [
+	returnAttributes := anObject
 ]
 
 { #category : #accessing }

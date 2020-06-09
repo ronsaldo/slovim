@@ -4,10 +4,22 @@ Class {
 	#instVars : [
 		'calledFunction',
 		'arguments',
+		'argumentAttributes',
+		'returnAttributes',
 		'callingConvention'
 	],
 	#category : #'LLVM-IR-Instructions'
 }
+
+{ #category : #accessing }
+LLVMCallInst >> argumentAttributes [
+	^ argumentAttributes ifNil: [ argumentAttributes := arguments collect: [:each | #() ]]
+]
+
+{ #category : #accessing }
+LLVMCallInst >> argumentAttributes: anObject [
+	argumentAttributes := anObject
+]
 
 { #category : #accessing }
 LLVMCallInst >> arguments [
@@ -48,12 +60,27 @@ LLVMCallInst >> mnemonic [
 LLVMCallInst >> printParametersOn: aStream [
 	| calledFunctionType |
 	callingConvention ifNotNil: [ aStream space; nextPutAll: callingConvention ].
+	returnAttributes ifNotNil: [ returnAttributes do: [ :each | aStream space; nextPutAll: each ] ].
 	calledFunctionType := calledFunction type elementType.
 	aStream space; print: calledFunctionType; space; print: calledFunction; nextPut: $(.
 	arguments doWithIndex: [ :arg :index |
 		index > 1 ifTrue: [ aStream nextPutAll: ', ' ].
-		aStream print: arg type; space; print: arg
+		aStream print: arg type; space.
+		argumentAttributes ifNotNil: [ (argumentAttributes at: index) do: [ :each |
+			aStream nextPutAll: each; space
+		] ].
+		aStream print: arg
 	].
 
 	aStream nextPut: $)
+]
+
+{ #category : #accessing }
+LLVMCallInst >> returnAttributes [
+	^ returnAttributes ifNil: [ returnAttributes := #() ]
+]
+
+{ #category : #accessing }
+LLVMCallInst >> returnAttributes: anObject [
+	returnAttributes := anObject
 ]

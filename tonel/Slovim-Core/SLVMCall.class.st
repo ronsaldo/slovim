@@ -28,7 +28,7 @@ SLVMCall >> accept: aVisitor [
 
 { #category : #adding }
 SLVMCall >> addFlag: flag [
-	flags := flags copyWith: flag
+	flags := self flags copyWith: flag
 	
 ]
 
@@ -65,6 +65,11 @@ SLVMCall >> hasOutputs [
 	^ type isVoidType not
 ]
 
+{ #category : #initialization }
+SLVMCall >> hasSRet [
+	^ self hasFlag: #sret
+]
+
 { #category : #testing }
 SLVMCall >> isCall [
 	^ true
@@ -83,6 +88,11 @@ SLVMCall >> isPrimitiveCall [
 { #category : #flags }
 SLVMCall >> setPrimitiveCall [
 	^ self addFlag: #primitiveCall
+]
+
+{ #category : #initialization }
+SLVMCall >> setSRetPresence [
+	self addFlag: #sret.
 ]
 
 { #category : #accessing }
