@@ -478,6 +478,7 @@ SLVMLLVMCodeGenerator >> llvmModule [
 			cpu: target cpu;
 			fpu: target fpu;
 			floatAbiName: target floatAbiName;
+			exceptionModel: target exceptionModel;
 			yourself
 		]
 ]

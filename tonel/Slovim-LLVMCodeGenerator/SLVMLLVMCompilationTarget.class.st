@@ -14,7 +14,8 @@ Class {
 		'systemVendor',
 		'machineAttributes',
 		'compilationPlugins',
-		'relocationModel'
+		'relocationModel',
+		'exceptionModel'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
@@ -182,6 +183,21 @@ SLVMLLVMCompilationTarget >> applyDefaultVendor [
 ]
 
 { #category : #accessing }
+SLVMLLVMCompilationTarget >> applyExceptionHandlingModel [
+	exceptionModel := #dwarf.
+	(architecture beginsWith: #arm) ifTrue: [
+		exceptionModel := #arm
+	].
+
+	self isWin32 ifTrue: [ 
+		exceptionModel := #wineh
+	].
+	self isWebAssembly ifTrue: [ 
+		exceptionModel := #wasm
+	]
+]
+
+{ #category : #accessing }
 SLVMLLVMCompilationTarget >> architecture [
 	^ architecture
 ]
@@ -192,7 +208,8 @@ SLVMLLVMCompilationTarget >> architecture: aName [
 	canonicalArchitecture := aName.
 	self
 		applyDefaultVendor;
-		applyABI
+		applyABI;
+		applyExceptionHandlingModel
 ]
 
 { #category : #architectures }
@@ -278,6 +295,16 @@ SLVMLLVMCompilationTarget >> createTargetTypes [
 	^ pointerSize = 4
 		ifTrue: [ SLVM32BitsPointerCompilationTargetTypes new ]
 		ifFalse: [ SLVM64BitsPointerCompilationTargetTypes new ]
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> exceptionModel [
+	^ exceptionModel
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> exceptionModel: anObject [
+	exceptionModel := anObject
 ]
 
 { #category : #accessing }
@@ -384,7 +411,7 @@ SLVMLLVMCompilationTarget >> operatingSystemName [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> operatingSystemName: aName [
 	operatingSystemName := aName.
-	self applyABI
+	self applyABI; applyExceptionHandlingModel
 ]
 
 { #category : #accessing }

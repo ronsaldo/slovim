@@ -20,7 +20,8 @@ Class {
 		'linkerProgram',
 		'llcProgram',
 		'relocationModel',
-		'linkerArguments'
+		'linkerArguments',
+		'exceptionModel'
 	],
 	#category : #'LLVM-IR'
 }
@@ -103,6 +104,16 @@ LLVMModule >> cpu [
 { #category : #accessing }
 LLVMModule >> cpu: anObject [
 	cpu := anObject
+]
+
+{ #category : #accessing }
+LLVMModule >> exceptionModel [
+	^ exceptionModel
+]
+
+{ #category : #accessing }
+LLVMModule >> exceptionModel: anObject [
+	exceptionModel := anObject
 ]
 
 { #category : #accessing }
@@ -265,6 +276,7 @@ LLVMModule >> llcFlags [
 	cpu ifNotNil: [ flags := flags , { '-mcpu=' , cpu } ].
 	fpu ifNotNil: [ flags := flags , { '-mattr=' , fpu } ].
 	floatAbiName ifNotNil: [ flags := flags , { '-float-abi=' , floatAbiName } ].
+	exceptionModel ifNotNil: [ flags := flags , { '-exception-model=' , exceptionModel } ].
 	(machineAttributes isNotNil and: [machineAttributes isNotEmpty]) ifTrue: [ 
 		flags := flags , { '-mattr=' , machineAttributes }
 	].
