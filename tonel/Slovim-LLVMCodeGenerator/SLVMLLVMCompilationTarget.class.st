@@ -175,18 +175,22 @@ SLVMLLVMCompilationTarget >> applyABI [
 
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> applyDefaultVendor [
+	systemVendor ifNotNil: [ ^ nil ].
+	
 	(#(x86 x86_64) includes: self architecture) ifTrue: [ 
 		^ self systemVendor: #pc
 	].
 
-	self systemVendor: nil
+	self systemVendor: #unknown
+
 ]
 
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> applyExceptionHandlingModel [
 	exceptionModel := #dwarf.
 	(architecture beginsWith: #arm) ifTrue: [
-		exceptionModel := #arm
+		exceptionModel := #arm.
+		^ self.
 	].
 
 	self isWin32 ifTrue: [ 
@@ -212,6 +216,17 @@ SLVMLLVMCompilationTarget >> architecture: aName [
 		applyExceptionHandlingModel
 ]
 
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> architecture: aName subarchitecture: subArchitectureName [
+	architecture := aName.
+	subarchitecture := subArchitectureName.
+	canonicalArchitecture := aName.
+	self
+		applyDefaultVendor;
+		applyABI;
+		applyExceptionHandlingModel
+]
+
 { #category : #architectures }
 SLVMLLVMCompilationTarget >> arm [
 	self
@@ -227,37 +242,37 @@ SLVMLLVMCompilationTarget >> arm64 [
 { #category : #architectures }
 SLVMLLVMCompilationTarget >> armv5 [
 	self
-		architecture: #armv5
+		architecture: #arm subarchitecture: #v5
 ]
 
 { #category : #architectures }
 SLVMLLVMCompilationTarget >> armv6 [
 	self
-		architecture: #armv6
+		architecture: #arm subarchitecture: #v6
 ]
 
 { #category : #architectures }
 SLVMLLVMCompilationTarget >> armv6m [
 	self
-		architecture: #armv6m
+		architecture: #arm subarchitecture: #v6m
 ]
 
 { #category : #architectures }
 SLVMLLVMCompilationTarget >> armv7 [
 	self
-		architecture: #armv7
+		architecture: #arm subarchitecture: #v7
 ]
 
 { #category : #architectures }
 SLVMLLVMCompilationTarget >> armv7a [
 	self
-		architecture: #armv7a
+		architecture: #arm subarchitecture: #v7a
 ]
 
 { #category : #architectures }
 SLVMLLVMCompilationTarget >> armv7m [
 	self
-		architecture: #armv7m
+		architecture: #armv subarchitecture: #v7m
 ]
 
 { #category : #accessing }
@@ -340,6 +355,11 @@ SLVMLLVMCompilationTarget >> generateLowLevelModule: aModule optimizationLevel: 
 		translateModule: aModule
 ]
 
+{ #category : #testing }
+SLVMLLVMCompilationTarget >> hasArmEhAbi [
+	^ architecture beginsWith: #arm
+]
+
 { #category : #initialization }
 SLVMLLVMCompilationTarget >> initialize [
 	super initialize.
@@ -411,7 +431,7 @@ SLVMLLVMCompilationTarget >> operatingSystemName [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> operatingSystemName: aName [
 	operatingSystemName := aName.
-	self applyABI; applyExceptionHandlingModel
+	self applyABI; applyDefaultVendor; applyExceptionHandlingModel
 ]
 
 { #category : #accessing }

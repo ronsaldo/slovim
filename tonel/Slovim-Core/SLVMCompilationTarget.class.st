@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'types',
 		'emittingDebugInformation',
-		'targetTriple'
+		'targetTriple',
+		'linkerTargetTriple'
 	],
 	#classVars : [
 		'LandingPadSelectorRegisterIndexMap',
@@ -145,6 +146,11 @@ SLVMCompilationTarget >> generateLowLevelModule: aModule [
 	^ self lowLevelCodeGeneratorClass translateModule: aModule
 ]
 
+{ #category : #testing }
+SLVMCompilationTarget >> hasArmEhAbi [
+	^ false
+]
+
 { #category : #initialization }
 SLVMCompilationTarget >> initialize [
 	super initialize.
@@ -278,6 +284,32 @@ SLVMCompilationTarget >> landingPadStructurePointerRegisterIndex [
 ]
 
 { #category : #accessing }
+SLVMCompilationTarget >> linkerTargetTriple [
+	^ linkerTargetTriple ifNil: [linkerTargetTriple := ByteString streamContents: [ :out |
+			out nextPutAll: self canonicalArchitecture.
+		
+			self systemVendor ifNotNil: [ :vendor |
+				vendor ~= #unknown ifTrue: [ 
+					out nextPut: $-; nextPutAll: vendor
+				].
+			].
+
+			self canonicalOperatingSystem ifNotNil: [ :system |
+				system ~= #unknown ifTrue: [ 
+					out nextPut: $-; nextPutAll: system
+				].
+			].
+
+			self abiName ifNotNil: [ :abi |
+				abi ~= #unknown ifTrue: [ 
+					out nextPut: $-; nextPutAll: abi
+				]
+			].
+		]
+	].
+]
+
+{ #category : #accessing }
 SLVMCompilationTarget >> lowLevelCodeGeneratorClass [
 	self subclassResponsibility
 ]
@@ -381,15 +413,21 @@ SLVMCompilationTarget >> targetTriple [
 				out nextPutAll: subarch
 			].
 		
-			self systemVendor ifNotNil: [ :vendor |
+			self systemVendor ifNil: [
+				out nextPutAll: '-unknown'
+			] ifNotNil: [ :vendor |
 				out nextPut: $-; nextPutAll: vendor
 			].
 
-			self canonicalOperatingSystem ifNotNil: [ :system |
+			self canonicalOperatingSystem ifNil: [
+				out nextPutAll: '-none'
+			] ifNotNil: [ :system |
 				out nextPut: $-; nextPutAll: system
 			].
 
-			self abiName ifNotNil: [ :abi |
+			self abiName ifNil: [
+				out nextPutAll: '-unknown'
+			] ifNotNil: [ :abi |
 				out nextPut: $-; nextPutAll: abi
 			].
 		]

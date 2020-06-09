@@ -473,6 +473,7 @@ SLVMLLVMCodeGenerator >> llvmModule [
 			optimizationLevel: optimizationLevel;
 			relocationModel: target relocationModel;
 			targetTriple: target targetTriple;
+			linkerTargetTriple: target linkerTargetTriple;
 			machineAttributes: target machineAttributes;
 			compilationPlugins: target compilationPlugins;
 			cpu: target cpu;

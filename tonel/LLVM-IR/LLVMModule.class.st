@@ -21,7 +21,10 @@ Class {
 		'llcProgram',
 		'relocationModel',
 		'linkerArguments',
-		'exceptionModel'
+		'exceptionModel',
+		'clangProgram',
+		'linkerTargetTriple',
+		'systemRoot'
 	],
 	#category : #'LLVM-IR'
 }
@@ -79,6 +82,50 @@ LLVMModule >> asBinaryObject [
 { #category : #printing }
 LLVMModule >> asString [
 	^ ByteString streamContents: [ :out | self fullPrintOn: out ]
+]
+
+{ #category : #writing }
+LLVMModule >> clangFlags [
+	| flags |
+	flags := #().
+	optimizationLevel ifNotNil: [ flags := { '-O' , optimizationLevel asString} ].
+	flags := { '-target' . targetTriple }.
+	cpu ifNotNil: [ flags := flags , { '-mcpu=' , cpu } ].
+	fpu ifNotNil: [ flags := flags , { '-mfpu=' , fpu } ].
+	floatAbiName ifNotNil: [ flags := flags , { '-mfloat-abi=' , floatAbiName } ].
+	exceptionModel ifNotNil: [
+		exceptionModel = #dwarf ifTrue: [ flags := flags , #('-fdwarf-exceptions') ].
+		exceptionModel = #wineh ifTrue: [ flags := flags , #('-fseh-exceptions') ].
+		exceptionModel = #sjlj ifTrue: [ flags := flags , #('-fsjlj-exceptions') ].
+	].
+	(machineAttributes isNotNil and: [machineAttributes isNotEmpty]) ifTrue: [ 
+		flags := flags , machineAttributes
+	].
+
+	^ flags
+]
+
+{ #category : #accessing }
+LLVMModule >> clangProgram [
+	clangProgram ifNil: [ linkerProgram := OSEnvironment current at: 'CC' ifAbsent: [nil]].
+	clangProgram ifNil: [
+		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
+			clangProgram := 'clang.exe'
+		].
+	
+		clangProgram ifNil: [ clangProgram := 'clang' ].
+		
+		(self targetTriple isNotNil and: [ self targetTriple includesSubstring: 'wasm' ]) ifTrue: [
+			clangProgram := 'emcc'
+		]
+	].
+
+	^ clangProgram
+]
+
+{ #category : #accessing }
+LLVMModule >> clangProgram: aProgramName [
+	clangProgram := aProgramName
 ]
 
 { #category : #accessing }
@@ -258,13 +305,24 @@ LLVMModule >> linkerProgram: aLinkerProgram [
 LLVMModule >> linkerTargetArguments [
 	(self linkerProgram includesSubstring: 'clang') ifTrue: [
 		| flags|
-		flags := { '-target' . targetTriple }.
+		flags := { '-target' . self validLinkerTargetTriple }.
+		systemRoot ifNotNil: [ flags := flags , { '-sysroot=' , systemRoot} ].
 		cpu ifNotNil: [ flags := flags , { '-mcpu=' , cpu } ].
 		fpu ifNotNil: [ flags := flags , { '-mfpu=' , fpu } ].
 		floatAbiName ifNotNil: [ flags := flags , { '-mfloat-abi=' , floatAbiName } ].
 		^ flags	
 	].
 	^ #()
+]
+
+{ #category : #accessing }
+LLVMModule >> linkerTargetTriple [
+	^ linkerTargetTriple
+]
+
+{ #category : #accessing }
+LLVMModule >> linkerTargetTriple: aTriple [
+	linkerTargetTriple := aTriple
 ]
 
 { #category : #writing }
@@ -280,6 +338,8 @@ LLVMModule >> llcFlags [
 	(machineAttributes isNotNil and: [machineAttributes isNotEmpty]) ifTrue: [ 
 		flags := flags , { '-mattr=' , machineAttributes }
 	].
+	flags := flags , #('--meabi=gnu').
+
 	compilationPlugins ifNotEmpty: [ 
 		flags := flags , (compilationPlugins collect: [:pluginName |
 			'-load=' , pluginName
@@ -351,6 +411,16 @@ LLVMModule >> relocationModel: anObject [
 ]
 
 { #category : #writing }
+LLVMModule >> runClangWithArguments: arguments tempFileName: tempFileName [
+	tempFileName writeStreamDo: [ :out |
+		out truncate.
+		self fullPrintOn: out
+	].
+	
+	^ self runCommand: self clangProgram withArguments: arguments , { tempFileName fullName }
+]
+
+{ #category : #writing }
 LLVMModule >> runCommand: command withArguments: arguments [
 	| formattedCommand exitCode |
 	formattedCommand := ByteString streamContents: [ :out |
@@ -365,11 +435,6 @@ LLVMModule >> runCommand: command withArguments: arguments [
 		self error: 'Failed to invoke command: ' , formattedCommand 
 	]
 	
-]
-
-{ #category : #writing }
-LLVMModule >> runLLCWithArguments: arguments [
-	self halt
 ]
 
 { #category : #writing }
@@ -394,6 +459,16 @@ LLVMModule >> setKnownIntrinsicAttributes: intrinsic [
 ]
 
 { #category : #accessing }
+LLVMModule >> systemRoot [
+	^ systemRoot
+]
+
+{ #category : #accessing }
+LLVMModule >> systemRoot: anObject [
+	systemRoot := anObject
+]
+
+{ #category : #accessing }
 LLVMModule >> targetTriple [
 	^ targetTriple
 ]
@@ -401,6 +476,16 @@ LLVMModule >> targetTriple [
 { #category : #accessing }
 LLVMModule >> targetTriple: aTargetTriple [
 	targetTriple := aTargetTriple
+]
+
+{ #category : #writing }
+LLVMModule >> useClangInsteadOfLLC [
+	^ false "compilationPlugins isEmpty"
+]
+
+{ #category : #accessing }
+LLVMModule >> validLinkerTargetTriple [
+	^ linkerTargetTriple ifNil: [ targetTriple ]
 ]
 
 { #category : #accessing }
@@ -432,15 +517,24 @@ LLVMModule >> withTemporaryFileWithSuffix: suffix do: aBlock [
 ]
 
 { #category : #writing }
-LLVMModule >> writeAssemblyToFileNamed: outputFileName [
+LLVMModule >> writeAssemblyToFileNamed: outputFileRef [
 	| arguments |
-	arguments := self llcFlags , {
-		'-filetype=asm' .
-		'-o' . outputFileName .
-		'-'.
-	}.
+	self useClangInsteadOfLLC ifTrue: [
+		arguments := self clangFlags , {
+			'-S' .
+			'-o' . outputFileRef fullName.
+		}.
 
-	^ self runLLCWithArguments: arguments
+		^ self runClangWithArguments: arguments tempFileName: (outputFileRef fullName , '.ll') asFileReference asAbsolute
+	] ifFalse: [ 
+		arguments := self llcFlags , {
+			'-filetype=asm' .
+			'-o' . outputFileRef fullName.
+		}.
+
+		^ self runLLCWithArguments: arguments tempFileName: (outputFileRef fullName , '.ll') asFileReference asAbsolute
+	].
+
 ]
 
 { #category : #writing }
@@ -470,13 +564,24 @@ LLVMModule >> writeIRAssemblyToFileNamed: aFileName [
 { #category : #writing }
 LLVMModule >> writeObjectToFileNamed: outputFileName [
 	| arguments outputFileRef |
-	outputFileRef := outputFileName asFileReference asAbsolute.
-	arguments := self llcFlags , {
-		'-filetype=obj' .
-		'-o' . outputFileRef fullName.
-	}.
+	self useClangInsteadOfLLC ifTrue: [
+		outputFileRef := outputFileName asFileReference asAbsolute.
+		arguments := self clangFlags , {
+			'-c' .
+			'-o' . outputFileRef fullName.
+		}.
 
-	^ self runLLCWithArguments: arguments tempFileName: (outputFileRef fullName , '.ll') asFileReference asAbsolute
+		^ self runClangWithArguments: arguments tempFileName: (outputFileRef fullName , '.ll') asFileReference asAbsolute
+	] ifFalse: [
+		outputFileRef := outputFileName asFileReference asAbsolute.
+		arguments := self llcFlags , {
+			'-filetype=obj' .
+			'-o' . outputFileRef fullName.
+		}.
+
+		^ self runLLCWithArguments: arguments tempFileName: (outputFileRef fullName , '.ll') asFileReference asAbsolute
+	]
+
 ]
 
 { #category : #writing }
