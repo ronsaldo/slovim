@@ -374,6 +374,18 @@ SLVMSpirVCodeGenerator >> basicBlockLabelId: basicBlock [
 	^ basicBlockDictionary at: basicBlock ifAbsentPut: [ builder newId ].
 ]
 
+{ #category : #'code generation' }
+SLVMSpirVCodeGenerator >> createTemporaryOfType: type [
+	| tempId |
+	tempId := builder newId.
+	builder addFunctionStartInstruction: (SpirVInstruction
+		opcode: SpvOpVariable
+		type: (self translateValue: type)
+		result: tempId
+		operands: { SpvStorageClassFunction }).
+	^ tempId
+]
+
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> emitControlFlowMergeBlock: mergeBlock continueBlock: continueBlock [
 	| mergeBlockId continueBlockId |
@@ -484,6 +496,18 @@ SLVMSpirVCodeGenerator >> isInliningMandatory [
 	^ false
 ]
 
+{ #category : #'code generation' }
+SLVMSpirVCodeGenerator >> loadPointer: pointer valueOfType: valueType [
+	| tempId |
+	tempId := builder newId.
+	builder addFunctionInstruction: (SpirVInstruction
+		opcode: SpvOpLoad
+		type: (self translateValue: valueType)
+		result: tempId
+		operands: { pointer }).
+	^ tempId
+]
+
 { #category : #accessing }
 SLVMSpirVCodeGenerator >> logicalAddressMode [
 	^ logicalAddressMode
@@ -504,17 +528,43 @@ SLVMSpirVCodeGenerator >> perFunctionInterfaceList [
 	^ perFunctionInterfaceList ifNil: [ perFunctionInterfaceList := IdentityDictionary new ]
 ]
 
+{ #category : #'code generation' }
+SLVMSpirVCodeGenerator >> storeValue: value inPointer: pointer [
+	builder addFunctionInstruction: (SpirVInstruction
+			opcode: SpvOpStore
+			operands: { pointer . value })
+]
+
 { #category : #initialization }
 SLVMSpirVCodeGenerator >> target: aCompilationTarget [
 	compilationTarget := aCompilationTarget
 ]
 
 { #category : #'as yet unclassified' }
-SLVMSpirVCodeGenerator >> translateBasicBlock: basicBlock [
+SLVMSpirVCodeGenerator >> translateBasicBlock: basicBlock index: index [
 	| labelId |
 	labelId := self basicBlockLabelId: basicBlock.
-	builder addFunctionInstruction: (SpirVInstruction opcode: SpvOpLabel result: labelId).
+	index = 1 ifTrue: [ 
+		builder addFunctionStartInstruction: (SpirVInstruction opcode: SpvOpLabel result: labelId).
+	] ifFalse: [ 
+		builder addFunctionInstruction: (SpirVInstruction opcode: SpvOpLabel result: labelId).
+	].
 	basicBlock instructionsDo: [ :ins | ins accept: self ] 
+]
+
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> translateFunctionCallValue: arg [
+	(arg type isPointerType and: [ arg type storage = SLVMType functionStorage ]) ifTrue: [
+		(arg isInstruction and: [ arg isAlloca ]) ifFalse: [
+			| value temp |
+			temp := self createTemporaryOfType: arg type.
+			value := self loadPointer: (self translateValue: arg) valueOfType: arg type baseType.
+			self storeValue: value inPointer: temp.
+			^ temp
+		]
+	].
+
+	^ self translateValue: arg
 ]
 
 { #category : #'as yet unclassified' }
@@ -571,7 +621,7 @@ SLVMSpirVCodeGenerator >> visitAlloca: allocaInstruction [
 	| resultType |
 	^ self instructionTranslation: allocaInstruction do: [ :id |
 		resultType := self translateValue: allocaInstruction type.
-		builder addFunctionInstruction: (SpirVInstruction
+		builder addFunctionStartInstruction: (SpirVInstruction
 			opcode: SpvOpVariable
 			type: resultType
 			result: id
@@ -627,14 +677,27 @@ SLVMSpirVCodeGenerator >> visitBinaryOperation: binaryOp [
 SLVMSpirVCodeGenerator >> visitBitCast: instruction [
 	| resultType source |
 	^ self instructionTranslation: instruction do: [ :id |
+		self flag: 'TODO: Support proper bitcast between pointers'.
 		resultType := self translateValue: instruction type.
 		source := self translateValue: instruction source.
-		builder addFunctionInstruction: (SpirVInstruction
-			opcode: SpvOpBitcast
-			type: resultType
-			result: id
-			operands: { source }
-		)
+
+		instruction type isPointerType ifTrue: [
+			self assert: instruction type storage = SLVMType functionStorage.
+			builder addFunctionStartInstruction: (SpirVInstruction
+				opcode: SpvOpVariable
+				type: resultType
+				result: id
+				operands: { SpvStorageClassFunction }
+			).
+			self flag: 'TODO: Copy the first matching members.'.
+		] ifFalse: [ 
+			builder addFunctionInstruction: (SpirVInstruction
+				opcode: SpvOpBitcast
+				type: resultType
+				result: id
+				operands: { source }
+			)
+		].
 	]
 ]
 
@@ -670,7 +733,7 @@ SLVMSpirVCodeGenerator >> visitCall: callInstruction [
 	^ self instructionTranslation: callInstruction do: [ :id |
 		functionValue := callInstruction functionValue.
 		resultType := self translateValue: callInstruction type.
-		arguments := callInstruction arguments collect: [:arg | self translateValue: arg].
+		arguments := callInstruction arguments collect: [:arg | self translateFunctionCallValue: arg].
 
 		functionValue isConstantBuiltInFunction ifTrue: [
 			setInstructionPair := BuiltInExtensionInstructionMap at: functionValue name.
@@ -940,7 +1003,7 @@ SLVMSpirVCodeGenerator >> visitFunction: function [
 		functionType := self translateValue: function functionType.
 		resultType := self translateValue: function functionType returnType.
 		
-		builder addFunctionInstruction: (SpirVInstruction 
+		builder addFunctionStartInstruction: (SpirVInstruction 
 			opcode: SpvOpFunction
 			type: resultType
 			result: id
@@ -949,7 +1012,9 @@ SLVMSpirVCodeGenerator >> visitFunction: function [
 		
 		currentFunction arguments do: [ :arg | self translateValue: arg ].
 		
-		function dominanceTopoSort do: [ :basicBlock | self translateBasicBlock: basicBlock ].
+		function dominanceTopoSort doWithIndex: [ :basicBlock :index |
+			self translateBasicBlock: basicBlock index: index
+		].
 		
 		builder addFunctionInstruction: (SpirVInstruction opcode: SpvOpFunctionEnd).
 		
@@ -1008,7 +1073,7 @@ SLVMSpirVCodeGenerator >> visitFunctionArgument: functionArgument [
 	| type |
 	^ self valueTranslation: functionArgument do: [ :id |
 		type := self translateValue: functionArgument type.
-		builder addFunctionInstruction: (SpirVInstruction
+		builder addFunctionStartInstruction: (SpirVInstruction
 			opcode: SpvOpFunctionParameter
 			type: type
 			result: id)

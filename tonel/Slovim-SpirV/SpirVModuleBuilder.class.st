@@ -14,7 +14,8 @@ Class {
 		'entryPointInstructions',
 		'constantGlobalAndTypeInstructions',
 		'usedCapabilties',
-		'entryPoints'
+		'entryPoints',
+		'currentFunctionStartInstructions'
 	],
 	#pools : [
 		'SpirVConstants'
@@ -86,6 +87,13 @@ SpirVModuleBuilder >> addFunctionInstruction: anInstruction [
 ]
 
 { #category : #adding }
+SpirVModuleBuilder >> addFunctionStartInstruction: anInstruction [
+	self assert: anInstruction opcode isNotNil.
+	currentFunctionStartInstructions add: anInstruction.
+	^ anInstruction resultId
+]
+
+{ #category : #adding }
 SpirVModuleBuilder >> addGlobalInstruction: anInstruction [
 	self assert: anInstruction opcode isNotNil.
 	constantGlobalAndTypeInstructions add: anInstruction.
@@ -137,13 +145,20 @@ SpirVModuleBuilder >> finish [
 
 { #category : #building }
 SpirVModuleBuilder >> functionDo: aBlock [
-	| oldScope |
+	| oldScope oldScopeStart|
 	oldScope := currentFunctionInstructions.
+	oldScopeStart := currentFunctionStartInstructions.
 	currentFunctionInstructions := OrderedCollection new.
+	currentFunctionStartInstructions := OrderedCollection new.
 	[
 		aBlock value.
-		functionInstructions addAll: currentFunctionInstructions.
-	] ensure: [ currentFunctionInstructions := oldScope. ]
+		functionInstructions
+			addAll: currentFunctionStartInstructions;
+			addAll: currentFunctionInstructions.
+	] ensure: [
+		currentFunctionInstructions := oldScope.
+		currentFunctionStartInstructions := oldScopeStart.
+	]
 ]
 
 { #category : #accessing }
