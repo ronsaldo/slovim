@@ -995,6 +995,7 @@ SLVMSpirVCodeGenerator >> visitFunction: function [
 	| functionType resultType |
 	self applyPassesInFunction: function.
 	^ self functionTranslation: function do: [ :id |
+		self assert: function basicBlocks isNotEmpty.
 		compilationTarget emittingDebugInformation ifTrue: [ 
 			self emitValue: id name: (function unmangledName
 				ifNotNil: [:name | name ]
@@ -1617,15 +1618,28 @@ SLVMSpirVCodeGenerator >> visitTupleType: structureType [
 SLVMSpirVCodeGenerator >> visitUnaryOperation: unaryOp [
 	| opcode resultType operand |
 	^ self instructionTranslation: unaryOp do: [ :id |
-		opcode := UnaryOperationMap at: unaryOp operation.
-		resultType := self translateValue: unaryOp type.
-		operand := self translateValue: unaryOp operand.
-		builder addFunctionInstruction: (SpirVInstruction
-			opcode: opcode
-			type: resultType
-			result: id
-			operands: { operand }
-		)
+		unaryOp operation = #fsqrt ifTrue: [ 
+			| extensionSet |
+			resultType := self translateValue: unaryOp type.
+			operand := self translateValue: unaryOp operand.
+			extensionSet := builder glsl450ExtensionSet.
+
+			builder addFunctionInstruction: (SpirVInstruction
+					opcode: SpvOpExtInst
+					type: resultType
+					result: id
+					operands: { extensionSet . GLSLstd450Sqrt . operand })
+		] ifFalse: [ 
+			opcode := UnaryOperationMap at: unaryOp operation.
+			resultType := self translateValue: unaryOp type.
+			operand := self translateValue: unaryOp operand.
+			builder addFunctionInstruction: (SpirVInstruction
+				opcode: opcode
+				type: resultType
+				result: id
+				operands: { operand }
+			)
+		].
 	]
 ]
 
