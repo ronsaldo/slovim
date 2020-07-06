@@ -18,6 +18,12 @@ LLVMStructType class >> context: context elements: elements [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMStructType >> computeMemberTypeFor: elementIndex [
+	self assert: elementIndex value isInteger.
+	^ (elements at: elementIndex value + 1)
+]
+
+{ #category : #'as yet unclassified' }
 LLVMStructType >> constant: constantElements [
 	^ LLVMConstantStruct new
 		type: self;

@@ -25,7 +25,8 @@ Class {
 		'dynamicsRootsDescriptorVar',
 		'objectMethodDispatchTrampolines',
 		'nativeMethodDispatchTrampolines',
-		'namedStructures'
+		'namedStructures',
+		'compactTranslatedVectors'
 	],
 	#classVars : [
 		'DebugLanguageMap',
@@ -256,7 +257,7 @@ SLVMLLVMCodeGenerator >> convertStructureContent: slvmStructure into: llvmStruct
 			LLVMArrayType get: self context int8Ty elements: slvmStructure size
 		}
 	] ifFalse: [ 
-		llvmStructure elements: (slvmStructure types collect: [:type | self translateType: type])
+		llvmStructure elements: (self translateStructureFieldTypes: slvmStructure)
 	]
 
 ]
@@ -441,6 +442,7 @@ SLVMLLVMCodeGenerator >> initialize [
 	super initialize.
 	translatedModuleElements := IdentityDictionary new.
 	namedStructures := Dictionary new.
+	compactTranslatedVectors := Dictionary new.
 	translatedTypes := IdentityDictionary new.
 	translatedConstants := IdentityDictionary new.
 	translatedLiterals := IdentityDictionary new.
@@ -574,6 +576,17 @@ SLVMLLVMCodeGenerator >> target [
 { #category : #accessing }
 SLVMLLVMCodeGenerator >> target: anObject [
 	target := anObject
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> translateCompactVersionOf: type [
+	self assert: type isVectorType.
+	^ compactTranslatedVectors at: type ifAbsentPut: [
+		| elementType |
+		elementType := self translateType: type baseType.
+		LLVMArrayType get: elementType elements: type elements
+	]
+
 ]
 
 { #category : #'code generation' }
@@ -749,6 +762,39 @@ SLVMLLVMCodeGenerator >> translateNamedStructure: aNamedStructure [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> translateStructureFieldTypes: structureType [
+	| currentOffset fieldTypes |
+	currentOffset := 0.
+
+	fieldTypes := OrderedCollection new.
+
+	structureType types doWithIndex: [ :type :i |
+		| currentTypeSize currentTypeAlignedSize fieldConvertedType nextOffset |
+		currentOffset := currentOffset alignedTo: type alignment.
+		currentTypeSize := type size.
+		currentTypeAlignedSize := currentTypeSize alignedTo: type alignment.
+
+		fieldConvertedType := self translateType: type.
+		nextOffset := currentOffset + currentTypeAlignedSize.
+		(type size < type alignment and: [ i + 1 <= structureType types size ]) ifTrue: [
+			| nextType nextUnalignedSize |
+			nextType := structureType types at: i + 1.
+			nextUnalignedSize := currentOffset + currentTypeSize.
+			(nextUnalignedSize + nextType size) = nextOffset ifTrue: [
+				fieldConvertedType := self translateCompactVersionOf: type.
+				nextOffset := nextUnalignedSize.
+			].
+		].
+	
+		currentOffset := nextOffset.
+		fieldTypes add: fieldConvertedType.
+	].
+
+	^ fieldTypes asArray.
+
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> translateType: aType [
 	translatedTypes at: aType ifPresent: [ :existent | ^ existent ].
 	^ aType accept: self
@@ -759,6 +805,19 @@ SLVMLLVMCodeGenerator >> translateValue: aValue [
 	aValue isGlobalValue ifTrue: [ ^ self translateModuleElement: aValue ].
 	aValue isConstant ifTrue: [ ^ self translateConstant: aValue ].
 	self error: 'Cannot translate value ', aValue printString
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> translateValue: value withExpectedType: expectedValueType [
+	| result |
+	result := self translateValue: value.
+	result type ~= expectedValueType ifTrue: [ 
+		(result type isVectorTy and: [ expectedValueType isArrayTy ]) ifTrue: [
+			^ result convertIntoCompactVectorType: expectedValueType
+		]
+	].
+
+	^ result
 ]
 
 { #category : #'debug information' }
@@ -905,7 +964,9 @@ SLVMLLVMCodeGenerator >> visitConstantPointer: constant [
 SLVMLLVMCodeGenerator >> visitConstantStructureValue: constantStructureValue [
 	| type slots |
 	type := self translateType: constantStructureValue type.
-	slots := constantStructureValue slots collect: [ :slot | self translateValue: slot ].
+	slots := constantStructureValue slots collectWithIndex: [ :slot :index |
+		self translateValue: slot withExpectedType: (type elements at: index)
+	].
 	^ LLVMConstantStruct new
 		type: type;
 		elements: slots;
@@ -1110,7 +1171,7 @@ SLVMLLVMCodeGenerator >> visitStructureType: structureType [
 		^ convertedStructure
 	].
 	^ self recursiveType: structureType translationDo: [
-		LLVMStructType context: llvmContext elements: (structureType types collect: [:type | self translateType: type])
+		LLVMStructType context: llvmContext elements: (self translateStructureFieldTypes: structureType)
 	]
 ]
 

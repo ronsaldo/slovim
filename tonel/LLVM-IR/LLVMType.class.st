@@ -59,6 +59,11 @@ LLVMType class >> getVoidTy: context [
 	^ context voidTy
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMType >> computeMemberTypeFor: elementIndex [
+	self error: 'Unsupported getElementPointer for myself.'
+]
+
 { #category : #accessing }
 LLVMType >> context [
 	^ context

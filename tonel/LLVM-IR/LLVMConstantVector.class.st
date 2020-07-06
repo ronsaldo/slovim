@@ -4,6 +4,15 @@ Class {
 	#category : #'LLVM-IR-Constants'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMConstantVector >> convertIntoCompactVectorType: compactVectorType [
+	self assert: compactVectorType elements = elements size.
+	^ LLVMConstantArray new
+		type: compactVectorType;
+		elements: elements;
+		yourself
+]
+
 { #category : #printing }
 LLVMConstantVector >> printOn: aStream [
 	aStream nextPut: $<.

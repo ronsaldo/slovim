@@ -8,6 +8,18 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMGetElementPtrInst >> computeResultType [
+	| memberType |
+	memberType := pointer type.
+	self assert: indices isEmpty not.
+	indices do: [ :each |
+		memberType := memberType computeMemberTypeFor: each
+	].
+
+	type := LLVMPointerType get: memberType addressSpace: pointer type addressSpace
+]
+
 { #category : #accessing }
 LLVMGetElementPtrInst >> indices [
 	^ indices

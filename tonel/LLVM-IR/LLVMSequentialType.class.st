@@ -23,6 +23,11 @@ LLVMSequentialType >> = other [
 	^ self class == other class and: [ elementType = other elementType and: [ elements = other elements ] ]
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMSequentialType >> computeMemberTypeFor: elementIndex [
+	^ elementType
+]
+
 { #category : #accessing }
 LLVMSequentialType >> elementType [
 	^ elementType

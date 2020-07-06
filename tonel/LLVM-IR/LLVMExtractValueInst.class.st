@@ -18,6 +18,18 @@ LLVMExtractValueInst >> aggregate: anObject [
 	aggregate := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMExtractValueInst >> computeResultType [
+	| memberType |
+	memberType := aggregate type.
+	self assert: indices isEmpty not.
+	indices do: [ :each |
+		memberType := memberType memberAt: each
+	].
+
+	type := memberType
+]
+
 { #category : #accessing }
 LLVMExtractValueInst >> indices [
 	^ indices

@@ -26,6 +26,11 @@ LLVMArrayType >> isArrayTy [
 ]
 
 { #category : #accessing }
+LLVMArrayType >> memberAt: index [
+	^ elementType
+]
+
+{ #category : #accessing }
 LLVMArrayType >> totalElementCount [
 	^ elementType totalElementCount * elements
 ]

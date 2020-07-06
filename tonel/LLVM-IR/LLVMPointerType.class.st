@@ -31,6 +31,11 @@ LLVMPointerType >> addressSpace: anObject [
 	addressSpace := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMPointerType >> computeMemberTypeFor: index [
+	^ elementType
+]
+
 { #category : #accessing }
 LLVMPointerType >> createName [
 	| validElementType |

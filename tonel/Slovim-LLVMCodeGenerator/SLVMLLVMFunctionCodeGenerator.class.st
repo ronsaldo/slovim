@@ -558,6 +558,34 @@ SLVMLLVMFunctionCodeGenerator >> convertName: aName [
 	]
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMLLVMFunctionCodeGenerator >> convertValue: value intoExpectedType: expectedType [
+	(value type isVectorTy and: [expectedType isArrayTy and: [ value type elements = expectedType elements ]]) ifTrue: [
+		"Vector -> compact vector"
+		| result |
+		result := expectedType undefinedConstant.
+		0 to: expectedType elements - 1 do: [ :i |
+			result := self aggregate: result insertValue: (self vector: value extractElementAt: i) at: i.
+		].
+	
+		^ result
+	].
+
+	(value type isArrayTy and: [expectedType isVectorTy and: [ value type elements = expectedType elements ]]) ifTrue: [
+		"Compact vector -> vector"
+		| result |
+		result := expectedType undefinedConstant.
+		0 to: expectedType elements - 1 do: [ :i |
+			result := self vector: result insertElement: (self aggregate: value extractValueAt: i) at: i.
+		].
+	
+		^ result
+	].
+
+	"self assert: value type = expectedType."
+	^ value
+]
+
 { #category : #'code generation' }
 SLVMLLVMFunctionCodeGenerator >> createProxyValues [
 	| llvmBasicBlock proxy |
@@ -2190,12 +2218,16 @@ SLVMLLVMFunctionCodeGenerator >> visitDynamicObjectToIntCast: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitExtractValue: instruction [
-	^ self addInstruction: (LLVMExtractValueInst new
+	| result |
+	result := self addInstruction: (LLVMExtractValueInst new
 		name: (self convertName: instruction name);
-		type: (self translateType: instruction type);
 		aggregate: (self translateValue: instruction aggregate);
 		indices: instruction indices;
-		yourself)
+		computeResultType;
+		yourself).
+		
+	^ self convertValue: result intoExpectedType: (self translateType: instruction type).
+
 ]
 
 { #category : #visiting }
@@ -2278,18 +2310,16 @@ SLVMLLVMFunctionCodeGenerator >> visitGetElementPointer: instruction [
 	canonicalFragments do: [ :fragment |
 		| expectedFragmentType lastContainerType |
 		result := self addInstruction: (LLVMGetElementPtrInst new
-			type: (self translateType: fragment type);
 			pointer: result;
 			indices: (fragment indices collect: [ :containerAndIndex | self translateValue: containerAndIndex second ]);
+			computeResultType;
 			yourself).
 		
 		expectedFragmentType := self translateType: fragment type.
 		lastContainerType := fragment indices last first.
 		lastContainerType isUnionType ifTrue: [
-			| expectedResultType |
-			expectedResultType := result type.
-			result type: (LLVMPointerType get: (self translateType: lastContainerType) elements first addressSpace: expectedResultType addressSpace).
-			result := self bitCast: result target: expectedResultType name: nil.
+			result type: (LLVMPointerType get: (self translateType: lastContainerType) elements first addressSpace: expectedFragmentType addressSpace).
+			result := self bitCast: result target: expectedFragmentType name: nil.
 		]
 	].
 
@@ -2339,11 +2369,20 @@ SLVMLLVMFunctionCodeGenerator >> visitGetThisContext: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitInsertValue: instruction [
+	| aggregate value expectedValueType |
+	aggregate := self translateValue: instruction aggregate.
+	value := self translateValue: instruction value.
+	expectedValueType := aggregate type.
+	instruction indices do: [ :eachIndex |
+		expectedValueType := expectedValueType memberAt: eachIndex
+	].	
+	value := self convertValue: value intoExpectedType: expectedValueType.
+
 	^ self addInstruction: (LLVMInsertValueInst new
 		name: (self convertName: instruction name);
 		type: (self translateType: instruction type);
-		aggregate: (self translateValue: instruction aggregate);
-		element: (self translateValue: instruction value);
+		aggregate: aggregate;
+		element: value;
 		indices: instruction indices;
 		yourself)
 ]
@@ -2517,15 +2556,18 @@ SLVMLLVMFunctionCodeGenerator >> visitLandingPath: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitLoad: instruction [
-	| pointer type |
+	| pointer type result |
 	type := self translateType: instruction type.
 	pointer := self translateValue: instruction variable.
-	^ self addInstruction: (LLVMLoadInst new
+	result := self addInstruction: (LLVMLoadInst new
 		name: (self convertName: instruction name);
 		volatile: instruction volatile;
 		pointer: pointer;
-		type: type;
-		yourself)
+		type: pointer type elementType;
+		yourself).
+	result := self convertValue: result intoExpectedType: type.
+
+	^ result
 ]
 
 { #category : #visiting }
@@ -2731,6 +2773,7 @@ SLVMLLVMFunctionCodeGenerator >> visitStore: instruction [
 	| pointer value |
 	pointer := self translateValue: instruction variable.
 	value := self translateValue: instruction value.
+	value := self convertValue: value intoExpectedType: pointer type elementType.
 	^ self addInstruction: (LLVMStoreInst new
 		name: (self convertName: instruction name);
 		volatile: instruction volatile;

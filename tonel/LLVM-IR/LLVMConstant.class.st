@@ -9,6 +9,11 @@ LLVMConstant >> asLLVMMetadata [
 	^ LLVMConstantAsMetadata new constant: self
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMConstant >> convertIntoCompactVectorType: compactVectorType [
+	self error: 'Not supported here.'
+]
+
 { #category : #printing }
 LLVMConstant >> printOn: aStream [
 	self subclassResponsibility
