@@ -2601,15 +2601,19 @@ SLVMLLVMFunctionCodeGenerator >> visitMakeVector: instruction [
 				vectorParam := self vector: vectorParam shuffleWith: vectorParam
 					mask: ((0 to: vectorType elements - 1) collect: [ :mi | mi min: param type elements - 1 ])
 			].
-				
-			resultInstruction := self vector: resultInstruction shuffleWith: vectorParam
-					mask: ((0 to: vectorType elements - 1) collect: [:mi |
-						mi < destIndex ifTrue: [
-							mi
-						] ifFalse: [
-							mi - destIndex +  vectorType elements
-						]
-					]).
+			
+			resultInstruction isUndefValue ifTrue: [
+				resultInstruction := vectorParam
+			] ifFalse: [ 
+				resultInstruction := self vector: resultInstruction shuffleWith: vectorParam
+						mask: ((0 to: vectorType elements - 1) collect: [:mi |
+							mi < destIndex ifTrue: [
+								mi
+							] ifFalse: [
+								mi - destIndex +  vectorType elements
+							]
+						]).
+			].
 			destIndex := destIndex + param type elements
 		] ifFalse: [
 			resultInstruction := self vector: resultInstruction

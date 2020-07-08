@@ -44,6 +44,11 @@ LLVMValue >> isInstruction [
 	^ false
 ]
 
+{ #category : #testing }
+LLVMValue >> isUndefValue [
+	^ false
+]
+
 { #category : #accessing }
 LLVMValue >> name [
 	^ name

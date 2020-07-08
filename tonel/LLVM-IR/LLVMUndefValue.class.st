@@ -9,6 +9,11 @@ LLVMUndefValue >> convertIntoCompactVectorType: compactVectorType [
 	^ self copy type: compactVectorType; yourself
 ]
 
+{ #category : #testing }
+LLVMUndefValue >> isUndefValue [
+	^ true
+]
+
 { #category : #printing }
 LLVMUndefValue >> printOn: aStream [
 	^ aStream nextPutAll: 'undef'
