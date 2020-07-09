@@ -328,8 +328,12 @@ LLVMModule >> linkerTargetTriple: aTriple [
 { #category : #writing }
 LLVMModule >> llcFlags [
 	| flags |
-	flags := #().
-	optimizationLevel ifNotNil: [ flags := { '-O=' , optimizationLevel asString} ].
+	flags := #(
+		"Emit functions and globals into separate sections"
+		'--data-sections'
+		'--function-sections'
+	).
+	optimizationLevel ifNotNil: [ flags := flags , { '-O=' , optimizationLevel asString} ].
 	relocationModel ifNotNil: [ flags := flags , { '-relocation-model=' , relocationModel } ].
 	cpu ifNotNil: [ flags := flags , { '-mcpu=' , cpu } ].
 	fpu ifNotNil: [ flags := flags , { '-mattr=' , fpu } ].
@@ -338,7 +342,6 @@ LLVMModule >> llcFlags [
 	(machineAttributes isNotNil and: [machineAttributes isNotEmpty]) ifTrue: [ 
 		flags := flags , { '-mattr=' , machineAttributes }
 	].
-	flags := flags , #('--meabi=gnu').
 
 	compilationPlugins ifNotEmpty: [ 
 		flags := flags , (compilationPlugins collect: [:pluginName |
@@ -545,6 +548,7 @@ LLVMModule >> writeExecutableToFileNamed: outputFileName [
 	self writeObjectToFileNamed: objectFile.
 
 	arguments := self linkerTargetArguments , {
+		'-Wl,--gc-sections' .
 		'-o' . outputFileRef fullName.
 		objectFile.
 	} , self linkerArguments.
