@@ -78,7 +78,9 @@ LLVMFunction >> fullPrintOn: aStream [
 			aStream space; nextPutAll: each
 		].
 	
-		aStream  << ' ' << functionType returnType name << ' @' << self name << ' ( '.
+		aStream << ' ' << functionType returnType name << ' @'.
+		self name llvmPrintNameOn: aStream.
+		aStream << ' ( '.
 		
 		arguments doWithIndex: [ :arg :index |
 			index > 1 ifTrue: [ aStream << ', ' ].
@@ -99,7 +101,9 @@ LLVMFunction >> fullPrintOn: aStream [
 	returnAttributes do: [ :each |
 		aStream space; nextPutAll: each
 	].
-	aStream << ' ' << functionType returnType name << ' @' << self name << ' ( '.
+	aStream << ' ' << functionType returnType name << ' @' .
+	self name llvmPrintNameOn: aStream.
+	aStream << ' ( '.
 	
 	arguments doWithIndex: [ :arg :index |
 			index > 1 ifTrue: [ aStream << ', ' ].

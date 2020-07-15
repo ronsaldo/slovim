@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'baseType',
 		'arrayRange',
-		'members'
+		'members',
+		'identifier'
 	],
 	#category : #'Slovim-Core-Debug'
 }
@@ -32,6 +33,16 @@ SLVMDebugCompositeType >> baseType [
 { #category : #accessing }
 SLVMDebugCompositeType >> baseType: anObject [
 	baseType := anObject
+]
+
+{ #category : #accessing }
+SLVMDebugCompositeType >> identifier [
+	^ identifier
+]
+
+{ #category : #accessing }
+SLVMDebugCompositeType >> identifier: anObject [
+	identifier := anObject
 ]
 
 { #category : #initialization }

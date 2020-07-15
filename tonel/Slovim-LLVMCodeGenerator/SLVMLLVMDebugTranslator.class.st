@@ -45,6 +45,19 @@ SLVMLLVMDebugTranslator class >> initialize [
 	}.
 ]
 
+{ #category : #visiting }
+SLVMLLVMDebugTranslator >> escapeIdentifierForCodeView: identifier [
+	self isEmittingCodeView ifTrue: [ ^ nil ].
+	identifier ifNil: [ ^ nil ].
+	^ '.?' , identifier , '@@'
+
+]
+
+{ #category : #visiting }
+SLVMLLVMDebugTranslator >> isEmittingCodeView [
+	^ moduleTranslator isEmittingCodeView
+]
+
 { #category : #accessing }
 SLVMLLVMDebugTranslator >> llvmModule [
 	^ moduleTranslator llvmModule
@@ -171,6 +184,9 @@ SLVMLLVMDebugTranslator >> visitDebugCompositeType: debugType [
 		size: debugType bitSize;
 		align: debugType bitAlignment;
 		elements: (LLVMMDTuple for: self llvmModule);
+		identifier: (self isEmittingCodeView
+			ifTrue: [debugType identifier]
+			ifFalse: [nil]);
 		yourself.
 	moduleTranslator register: debugType debugElement: compositeType.
 	self translateDebugType: debugType commonParametersInto: compositeType.
@@ -352,6 +368,7 @@ SLVMLLVMDebugTranslator >> visitMatrixType: type [
 		size: type size*8;
 		align: type alignment*8;
 		elements: (LLVMMDTuple for: self llvmModule);
+		identifier: (self escapeIdentifierForCodeView: type asString);
 		yourself.
 	moduleTranslator register: type debugElement: compositeType.
 	^ compositeType
@@ -401,6 +418,7 @@ SLVMLLVMDebugTranslator >> visitVectorType: type [
 		size: type size*8;
 		align: type alignment*8;
 		elements: (LLVMMDTuple for: self llvmModule);
+		identifier: (self escapeIdentifierForCodeView: type asString);
 		yourself.
 	moduleTranslator register: type debugElement: compositeType.
 	^ compositeType

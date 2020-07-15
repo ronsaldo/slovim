@@ -26,8 +26,82 @@ Class {
 		'linkerTargetTriple',
 		'systemRoot'
 	],
+	#classVars : [
+		'ClangIsPresent',
+		'LLCIsPresent',
+		'LastLLCAndClangSessionCheck'
+	],
 	#category : #'LLVM-IR'
 }
+
+{ #category : #testing }
+LLVMModule class >> checkLLCAndClangPresence [
+	LastLLCAndClangSessionCheck == Smalltalk session ifFalse: [
+		LLCIsPresent := (LibC resultOfCommand: self llcProgram  , ' --version') isNotEmpty.
+		ClangIsPresent := (LibC resultOfCommand: self clangProgram  , ' --version') isNotEmpty.
+	]
+]
+
+{ #category : #accessing }
+LLVMModule class >> clangProgram [
+	| clangProgram |
+	clangProgram := OSEnvironment current at: 'CC' ifAbsent: [nil].
+	clangProgram ifNil: [
+		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
+			clangProgram := 'clang.exe'
+		].
+	
+		clangProgram ifNil: [ clangProgram := 'clang' ].
+	].
+
+	^ clangProgram
+]
+
+{ #category : #testing }
+LLVMModule class >> hasClang [
+	^ ClangIsPresent
+]
+
+{ #category : #testing }
+LLVMModule class >> hasClangButNoLLC [
+	self checkLLCAndClangPresence.
+	^ ClangIsPresent and: [LLCIsPresent not]
+]
+
+{ #category : #testing }
+LLVMModule class >> hasLLC [
+	^ LLCIsPresent
+]
+
+{ #category : #accessing }
+LLVMModule class >> linkerProgram [
+	| linkerProgram |
+	linkerProgram := OSEnvironment current at: 'CC' ifAbsent: [nil].
+	linkerProgram ifNil: [
+		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
+			linkerProgram := 'clang.exe'
+		].
+	
+		linkerProgram ifNil: [ linkerProgram := 'clang' ].
+	].
+
+	^ linkerProgram
+]
+
+{ #category : #accessing }
+LLVMModule class >> llcProgram [
+	| llcProgram |
+	llcProgram := OSEnvironment current at: 'LLC' ifAbsent: [nil].
+	llcProgram ifNil: [
+		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
+			llcProgram := 'llc.exe'
+		].
+	
+		llcProgram ifNil: [llcProgram := 'llc']
+	].
+
+	^ llcProgram
+]
 
 { #category : #'instance creation' }
 LLVMModule class >> name: aName context: aContext [
@@ -107,20 +181,13 @@ LLVMModule >> clangFlags [
 
 { #category : #accessing }
 LLVMModule >> clangProgram [
-	clangProgram ifNil: [ linkerProgram := OSEnvironment current at: 'CC' ifAbsent: [nil]].
-	clangProgram ifNil: [
-		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
-			clangProgram := 'clang.exe'
-		].
-	
-		clangProgram ifNil: [ clangProgram := 'clang' ].
-		
+	^ clangProgram ifNil: [
 		(self targetTriple isNotNil and: [ self targetTriple includesSubstring: 'wasm' ]) ifTrue: [
-			clangProgram := 'emcc'
-		]
-	].
-
-	^ clangProgram
+			^ 'emcc'
+		].
+			
+		self class clangProgram
+	]
 ]
 
 { #category : #accessing }
@@ -246,6 +313,11 @@ LLVMModule >> getOrCreateNamedMetadata: aName [
 	^ metadataSymbolTable at: aName ifAbsentPut: [ LLVMMDTuple new metadataName: aName ]
 ]
 
+{ #category : #writing }
+LLVMModule >> hasClangButNoLLC [
+	^ self class hasClangButNoLLC
+]
+
 { #category : #initialization }
 LLVMModule >> initialize [
 	super initialize.
@@ -268,6 +340,11 @@ LLVMModule >> initializeWithName: aName context: aContext [
 	self initialize
 ]
 
+{ #category : #writing }
+LLVMModule >> isWindowsTarget [
+	^ (targetTriple includesSubstring: 'windows') or: [ targetTriple includesSubstring: 'win32' ]
+]
+
 { #category : #accessing }
 LLVMModule >> linkerArguments [
 	^ linkerArguments ifNil: [linkerArguments := #()]
@@ -280,20 +357,13 @@ LLVMModule >> linkerArguments: aListOfFlags [
 
 { #category : #accessing }
 LLVMModule >> linkerProgram [
-	linkerProgram ifNil: [ linkerProgram := OSEnvironment current at: 'CC' ifAbsent: [nil]].
-	linkerProgram ifNil: [
-		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
-			linkerProgram := 'clang.exe'
+	^ linkerProgram ifNil: [
+		(self targetTriple isNotNil and: [ self targetTriple includesSubstring: 'wasm' ]) ifTrue: [
+			^ 'emcc'
 		].
 	
-		linkerProgram ifNil: [ linkerProgram := 'clang' ].
-		
-		(self targetTriple isNotNil and: [ self targetTriple includesSubstring: 'wasm' ]) ifTrue: [
-			linkerProgram := 'emcc'
-		]
-	].
-
-	^ linkerProgram
+		^ self class linkerProgram
+	]
 ]
 
 { #category : #accessing }
@@ -354,16 +424,7 @@ LLVMModule >> llcFlags [
 
 { #category : #accessing }
 LLVMModule >> llcProgram [
-	llcProgram ifNil: [ llcProgram := OSEnvironment current at: 'LLC' ifAbsent: [nil] ].
-	llcProgram ifNil: [
-		(Smalltalk os isWin32 or: [ Smalltalk os isWin64 ]) ifTrue: [
-			llcProgram := 'llc.exe'
-		].
-	
-		llcProgram ifNil: [llcProgram := 'llc']
-	].
-
-	^ llcProgram
+	^ llcProgram ifNil: [ self class llcProgram ]
 ]
 
 { #category : #accessing }
@@ -483,7 +544,8 @@ LLVMModule >> targetTriple: aTargetTriple [
 
 { #category : #writing }
 LLVMModule >> useClangInsteadOfLLC [
-	^ false "compilationPlugins isEmpty"
+	compilationPlugins isEmpty ifFalse: [ ^ false ].
+	^ self hasClangButNoLLC
 ]
 
 { #category : #accessing }
@@ -542,13 +604,17 @@ LLVMModule >> writeAssemblyToFileNamed: outputFileRef [
 
 { #category : #writing }
 LLVMModule >> writeExecutableToFileNamed: outputFileName [
-	| outputFileRef objectFile arguments |
+	| outputFileRef objectFile arguments extraLinkerArguments |
 	outputFileRef := outputFileName asFileReference asAbsolute.
 	objectFile := outputFileRef fullName , '.o'.
 	self writeObjectToFileNamed: objectFile.
 
-	arguments := self linkerTargetArguments , {
-		'-Wl,--gc-sections' .
+	extraLinkerArguments := #('-Wl,--gc-sections').
+	(Smalltalk os isWin32 and: [self isWindowsTarget]) ifTrue: [
+		extraLinkerArguments := #('-Wl,/debug')
+	].
+	
+	arguments := self linkerTargetArguments , extraLinkerArguments , {
 		'-o' . outputFileRef fullName.
 		objectFile.
 	} , self linkerArguments.

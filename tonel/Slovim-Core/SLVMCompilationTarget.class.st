@@ -255,7 +255,7 @@ SLVMCompilationTarget >> isWebAssembly [
 
 { #category : #testing }
 SLVMCompilationTarget >> isWin32 [
-	^ self operatingSystemName = #win32
+	^ #(win32 windows) includes: self operatingSystemName
 ]
 
 { #category : #testing }

@@ -3,7 +3,8 @@ Class {
 	#superclass : #SLVMDebugInformation,
 	#instVars : [
 		'name',
-		'directory'
+		'directory',
+		'fileReference'
 	],
 	#category : #'Slovim-Core-Debug'
 }
@@ -14,6 +15,11 @@ SLVMDebugSourceFile class >> null [
 ]
 
 { #category : #accessing }
+SLVMDebugSourceFile >> asFileReference [
+	^ fileReference ifNil: [fileReference := directory asFileReference / name]
+]
+
+{ #category : #accessing }
 SLVMDebugSourceFile >> directory [
 	^ directory
 ]
@@ -21,6 +27,18 @@ SLVMDebugSourceFile >> directory [
 { #category : #accessing }
 SLVMDebugSourceFile >> directory: anObject [
 	directory := anObject
+]
+
+{ #category : #accessing }
+SLVMDebugSourceFile >> fullname [
+	^ self asFileReference fullName
+]
+
+{ #category : #accessing }
+SLVMDebugSourceFile >> md5Checksum [
+	^ ((self asFileReference
+		binaryReadStreamDo: [ :in | MD5 hashStream: in ]
+		ifAbsent: [MD5 hashMessage: #[]])) hex
 ]
 
 { #category : #accessing }

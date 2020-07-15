@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'tag',
 		'elements',
-		'baseType'
+		'baseType',
+		'identifier'
 	],
 	#category : #'LLVM-IR-Metadata'
 }
@@ -30,13 +31,23 @@ LLVMDICompositeType >> elements: anObject [
 ]
 
 { #category : #accessing }
+LLVMDICompositeType >> identifier [
+	^ identifier
+]
+
+{ #category : #accessing }
+LLVMDICompositeType >> identifier: anObject [
+	identifier := anObject
+]
+
+{ #category : #accessing }
 LLVMDICompositeType >> specializedName [
 	^ #DICompositeType
 ]
 
 { #category : #accessing }
 LLVMDICompositeType >> specializedProperties [
-	^ super specializedProperties , #(tag elements baseType)
+	^ super specializedProperties , #(tag elements baseType identifier)
 ]
 
 { #category : #accessing }

@@ -26,7 +26,8 @@ Class {
 		'objectMethodDispatchTrampolines',
 		'nativeMethodDispatchTrampolines',
 		'namedStructures',
-		'compactTranslatedVectors'
+		'compactTranslatedVectors',
+		'cskMD5'
 	],
 	#classVars : [
 		'DebugLanguageMap',
@@ -165,10 +166,19 @@ SLVMLLVMCodeGenerator >> context [
 { #category : #'debug information' }
 SLVMLLVMCodeGenerator >> convertDebugFile: debugFile [
 	^ self convertedDebugFiles at: debugFile ifAbsentPut: [
-		(LLVMDIFile for: self llvmModule)
-			filename: debugFile name;
-			directory: debugFile directory;
-			yourself
+		self isEmittingCodeView ifTrue: [ 
+			(LLVMDIFile for: self llvmModule)
+				filename: debugFile fullname;
+				directory: '';
+				checksumkind: self cskMD5;
+				checksum: debugFile md5Checksum;
+				yourself
+		] ifFalse: [ 
+			(LLVMDIFile for: self llvmModule)
+				filename: debugFile name;
+				directory: debugFile directory;
+				yourself
+		].
 	]
 ]
 
@@ -346,6 +356,11 @@ SLVMLLVMCodeGenerator >> createObjectMethodDispatchTrampolineWithType: functionT
 	^ self translateValue: slvmFunction
 ]
 
+{ #category : #'debug information' }
+SLVMLLVMCodeGenerator >> cskMD5 [
+	^ cskMD5 ifNil: [cskMD5 := LLVMNamedFlags with: #(CSK_MD5)]
+]
+
 { #category : #accessing }
 SLVMLLVMCodeGenerator >> debugCompileUnit [
 	^ debugCompileUnit
@@ -457,6 +472,11 @@ SLVMLLVMCodeGenerator >> initialize [
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> intPointerType [
 	^ target pointerSize = 4 ifTrue: [ llvmContext int32Ty ] ifFalse: [ llvmContext int64Ty ]
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> isEmittingCodeView [
+	^ target isWin32
 ]
 
 { #category : #'debug information' }
@@ -724,8 +744,16 @@ SLVMLLVMCodeGenerator >> translateModuleDebugInformation: module [
 	
 	cuMetadata := LLVMMDTuple named: #'llvm.dbg.cu' for: self llvmModule.
 	int32Ty := self context int32Ty.
+	self isEmittingCodeView ifTrue: [
+		self llvmModule
+			addModuleFlag: 'CodeView' value: (int32Ty constant: 1) behaviorOnCollision: (int32Ty constant: 2)
+		
+	] ifFalse: [
+		self llvmModule
+			addModuleFlag: 'Dwarf Version' value: (int32Ty constant: 4) behaviorOnCollision: (int32Ty constant: 2)
+	].
+
 	self llvmModule
-		addModuleFlag: 'Dwarf Version' value: (int32Ty constant: 4) behaviorOnCollision: (int32Ty constant: 2);
 		addModuleFlag: 'Debug Info Version' value: (int32Ty constant: 3) behaviorOnCollision: (int32Ty constant: 2).
 	
 	debugCompileUnit := (LLVMDICompileUnit for: self llvmModule)
@@ -840,10 +868,21 @@ SLVMLLVMCodeGenerator >> uintPointerType [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> unknownDebugFile [
-	^ unknownDebugFile ifNil: [ unknownDebugFile := (LLVMDIFile for: self llvmModule)
-			filename: 'unknown';
-			directory: '';
-			yourself ]
+	^ unknownDebugFile ifNil: [
+		self isEmittingCodeView ifTrue: [
+			unknownDebugFile := (LLVMDIFile for: self llvmModule)
+				filename: 'unknown';
+				directory: '';
+				checksumkind: self cskMD5;
+				checksum: (MD5 hashMessage: #[]) hex;
+				yourself
+		] ifFalse: [
+			unknownDebugFile := (LLVMDIFile for: self llvmModule)
+				filename: 'unknown';
+				directory: '';
+				yourself
+		].
+	]
 ]
 
 { #category : #testing }

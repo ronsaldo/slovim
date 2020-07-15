@@ -155,7 +155,7 @@ SLVMLLVMCompilationTarget >> abiName: anObject [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> applyABI [
 	(#(x86 x86_64) includes: self architecture) ifTrue: [ 
-		self isWin32 ifTrue: [ ^ self abiName: #coff ].
+		self isWin32 ifTrue: [ ^ self abiName: #msvc ].
 		self isLinux ifTrue: [ ^ self abiName: #gnu ].
 		self isOSX ifTrue: [ ^ self abiName: #macho ].
 		^ self abiName: #elf

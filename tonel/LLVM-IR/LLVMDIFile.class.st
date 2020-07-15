@@ -3,10 +3,32 @@ Class {
 	#superclass : #LLVMDIScope,
 	#instVars : [
 		'filename',
-		'directory'
+		'directory',
+		'checksumkind',
+		'checksum'
 	],
 	#category : #'LLVM-IR-Metadata'
 }
+
+{ #category : #accessing }
+LLVMDIFile >> checksum [
+	^ checksum
+]
+
+{ #category : #accessing }
+LLVMDIFile >> checksum: anObject [
+	checksum := anObject
+]
+
+{ #category : #accessing }
+LLVMDIFile >> checksumkind [
+	^ checksumkind
+]
+
+{ #category : #accessing }
+LLVMDIFile >> checksumkind: anObject [
+	checksumkind := anObject
+]
 
 { #category : #accessing }
 LLVMDIFile >> directory [
@@ -35,5 +57,5 @@ LLVMDIFile >> specializedName [
 
 { #category : #accessing }
 LLVMDIFile >> specializedProperties [
-	^ #(filename directory)
+	^ #(filename directory checksumkind checksum)
 ]
