@@ -62,7 +62,7 @@ SLVMCompilationTarget >> canonicalName [
 ]
 
 { #category : #accessing }
-SLVMCompilationTarget >> canonicalOperatingSystem [
+SLVMCompilationTarget >> canonicalOperatingSystemName [
 	^ self operatingSystemName
 ]
 
@@ -214,6 +214,11 @@ SLVMCompilationTarget >> isCurrentImage [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isEmbeddedPAL [
+	^ false
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isFreeBSD [
 	^ self operatingSystemName = #freebsd
 ]
@@ -244,6 +249,11 @@ SLVMCompilationTarget >> isNoOperatingSystem [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isNullOS [
+	^ false
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isOSX [
 	^ self operatingSystemName = #osx
 ]
@@ -254,8 +264,8 @@ SLVMCompilationTarget >> isWebAssembly [
 ]
 
 { #category : #testing }
-SLVMCompilationTarget >> isWin32 [
-	^ #(win32 windows) includes: self operatingSystemName
+SLVMCompilationTarget >> isWindows [
+	^ #windows = self operatingSystemName
 ]
 
 { #category : #testing }
@@ -294,7 +304,7 @@ SLVMCompilationTarget >> linkerTargetTriple [
 				].
 			].
 
-			self canonicalOperatingSystem ifNotNil: [ :system |
+			self canonicalOperatingSystemName ifNotNil: [ :system |
 				system ~= #unknown ifTrue: [ 
 					out nextPut: $-; nextPutAll: system
 				].
@@ -382,7 +392,7 @@ SLVMCompilationTarget >> sampler [
 
 { #category : #'as yet unclassified' }
 SLVMCompilationTarget >> sharedObjectsAreAlsoImports [
-	^ self isWin32 not
+	^ self isWindows not
 ]
 
 { #category : #types }
@@ -419,7 +429,7 @@ SLVMCompilationTarget >> targetTriple [
 				out nextPut: $-; nextPutAll: vendor
 			].
 
-			self canonicalOperatingSystem ifNil: [
+			self canonicalOperatingSystemName ifNil: [
 				out nextPutAll: '-none'
 			] ifNotNil: [ :system |
 				out nextPut: $-; nextPutAll: system

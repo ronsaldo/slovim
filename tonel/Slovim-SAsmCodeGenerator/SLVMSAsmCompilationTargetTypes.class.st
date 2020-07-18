@@ -9,12 +9,12 @@ Class {
 
 { #category : #'operating systems' }
 SLVMSAsmCompilationTargetTypes >> double [
-	^ self isWin32 ifTrue: [ self doubleAlign8 ] ifFalse: [ self doubleAlign4 ]
+	^ self isWindows ifTrue: [ self doubleAlign8 ] ifFalse: [ self doubleAlign4 ]
 ]
 
 { #category : #testing }
-SLVMSAsmCompilationTargetTypes >> isWin32 [
-	^ self operatingSystemName = #win32
+SLVMSAsmCompilationTargetTypes >> isWindows [
+	^ self operatingSystemName = #windows
 ]
 
 { #category : #accessing }

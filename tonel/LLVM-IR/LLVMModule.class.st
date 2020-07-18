@@ -39,6 +39,7 @@ LLVMModule class >> checkLLCAndClangPresence [
 	LastLLCAndClangSessionCheck == Smalltalk session ifFalse: [
 		LLCIsPresent := (LibC resultOfCommand: self llcProgram  , ' --version') isNotEmpty.
 		ClangIsPresent := (LibC resultOfCommand: self clangProgram  , ' --version') isNotEmpty.
+		LastLLCAndClangSessionCheck := Smalltalk session
 	]
 ]
 
@@ -161,8 +162,11 @@ LLVMModule >> asString [
 { #category : #writing }
 LLVMModule >> clangFlags [
 	| flags |
-	flags := #().
-	optimizationLevel ifNotNil: [ flags := { '-O' , optimizationLevel asString} ].
+	flags := #(
+		'-fdata-sections'
+		'-ffunction-sections'
+	).
+	optimizationLevel ifNotNil: [ flags := flags , { '-O' , optimizationLevel asString} ].
 	flags := { '-target' . targetTriple }.
 	cpu ifNotNil: [ flags := flags , { '-mcpu=' , cpu } ].
 	fpu ifNotNil: [ flags := flags , { '-mfpu=' , fpu } ].

@@ -476,7 +476,7 @@ SLVMLLVMCodeGenerator >> intPointerType [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> isEmittingCodeView [
-	^ target isWin32
+	^ target isWindows
 ]
 
 { #category : #'debug information' }

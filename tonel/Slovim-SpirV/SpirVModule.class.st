@@ -86,6 +86,11 @@ SpirVModule >> writeExecutableToFileNamed: fileName [
 ]
 
 { #category : #writing }
+SpirVModule >> writeObjectLibToFileNamed: fileName [
+	^ self saveTo: fileName
+]
+
+{ #category : #writing }
 SpirVModule >> writeObjectToFileNamed: fileName [
 	^ self saveTo: fileName
 ]

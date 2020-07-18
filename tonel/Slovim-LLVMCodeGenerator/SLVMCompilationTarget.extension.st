@@ -21,6 +21,11 @@ SLVMCompilationTarget class >> llvm_armv6 [
 ]
 
 { #category : #'*Slovim-LLVMCodeGenerator' }
+SLVMCompilationTarget class >> llvm_armv6k [
+	^ SLVMLLVMCompilationTarget armv6k
+]
+
+{ #category : #'*Slovim-LLVMCodeGenerator' }
 SLVMCompilationTarget class >> llvm_armv6m [
 	^ SLVMLLVMCompilationTarget armv6m
 ]

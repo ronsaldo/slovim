@@ -15,7 +15,8 @@ Class {
 		'machineAttributes',
 		'compilationPlugins',
 		'relocationModel',
-		'exceptionModel'
+		'exceptionModel',
+		'canonicalOperatingSystemName'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
@@ -51,6 +52,15 @@ SLVMLLVMCompilationTarget class >> armv5 [
 SLVMLLVMCompilationTarget class >> armv6 [
 	^ self basicNew
 		armv6;
+		pointerSize: 4;
+		initialize;
+		yourself
+]
+
+{ #category : #construction }
+SLVMLLVMCompilationTarget class >> armv6k [
+	^ self basicNew
+		armv6k;
 		pointerSize: 4;
 		initialize;
 		yourself
@@ -155,7 +165,7 @@ SLVMLLVMCompilationTarget >> abiName: anObject [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> applyABI [
 	(#(x86 x86_64) includes: self architecture) ifTrue: [ 
-		self isWin32 ifTrue: [ ^ self abiName: #msvc ].
+		self isWindows ifTrue: [ ^ self abiName: #msvc ].
 		self isLinux ifTrue: [ ^ self abiName: #gnu ].
 		self isOSX ifTrue: [ ^ self abiName: #macho ].
 		^ self abiName: #elf
@@ -193,7 +203,7 @@ SLVMLLVMCompilationTarget >> applyExceptionHandlingModel [
 		^ self.
 	].
 
-	self isWin32 ifTrue: [ 
+	self isWindows ifTrue: [ 
 		exceptionModel := #wineh
 	].
 	self isWebAssembly ifTrue: [ 
@@ -252,6 +262,12 @@ SLVMLLVMCompilationTarget >> armv6 [
 ]
 
 { #category : #architectures }
+SLVMLLVMCompilationTarget >> armv6k [
+	self
+		architecture: #arm subarchitecture: #v6k
+]
+
+{ #category : #architectures }
 SLVMLLVMCompilationTarget >> armv6m [
 	self
 		architecture: #arm subarchitecture: #v6m
@@ -283,6 +299,16 @@ SLVMLLVMCompilationTarget >> canonicalArchitecture [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> canonicalArchitecture: anObject [
 	canonicalArchitecture := anObject
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> canonicalOperatingSystemName [
+	^ canonicalOperatingSystemName ifNil: [operatingSystemName]
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> canonicalOperatingSystemName: aName [
+	canonicalOperatingSystemName := aName
 ]
 
 { #category : #accessing }
@@ -383,6 +409,11 @@ SLVMLLVMCompilationTarget >> isARM64 [
 ]
 
 { #category : #testing }
+SLVMLLVMCompilationTarget >> isEmbeddedPAL [
+	^ operatingSystemName = #epal
+]
+
+{ #category : #testing }
 SLVMLLVMCompilationTarget >> isLLVMCompilationTarget [
 	^ true
 ]
@@ -390,6 +421,11 @@ SLVMLLVMCompilationTarget >> isLLVMCompilationTarget [
 { #category : #testing }
 SLVMLLVMCompilationTarget >> isMIPS [
 	^ architecture beginsWith: #mips
+]
+
+{ #category : #testing }
+SLVMLLVMCompilationTarget >> isNullOS [
+	^ operatingSystemName = #nullos
 ]
 
 { #category : #testing }
@@ -431,6 +467,7 @@ SLVMLLVMCompilationTarget >> operatingSystemName [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> operatingSystemName: aName [
 	operatingSystemName := aName.
+	canonicalOperatingSystemName := nil.
 	self applyABI; applyDefaultVendor; applyExceptionHandlingModel
 ]
 
@@ -452,6 +489,16 @@ SLVMLLVMCompilationTarget >> relocationModel [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> relocationModel: aRelocationModel [
 	relocationModel := aRelocationModel
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> setForEmbeddedPAL [
+	self operatingSystemName: #epal; canonicalOperatingSystemName: #none
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> setForNullOS [
+	self operatingSystemName: #nullos; canonicalOperatingSystemName: #none
 ]
 
 { #category : #accessing }
