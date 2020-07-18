@@ -1781,6 +1781,37 @@ SLVMBuilder >> urem: left with: right name: resultName [
 	^ self addOperation: #urem left: left right: right name: resultName
 ]
 
+{ #category : #intrinsics }
+SLVMBuilder >> valistEnd: aValue [
+	"Count leading zeros."
+	| intrinsic |
+	intrinsic := self valistEndIntrinsic.
+	^ self call: intrinsic arguments: { self bitCast: aValue target: self valistIntrinsicType }
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> valistEndIntrinsic [
+	^ self builtInFunctionName: #'valist.end' argumentTypes: { self valistIntrinsicType } returnType: SLVMType voidType
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> valistIntrinsicType [
+	^ self compilationTarget voidPointerType
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> valistStart: aValue [
+	"Count leading zeros."
+	| intrinsic |
+	intrinsic := self valistStartIntrinsic.
+	^ self call: intrinsic arguments: { self bitCast: aValue target: self valistIntrinsicType }
+]
+
+{ #category : #intrinsics }
+SLVMBuilder >> valistStartIntrinsic [
+	^ self builtInFunctionName: #'valist.start' argumentTypes: { self valistIntrinsicType } returnType: SLVMType voidType
+]
+
 { #category : #'vector arithmetic' }
 SLVMBuilder >> vectorAdd: left with: right [
 	^ self vectorAdd: left with: right name: nil

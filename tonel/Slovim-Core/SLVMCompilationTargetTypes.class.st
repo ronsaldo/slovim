@@ -285,6 +285,11 @@ SLVMCompilationTargetTypes >> ushort [
 ]
 
 { #category : #types }
+SLVMCompilationTargetTypes >> valist [
+	^ self voidPointerType
+]
+
+{ #category : #types }
 SLVMCompilationTargetTypes >> vector: baseType elements: elements [
 	^ SLVMVectorType baseType: baseType elements: elements
 ]

@@ -269,6 +269,11 @@ SLVMCompilationTarget >> isWindows [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isWindowsStore [
+	^ false
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isX86 [
 	^ self isX86_32 or: [ self isX86_64 ]
 ]
@@ -542,6 +547,11 @@ SLVMCompilationTarget >> ulong [
 { #category : #types }
 SLVMCompilationTarget >> ushort [
 	^ types ushort
+]
+
+{ #category : #types }
+SLVMCompilationTarget >> valist [
+	^ types valist
 ]
 
 { #category : #types }

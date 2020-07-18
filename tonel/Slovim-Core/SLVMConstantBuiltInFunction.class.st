@@ -129,6 +129,10 @@ SLVMConstantBuiltInFunction class >> initialize [
 		'gc.root'
 		'gc.read'
 		'gc.write'
+		
+		"valist"
+		'valist.start'
+		'valist.end'
 	) collect: [:each | each asSymbol]).
 ]
 

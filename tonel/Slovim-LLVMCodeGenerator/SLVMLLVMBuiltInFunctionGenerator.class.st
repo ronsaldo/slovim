@@ -213,6 +213,14 @@ SLVMLLVMBuiltInFunctionGenerator class >> texture [
 ]
 
 { #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> varlistBuiltin [
+	<builtInFunctions>
+	self
+		addBuiltIn: #'valist.start' callEquivalent: #'llvm.va_start';
+		addBuiltIn: #'valist.end' callEquivalent: #'llvm.va_end'
+]
+
+{ #category : #initialization }
 SLVMLLVMBuiltInFunctionGenerator class >> vectorBuiltIn [
 	<builtInFunctions>
 	self

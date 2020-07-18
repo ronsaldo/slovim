@@ -169,6 +169,7 @@ SLVMFunction >> asPrettyFullSExpressionForTesting [
 		out cr.
 	
 		(sexpr allButFirst: 4) pairsDo: [ :key :value |
+			value isArray ifTrue: [ 
 			out tab; print: key; nextPutAll: ' ('; cr.
 			key = #blocks ifTrue: [
 				value do: [ :each |
@@ -177,9 +178,12 @@ SLVMFunction >> asPrettyFullSExpressionForTesting [
 			] ifFalse: [
 				value do: [ :each |
 					out tab; tab; print: each; cr.
-				]
+				]					
 			].
 			out tab; nextPutAll: ')'; cr.
+			] ifFalse: [
+				out tab; print: key; space; print: value; cr.
+			]
 		]
 	]) copyReplaceAll: '#' with: ''
 ]
