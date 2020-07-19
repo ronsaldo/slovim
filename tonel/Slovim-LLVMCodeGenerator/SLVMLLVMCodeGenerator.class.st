@@ -716,7 +716,7 @@ SLVMLLVMCodeGenerator >> translateModuleConstructorsOrDestructors: constructorsO
 		}
 	].
 
-	moduleDynamicRoots ifNotEmpty: [
+	(moduleDynamicRoots isNotEmpty and: [llvmGlobalName = 'llvm.global_ctors' ]) ifTrue: [
 		(self createGlobalDynamicRootsCtorOrDtorFor: llvmGlobalName) ifNotNil: [ :ctorOrDtor |
 			descriptors add: (descriptorType constant: {
 				int32Ty constant: self target objectModel gcModuleRootRegistrationPriority .
