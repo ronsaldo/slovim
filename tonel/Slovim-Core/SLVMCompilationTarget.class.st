@@ -126,6 +126,11 @@ SLVMCompilationTarget >> emittingDebugInformation: anObject [
 	emittingDebugInformation := anObject
 ]
 
+{ #category : #accessing }
+SLVMCompilationTarget >> exceptionModel [
+	^ nil
+]
+
 { #category : #types }
 SLVMCompilationTarget >> float [
 	^ types float
@@ -149,6 +154,31 @@ SLVMCompilationTarget >> generateLowLevelModule: aModule [
 { #category : #testing }
 SLVMCompilationTarget >> hasArmEhAbi [
 	^ false
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> hasDwarfExceptions [
+	^ self exceptionModel = #dwarf
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> hasNoExceptionModel [
+	^ self exceptionModel isNil
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> hasSEHExceptions [
+	^ self hasWindowsExceptions
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> hasWebAssemblyExceptions [
+	^ self exceptionModel = #wasm
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> hasWindowsExceptions [
+	^ self exceptionModel = #wineh
 ]
 
 { #category : #initialization }
@@ -393,6 +423,23 @@ SLVMCompilationTarget >> referenceSize [
 { #category : #types }
 SLVMCompilationTarget >> sampler [
 	^ types sampler
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> setDwarfExceptionModel [
+	self subclassResponsibility
+
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> setNoExceptionModel [
+
+]
+
+{ #category : #testing }
+SLVMCompilationTarget >> setWindowsExceptionModel [
+	self subclassResponsibility
+
 ]
 
 { #category : #'as yet unclassified' }

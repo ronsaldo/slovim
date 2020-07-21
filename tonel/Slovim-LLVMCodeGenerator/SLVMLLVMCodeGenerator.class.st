@@ -315,31 +315,8 @@ SLVMLLVMCodeGenerator >> createGlobalDynamicRootsCtor [
 
 { #category : #'as yet unclassified' }
 SLVMLLVMCodeGenerator >> createGlobalDynamicRootsCtorOrDtorFor: llvmGlobalName [
-	^ llvmGlobalName = #'llvm.global_ctors' ifTrue: [
-		self createGlobalDynamicRootsCtor
-	] ifFalse: [
-		self assert: llvmGlobalName = #'llvm.global_dtors'.
-		self createGlobalDynamicRootsDtor
-	]
-]
-
-{ #category : #'as yet unclassified' }
-SLVMLLVMCodeGenerator >> createGlobalDynamicRootsDtor [
-	| descriptorVar dtorFunction bb moduleRootUnregistrationFunction descriptorPointer descriptorCount |
-	descriptorVar := self getOrCreateDynamicsRootsDescriptor.
-	moduleRootUnregistrationFunction := self translateValue: self target objectModel moduleRootUnregistrationFunction.
-	descriptorPointer := LLVMBitCastConstantExpr new
-		type: moduleRootUnregistrationFunction functionType params first;
-		source: descriptorVar;
-		yourself.
-	descriptorCount := moduleRootUnregistrationFunction functionType params second constant: descriptorVar valueType elements.
-	
-	dtorFunction := LLVMFunction createWithType: (LLVMFunctionType get: self context voidTy params: #() isVarArg: false) linkage: LLVMGlobalValue privateLinkage name: nil module: self llvmModule..
-	bb := LLVMBasicBlock for: self context name: #entry parent: dtorFunction.
-	(LLVMIRBuilder forBasicBlock: bb)
-		call: moduleRootUnregistrationFunction arguments: { descriptorPointer . descriptorCount};
-		returnVoid.
-	^ dtorFunction
+	self assert: llvmGlobalName = #'llvm.global_ctors'.
+	^ self createGlobalDynamicRootsCtor
 ]
 
 { #category : #'code generation' }
@@ -573,6 +550,9 @@ SLVMLLVMCodeGenerator >> setLLVMFunction: llvmFunction flagsFrom: slvmFunction [
 	].
 	slvmFunction isNoReturn ifTrue: [ 
 		llvmFunction addFunctionAttribute: #noreturn
+	].
+	slvmFunction doesHaveMultipleReturns ifTrue: [ 
+		llvmFunction addFunctionAttribute: #returns_twice
 	].
 
 	slvmFunction isEmpty ifFalse: [

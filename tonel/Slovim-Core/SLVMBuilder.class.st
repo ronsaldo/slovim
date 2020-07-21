@@ -39,10 +39,9 @@ SLVMBuilder >> addDynamicLiteral: literal [
 { #category : #adding }
 SLVMBuilder >> addInstruction: anInstruction name: theInstructionName [
 	self assert: currentBlock isLastTerminator not.
-	anInstruction name: theInstructionName.
-	debugPositionStack ifNotEmpty: [
-		anInstruction debugSourceLocation: debugPositionStack top
-	].
+	anInstruction
+		name: theInstructionName;
+		debugSourceLocation: self currentDebugSourceLocation.
 	currentBlock add: anInstruction.
 	^ anInstruction
 ]
@@ -343,6 +342,14 @@ SLVMBuilder >> currentBlock [
 { #category : #accessing }
 SLVMBuilder >> currentBlock: anObject [
 	currentBlock := anObject
+]
+
+{ #category : #adding }
+SLVMBuilder >> currentDebugSourceLocation [
+	^ debugPositionStack ifNotEmpty: [
+		debugPositionStack top
+	] ifEmpty: [ nil ]
+
 ]
 
 { #category : #'debug information' }

@@ -590,6 +590,16 @@ SLVMFunction >> decodeDefinitionFromSExpression: encodedGlobal context: context 
 	self decodeBasicBlocksFromSExpressions: (dict at: #blocks).
 ]
 
+{ #category : #testing }
+SLVMFunction >> doesHaveMultipleReturns [
+	^ self hasFlag: #returns_twice
+]
+
+{ #category : #testing }
+SLVMFunction >> doesHaveMultipleReturns: value [
+	^ self setFlag: #returns_twice value: value
+]
+
 { #category : #'control flow' }
 SLVMFunction >> dominanceTopoSort [
 	| visited result |

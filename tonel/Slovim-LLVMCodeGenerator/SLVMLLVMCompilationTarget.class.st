@@ -203,7 +203,7 @@ SLVMLLVMCompilationTarget >> applyExceptionHandlingModel [
 		^ self.
 	].
 
-	self isWindows ifTrue: [ 
+	self isWindows ifTrue: [
 		exceptionModel := #wineh
 	].
 	self isWebAssembly ifTrue: [ 
@@ -491,14 +491,44 @@ SLVMLLVMCompilationTarget >> relocationModel: aRelocationModel [
 	relocationModel := aRelocationModel
 ]
 
+{ #category : #testing }
+SLVMLLVMCompilationTarget >> setDwarfExceptionModel [
+	exceptionModel := #dwarf.
+]
+
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> setForEmbeddedPAL [
 	self operatingSystemName: #epal; canonicalOperatingSystemName: #none
 ]
 
 { #category : #accessing }
+SLVMLLVMCompilationTarget >> setForLinux [
+	self operatingSystemName: #linux
+]
+
+{ #category : #accessing }
 SLVMLLVMCompilationTarget >> setForNullOS [
 	self operatingSystemName: #nullos; canonicalOperatingSystemName: #none
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> setForOSX [
+	self operatingSystemName: #osx
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> setForWindows [
+	self operatingSystemName: #windows
+]
+
+{ #category : #testing }
+SLVMLLVMCompilationTarget >> setNoExceptionModel [
+	exceptionModel := nil.
+]
+
+{ #category : #testing }
+SLVMLLVMCompilationTarget >> setWindowsExceptionModel [
+	exceptionModel := #wineh.
 ]
 
 { #category : #accessing }
