@@ -291,6 +291,8 @@ SLVMLLVMCodeGenerator >> convertedDebugVariables [
 SLVMLLVMCodeGenerator >> createComdatIfRequiredFor: aGlobal [
 	| comdat |
 	aGlobal name ifNil: [ ^ self ].
+	self target isWindows ifFalse: [ ^ self ].
+
 	aGlobal linkage = LLVMGlobalValue linkOnceODRLinkage ifTrue: [
 		comdat := LLVMComdat new
 			name: aGlobal name; 
