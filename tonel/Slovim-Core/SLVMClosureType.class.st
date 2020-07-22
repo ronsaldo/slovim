@@ -5,7 +5,8 @@ Class {
 		'functionType',
 		'captures',
 		'kind',
-		'normalFunctionTypeInfo'
+		'normalFunctionTypeInfo',
+		'fullSExpression'
 	],
 	#category : #'Slovim-Core-Type'
 }
@@ -13,6 +14,11 @@ Class {
 { #category : #'as yet unclassified' }
 SLVMClosureType class >> functionType: aFunctionType kind: kind captures: captures [
 	^ self new functionType: aFunctionType; kind: kind; captures: captures
+]
+
+{ #category : #printing }
+SLVMClosureType class >> mnemonic [
+	^ #closure
 ]
 
 { #category : #comparing }
@@ -23,6 +29,16 @@ SLVMClosureType >> = other [
 { #category : #comparing }
 SLVMClosureType >> accept: aVisitor [
 	^ aVisitor visitClosureType: self
+]
+
+{ #category : #converting }
+SLVMClosureType >> asFullSExpression [
+	^ fullSExpression ifNil: [ fullSExpression := {
+		self mnemonic . kind .
+		functionType asSExpression  .
+		captures collect: [:each | each asSExpression] as: Array
+		}
+	]
 ]
 
 { #category : #'as yet unclassified' }
