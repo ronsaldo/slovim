@@ -466,6 +466,13 @@ SLVMLLVMCodeGenerator >> isInliningMandatory [
 	^ false
 ]
 
+{ #category : #testing }
+SLVMLLVMCodeGenerator >> isSpecialSetjmp: aFunction [
+	^ target isWindows and: [
+	(aFunction isFunction) and: [
+	#(_setjmp __setjmp) includes: aFunction name]]
+]
+
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> llvmModule [
 	^ llvmModule ifNil: [ llvmModule := (LLVMModule name: #module context: self context)
@@ -767,6 +774,32 @@ SLVMLLVMCodeGenerator >> translateNamedStructure: aNamedStructure [
 	convertedStructure := translatedTypes at: aNamedStructure.
 	self convertStructureContent: aNamedStructure into: convertedStructure
 	
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> translateSpecialSetjmp: aFunction [
+	| functionType intrinsicName function |
+	target isX86_32 ifTrue: [
+		intrinsicName := #_setjmp3.
+		functionType := LLVMFunctionType get: self context int32Ty params: {LLVMPointerType getUnqual: self context int8Ty . self context int32Ty} isVarArg: false.
+	].
+
+	target isX86_64 ifTrue: [ 
+		intrinsicName := #_setjmp.
+		functionType := LLVMFunctionType get: self context int32Ty params: {LLVMPointerType getUnqual: self context int8Ty . LLVMPointerType getUnqual: self context int8Ty} isVarArg: false.
+	].
+
+	functionType ifNil: [
+		self error: 'Case not yet supported.'
+	].
+
+	function := LLVMFunction createWithType: functionType linkage: LLVMGlobalValue externalLinkage name: intrinsicName module: self llvmModule.
+	function addFunctionAttribute: #returns_twice.
+	translatedModuleElements at: aFunction put: function.
+	self buildFunction: aFunction debugInformationInto: function.
+	
+	^ function
+
 ]
 
 { #category : #visiting }
@@ -1080,6 +1113,10 @@ SLVMLLVMCodeGenerator >> visitFloatType: type [
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> visitFunction: aFunction [
 	| functionType function debugScope |
+	(self isSpecialSetjmp: aFunction) ifTrue: [ 
+		^ self translateSpecialSetjmp: aFunction
+	].
+
 	functionType := self translateType: aFunction functionType.
 	function := LLVMFunction createWithType: functionType linkage: (self convertLinkage: aFunction) name: (self convertName: aFunction name) module: self llvmModule.
 	translatedModuleElements at: aFunction put: function.

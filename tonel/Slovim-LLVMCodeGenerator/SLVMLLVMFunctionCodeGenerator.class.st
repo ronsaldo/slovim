@@ -154,6 +154,16 @@ SLVMLLVMFunctionCodeGenerator >> bitCast: source target: targetType name: name [
 			yourself)
 ]
 
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> call: calledFunction arguments: arguments name: name [
+	^ self addInstruction: (LLVMCallInst new
+		name: name;
+		type: calledFunction type elementType returnType;
+		calledFunction: calledFunction;
+		arguments: arguments;
+		yourself)
+]
+
 { #category : #'instruction building' }
 SLVMLLVMFunctionCodeGenerator >> call: calledFunction arguments: arguments returnType: returnType name: name [
 	^ self call: calledFunction convention: nil arguments: arguments returnType: returnType name: name
@@ -1199,6 +1209,29 @@ SLVMLLVMFunctionCodeGenerator >> generateSmoothStepEdge: leftEdge edge: rightEdg
 	^ self binaryOperation: #fmul left: tsquare right: threeMinus2T name: nil.
 ]
 
+{ #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> generateSpecialSetjmpCall: setjmpCall [
+	| calledFunction int8PointerType jumpBuffer intrinsic frameaddress |
+	calledFunction := self translateValue: setjmpCall functionValue.
+	int8PointerType := LLVMPointerType getUnqual: self context int8Ty.
+	jumpBuffer := self bitCast: (self translateValue: setjmpCall arguments first)
+		target: int8PointerType name: nil.
+		
+	target isX86_32 ifTrue: [
+		^ self call: calledFunction arguments: { jumpBuffer . self context int32Ty constant: 0 } returnType: self context int32Ty name: nil
+	].
+
+	target isX86_64 ifTrue: [
+		intrinsic := self llvmModule getIntrinsic: #'llvm.frameaddress' orCreateWithType: [
+			LLVMFunctionType get: int8PointerType params: {self context int32Ty} isVarArg: false
+		].
+		frameaddress := self call: intrinsic arguments: { self context int32Ty constant: 0 } returnType: int8PointerType name: nil.
+		^ self call: calledFunction arguments: { jumpBuffer . frameaddress } returnType: self context int32Ty name: nil
+	].
+
+	self error: 'Unsupported target'
+]
+
 { #category : #'as yet unclassified' }
 SLVMLLVMFunctionCodeGenerator >> generateStepEdge: edge value: argument [
 	| edgeValue argumentValue resultType int1Ty comparisonType comparisonResult |
@@ -2045,6 +2078,10 @@ SLVMLLVMFunctionCodeGenerator >> visitCall: instruction [
 	| type calledFunction arguments calledFunctionType abiParameters |
 	instruction functionValue isConstantBuiltInFunction ifTrue: [
 		^ self generateBuiltInFunction: instruction functionValue call: instruction
+	].
+
+	(moduleTranslator isSpecialSetjmp: instruction functionValue) ifTrue: [
+		^ self generateSpecialSetjmpCall: instruction
 	].
 
 	type := self translateType: instruction type.
