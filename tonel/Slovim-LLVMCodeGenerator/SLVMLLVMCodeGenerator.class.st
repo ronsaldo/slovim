@@ -287,6 +287,20 @@ SLVMLLVMCodeGenerator >> convertedDebugVariables [
 	^ convertedDebugVariables ifNil: [ convertedDebugVariables := Dictionary new ]
 ]
 
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> createComdatIfRequiredFor: aGlobal [
+	| comdat |
+	aGlobal name ifNil: [ ^ self ].
+	aGlobal linkage = LLVMGlobalValue linkOnceODRLinkage ifTrue: [
+		comdat := LLVMComdat new
+			name: aGlobal name; 
+			type: #any.
+		llvmModule addComdat: comdat.
+		aGlobal comdat: comdat.
+	].
+
+]
+
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> createDoesNotUnderstandTrampolineWithType: functionType [
 	| slvmFunction |
@@ -1119,6 +1133,7 @@ SLVMLLVMCodeGenerator >> visitFunction: aFunction [
 
 	functionType := self translateType: aFunction functionType.
 	function := LLVMFunction createWithType: functionType linkage: (self convertLinkage: aFunction) name: (self convertName: aFunction name) module: self llvmModule.
+	self createComdatIfRequiredFor: function.
 	translatedModuleElements at: aFunction put: function.
 		
 	aFunction propertyAt: #llvmGCStrategy ifPresent: [ :gcStrategyName |
@@ -1158,6 +1173,7 @@ SLVMLLVMCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 	variableType := self translateType: aGlobalVariable valueType.
 	variable := LLVMGlobalVariable createWithType: variableType module: self llvmModule isConstant: aGlobalVariable readOnly linkage: (self convertLinkage: aGlobalVariable) name: (self convertName: aGlobalVariable name) threadLocalMode: LLVMGlobalValue notThreadLocal addressSpace: 0.
 	variable alignment: aGlobalVariable valueType alignment.
+	self createComdatIfRequiredFor: variable.
 	aGlobalVariable threadLocalModel ifNil: [ 
 		aGlobalVariable type storage == SLVMType gcStorage ifTrue: [
 			moduleDynamicRoots add: variable

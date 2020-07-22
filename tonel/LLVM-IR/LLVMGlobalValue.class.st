@@ -6,7 +6,8 @@ Class {
 		'visibility',
 		'dllStorageClass',
 		'threadLocalMode',
-		'metadata'
+		'metadata',
+		'comdat'
 	],
 	#classVars : [
 		'AppendingLinkage',
@@ -150,6 +151,16 @@ LLVMGlobalValue >> addNamed: metadataName metadata: metadataValue [
 ]
 
 { #category : #accessing }
+LLVMGlobalValue >> comdat [
+	^ comdat
+]
+
+{ #category : #accessing }
+LLVMGlobalValue >> comdat: anObject [
+	comdat := anObject
+]
+
+{ #category : #accessing }
 LLVMGlobalValue >> dllStorageClass [
 	^ dllStorageClass
 ]
@@ -278,6 +289,16 @@ LLVMGlobalValue >> linkage: anObject [
 { #category : #visibility }
 LLVMGlobalValue >> makePrivate [
 	self linkage: PrivateLinkage
+]
+
+{ #category : #printing }
+LLVMGlobalValue >> printComdatOn: aStream [.
+	comdat ifNil: [ ^ self ].
+	aStream nextPutAll: ' comdat'.
+	comdat name = name ifFalse: [
+		aStream nextPut: $(; print: comdat; nextPut: $)
+	].
+
 ]
 
 { #category : #printing }

@@ -122,6 +122,7 @@ LLVMFunction >> fullPrintOn: aStream [
 		aStream nextPutAll: ' personality '; print: personalityFunction type; space; print: personalityFunction
 	].
 	gcStrategy ifNotNil: [ aStream << ' gc "' << gcStrategy << '"' ].
+	self printComdatOn: aStream.
 	self printMetadataOn: aStream.
 	aStream nextPutAll: ' {'; lf.
 	basicBlocks do: [ :bb | bb fullPrintOn: aStream ].

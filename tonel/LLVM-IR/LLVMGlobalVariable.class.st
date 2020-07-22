@@ -56,6 +56,7 @@ LLVMGlobalVariable >> fullPrintOn: aStream [
 	aStream space; nextPutAll: (isConstant ifTrue: [ 'constant' ] ifFalse: [ 'global' ]);
 		space; print: valueType.
 	initialValue ifNotNil: [ aStream space; print: initialValue ].
+	comdat ifNotNil: [ aStream nextPut: $,. self printComdatOn: aStream ].
 	alignment ifNotNil: [ aStream nextPutAll: ', align '; print: alignment ].
 
 	metadata ifNotEmpty: [ 

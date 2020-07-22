@@ -24,7 +24,8 @@ Class {
 		'exceptionModel',
 		'clangProgram',
 		'linkerTargetTriple',
-		'systemRoot'
+		'systemRoot',
+		'comdats'
 	],
 	#classVars : [
 		'ClangIsPresent',
@@ -107,6 +108,11 @@ LLVMModule class >> llcProgram [
 { #category : #'instance creation' }
 LLVMModule class >> name: aName context: aContext [
 	^ self basicNew initializeWithName: aName context: aContext
+]
+
+{ #category : #adding }
+LLVMModule >> addComdat: aComdata [
+	comdats add: aComdata
 ]
 
 { #category : #adding }
@@ -260,6 +266,7 @@ LLVMModule >> fullPrintOn: aStream [
 	targetTriple ifNotNil: [ aStream << 'target triple = "' << targetTriple << '"'; lf ].
 
 	structureSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ].
+	comdats do: [ :each | each fullPrintOn: aStream. aStream lf ].
 	moduleLevelAssemblySources do: [ :assembly | self printModuleLevelAssembly: assembly on: aStream ].
 	valueSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ].
 	metadataSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ].
@@ -329,6 +336,7 @@ LLVMModule >> initialize [
 	valueSymbolTable := LLVMOrderedDictionary new.
 	metadataSymbolTable := LLVMOrderedDictionary new.
 	moduleLevelAssemblySources := OrderedCollection new.
+	comdats := OrderedCollection new.
 	symbolGenerationCount := 0.
 	metadataSymbolGenerationCount := 0.
 	optimizationLevel := 0.
