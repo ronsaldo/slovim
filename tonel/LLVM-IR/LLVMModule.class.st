@@ -15,6 +15,7 @@ Class {
 		'cpu',
 		'fpu',
 		'floatAbiName',
+		'floatingPointModel',
 		'machineAttributes',
 		'compilationPlugins',
 		'linkerProgram',
@@ -177,6 +178,7 @@ LLVMModule >> clangFlags [
 	cpu ifNotNil: [ flags := flags , { '-mcpu=' , cpu } ].
 	fpu ifNotNil: [ flags := flags , { '-mfpu=' , fpu } ].
 	floatAbiName ifNotNil: [ flags := flags , { '-mfloat-abi=' , floatAbiName } ].
+	floatingPointModel ifNotNil: [ flags := flags , { '-ffp-model=' , floatingPointModel } ].
 	exceptionModel ifNotNil: [
 		exceptionModel = #dwarf ifTrue: [ flags := flags , #('-fdwarf-exceptions') ].
 		exceptionModel = #wineh ifTrue: [ flags := flags , #('-fseh-exceptions') ].
@@ -248,6 +250,16 @@ LLVMModule >> floatAbiName [
 { #category : #accessing }
 LLVMModule >> floatAbiName: anObject [
 	floatAbiName := anObject
+]
+
+{ #category : #accessing }
+LLVMModule >> floatingPointModel [
+	^ floatingPointModel
+]
+
+{ #category : #accessing }
+LLVMModule >> floatingPointModel: anObject [
+	floatingPointModel := anObject
 ]
 
 { #category : #accessing }

@@ -6,7 +6,8 @@ Class {
 
 { #category : #types }
 SLVM32BitsPointerCompilationTargetTypes >> double [
-	^ self doubleAlign4
+	self flag: 'TODO: Select this alignment properly according to the actual target.'.
+	^ self doubleAlign8
 ]
 
 { #category : #accessing }

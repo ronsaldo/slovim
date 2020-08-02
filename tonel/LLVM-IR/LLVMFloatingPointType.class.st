@@ -21,7 +21,11 @@ LLVMFloatingPointType >> bits: anObject [
 LLVMFloatingPointType >> constantScalarValue: value [
 	| sanitizedValue |
 	sanitizedValue := value.
-	bits = 32 ifTrue: [ sanitizedValue := Float fromIEEE32Bit: sanitizedValue asIEEE32BitWord ].
+	bits = 32 ifTrue: [
+		(value isInfinite or: [ value isNaN ]) ifFalse: [ 
+			sanitizedValue := Float fromIEEE32Bit: sanitizedValue asIEEE32BitWord
+		].
+	].
 	^ LLVMConstantFP new
 		type: self;
 		value: sanitizedValue;

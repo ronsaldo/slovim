@@ -501,6 +501,7 @@ SLVMLLVMCodeGenerator >> llvmModule [
 			cpu: target cpu;
 			fpu: target fpu;
 			floatAbiName: target floatAbiName;
+			floatingPointModel: target floatingPointModel;
 			exceptionModel: target exceptionModel;
 			yourself
 		]

@@ -16,7 +16,8 @@ Class {
 		'compilationPlugins',
 		'relocationModel',
 		'exceptionModel',
-		'canonicalOperatingSystemName'
+		'canonicalOperatingSystemName',
+		'floatingPointModel'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
@@ -356,6 +357,16 @@ SLVMLLVMCompilationTarget >> floatAbiName [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> floatAbiName: anObject [
 	floatAbiName := anObject
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> floatingPointModel [
+	^ floatingPointModel
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> floatingPointModel: anObject [
+	floatingPointModel := anObject
 ]
 
 { #category : #accessing }
