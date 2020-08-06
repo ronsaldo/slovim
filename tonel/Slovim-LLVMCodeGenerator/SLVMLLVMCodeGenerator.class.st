@@ -238,6 +238,10 @@ SLVMLLVMCodeGenerator >> convertLinkage: element [
 	element isLinkOnceODR ifTrue: [ 
 		^ LLVMGlobalValue linkOnceODRLinkage
 	].
+	element isWeakODR ifTrue: [ 
+		^ LLVMGlobalValue weakODRLinkage
+	].
+
 	element isPrivate ifTrue: [ 
 		^ LLVMGlobalValue privateLinkage
 	].
@@ -293,7 +297,8 @@ SLVMLLVMCodeGenerator >> createComdatIfRequiredFor: aGlobal [
 	aGlobal name ifNil: [ ^ self ].
 	self target isWindows ifFalse: [ ^ self ].
 
-	aGlobal linkage = LLVMGlobalValue linkOnceODRLinkage ifTrue: [
+	(aGlobal linkage = LLVMGlobalValue linkOnceODRLinkage
+	or: [aGlobal linkage = LLVMGlobalValue weakODRLinkage]) ifTrue: [
 		comdat := LLVMComdat new
 			name: aGlobal name; 
 			type: #any.

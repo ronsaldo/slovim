@@ -181,6 +181,11 @@ SLVMGlobalValue >> isWeak [
 ]
 
 { #category : #visibility }
+SLVMGlobalValue >> isWeakODR [
+	^ visibility == #weakODR
+]
+
+{ #category : #visibility }
 SLVMGlobalValue >> makeExternal [
 	visibility := #external
 ]
@@ -208,6 +213,11 @@ SLVMGlobalValue >> makePublic [
 { #category : #visibility }
 SLVMGlobalValue >> makeWeak [
 	visibility := #weak
+]
+
+{ #category : #visibility }
+SLVMGlobalValue >> makeWeakODR [
+	visibility := #weakODR
 ]
 
 { #category : #accessing }

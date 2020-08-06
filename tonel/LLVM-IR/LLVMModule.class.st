@@ -174,7 +174,7 @@ LLVMModule >> clangFlags [
 		'-ffunction-sections'
 	).
 	optimizationLevel ifNotNil: [ flags := flags , { '-O' , optimizationLevel asString} ].
-	flags := { '-target' . targetTriple }.
+	flags := flags , { '-target' . targetTriple }.
 	cpu ifNotNil: [ flags := flags , { '-mcpu=' , cpu } ].
 	fpu ifNotNil: [ flags := flags , { '-mfpu=' , fpu } ].
 	floatAbiName ifNotNil: [ flags := flags , { '-mfloat-abi=' , floatAbiName } ].
