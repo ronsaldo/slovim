@@ -267,9 +267,7 @@ SLVMLLVMCodeGenerator >> convertName: aName [
 { #category : #'as yet unclassified' }
 SLVMLLVMCodeGenerator >> convertStructureContent: slvmStructure into: llvmStructure [
 	slvmStructure isUnionType ifTrue: [ 
-		llvmStructure elements: {
-			LLVMArrayType get: self context int8Ty elements: slvmStructure size
-		}
+		llvmStructure elements: (self translateUnionTypes: slvmStructure types size: slvmStructure size alignment: slvmStructure alignment)
 	] ifFalse: [ 
 		llvmStructure elements: (self translateStructureFieldTypes: slvmStructure)
 	]
@@ -863,6 +861,24 @@ SLVMLLVMCodeGenerator >> translateType: aType [
 	^ aType accept: self
 ]
 
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> translateUnionTypes: types size: unionSize alignment: unionAlignment [
+	| alignedUnionSize typeWithBestAlignment remainingSize translatedTypeWithBestAlignment |
+	alignedUnionSize := unionSize alignedTo: unionAlignment.
+	typeWithBestAlignment := types first.
+	types do: [ :each |
+		each alignment > typeWithBestAlignment alignment ifTrue: [
+			typeWithBestAlignment := each
+		]
+	].
+	
+	remainingSize := alignedUnionSize - typeWithBestAlignment size.
+	translatedTypeWithBestAlignment := self translateType: typeWithBestAlignment.
+	remainingSize = 0 ifTrue: [ ^ { translatedTypeWithBestAlignment } ].
+	self assert: remainingSize > 0.
+	^ { translatedTypeWithBestAlignment . LLVMArrayType get: self context int8Ty elements: remainingSize }
+]
+
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> translateValue: aValue [
 	aValue isGlobalValue ifTrue: [ ^ self translateModuleElement: aValue ].
@@ -1258,7 +1274,8 @@ SLVMLLVMCodeGenerator >> visitStructureType: structureType [
 { #category : #visiting }
 SLVMLLVMCodeGenerator >> visitUnionType: type [
 	^ self type: type translationDo: [
-		LLVMStructType context: self context elements: {LLVMArrayType get: self context int8Ty elements: (type size alignedTo: type alignment)}
+		
+		LLVMStructType context: self context elements: (self translateUnionTypes: type types size: type size alignment: type alignment)
 	]
 
 ]
