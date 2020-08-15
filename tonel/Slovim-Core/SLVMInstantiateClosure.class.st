@@ -24,9 +24,9 @@ SLVMInstantiateClosure >> accept: aVisitor [
 ]
 
 { #category : #enumerating }
-SLVMInstantiateClosure >> allInstructionsDo: aBlock [
+SLVMInstantiateClosure >> allModuleInstructionsDo: aBlock [
 	aBlock value: self.
-	self definition allInstructionsDo: aBlock
+	self definition allModuleInstructionsDo: aBlock
 ]
 
 { #category : #accessing }

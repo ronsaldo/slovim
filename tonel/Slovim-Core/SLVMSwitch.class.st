@@ -94,5 +94,5 @@ SLVMSwitch >> validateInBlock: aBasicBlock [
 	super validateInBlock: aBasicBlock.
 	self assert: (block function basicBlocks includesAll: caseBlocks).
 	self assert: (block function basicBlocks includes: defaultBlock).
-	self assert: self block successors = self successors.
+	self assert: (self block successors includesAll: self successors).
 ]

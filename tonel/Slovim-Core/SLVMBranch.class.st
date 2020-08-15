@@ -112,5 +112,5 @@ SLVMBranch >> validateInBlock: aBasicBlock [
 	super validateInBlock: aBasicBlock.
 	self assert: (block function basicBlocks includes: trueBlock).
 	self assert: (block function basicBlocks includes: falseBlock).
-	self assert: self block successors = self successors.
+	self assert: (self block successors includesAll: self successors).
 ]

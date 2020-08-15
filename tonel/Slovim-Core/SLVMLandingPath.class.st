@@ -58,6 +58,11 @@ SLVMLandingPath >> initialize [
 
 ]
 
+{ #category : #testing }
+SLVMLandingPath >> isLandingPath [
+	^ true
+]
+
 { #category : #accessing }
 SLVMLandingPath >> type [
 	^ type

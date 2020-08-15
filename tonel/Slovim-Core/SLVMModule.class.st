@@ -134,7 +134,7 @@ SLVMModule >> allGlobalValuesDo: aBlock [
 SLVMModule >> allInstructionsDo: aBlock [
 	self allGlobalValuesDo: [ :global |
 		global isFunction ifTrue: [
-			global allInstructionsDo: aBlock
+			global allModuleInstructionsDo: aBlock
 		]
 	]
 ]

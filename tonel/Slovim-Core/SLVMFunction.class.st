@@ -100,6 +100,13 @@ SLVMFunction >> allInstructionsMnemonics [
 	^ basicBlocks collect: [:bb | {bb name . bb allInstructionsMnemonics}] as: Array
 ]
 
+{ #category : #enumerating }
+SLVMFunction >> allModuleInstructionsDo: aBlock [
+	self allInstructionsDo: [ :instruction |
+		instruction allModuleInstructionsDo: aBlock
+	]
+]
+
 { #category : #'control flow' }
 SLVMFunction >> applyDominanceTopoSort [
 	basicBlocks := self dominanceTopoSort.

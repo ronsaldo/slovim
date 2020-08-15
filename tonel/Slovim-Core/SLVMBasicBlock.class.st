@@ -205,7 +205,7 @@ SLVMBasicBlock >> allInstructions [
 { #category : #enumerating }
 SLVMBasicBlock >> allInstructionsDo: aBlock [
 	self instructionsDo: [ :instruction |
-		instruction allInstructionsDo: aBlock
+		aBlock value: instruction
 	]
 ]
 

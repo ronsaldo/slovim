@@ -1155,6 +1155,8 @@ SLVMLLVMCodeGenerator >> visitFunction: aFunction [
 		^ self translateSpecialSetjmp: aFunction
 	].
 
+	aFunction applyGCStrategy.
+
 	functionType := self translateType: aFunction functionType.
 	function := LLVMFunction createWithType: functionType linkage: (self convertLinkage: aFunction) name: (self convertName: aFunction name) module: self llvmModule.
 	self createComdatIfRequiredFor: function.

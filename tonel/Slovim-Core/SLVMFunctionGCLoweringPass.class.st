@@ -6,7 +6,7 @@ Class {
 
 { #category : #'as yet unclassified' }
 SLVMFunctionGCLoweringPass class >> gcName [
-	^ self subclassResponsibility
+	^ nil
 ]
 
 { #category : #'as yet unclassified' }

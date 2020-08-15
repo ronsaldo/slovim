@@ -20,7 +20,7 @@ SLVMInstruction class >> isAbstract [
 ]
 
 { #category : #enumerating }
-SLVMInstruction >> allInstructionsDo: aBlock [
+SLVMInstruction >> allModuleInstructionsDo: aBlock [
 	aBlock value: self
 ]
 
@@ -280,6 +280,11 @@ SLVMInstruction >> isJump [
 ]
 
 { #category : #testing }
+SLVMInstruction >> isLandingPath [
+	^ false
+]
+
+{ #category : #testing }
 SLVMInstruction >> isLoad [
 	^ false
 ]
@@ -458,9 +463,12 @@ SLVMInstruction >> removeFromBlockWithAllReferences [
 
 { #category : #modifying }
 SLVMInstruction >> replaceReferencesWith: aNewInstruction [
+	| myFunction |
 	self == aNewInstruction ifTrue: [ ^ self ].
 	
+	myFunction := self function.
 	instructionReferences do: [ :usage |
+		self assert: usage function == myFunction.
 		usage parameters replaceAll: self with: aNewInstruction.
 		aNewInstruction addInstructionReference: usage.
 	].
@@ -525,5 +533,10 @@ SLVMInstruction >> successors [
 
 { #category : #testing }
 SLVMInstruction >> validateInBlock: aBasicBlock [
-	self assert: block == aBasicBlock
+	| requiredFunction |
+	self assert: block == aBasicBlock.
+	requiredFunction := self function.
+	instructionReferences do: [ :each |
+		self assert: each function == requiredFunction
+	].
 ]
