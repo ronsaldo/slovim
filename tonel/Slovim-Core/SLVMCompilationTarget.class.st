@@ -9,6 +9,7 @@ Class {
 	],
 	#classVars : [
 		'LandingPadSelectorRegisterIndexMap',
+		'LandingPadStackPointerIndexMap',
 		'LandingPadStructurePointerIndexMap'
 	],
 	#category : #'Slovim-Core-Type'
@@ -23,6 +24,11 @@ SLVMCompilationTarget class >> initialize [
 	LandingPadSelectorRegisterIndexMap := Dictionary newFromPairs: #(
 		x86_64 1
 		i686 2
+	).
+	
+	LandingPadStackPointerIndexMap := Dictionary newFromPairs: #(
+		x86_64 7
+		i686 4
 	).
 ]
 
@@ -321,6 +327,11 @@ SLVMCompilationTarget >> isX86_64 [
 { #category : #'as yet unclassified' }
 SLVMCompilationTarget >> landingPadSelectorRegisterIndex [
 	^ LandingPadSelectorRegisterIndexMap at: self canonicalArchitecture ifAbsent: [ 1 ]
+]
+
+{ #category : #'as yet unclassified' }
+SLVMCompilationTarget >> landingPadStackPointerRegisterIndex [
+	^ LandingPadStackPointerIndexMap at: self canonicalArchitecture ifAbsent: [ 0 ]
 ]
 
 { #category : #'as yet unclassified' }
