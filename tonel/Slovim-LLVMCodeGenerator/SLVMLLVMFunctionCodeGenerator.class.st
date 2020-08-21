@@ -2166,6 +2166,15 @@ SLVMLLVMFunctionCodeGenerator >> visitDebugInstructionSetVariableValue: instruct
 ]
 
 { #category : #visiting }
+SLVMLLVMFunctionCodeGenerator >> visitDiscardFragment: instruction [
+	self flag: 'TODO: Implement myself propertly.'.
+	^ self addInstruction: (LLVMReturnInst new
+		name: (self convertName: instruction name);
+		type: self context voidTy;
+		yourself)
+]
+
+{ #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitDynamicObjectToBoolCast: instruction [
 	| sourceValue targetType conversionFunction conversionResult targetSLVMType |
 	sourceValue := self translateValue: instruction source.
