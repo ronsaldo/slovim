@@ -27,6 +27,11 @@ SLVMSpirV32CompilationTarget >> isGPU [
 ]
 
 { #category : #testing }
+SLVMSpirV32CompilationTarget >> isMultiSpirV [
+	^ false
+]
+
+{ #category : #testing }
 SLVMSpirV32CompilationTarget >> isSpirV [
 	^ true
 ]

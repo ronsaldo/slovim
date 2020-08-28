@@ -2,6 +2,7 @@ Class {
 	#name : #SpirVModule,
 	#superclass : #Object,
 	#instVars : [
+		'name',
 		'idBound',
 		'instructions',
 		'entryPoints'
@@ -64,6 +65,16 @@ SpirVModule >> linkerArguments: aListOfArguments [
 	"This is ignored by this backend."
 ]
 
+{ #category : #accessing }
+SpirVModule >> name [
+	^ name
+]
+
+{ #category : #accessing }
+SpirVModule >> name: anObject [
+	name := anObject
+]
+
 { #category : #'id generation' }
 SpirVModule >> newId [
 	| result |
@@ -74,8 +85,8 @@ SpirVModule >> newId [
 
 { #category : #fileout }
 SpirVModule >> saveTo: aFileReference [
-	FileStream forceNewFileNamed: aFileReference asFileReference fullName do: [ :out |
-		out binary.
+	aFileReference binaryWriteStreamDo: [ :out |
+		out truncate.
 		self writeOn: out
 	]
 ]

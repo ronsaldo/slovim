@@ -375,6 +375,15 @@ SLVMSpirVCodeGenerator >> basicBlockLabelId: basicBlock [
 ]
 
 { #category : #'code generation' }
+SLVMSpirVCodeGenerator >> buildModuleWithSingleEntryPoint: entryPoint [
+	^ SpirVModuleBuilder build: [ :builderArg |
+		builder := builderArg.
+		builder module name: entryPoint name.
+		self translateValue: entryPoint
+	]
+]
+
+{ #category : #'code generation' }
 SLVMSpirVCodeGenerator >> createTemporaryOfType: type [
 	| tempId |
 	tempId := builder newId.
@@ -408,10 +417,13 @@ SLVMSpirVCodeGenerator >> emitControlFlowMergeBlock: mergeBlock continueBlock: c
 
 { #category : #'code generation' }
 SLVMSpirVCodeGenerator >> emitValue: value name: name [
-	"Do not emit duplicated names. This crashes the NVIDIA driver."
-	(emittedNames includes: name) ifTrue: [ ^ self ].
-	
-	emittedNames add: name.
+	"Do not emit duplicated names. This crashes the NVIDIA driver.
+	FIXME: Check on whether this issue has been resolved in recent drivers."
+	compilationTarget isMultiSpirV ifFalse: [ 
+		(emittedNames includes: name) ifTrue: [ ^ self ].
+		emittedNames add: name.
+	].
+
 	builder addDebugInstruction: (SpirVInstruction
 		opcode: SpvOpName
 		operands: { value } , name asSpirVStringLiteral
@@ -575,6 +587,18 @@ SLVMSpirVCodeGenerator >> translateModule: ssaModule [
 { #category : #'code generation' }
 SLVMSpirVCodeGenerator >> translateModule: ssaModule exportList: exportList [
 	compilationTarget ifNil: [compilationTarget := ssaModule compilationTarget].
+	compilationTarget isMultiSpirV ifTrue: [
+		^ MultiSpirVModule new
+			modules: (exportList collect: [ :entryPoint |
+			self class new
+				target: compilationTarget;
+				logicalAddressMode: logicalAddressMode;
+				optimizationLevel: optimizationLevel;
+				buildModuleWithSingleEntryPoint: entryPoint
+		]) asArray;
+		yourself
+	].
+
 	^ SpirVModuleBuilder build: [ :builderArg |
 		builder := builderArg.
 		exportList do: [ :value | self translateValue: value ]
@@ -919,6 +943,22 @@ SLVMSpirVCodeGenerator >> visitConvertInteger: instruction [
 ]
 
 { #category : #visitor }
+SLVMSpirVCodeGenerator >> visitDebugInstructionDeclareVariable: instruction [
+	compilationTarget emittingDebugInformation ifTrue: [
+		self emitValue: (self translateValue: instruction variable) name: instruction debugInformation name.
+	].
+	^ nil
+]
+
+{ #category : #visitor }
+SLVMSpirVCodeGenerator >> visitDebugInstructionSetVariableValue: instruction [
+	compilationTarget emittingDebugInformation ifTrue: [
+		self emitValue: (self translateValue: instruction value) name: instruction variable name.
+	].
+	^ nil
+]
+
+{ #category : #visitor }
 SLVMSpirVCodeGenerator >> visitDiscardFragment: discardInstruction [
 	^ self instructionTranslation: discardInstruction do: [ :id |
 		builder addFunctionInstruction: (SpirVInstruction
@@ -1151,7 +1191,13 @@ SLVMSpirVCodeGenerator >> visitGlobalVariable: globalVariable [
 			operands: { storage } , initialValue
 		).
 		
-		self emitValue: id name: globalVariable name.
+		compilationTarget emittingDebugInformation ifTrue: [ 
+			globalVariable unmangledName ifNotNil: [ :unmangledName |
+				self emitValue: id name: unmangledName.
+			] ifNil: [ 
+				self emitValue: id name: globalVariable name.
+			].
+		].
 		globalVariable propertyAt: #restrict ifPresent: [ :ignored |
 				builder addAnnotationInstruction: (SpirVInstruction
 					opcode: SpvOpDecorate
