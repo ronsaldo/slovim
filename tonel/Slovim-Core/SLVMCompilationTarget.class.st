@@ -72,9 +72,22 @@ SLVMCompilationTarget >> canonicalOperatingSystemName [
 	^ self operatingSystemName
 ]
 
+{ #category : #accessing }
+SLVMCompilationTarget >> canonicalOperatingSystemName: aName [
+]
+
 { #category : #types }
 SLVMCompilationTarget >> char [
 	^ types char
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> cpu [
+	^ nil
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> cpu: aName [
 ]
 
 { #category : #initialization }
@@ -137,6 +150,10 @@ SLVMCompilationTarget >> exceptionModel [
 	^ nil
 ]
 
+{ #category : #accessing }
+SLVMCompilationTarget >> exceptionModel: aName [
+]
+
 { #category : #types }
 SLVMCompilationTarget >> float [
 	^ types float
@@ -150,6 +167,35 @@ SLVMCompilationTarget >> float32 [
 { #category : #types }
 SLVMCompilationTarget >> float64 [
 	^ types float64
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> floatAbiName [
+	^ nil
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> floatAbiName: name [
+	
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> floatingPointModel [
+	^ nil
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> floatingPointModel: aName [
+	^ nil
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> fpu [
+	^ nil
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> fpu: aName [
 ]
 
 { #category : #convenience }
@@ -370,6 +416,15 @@ SLVMCompilationTarget >> lowLevelCodeGeneratorClass [
 	self subclassResponsibility
 ]
 
+{ #category : #accessing }
+SLVMCompilationTarget >> machineAttributes [
+	^ #()
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> machineAttributes: aListOfMachineAttributes [
+]
+
 { #category : #types }
 SLVMCompilationTarget >> matrix: aBaseType rows: numRows columns: numColumns [
 	^ types matrix: aBaseType rows: numRows columns: numColumns
@@ -399,6 +454,10 @@ SLVMCompilationTarget >> objectModel: anObject [
 { #category : #accessing }
 SLVMCompilationTarget >> operatingSystemName [
 	^ self subclassResponsibility
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> operatingSystemName: aName [
 ]
 
 { #category : #accessing }
@@ -476,6 +535,10 @@ SLVMCompilationTarget >> supportsLocalAddressForThisContext [
 { #category : #accessing }
 SLVMCompilationTarget >> systemVendor [
 	^ nil
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> systemVendor: aName [
 ]
 
 { #category : #accessing }
