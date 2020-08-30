@@ -44,7 +44,7 @@ MultiSpirVModule >> saveTo: aFileReference [
 		| fileName |
 		self assert: each name isNotNil.
 		fileName := (each name copyReplaceAll: ':' with: '_') , '.spv'.
-		zip addString: each bytes asString as: fileName
+		zip addDeflateString: each bytes asString as: fileName
 	].
 
 	zip writeToFile: aFileReference
