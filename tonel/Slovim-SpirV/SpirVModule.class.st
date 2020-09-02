@@ -84,8 +84,8 @@ SpirVModule >> newId [
 ]
 
 { #category : #fileout }
-SpirVModule >> saveTo: aFileReference [
-	aFileReference binaryWriteStreamDo: [ :out |
+SpirVModule >> saveTo: aFileNameOrReference [
+	aFileNameOrReference asFileReference binaryWriteStreamDo: [ :out |
 		out truncate.
 		self writeOn: out
 	]
