@@ -63,6 +63,11 @@ SLVMSAsmCompilationTarget >> generateLowLevelModule: aModule optimizationLevel: 
 		translateModule: aModule
 ]
 
+{ #category : #testing }
+SLVMSAsmCompilationTarget >> isSAsmCompilationTarget [
+	^ true
+]
+
 { #category : #'operating systems' }
 SLVMSAsmCompilationTarget >> linux [
 	target linux

@@ -341,6 +341,11 @@ SLVMCompilationTarget >> isOSX [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isSAsmCompilationTarget [
+	^ false
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isWebAssembly [
 	^ false
 ]

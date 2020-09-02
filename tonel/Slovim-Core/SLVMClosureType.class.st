@@ -6,14 +6,16 @@ Class {
 		'captures',
 		'kind',
 		'normalFunctionTypeInfo',
-		'fullSExpression'
+		'fullSExpression',
+		'addressSpace',
+		'hasStructReturnPointer'
 	],
 	#category : #'Slovim-Core-Type'
 }
 
 { #category : #'as yet unclassified' }
-SLVMClosureType class >> functionType: aFunctionType kind: kind captures: captures [
-	^ self new functionType: aFunctionType; kind: kind; captures: captures
+SLVMClosureType class >> functionType: aFunctionType hasStructReturnPointer: hasStructReturnPointer kind: kind captures: captures addressSpace: addressSpace [
+	^ self new functionType: aFunctionType; hasStructReturnPointer: hasStructReturnPointer; kind: kind; captures: captures; addressSpace: addressSpace
 ]
 
 { #category : #printing }
@@ -29,6 +31,16 @@ SLVMClosureType >> = other [
 { #category : #comparing }
 SLVMClosureType >> accept: aVisitor [
 	^ aVisitor visitClosureType: self
+]
+
+{ #category : #accessing }
+SLVMClosureType >> addressSpace [
+	^ addressSpace
+]
+
+{ #category : #accessing }
+SLVMClosureType >> addressSpace: anObject [
+	addressSpace := anObject
 ]
 
 { #category : #converting }
@@ -66,6 +78,16 @@ SLVMClosureType >> functionType: anObject [
 	functionType := anObject
 ]
 
+{ #category : #accessing }
+SLVMClosureType >> hasStructReturnPointer [
+	^ hasStructReturnPointer
+]
+
+{ #category : #accessing }
+SLVMClosureType >> hasStructReturnPointer: anObject [
+	hasStructReturnPointer := anObject
+]
+
 { #category : #comparing }
 SLVMClosureType >> internalHash [	
 	^ (self class hash bitXor: functionType hash) bitXor: captures hash
@@ -93,14 +115,14 @@ SLVMClosureType >> name [
 ]
 
 { #category : #'as yet unclassified' }
-SLVMClosureType >> normalFunctionTypeWith: compilationTarget hasStructReturnPointer: hasStructReturnPointer [
+SLVMClosureType >> normalFunctionTypeWith: compilationTarget [
 	| capturedEnvironmentStructure closureStructureType closurePointer closureFunctionType genericClosurePointer genericClosureFunctionType genericClosureFunctionPointer |
 	normalFunctionTypeInfo ifNotNil: [ ^ normalFunctionTypeInfo ].
 	
 	capturedEnvironmentStructure := self capturedEnvironmentStructureTypeWith: compilationTarget.
 	
 	closureStructureType := SLVMStructureType new kind: SLVMStructureType genericKind.
-	closurePointer := compilationTarget pointerTo: closureStructureType.
+	closurePointer := compilationTarget pointerTo: closureStructureType storage: addressSpace.
 
 	hasStructReturnPointer ifTrue: [ 
 		closureFunctionType := SLVMFunctionType callingConvention: functionType callingConvention

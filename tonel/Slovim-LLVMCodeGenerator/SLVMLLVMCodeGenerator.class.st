@@ -968,6 +968,13 @@ SLVMLLVMCodeGenerator >> visitClosureDefinition: closureDefinition [
 ]
 
 { #category : #visiting }
+SLVMLLVMCodeGenerator >> visitClosureType: closureType [
+	^ self recursiveType: closureType translationDo: [
+		self translateType: (closureType normalFunctionTypeWith: self target) third
+	]
+]
+
+{ #category : #visiting }
 SLVMLLVMCodeGenerator >> visitConstantArrayBlob: constant [
 	| type |
 	type := self translateType: (constant type addCount: constant hasExtraNullCharacter asBit).
@@ -1202,7 +1209,9 @@ SLVMLLVMCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 	self createComdatIfRequiredFor: variable.
 	aGlobalVariable threadLocalModel ifNil: [ 
 		aGlobalVariable type storage == SLVMType gcStorage ifTrue: [
-			moduleDynamicRoots add: variable
+			(aGlobalVariable initialValue isNotNil or: [ aGlobalVariable isExternal not ]) ifTrue: [ 
+				moduleDynamicRoots add: variable
+			]
 		].
 	] ifNotNil: [ :modelName |
 		variable threadLocalMode: (ThreadLocalModelMap at: modelName)

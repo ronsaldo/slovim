@@ -2446,23 +2446,14 @@ SLVMLLVMFunctionCodeGenerator >> visitInsertVectorElement: instruction [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitInstantiateClosure: instruction [
-	| closurePrototype captures kind allocation dynamicCaptures normalCaptures normalFunctionType closureStructureType captureDefinitions environmentPtr |
+	| closurePrototype captures kind allocation normalFunctionType closureStructureType environmentPtr |
 	closurePrototype := self translateValue: instruction definition.
-	captureDefinitions := instruction definition captures.
-	dynamicCaptures := OrderedCollection new.
-	normalCaptures := OrderedCollection new.
-	
-	instruction captures doWithIndex: [:capture :index |
-		capture type isDynamicObjectPointerType ifTrue: [ 
-			dynamicCaptures add: {captureDefinitions at: index . self translateValue: capture}
-		] ifFalse: [ 
-			normalCaptures add: {captureDefinitions at: index . self translateValue: capture}
-		].
+	captures := instruction definition sortedCaptures collect: [:each |
+		{each . self translateValue: (instruction captures at: each index + 1)}
 	].
 	
-	captures := dynamicCaptures asArray, normalCaptures asArray.
 	kind := instruction closureType kind.
-	normalFunctionType := instruction closureType normalFunctionTypeWith: self target hasStructReturnPointer: instruction definition hasStructReturnPointer.
+	normalFunctionType := instruction closureType normalFunctionTypeWith: self target.
 	closureStructureType := normalFunctionType third.
 	
 	allocation := nil.

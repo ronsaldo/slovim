@@ -66,7 +66,7 @@ SLVMInstantiateClosure >> definition: definition captures: captures [
 	functionType := definition functionType.
 	captureTypes := captures collect: [:each | each type].
 	closureType := definition closureType.
-	type := SLVMPointerType size: (definition compilationTarget pointerSize) baseType: closureType storage: SLVMType genericStorage.
+	type := SLVMPointerType size: (definition compilationTarget pointerSize) baseType: closureType storage: definition addressSpace.
 
 ]
 

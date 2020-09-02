@@ -5,10 +5,12 @@ Class {
 	#name : #SLVMClosureDefinition,
 	#superclass : #SLVMFunction,
 	#instVars : [
+		'addressSpace',
 		'captures',
 		'closureType',
 		'normalFunctionTypes',
-		'kind'
+		'kind',
+		'sortedCaptures'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -20,17 +22,33 @@ SLVMClosureDefinition class >> mnemonic [
 
 { #category : #construction }
 SLVMClosureDefinition class >> module: module functionType: functionType [
+	^ self module: module functionType: functionType addressSpace: SLVMType genericStorage
+]
+
+{ #category : #construction }
+SLVMClosureDefinition class >> module: module functionType: functionType addressSpace: addressSpace [
 	| closureDefinition |
 	closureDefinition := self pointerSize: module compilationTarget pointerSize functionType: functionType.
 	closureDefinition
 		module: module;
-		compilationTarget: module compilationTarget.
+		compilationTarget: module compilationTarget;
+		addressSpace: addressSpace.
 	^ closureDefinition
 ]
 
 { #category : #visiting }
 SLVMClosureDefinition >> accept: aVisitor [
 	^ aVisitor visitClosureDefinition: self
+]
+
+{ #category : #accessing }
+SLVMClosureDefinition >> addressSpace [
+	^ addressSpace
+]
+
+{ #category : #accessing }
+SLVMClosureDefinition >> addressSpace: anObject [
+	addressSpace := anObject
 ]
 
 { #category : #printing }
@@ -127,7 +145,7 @@ SLVMClosureDefinition >> captures [
 
 { #category : #accessing }
 SLVMClosureDefinition >> closureType [
-	^ closureType ifNil: [closureType := SLVMClosureType functionType: functionType kind: kind captures: (captures collect: [:each | each type])]
+	^ closureType ifNil: [closureType := SLVMClosureType functionType: functionType hasStructReturnPointer: self hasStructReturnPointer kind: kind captures: (captures collect: [:each | each type]) addressSpace: addressSpace]
 ]
 
 { #category : #initialization }
@@ -180,5 +198,24 @@ SLVMClosureDefinition >> localValuesDo: aBlock [
 
 { #category : #converting }
 SLVMClosureDefinition >> normalFunctionTypes [
-	^ normalFunctionTypes ifNil: [normalFunctionTypes := self closureType normalFunctionTypeWith: compilationTarget hasStructReturnPointer: self hasStructReturnPointer]
+	^ normalFunctionTypes ifNil: [normalFunctionTypes := self closureType normalFunctionTypeWith: compilationTarget]
+]
+
+{ #category : #accessing }
+SLVMClosureDefinition >> sortedCaptures [
+	^ sortedCaptures ifNil: [ 
+		| dynamicCaptures normalCaptures |
+		dynamicCaptures := OrderedCollection new.
+		normalCaptures := OrderedCollection new.
+		
+		captures do: [ :each |
+			each type isDynamicObjectPointerType ifTrue: [
+				dynamicCaptures add: each.
+			] ifFalse: [ 
+				normalCaptures add: each.
+			]
+		].
+	
+		sortedCaptures := dynamicCaptures asArray , normalCaptures asArray
+	]
 ]
