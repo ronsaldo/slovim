@@ -128,6 +128,12 @@ SLVMLLVMCodeGenerator >> buildGlobalVariable: slvmGlobalVariable debugInformatio
 		name: debugInfo name;
 		yourself.
 		
+	slvmGlobalVariable name ifNotNil: [
+		debugInfo emitLinkageName ifTrue: [ 
+			debugGlobalVariable linkageName: slvmGlobalVariable name
+		]
+	].
+
 	self translatedDebugElements at: debugInfo put: debugGlobalVariable.
 	debugGlobalVariable
 		scope: (self convertDebugScope: debugInfo scope fallbackTo: debugCompileUnit);

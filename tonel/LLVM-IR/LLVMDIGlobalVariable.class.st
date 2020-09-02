@@ -2,6 +2,7 @@ Class {
 	#name : #LLVMDIGlobalVariable,
 	#superclass : #LLVMDIVariable,
 	#instVars : [
+		'linkageName',
 		'isLocal',
 		'isDefinition'
 	],
@@ -29,11 +30,21 @@ LLVMDIGlobalVariable >> isLocal: anObject [
 ]
 
 { #category : #accessing }
+LLVMDIGlobalVariable >> linkageName [
+	^ linkageName
+]
+
+{ #category : #accessing }
+LLVMDIGlobalVariable >> linkageName: anObject [
+	linkageName := anObject
+]
+
+{ #category : #accessing }
 LLVMDIGlobalVariable >> specializedName [
 	^ #DIGlobalVariable
 ]
 
 { #category : #accessing }
 LLVMDIGlobalVariable >> specializedProperties [
-	^ super specializedProperties , #(isDefinition isLocal)
+	^ super specializedProperties , #(linkageName isDefinition isLocal)
 ]

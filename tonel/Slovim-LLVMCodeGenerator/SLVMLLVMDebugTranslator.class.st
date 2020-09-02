@@ -185,7 +185,7 @@ SLVMLLVMDebugTranslator >> visitDebugCompositeType: debugType [
 		align: debugType bitAlignment;
 		elements: (LLVMMDTuple for: self llvmModule);
 		identifier: (self isEmittingCodeView
-			ifTrue: [debugType identifier]
+			ifTrue: [self assert: (debugType kind ~~ #structure or: [debugType identifier isNotNil]). debugType identifier]
 			ifFalse: [nil]);
 		yourself.
 	moduleTranslator register: debugType debugElement: compositeType.

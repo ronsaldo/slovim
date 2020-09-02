@@ -148,6 +148,11 @@ SLVMGlobalVariable >> minimalAlignment: anObject [
 	minimalAlignment := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+SLVMGlobalVariable >> omitDebugInformation: aBoolean [
+	self propertyAt: #omitDebugInformation put: aBoolean
+]
+
 { #category : #accessing }
 SLVMGlobalVariable >> pointerSize: pointerSize valueType: aType storage: storageClass [
 	self assert: aType isSlovimType.
