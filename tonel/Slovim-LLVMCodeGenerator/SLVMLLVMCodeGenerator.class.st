@@ -27,7 +27,8 @@ Class {
 		'nativeMethodDispatchTrampolines',
 		'namedStructures',
 		'compactTranslatedVectors',
-		'cskMD5'
+		'cskMD5',
+		'usedSymbols'
 	],
 	#classVars : [
 		'DebugLanguageMap',
@@ -261,7 +262,8 @@ SLVMLLVMCodeGenerator >> convertName: aName [
 	^ aName ifNotNil: [
 		aName isLLVMAnon ifTrue: [ nil
 		] ifFalse: [
-			(usedNames includes: aName) ifTrue: [ nil
+			(usedNames includes: aName) ifTrue: [
+				nil
 			] ifFalse: [
 				usedNames add: aName.
 				aName
@@ -467,6 +469,7 @@ SLVMLLVMCodeGenerator >> initialize [
 	objectMethodDispatchTrampolines := Dictionary new.
 	nativeMethodDispatchTrampolines := Dictionary new.
 	usedNames := Set new.
+	usedSymbols := OrderedCollection new.
 	moduleDynamicRoots := OrderedCollection new.
 	debugAnonymousCount := 0.
 ]
@@ -627,7 +630,9 @@ SLVMLLVMCodeGenerator >> translateCompiledMethodMetadataOf: aFunction [
 	| metadata |
 	translatedCompiledMethodMetadata at: aFunction ifPresent: [ :existent | ^ existent ].
 	
+	self assert: aFunction name isNotNil.
 	metadata := self translateDynamicLiteral: (target objectModel createFunctionContextMetaData: aFunction).
+	self assert: metadata source name isNotNil.
 	translatedCompiledMethodMetadata at: aFunction put: metadata.
 	^ metadata
 ]
@@ -704,6 +709,7 @@ SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
 
 	self translateModuleConstructorsOrDestructors: module globalConstructors name: #'llvm.global_ctors'.
 	self translateModuleConstructorsOrDestructors: module globalDestructors name: #'llvm.global_dtors'.
+	self translateModuleUsedSymbols: module usedSymbols name: #'llvm.used'.
 	^ self llvmModule
 ]
 
@@ -734,7 +740,7 @@ SLVMLLVMCodeGenerator >> translateModuleConstructorsOrDestructors: constructorsO
 			descriptors add: (descriptorType constant: {
 				int32Ty constant: self target objectModel gcModuleRootRegistrationPriority .
 				ctorOrDtor .
-				LLVMBitCastConstantExpr new type: varPointerType; source: dynamicsRootsDescriptorVar; yourself
+				LLVMConstantPointerNull new type: varPointerType
 			})
 		].
 	].
@@ -792,6 +798,24 @@ SLVMLLVMCodeGenerator >> translateModuleInlineAssembly: assemblyFragment [
 	assemblyFragment language ~~ #gas ifTrue: [^ self].
 	
 	llvmModule addModuleLevelInlineAssembly: assemblyFragment source
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> translateModuleUsedSymbols: moduleUsedSymbols name: llvmGlobalName [
+	| pointerType arrayType elements variable |
+	moduleUsedSymbols do: [ :each |
+		usedSymbols add: (self translateValue: each)
+	].
+	usedSymbols ifEmpty: [ ^ self ].
+
+	pointerType := LLVMPointerType getUnqual: self context int8Ty.
+	arrayType := LLVMArrayType get: pointerType elements: usedSymbols size.
+	elements := usedSymbols collect: [ :each | LLVMBitCastConstantExpr new type: pointerType; source: each; yourself ].
+	variable := LLVMGlobalVariable createWithType: arrayType module: self llvmModule isConstant: false linkage: LLVMGlobalValue appendingLinkage name: llvmGlobalName.
+	variable initialValue: (LLVMConstantArray new
+		type: arrayType;
+		elements: elements;
+		yourself)
 ]
 
 { #category : #'as yet unclassified' }

@@ -23,3 +23,8 @@ SLVMDiscardFragment >> hasOutputs [
 SLVMDiscardFragment >> isTerminator [
 	^ true
 ]
+
+{ #category : #accessing }
+SLVMDiscardFragment >> type [
+	^ SLVMType voidType
+]

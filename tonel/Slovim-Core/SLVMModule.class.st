@@ -25,7 +25,8 @@ Class {
 		'highLevelMapToStructureType',
 		'structureTypeNameToHighLevelMap',
 		'nonInlineLiterals',
-		'nonInlineLiteralsTable'
+		'nonInlineLiteralsTable',
+		'usedSymbols'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -118,6 +119,11 @@ SLVMModule >> addStructure: aStructure [
 	structures add: aStructure.
 	structureDictionary at: aStructure name ifAbsentPut: aStructure.
 	^ true
+]
+
+{ #category : #adding }
+SLVMModule >> addUsedSymbol: symbol [
+	usedSymbols add: symbol
 ]
 
 { #category : #accessing }
@@ -544,6 +550,7 @@ SLVMModule >> initialize [
 	structureDictionary := Dictionary new.
 	globalValues := OrderedCollection new.
 	globalValueDictionary := Dictionary new.
+	usedSymbols := OrderedCollection new.
 	packages := OrderedCollection new.
 	inlineAssemblyFragments := OrderedCollection new.
 	globalConstructors := OrderedCollection new.
@@ -656,4 +663,9 @@ SLVMModule >> structures [
 { #category : #accessing }
 SLVMModule >> symbolMapToHighLevel [
 	^ symbolMapToHighLevel
+]
+
+{ #category : #accessing }
+SLVMModule >> usedSymbols [
+	^ usedSymbols
 ]

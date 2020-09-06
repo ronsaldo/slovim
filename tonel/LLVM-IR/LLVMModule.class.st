@@ -635,8 +635,8 @@ LLVMModule >> writeExecutableToFileNamed: outputFileName [
 
 	extraLinkerArguments := #('-Wl,--gc-sections').
 	(Smalltalk os isWin32 and: [self isWindowsTarget]) ifTrue: [
-		"extraLinkerArguments := #('-fuse-ld=lld-link.exe' '-Wl,/debug' '-Wl,/opt:ref')."
-		extraLinkerArguments := #('-fuse-ld=lld-link.exe' '-Wl,/debug').
+		extraLinkerArguments := #('-fuse-ld=lld-link.exe' '-Wl,/debug' '-Wl,/opt:ref').
+		"extraLinkerArguments := #('-fuse-ld=lld-link.exe' '-Wl,/debug')."
 	].
 	
 	arguments := self linkerTargetArguments , extraLinkerArguments , {
