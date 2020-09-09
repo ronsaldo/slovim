@@ -6,6 +6,7 @@ Class {
 	],
 	#classVars : [
 		'EncodingFromDebugTypeKind',
+		'FlagConversionMap',
 		'TagFromDebugTypeKind'
 	],
 	#pools : [
@@ -43,6 +44,46 @@ SLVMLLVMDebugTranslator class >> initialize [
 		#unsigned . DW_ATE_unsigned.
 		#character . DW_ATE_unsigned_char.
 	}.
+	
+	FlagConversionMap := Dictionary newFromPairs: #(
+		private DIFlagPrivate
+		protected DIFlagProtected
+		public DIFlagPublic
+		fwdDecl DIFlagFwdDecl
+		appleBlock DIFlagAppleBlock
+		virtual DIFlagVirtual
+		artificial DIFlagArtificial
+		explicit DIFlagExplicit
+		prototypes DIFlagPrototyped
+		objectPointer DIFlagObjectPointer
+		vector DIFlagVector
+		staticMember DIFlagStaticMember
+		lvalueReference DIFlagLValueReference
+		rvalueReference DIFlagRValueReference
+		exportSymbols DIFlagExportSymbols
+		singleInheritance DIFlagSingleInheritance
+		multipleInheritance DIFlagMultipleInheritance
+		virtualInheritance DIFlagVirtualInheritance
+		introducedVirtual DIFlagIntroducedVirtual
+		bitField DIFlagNoReturn
+		typePassByValue DIFlagTypePassByValue
+		typePassByReference DIFlagTypePassByReference
+		enumClass DIFlagEnumClass
+		thunk DIFlagThunk
+		nonTrivial DIFlagNonTrivial
+		bigEndian DIFlagBigEndian
+		littleEndian DIFlagLittleEndian
+		allCallsDescribed DIFlagAllCallsDescribed
+		indirectVirtualBase DIFlagIndirectVirtualBase
+	).
+]
+
+{ #category : #visiting }
+SLVMLLVMDebugTranslator >> convertFlags: flags [
+	| convertedFlags |
+	convertedFlags := flags collect: [ :each | FlagConversionMap at: each ].
+	convertedFlags ifEmpty: [ ^ nil ].
+	^ LLVMNamedFlags with: convertedFlags
 ]
 
 { #category : #visiting }
@@ -218,6 +259,7 @@ SLVMLLVMDebugTranslator >> visitDebugDerivedType: debugType [
 		size: debugType bitSize;
 		align: debugType bitAlignment;
 		offset: debugType bitOffset;
+		flags: (self convertFlags: debugType flags);
 		yourself.
 	moduleTranslator register: debugType debugElement: derivedType.
 	derivedType baseType: (moduleTranslator translateDebugType: debugType baseType).
@@ -225,7 +267,6 @@ SLVMLLVMDebugTranslator >> visitDebugDerivedType: debugType [
 	
 	debugType isBitField ifTrue: [ 
 		derivedType
-			flags: (LLVMNamedFlags with: #(DIFlagBitField));
 			extraData: (moduleTranslator context int64Ty constant: 64) asLLVMMetadata
 	].
 	
@@ -277,7 +318,8 @@ SLVMLLVMDebugTranslator >> visitDebugSubprogram: debugSubprogram [
 		name: debugSubprogram name;
 		isLocal: debugSubprogram isLocal;
 		isDefinition: debugSubprogram isDefinition;
-		retainedNodes: (LLVMMDDynamicTuple for: self llvmModule)
+		retainedNodes: (LLVMMDDynamicTuple for: self llvmModule);
+		flags: (self convertFlags: debugSubprogram flags);
 		yourself.
 	moduleTranslator register: debugSubprogram debugElement: subprogram.
 	

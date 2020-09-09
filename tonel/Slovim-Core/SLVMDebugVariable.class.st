@@ -27,3 +27,8 @@ SLVMDebugVariable >> emitLinkageName [
 SLVMDebugVariable >> emitLinkageName: anObject [
 	emitLinkageName := anObject
 ]
+
+{ #category : #'as yet unclassified' }
+SLVMDebugVariable >> makeObjectPointer [
+	^ self addFlag: #objectPointer
+]

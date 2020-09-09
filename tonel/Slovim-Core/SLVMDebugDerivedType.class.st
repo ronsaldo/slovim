@@ -3,8 +3,7 @@ Class {
 	#superclass : #SLVMDebugType,
 	#instVars : [
 		'baseType',
-		'bitOffset',
-		'isBitField'
+		'bitOffset'
 	],
 	#category : #'Slovim-Core-Debug'
 }
@@ -41,12 +40,12 @@ SLVMDebugDerivedType >> byteOffset: anOffset [
 
 { #category : #accessing }
 SLVMDebugDerivedType >> isBitField [
-	^ isBitField ifNil: [ isBitField := false ]
+	^ self hasFlag: #bitField
 ]
 
 { #category : #accessing }
 SLVMDebugDerivedType >> isBitField: aBoolean [
-	isBitField := aBoolean
+	self setFlag: #bitField value: aBoolean
 ]
 
 { #category : #testing }

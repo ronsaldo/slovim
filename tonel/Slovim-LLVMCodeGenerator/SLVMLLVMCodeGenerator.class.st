@@ -127,6 +127,7 @@ SLVMLLVMCodeGenerator >> buildGlobalVariable: slvmGlobalVariable debugInformatio
 	debugGlobalVariable := (LLVMDIGlobalVariable for: llvmModule)
 		distinct;
 		name: debugInfo name;
+		flags: (self debugTranslator convertFlags: debugInfo flags);
 		yourself.
 		
 	slvmGlobalVariable name ifNotNil: [
@@ -232,6 +233,7 @@ SLVMLLVMCodeGenerator >> convertDebugVariable: debugVariable fallbackScopeInto: 
 			arg: debugVariable argumentIndex;
 			scope: scope;
 			type: (self translateDebugType: debugVariable type);
+			flags: (self debugTranslator convertFlags: debugVariable flags);
 			yourself.
 	]
 ]
@@ -1056,6 +1058,22 @@ SLVMLLVMCodeGenerator >> visitConstantExpressionGetElementPointer: aConstant [
 		inbounds: aConstant inBounds;
 		pointer: (self translateValue: aConstant pointer);
 		indices: (aConstant indices collect: [:index | self translateValue: index]);
+		yourself
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantExpressionIntToPointer: constantBitCast [
+	^ LLVMIntToPtrConstantExpr new
+		type: (self translateType: constantBitCast type);
+		source: (self translateValue: constantBitCast source);
+		yourself
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> visitConstantExpressionPointerToInt: constantBitCast [
+	^ LLVMPtrToIntConstantExpr new
+		type: (self translateType: constantBitCast type);
+		source: (self translateValue: constantBitCast source);
 		yourself
 ]
 

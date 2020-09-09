@@ -88,6 +88,11 @@ SLVMConstant class >> int: anInteger [
 	^ self type: SLVMType intType value: anInteger
 ]
 
+{ #category : #constructor }
+SLVMConstant class >> int: value toPointer: aTargetType [
+	^ SLVMConstantExpresionIntToPointer new value: value targetType: aTargetType
+]
+
 { #category : #testing }
 SLVMConstant class >> isAbstract [
 	^ self == SLVMConstant
@@ -111,7 +116,13 @@ SLVMConstant class >> nullPointer: pointerType [
 
 { #category : #constructor }
 SLVMConstant class >> pointer: value castTo: aTargetType [
+	aTargetType isIntegerType ifTrue: [ ^ self pointer: value toInt: aTargetType ].
 	^ self value: value bitcast: aTargetType
+]
+
+{ #category : #constructor }
+SLVMConstant class >> pointer: value toInt: aTargetType [
+	^ SLVMConstantExpresionPointerToInt new value: value targetType: aTargetType
 ]
 
 { #category : #constructor }

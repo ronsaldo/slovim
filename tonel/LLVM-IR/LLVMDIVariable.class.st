@@ -6,7 +6,8 @@ Class {
 		'scope',
 		'file',
 		'line',
-		'type'
+		'type',
+		'flags'
 	],
 	#category : #'LLVM-IR-Metadata'
 }
@@ -19,6 +20,16 @@ LLVMDIVariable >> file [
 { #category : #accessing }
 LLVMDIVariable >> file: anObject [
 	file := anObject
+]
+
+{ #category : #accessing }
+LLVMDIVariable >> flags [
+	^ flags
+]
+
+{ #category : #accessing }
+LLVMDIVariable >> flags: anObject [
+	flags := anObject
 ]
 
 { #category : #accessing }
@@ -53,7 +64,7 @@ LLVMDIVariable >> scope: anObject [
 
 { #category : #accessing }
 LLVMDIVariable >> specializedProperties [
-	^ #( name scope file line type )
+	^ #( name scope file line type flags )
 ]
 
 { #category : #accessing }
