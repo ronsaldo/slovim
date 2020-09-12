@@ -500,9 +500,11 @@ LLVMModule >> relocationModel: anObject [
 
 { #category : #writing }
 LLVMModule >> runClangWithArguments: arguments tempFileName: tempFileName [
+	| textIR |
+	textIR := ByteString streamContents: [ :out | self fullPrintOn: out ].
 	tempFileName writeStreamDo: [ :out |
 		out truncate.
-		self fullPrintOn: out
+		out nextPutAll: textIR
 	].
 	
 	^ self runCommand: self clangProgram withArguments: arguments , { tempFileName fullName }
@@ -527,9 +529,11 @@ LLVMModule >> runCommand: command withArguments: arguments [
 
 { #category : #writing }
 LLVMModule >> runLLCWithArguments: arguments tempFileName: tempFileName [
+	| textIR |
+	textIR := ByteString streamContents: [ :out | self fullPrintOn: out ].
 	tempFileName writeStreamDo: [ :out |
 		out truncate.
-		self fullPrintOn: out
+		out nextPutAll: textIR
 	].
 	
 	^ self runCommand: self llcProgram withArguments: arguments , { tempFileName fullName }
