@@ -419,7 +419,9 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 		targetFunction addBasicBlock: newBlock.
 		substitutionDictionary at: bb put: newBlock.
 		targetFirstBlock ifNil: [ targetFirstBlock := newBlock ].
-		allocaInsertionPoint := targetFirstBlock instructionAfterAllocas.
+		allocaInsertionPoint ifNil: [
+			allocaInsertionPoint := targetFirstBlock instructionAfterAllocas.
+		].
 		
 		bb instructionsDo: [ :instr |
 			newInstruction := instr copy.
@@ -445,8 +447,8 @@ SLVMFunction >> copyContentsInto: targetFunction valueMap: valueMap continuation
 		]
 	].
 
-	newBlocks do: #computeSuccessors.
-	newBlocks do: #addUnreachableStructuredSuccessors.
+	newBlocks do: [:each | each computeSuccessors].
+	newBlocks do: [:each | each addUnreachableStructuredSuccessors].
 
 	"Only change the returns when we are having a continuation"
 	continuationBlock ifNil: [ ^ { newBlocks first . nil } ].

@@ -181,7 +181,7 @@ SLVMBasicBlock >> addUnreachableStructuredSuccessors [
 		changed := true.
 	].
 
-	(unwindBlock isNotNil and: [ unwindBlock predecessors isEmpty]) ifTrue: [
+	(unwindBlock isNotNil and: [ (unreachableSuccessors includes: unwindBlock) not ]) ifTrue: [
 		unreachableSuccessors := unreachableSuccessors , { unwindBlock }.
 		changed := true.
 	].
@@ -228,6 +228,7 @@ SLVMBasicBlock >> applySubstitutions: substitutionDictionary [
 	structuredControlFlowHeader ifNotNil: [ structuredControlFlowHeader := substitutionDictionary at: structuredControlFlowHeader ].
 	mergeBlock ifNotNil: [ mergeBlock := substitutionDictionary at: mergeBlock ].
 	continueBlock ifNotNil: [ continueBlock := substitutionDictionary at: continueBlock ].
+	unwindBlock ifNotNil: [ unwindBlock := substitutionDictionary at: unwindBlock ].
 ]
 
 { #category : #converting }
@@ -335,6 +336,7 @@ SLVMBasicBlock >> copyingFrom: sourceBlock [
 	structuredControlFlowHeader := sourceBlock structuredControlFlowHeader.
 	mergeBlock := sourceBlock mergeBlock.
 	continueBlock := sourceBlock continueBlock.
+	unwindBlock := sourceBlock unwindBlock.
 ]
 
 { #category : #accessing }
