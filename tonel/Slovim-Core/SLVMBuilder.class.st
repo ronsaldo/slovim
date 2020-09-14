@@ -2010,7 +2010,7 @@ SLVMBuilder >> withBasicBlock: aBasicBlock do: aBlock [
 	| oldCurrentBlock |
 	oldCurrentBlock := currentBlock.
 	currentBlock := aBasicBlock.
-	aBlock ensure: [ currentBlock := oldCurrentBlock ]
+	^ aBlock ensure: [ currentBlock := oldCurrentBlock ]
 ]
 
 { #category : #casting }
