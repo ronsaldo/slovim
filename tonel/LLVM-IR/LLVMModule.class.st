@@ -544,6 +544,18 @@ LLVMModule >> runLinkerWithArguments: arguments [
 	^ self runCommand: self linkerProgram withArguments: arguments
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMModule >> sanitizeLinkerArgument: linkerArgument [
+	(Smalltalk os isWin32 and: [self isWindowsTarget]) ifFalse: [
+		^ linkerArgument
+	].
+
+	((linkerArgument beginsWith: '/') or: [ linkerArgument endsWith: '.lib' ]) ifTrue: [
+		^ '-Wl,' , linkerArgument
+	].
+	^ linkerArgument
+]
+
 { #category : #initialization }
 LLVMModule >> setKnownIntrinsicAttributes: intrinsic [
 	intrinsic functionAttributes: #(nounwind).
@@ -646,7 +658,7 @@ LLVMModule >> writeExecutableToFileNamed: outputFileName [
 	arguments := self linkerTargetArguments , extraLinkerArguments , {
 		'-o' . outputFileRef fullName.
 		objectFile.
-	} , self linkerArguments.
+	} , (self linkerArguments collect: [:each | self sanitizeLinkerArgument: each]).
 	
 	^ self runLinkerWithArguments: arguments
 
