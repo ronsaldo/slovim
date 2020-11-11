@@ -531,6 +531,7 @@ LLVMModule >> runCommand: command withArguments: arguments [
 LLVMModule >> runLLCWithArguments: arguments tempFileName: tempFileName [
 	| textIR |
 	textIR := ByteString streamContents: [ :out | self fullPrintOn: out ].
+	tempFileName parent ensureCreateDirectory.
 	tempFileName writeStreamDo: [ :out |
 		out truncate.
 		out nextPutAll: textIR

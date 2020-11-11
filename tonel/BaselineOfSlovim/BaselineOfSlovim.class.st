@@ -11,11 +11,13 @@ BaselineOfSlovim >> baseline: spec [
 	spec for: #'common' do: [
 		spec blessing: #'baseline'.
 		spec baseline: 'SAsm' with: [
-				spec repository: 'github://ronsaldo/sasm/tonel'].
+			spec repository: 'github://ronsaldo/sasm'].
+		spec baseline: #'WBT' with: [
+			spec repository: 'github://ronsaldo/wbt' ].
 		spec 
 			package: #'Slovim-MessagePack';
 			package: #'Slovim-Core' with: [
-				spec requires: #(#'Slovim-MessagePack')];
+				spec requires: #(#'Slovim-MessagePack' #WBT)];
 			package: #'Slovim-HighLevelCodeGenerator' with: [
 				spec requires: #(#'Slovim-Core' ). ];
 			package: 'Slovim-SAsmCodeGenerator' with: [

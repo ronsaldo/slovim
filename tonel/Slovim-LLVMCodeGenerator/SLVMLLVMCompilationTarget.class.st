@@ -17,7 +17,8 @@ Class {
 		'relocationModel',
 		'exceptionModel',
 		'canonicalOperatingSystemName',
-		'floatingPointModel'
+		'floatingPointModel',
+		'wbtPlatform'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
@@ -289,7 +290,7 @@ SLVMLLVMCompilationTarget >> armv7a [
 { #category : #architectures }
 SLVMLLVMCompilationTarget >> armv7m [
 	self
-		architecture: #armv subarchitecture: #v7m
+		architecture: #arm subarchitecture: #v7m
 ]
 
 { #category : #accessing }
@@ -337,6 +338,11 @@ SLVMLLVMCompilationTarget >> createTargetTypes [
 	^ pointerSize = 4
 		ifTrue: [ SLVM32BitsPointerCompilationTargetTypes new ]
 		ifFalse: [ SLVM64BitsPointerCompilationTargetTypes new ]
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> createWBTArchitecture [
+	^ WBTArchitecture getNamed: canonicalArchitecture , (subarchitecture ifNil: [ '' ])
 ]
 
 { #category : #accessing }
@@ -565,6 +571,41 @@ SLVMLLVMCompilationTarget >> systemVendor [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> systemVendor: anObject [
 	systemVendor := anObject
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> wbtArchitecture [
+	^ WBTArchitecture getNamed: architecture , (subarchitecture ifNil: [ '' ])
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> wbtPlatform [
+	^ wbtPlatform ifNil: [ wbtPlatform :=
+		WBTPlatform new
+			name: operatingSystemName;
+			canonicalName: canonicalOperatingSystemName;
+			architecture: self createWBTArchitecture;
+			toolchain: (self isWindowsFamily
+				ifTrue: [ WBTToolChain windowsClangCL ]
+				ifFalse: [
+					self isAppleFamily
+						ifTrue: [ WBTToolChain osxClang ]
+						ifFalse: [ WBTToolChain linuxClang ]
+				]);
+			abiName: abiName;
+			systemVendor: systemVendor;
+			cpu: cpu;
+			fpu: fpu;
+			floatAbiName: floatAbiName;
+			floatingPointModel: floatingPointModel;
+			setDefaultOperatingSystemConventions;
+			yourself
+	]
+]
+
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> wbtPlatform: anObject [
+	wbtPlatform := anObject
 ]
 
 { #category : #architectures }

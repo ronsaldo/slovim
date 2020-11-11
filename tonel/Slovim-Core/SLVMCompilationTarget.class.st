@@ -286,6 +286,11 @@ SLVMCompilationTarget >> isARM64 [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isAppleFamily [
+	^ #(osx ios) includes: self operatingSystemName
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isBigEndian [
 	^ self isLittleEndian not
 ]
@@ -356,8 +361,13 @@ SLVMCompilationTarget >> isWindows [
 ]
 
 { #category : #testing }
+SLVMCompilationTarget >> isWindowsFamily [
+	^ #(windows uwp) includes: self operatingSystemName
+]
+
+{ #category : #testing }
 SLVMCompilationTarget >> isWindowsStore [
-	^ false
+	^ #uwp = self operatingSystemName
 ]
 
 { #category : #testing }
@@ -698,6 +708,11 @@ SLVMCompilationTarget >> voidPointerPointerType [
 { #category : #types }
 SLVMCompilationTarget >> voidPointerType [
 	^ types voidPointerType
+]
+
+{ #category : #accessing }
+SLVMCompilationTarget >> wbtPlatform [
+	^ WBTPlatform current
 ]
 
 { #category : #initialization }
