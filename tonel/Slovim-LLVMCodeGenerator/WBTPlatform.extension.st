@@ -11,6 +11,7 @@ WBTPlatform >> createSLVMCompilationTarget [
 		fpu: fpu;
 		floatAbiName: floatAbiName;
 		floatingPointModel: floatingPointModel;
+		isEmbeddedPAL: isEmbeddedPAL;
 		yourself
 ]
 

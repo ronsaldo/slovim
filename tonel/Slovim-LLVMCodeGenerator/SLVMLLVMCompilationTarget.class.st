@@ -18,7 +18,9 @@ Class {
 		'exceptionModel',
 		'canonicalOperatingSystemName',
 		'floatingPointModel',
-		'wbtPlatform'
+		'wbtPlatform',
+		'useEmbeddedPAL',
+		'isEmbeddedPAL'
 	],
 	#category : #'Slovim-LLVMCodeGenerator'
 }
@@ -427,7 +429,12 @@ SLVMLLVMCompilationTarget >> isARM64 [
 
 { #category : #testing }
 SLVMLLVMCompilationTarget >> isEmbeddedPAL [
-	^ operatingSystemName = #epal
+	^ isEmbeddedPAL ifNil: [isEmbeddedPAL := operatingSystemName = #epal]
+]
+
+{ #category : #testing }
+SLVMLLVMCompilationTarget >> isEmbeddedPAL: aBoolean [
+	^ isEmbeddedPAL := aBoolean
 ]
 
 { #category : #testing }
@@ -598,6 +605,7 @@ SLVMLLVMCompilationTarget >> wbtPlatform [
 			fpu: fpu;
 			floatAbiName: floatAbiName;
 			floatingPointModel: floatingPointModel;
+			isEmbeddedPAL: isEmbeddedPAL;
 			setDefaultOperatingSystemConventions;
 			yourself
 	]
