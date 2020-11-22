@@ -303,7 +303,7 @@ SLVMLLVMCodeGenerator >> convertedDebugVariables [
 SLVMLLVMCodeGenerator >> createComdatIfRequiredFor: aGlobal [
 	| comdat |
 	aGlobal name ifNil: [ ^ self ].
-	self target isWindows ifFalse: [ ^ self ].
+	self target isWindowsFamily ifFalse: [ ^ self ].
 
 	(aGlobal linkage = LLVMGlobalValue linkOnceODRLinkage
 	or: [aGlobal linkage = LLVMGlobalValue weakODRLinkage]) ifTrue: [
@@ -483,7 +483,7 @@ SLVMLLVMCodeGenerator >> intPointerType [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> isEmittingCodeView [
-	^ target isWindows
+	^ target isWindowsFamily
 ]
 
 { #category : #'debug information' }
@@ -498,7 +498,7 @@ SLVMLLVMCodeGenerator >> isInliningMandatory [
 
 { #category : #testing }
 SLVMLLVMCodeGenerator >> isSpecialSetjmp: aFunction [
-	^ target isWindows and: [
+	^ target isWindowsFamily and: [
 	(aFunction isFunction) and: [
 	#(_setjmp __setjmp) includes: aFunction name]]
 ]

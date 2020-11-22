@@ -169,7 +169,7 @@ SLVMLLVMCompilationTarget >> abiName: anObject [
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> applyABI [
 	(#(x86 x86_64) includes: self architecture) ifTrue: [ 
-		self isWindows ifTrue: [ ^ self abiName: #msvc ].
+		self isWindowsFamily ifTrue: [ ^ self abiName: #msvc ].
 		self isLinux ifTrue: [ ^ self abiName: #gnu ].
 		self isOSX ifTrue: [ ^ self abiName: #macho ].
 		^ self abiName: #elf
@@ -207,7 +207,7 @@ SLVMLLVMCompilationTarget >> applyExceptionHandlingModel [
 		^ self.
 	].
 
-	self isWindows ifTrue: [
+	self isWindowsFamily ifTrue: [
 		exceptionModel := #wineh
 	].
 	self isWebAssembly ifTrue: [ 

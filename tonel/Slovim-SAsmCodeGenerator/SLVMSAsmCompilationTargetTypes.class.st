@@ -9,7 +9,7 @@ Class {
 
 { #category : #'operating systems' }
 SLVMSAsmCompilationTargetTypes >> double [
-	^ self isWindows ifTrue: [ self doubleAlign8 ] ifFalse: [ self doubleAlign4 ]
+	^ self isWindowsFamily ifTrue: [ self doubleAlign8 ] ifFalse: [ self doubleAlign4 ]
 ]
 
 { #category : #testing }

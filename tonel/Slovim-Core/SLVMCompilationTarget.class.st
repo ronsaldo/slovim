@@ -529,7 +529,7 @@ SLVMCompilationTarget >> setWindowsExceptionModel [
 
 { #category : #'as yet unclassified' }
 SLVMCompilationTarget >> sharedObjectsAreAlsoImports [
-	^ self isWindows not
+	^ self isWindowsFamily not
 ]
 
 { #category : #types }
