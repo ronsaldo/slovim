@@ -770,12 +770,21 @@ SLVMSpirVCodeGenerator >> visitCall: callInstruction [
 						type: nil
 						result: nil
 						operands: arguments , constantArguments)
-				] ifFalse: [ 
-					builder addFunctionInstruction: (SpirVInstruction
-						opcode: setInstructionPair second
-						type: resultType
-						result: id
-						operands: arguments , constantArguments)
+				] ifFalse: [
+					(functionValue name = #'texture.image.fetch' and: [ arguments size > 2 ]) ifTrue: [
+						self flag: 'FIXME: remove this hack'.
+						builder addFunctionInstruction: (SpirVInstruction
+							opcode: setInstructionPair second
+							type: resultType
+							result: id
+							operands: {arguments first . arguments second . SpvImageOperandsSample . arguments third})
+					] ifFalse: [
+						builder addFunctionInstruction: (SpirVInstruction
+							opcode: setInstructionPair second
+							type: resultType
+							result: id
+							operands: arguments , constantArguments)
+					].
 				]
 			] ifFalse: [ 
 				extensionSet := builder perform: (setInstructionPair first , #ExtensionSet) asSymbol. 
