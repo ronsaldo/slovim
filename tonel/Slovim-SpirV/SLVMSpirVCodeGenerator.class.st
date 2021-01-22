@@ -567,7 +567,7 @@ SLVMSpirVCodeGenerator >> translateBasicBlock: basicBlock index: index [
 { #category : #visitor }
 SLVMSpirVCodeGenerator >> translateFunctionCallValue: arg [
 	(arg type isPointerType and: [ arg type storage = SLVMType functionStorage ]) ifTrue: [
-		(arg isInstruction and: [ arg isAlloca ]) ifFalse: [
+		((arg isInstruction and: [ arg isAlloca ]) or: [arg isFunctionArgument]) ifFalse: [
 			| value temp |
 			temp := self createTemporaryOfType: arg type.
 			value := self loadPointer: (self translateValue: arg) valueOfType: arg type baseType.
