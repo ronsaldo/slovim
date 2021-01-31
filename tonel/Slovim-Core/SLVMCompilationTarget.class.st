@@ -510,6 +510,10 @@ SLVMCompilationTarget >> sampler [
 	^ types sampler
 ]
 
+{ #category : #accessing }
+SLVMCompilationTarget >> selectDefaultExceptionModel [
+]
+
 { #category : #testing }
 SLVMCompilationTarget >> setDwarfExceptionModel [
 	self subclassResponsibility

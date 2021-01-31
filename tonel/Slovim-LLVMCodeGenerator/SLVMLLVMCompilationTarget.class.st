@@ -515,6 +515,11 @@ SLVMLLVMCompilationTarget >> relocationModel: aRelocationModel [
 	relocationModel := aRelocationModel
 ]
 
+{ #category : #accessing }
+SLVMLLVMCompilationTarget >> selectDefaultExceptionModel [
+	self applyExceptionHandlingModel.
+]
+
 { #category : #testing }
 SLVMLLVMCompilationTarget >> setDwarfExceptionModel [
 	exceptionModel := #dwarf.
@@ -527,7 +532,8 @@ SLVMLLVMCompilationTarget >> setForEmbeddedPAL [
 
 { #category : #accessing }
 SLVMLLVMCompilationTarget >> setForLinux [
-	self operatingSystemName: #linux
+	self operatingSystemName: #linux.
+	wbtPlatform := nil.
 ]
 
 { #category : #accessing }
