@@ -33,14 +33,29 @@ LLVMFunctionTest >> testSquare [
 	secondInstruction := builder return: firstInstruction.
 	
 	self assert: function basicBlocks size equals: 1.
-	self assert: firstInstruction parent equals: function.
-	self assert: secondInstruction parent equals: function.
+	self assert: firstInstruction parent equals: bb.
+	self assert: secondInstruction parent equals: bb.
 	self assert: secondInstruction value equals: firstInstruction.
 
 ]
 
 { #category : #initialization }
 LLVMFunctionTest >> testVoidFunction [
+	| functionType function bb builder firstInstruction |
+	functionType := LLVMFunctionType get: context voidTy params: #() isVarArg: false.
+	function := LLVMFunction createWithType: functionType linkage: LLVMGlobalValue externalLinkage name: #testFunction module: module.
+	
+	bb := LLVMBasicBlock for: context name: #entry parent: function.
+	builder := LLVMIRBuilder forBasicBlock: bb.
+
+	firstInstruction := builder returnVoid.
+	
+	self assert: function basicBlocks size equals: 1.
+	self assert: firstInstruction parent equals: bb.
+]
+
+{ #category : #initialization }
+LLVMFunctionTest >> testVoidFunctionDeclaration [
 	| functionType function |
 	functionType := LLVMFunctionType get: context voidTy params: #() isVarArg: false.
 	function := LLVMFunction createWithType: functionType linkage: LLVMGlobalValue externalLinkage name: #testFunction module: module.

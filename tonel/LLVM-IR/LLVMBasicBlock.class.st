@@ -31,6 +31,19 @@ LLVMBasicBlock >> addNext: anInstruction [
 	instructions add: anInstruction
 ]
 
+{ #category : #handle }
+LLVMBasicBlock >> buildInstructionHandles [
+	| builder |
+	builder := parent context validHandle createBuilder
+		module: parent ownerModule;
+		positionAtEndOf: self validHandle;
+		yourself.	
+		
+	instructions do: [ :each |
+		each buildHandleWithBuilder: builder
+	]
+]
+
 { #category : #accessing }
 LLVMBasicBlock >> endingBlock [
 	^ endingBlock
@@ -39,6 +52,10 @@ LLVMBasicBlock >> endingBlock [
 { #category : #accessing }
 LLVMBasicBlock >> endingBlock: anObject [
 	endingBlock := anObject
+]
+
+{ #category : #handle }
+LLVMBasicBlock >> fixupInstructionHandles [
 ]
 
 { #category : #printing }

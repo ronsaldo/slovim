@@ -19,6 +19,16 @@ LLVMInstruction >> addNamed: metadataName metadata: metadataValue [
 	^ metadataValue
 ]
 
+{ #category : #accessing }
+LLVMInstruction >> buildHandle [
+	self shouldNotImplement
+]
+
+{ #category : #'as yet unclassified' }
+LLVMInstruction >> buildHandleWithBuilder: aBuilder [
+	self subclassResponsibility
+]
+
 { #category : #printing }
 LLVMInstruction >> fullPrintOn: aStream [
 	type isVoidTy ifFalse: [

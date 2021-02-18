@@ -22,6 +22,12 @@ String >> isValidLLVMSymbol [
 ]
 
 { #category : #'*LLVM-IR' }
+String >> llvmNameForHandle [
+	(self allSatisfy: [ :each | each isDigit ]) ifTrue: [ ^ '' ].
+	^ self
+]
+
+{ #category : #'*LLVM-IR' }
 String >> llvmNameString [
 	self isValidLLVMSymbol ifTrue: [ ^ self ].
 	^ ByteString streamContents: [ :out |

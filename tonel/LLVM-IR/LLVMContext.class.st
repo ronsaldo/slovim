@@ -20,6 +20,26 @@ Class {
 }
 
 { #category : #accessing }
+LLVMContext >> buildHandle [
+	handle := LLVMContextRef create.
+	
+	labelTy setHandle: handle labelType.
+	voidTy setHandle: handle voidType.
+	metadataTy setHandle: handle metadataType.
+	
+	halfTy setHandle: handle halfType.
+	floatTy setHandle: handle floatType.
+	doubleTy setHandle: handle doubleType.
+
+	int1Ty setHandle: handle int1Type.
+	int8Ty setHandle: handle int8Type.
+	int16Ty setHandle: handle int16Type.
+	int32Ty setHandle: handle int32Type.
+	int64Ty setHandle: handle int64Type.
+	int128Ty setHandle: handle int128Type.
+]
+
+{ #category : #accessing }
 LLVMContext >> doubleTy [
 	^ doubleTy
 ]

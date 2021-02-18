@@ -3,7 +3,8 @@ Class {
 	#superclass : #LLVMCompositeType,
 	#instVars : [
 		'elements',
-		'packed'
+		'packed',
+		'inlineDefinitionString'
 	],
 	#category : #'LLVM-IR-Types'
 }
@@ -29,19 +30,6 @@ LLVMStructType >> constant: constantElements [
 		type: self;
 		elements: constantElements;
 		yourself
-]
-
-{ #category : #printing }
-LLVMStructType >> createName [
-	self validateNonRecursion.
-	^ ByteString streamContents: [ :out |
-		out nextPutAll: '{'.
-		elements doWithIndex: [ :element :index |
-			index > 1 ifTrue: [ out nextPutAll: ', ' ].
-			out print: element
-		].
-		out nextPut: $}
-	]
 ]
 
 { #category : #'as yet unclassified' }
@@ -78,6 +66,20 @@ LLVMStructType >> initialize [
 	
 ]
 
+{ #category : #printing }
+LLVMStructType >> inlineDefinitionString [
+	^ inlineDefinitionString ifNil: [
+		self validateNonRecursion. inlineDefinitionString := ByteString streamContents: [ :out |
+			out nextPutAll: '{'.
+			elements doWithIndex: [ :element :index |
+				index > 1 ifTrue: [ out nextPutAll: ', ' ].
+				out print: element
+			].
+			out nextPut: $}
+		]
+	]
+]
+
 { #category : #testing }
 LLVMStructType >> isStructTy [
 	^ true
@@ -90,7 +92,7 @@ LLVMStructType >> memberAt: sourceIndex [
 
 { #category : #accessing }
 LLVMStructType >> name [
-	^ name ifNil: [ name := self createName ]
+	^ name
 ]
 
 { #category : #accessing }
@@ -122,6 +124,16 @@ LLVMStructType >> printDefinitionOn: aStream [
 	].
 
 	aStream nextPut: $}. packed ifTrue: [ aStream nextPut: $> ].
+]
+
+{ #category : #composition }
+LLVMStructType >> printOn: aStream [
+	name ifNotNil: [ 
+		aStream nextPut: $%; nextPutAll: name.
+	] ifNil: [
+		aStream nextPutAll: self inlineDefinitionString
+	].
+
 ]
 
 { #category : #'as yet unclassified' }

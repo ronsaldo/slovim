@@ -7,7 +7,8 @@ Class {
 		'dllStorageClass',
 		'threadLocalMode',
 		'metadata',
-		'comdat'
+		'comdat',
+		'ownerModule'
 	],
 	#classVars : [
 		'AppendingLinkage',
@@ -289,6 +290,16 @@ LLVMGlobalValue >> linkage: anObject [
 { #category : #visibility }
 LLVMGlobalValue >> makePrivate [
 	self linkage: PrivateLinkage
+]
+
+{ #category : #accessing }
+LLVMGlobalValue >> ownerModule [
+	^ ownerModule
+]
+
+{ #category : #accessing }
+LLVMGlobalValue >> ownerModule: aModule [
+	^ ownerModule := aModule
 ]
 
 { #category : #printing }

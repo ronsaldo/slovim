@@ -1,6 +1,12 @@
 Class {
 	#name : #LLVMObject,
 	#superclass : #Object,
+	#instVars : [
+		'handle'
+	],
+	#pools : [
+		'LLVMCConstants'
+	],
 	#category : #'LLVM-IR-Object'
 }
 
@@ -14,4 +20,29 @@ LLVMObject class >> enumDefine: list [
 		].
 		self classVarNamed: varName put: element
 	].
+]
+
+{ #category : #accessing }
+LLVMObject >> buildHandle [
+	self subclassResponsibility
+]
+
+{ #category : #accessing }
+LLVMObject >> handle [
+
+	^ handle
+]
+
+{ #category : #accessing }
+LLVMObject >> setHandle: anObject [
+
+	handle := anObject
+]
+
+{ #category : #accessing }
+LLVMObject >> validHandle [
+	^ handle ifNil: [
+		self buildHandle.
+		handle
+	]
 ]

@@ -382,7 +382,7 @@ SLVMLLVMCodeGenerator >> declareNamedStructure: aNamedStructure [
 	| convertedStructure |
 	convertedStructure := LLVMStructType new
 		context: self context;
-		name: ('%' , aNamedStructure name llvmNameString);
+		name: aNamedStructure name llvmNameString;
 		packed: aNamedStructure isPacked;
 		yourself.
 	translatedTypes at: aNamedStructure put: convertedStructure.

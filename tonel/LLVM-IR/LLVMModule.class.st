@@ -121,7 +121,8 @@ LLVMModule >> addGlobalValue: aGlobalValue [
 	aGlobalValue name ifNil: [ aGlobalValue name: self generateSymbol ].
 	valueSymbolTable at: aGlobalValue name ifPresent: [
 		self error: 'Trying to override global value'
-	] ifAbsentPut: [ aGlobalValue ]
+	] ifAbsentPut: [ aGlobalValue ].
+	aGlobalValue ownerModule: self
 ]
 
 { #category : #adding }
@@ -164,6 +165,17 @@ LLVMModule >> asBinaryObject [
 { #category : #printing }
 LLVMModule >> asString [
 	^ ByteString streamContents: [ :out | self fullPrintOn: out ]
+]
+
+{ #category : #accessing }
+LLVMModule >> buildHandle [
+	handle := context validHandle createModuleWithName: name.
+	
+	structureSymbolTable valuesDo: [ :each | each validHandle ].
+	comdats do: [ :each | each validHandle ].
+	moduleLevelAssemblySources do: [ :each | each validHandle ].
+	valueSymbolTable valuesDo: [ :each | each validHandle ].
+	metadataSymbolTable valuesDo: [ :each | each validHandle ].
 ]
 
 { #category : #writing }

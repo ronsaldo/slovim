@@ -66,3 +66,9 @@ LLVMArgument >> printOnDefinition: aStream [
 	].
 
 ]
+
+{ #category : #accessing }
+LLVMArgument >> setHandle: aHandle [
+	super setHandle: aHandle.
+	name ifNotNil: [ aHandle setName: name ].
+]

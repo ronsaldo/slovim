@@ -6,6 +6,11 @@ UndefinedObject >> asLLVMMetadata [
 ]
 
 { #category : #'*LLVM-IR' }
+UndefinedObject >> llvmNameForHandle [
+	^ ''
+]
+
+{ #category : #'*LLVM-IR' }
 UndefinedObject >> llvmPrintSpecializedMetadataValueOn: aStream [
 	aStream nextPutAll: 'null'
 ]

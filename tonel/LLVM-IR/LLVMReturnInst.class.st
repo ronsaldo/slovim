@@ -7,6 +7,15 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMReturnInst >> buildHandleWithBuilder: builder [
+	value ifNil: [
+		handle := builder retVoid
+	] ifNotNil: [ 
+		handle := builder ret: value validHandle
+	].
+]
+
 { #category : #printing }
 LLVMReturnInst >> mnemonic [
 	^ #ret

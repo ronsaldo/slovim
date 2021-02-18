@@ -69,6 +69,31 @@ LLVMFunction >> basicBlocksReplacedWith: replacement [
 	basicBlocks := replacement
 ]
 
+{ #category : #accessing }
+LLVMFunction >> buildHandle [
+	handle := ownerModule validHandle addFunction: name type: functionType validHandle.
+	"Set the arguments."
+	arguments doWithIndex: [ :arg :index |
+		arg setHandle: (handle getParam: index - 1)
+	].
+
+	"Create the blocks."
+	basicBlocks do: [ :each |
+		each setHandle: (handle appendBasicBlockNamed: each name inContext: functionType context)
+	].
+
+	"Create the instructions."
+	basicBlocks do: [ :each |
+		each buildInstructionHandles
+	].
+	
+	"Fix the phi nodes."
+	basicBlocks do: [ :each |
+		each fixupInstructionHandles
+	].
+
+]
+
 { #category : #printing }
 LLVMFunction >> fullPrintOn: aStream [
 	self sanitizeNames.
@@ -78,7 +103,7 @@ LLVMFunction >> fullPrintOn: aStream [
 			aStream space; nextPutAll: each
 		].
 	
-		aStream << ' ' << functionType returnType name << ' @'.
+		aStream << ' '; print: functionType returnType; << ' @'.
 		self name llvmPrintNameOn: aStream.
 		aStream << ' ( '.
 		
@@ -101,7 +126,7 @@ LLVMFunction >> fullPrintOn: aStream [
 	returnAttributes do: [ :each |
 		aStream space; nextPutAll: each
 	].
-	aStream << ' ' << functionType returnType name << ' @' .
+	aStream << ' '; print: functionType returnType; << ' @'.
 	self name llvmPrintNameOn: aStream.
 	aStream << ' ( '.
 	

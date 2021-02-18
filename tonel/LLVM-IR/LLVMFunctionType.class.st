@@ -21,6 +21,16 @@ LLVMFunctionType class >> get: returnType params: params isVarArg: isVarArg [
 ]
 
 { #category : #accessing }
+LLVMFunctionType >> buildHandle [
+	| argumentArray |
+	argumentArray := FFIExternalArray newType: 'void*' size: params size.
+	params doWithIndex: [ :param :index |
+		argumentArray at: index put: param validHandle getHandle.
+	].
+	handle := context validHandle functionType: returnType validHandle args: argumentArray getHandle count: params size variadic: isVarArg.
+]
+
+{ #category : #accessing }
 LLVMFunctionType >> createName [
 	^ ByteString streamContents: [ :out |
 		out print: returnType; nextPutAll: ' ('.
