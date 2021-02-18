@@ -19,6 +19,17 @@ LLVMExtractValueInst >> aggregate: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMExtractValueInst >> buildHandleWithBuilder: builder [
+	| currentAggregate |
+	currentAggregate := aggregate validHandle.
+	indices doWithIndex: [ :each :indexIndex |
+		currentAggregate := builder extract: currentAggregate valueAt: each
+			name: (indexIndex = indices size ifTrue: [ name llvmNameForHandle ] ifFalse: ['']).
+	].
+	handle := currentAggregate
+]
+
+{ #category : #'as yet unclassified' }
 LLVMExtractValueInst >> computeResultType [
 	| memberType |
 	memberType := aggregate type.

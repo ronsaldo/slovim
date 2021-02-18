@@ -34,7 +34,10 @@ LLVMStoreInst >> atomic: anObject [
 
 { #category : #'as yet unclassified' }
 LLVMStoreInst >> buildHandleWithBuilder: builder [
-	handle := builder store: value pointer: pointer validHandle
+	handle := builder store: value validHandle pointer: pointer validHandle.
+	handle setVolatile: volatile.
+	atomic ifTrue: [ handle setOrdering: (AtomicOrderingMap at: ordering) ].
+	align ifNotNil: [ handle setAlignment: align ]
 ]
 
 { #category : #initialization }

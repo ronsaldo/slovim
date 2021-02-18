@@ -33,7 +33,11 @@ LLVMPointerType >> addressSpace: anObject [
 
 { #category : #accessing }
 LLVMPointerType >> buildHandle [
-	handle := elementType validHandle pointerForAddressSpace: addressSpace
+	| validElementType |
+	validElementType := elementType.
+	validElementType isVoidTy ifTrue: [ validElementType := self context int8Ty ].
+
+	handle := validElementType validHandle pointerForAddressSpace: addressSpace
 ]
 
 { #category : #'as yet unclassified' }

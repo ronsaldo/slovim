@@ -192,3 +192,8 @@ SLVMFunctionType >> variadic [
 SLVMFunctionType >> variadic: anObject [
 	variadic := anObject
 ]
+
+{ #category : #'as yet unclassified' }
+SLVMFunctionType >> withAppendedArguments: extraArguments [
+	^ self class callingConvention: callingConvention arguments: arguments , extraArguments returnType: returnType
+]

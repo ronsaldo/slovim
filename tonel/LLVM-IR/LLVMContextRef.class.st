@@ -14,6 +14,18 @@ LLVMContextRef class >> primitiveCreate [
 	^ self ffiCall: #(LLVMContextRef LLVMContextCreate()) library: LLVMC
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMContextRef >> constString: elements length: length dontNullTerminate: dontNullTerminate [
+	^ self ffiCall: #(LLVMValueRef LLVMConstStringInContext(self, void *elements, uint length, bool dontNullTerminate)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMContextRef >> constStruct: constantValues count: count packed: packed [
+	^ self ffiCall: #(LLVMValueRef LLVMConstStructInContext(self,
+                                      void *constantValues,
+                                      uint count, bool packed)) library: LLVMC
+]
+
 { #category : #'module creation' }
 LLVMContextRef >> createBuilder [
 	^ self primitiveCreateBuilder

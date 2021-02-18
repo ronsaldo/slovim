@@ -33,7 +33,10 @@ LLVMLoadInst >> atomic: anObject [
 
 { #category : #'as yet unclassified' }
 LLVMLoadInst >> buildHandleWithBuilder: builder [
-	handle := builder load: pointer validHandle name: name llvmNameForHandle
+	handle := builder load: pointer validHandle name: name llvmNameForHandle.
+	handle setVolatile: volatile.
+	atomic ifTrue: [ handle setOrdering: (AtomicOrderingMap at: ordering) ].
+	align ifNotNil: [ handle setAlignment: align ]
 ]
 
 { #category : #accessing }

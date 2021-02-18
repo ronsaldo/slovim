@@ -14,6 +14,28 @@ LLVMBuilderRef >> addrSpaceCast: value to: destType name: name [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMBuilderRef >> alloca: type name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildAlloca(self, LLVMTypeRef type, String name)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMBuilderRef >> atomicPointer: pointer cmp: comparisonValue xchg: newValue successOrdering: successOrdering failureOrdering: failureOrdering singleThread: singleThread [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildAtomicCmpXchg(self, LLVMValueRef pointer,
+                                    LLVMValueRef comparisonValue, LLVMValueRef newValue,
+                                    uint successOrdering,
+                                    uint failureOrdering,
+                                    bool singleThread)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMBuilderRef >> atomicRMW: op pointer: pointer value: value ordering: ordering singleThread: singleThread [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildAtomicRMW(self, uint op,
+                                LLVMValueRef pointer, LLVMValueRef value,
+                                uint ordering,
+                                bool singleThread)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMBuilderRef >> binOp: opcode left: left right: right name: name [
 	^ self ffiCall: #(LLVMValueRef LLVMBuildBinOp(self, int opcode, LLVMValueRef left, LLVMValueRef right, String name)) library: LLVMC
 ]
@@ -51,6 +73,23 @@ LLVMBuilderRef >> context: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMBuilderRef >> extract: vector elementAt: index name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildExtractElement(self, LLVMValueRef vector,
+                                   LLVMValueRef index, String name)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMBuilderRef >> extract: aggregate valueAt: index name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildExtractValue(self, LLVMValueRef aggregate,
+                                   uint index, String name)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMBuilderRef >> fcmp: opcode left: left right: right name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildFCmp(self, int opcode, LLVMValueRef left, LLVMValueRef right, String name)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMBuilderRef >> fp: value toSI: destType name: name [
 	^ self ffiCall: #(LLVMValueRef LLVMBuildFPToSI(self, LLVMValueRef value, LLVMTypeRef destType, String name)) library: LLVMC
 ]
@@ -76,8 +115,35 @@ LLVMBuilderRef >> gepPointer: pointer indices: indices numIndices: numIndices na
 ]
 
 { #category : #'as yet unclassified' }
+LLVMBuilderRef >> icmp: opcode left: left right: right name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildICmp(self, int opcode, LLVMValueRef left, LLVMValueRef right, String name)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMBuilderRef >> insert: vector element: element at: index name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildInsertElement(self, LLVMValueRef vector, LLVMValueRef element, LLVMValueRef index, String name)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMBuilderRef >> insert: aggregate value: value at: index name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildInsertValue(self, LLVMValueRef aggregate, LLVMValueRef value, uint index, String name)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMBuilderRef >> int: value toPtr: destType name: name [
 	^ self ffiCall: #(LLVMValueRef LLVMBuildIntToPtr(self, LLVMValueRef value, LLVMTypeRef destType, String name)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMBuilderRef >> invoke: function arguments: arguments count: count thenBlock: thenBlock catchBlock: catchBlock name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildInvoke(self, LLVMValueRef function, void *arguments, uint count, LLVMBasicBlockRef thenBlock, LLVMBasicBlockRef catchBlock, String name)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMBuilderRef >> landingPath: type personalityFunction: personalityFunction numClauses: numClauses name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildLandingPad(self, LLVMTypeRef type,
+                                 LLVMValueRef personalityFunction, uint numClauses,
+                                 String name)) library: LLVMC
 ]
 
 { #category : #'as yet unclassified' }
@@ -98,6 +164,11 @@ LLVMBuilderRef >> module: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMBuilderRef >> phi: type name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildPhi(self, LLVMTypeRef type, String name)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMBuilderRef >> positionAtEndOf: basicBlock [
 	^ self ffiCall: #(LLVMValueRef LLVMPositionBuilderAtEnd(self, LLVMBasicBlockRef basicBlock)) library: LLVMC
 ]
@@ -113,6 +184,11 @@ LLVMBuilderRef >> ptr: value toInt: destType name: name [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMBuilderRef >> resume: value [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildResume(self, LLVMValueRef value)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMBuilderRef >> ret: result [
 	^ self ffiCall: #(LLVMValueRef LLVMBuildRet(self, LLVMValueRef result)) library: LLVMC
 ]
@@ -120,6 +196,11 @@ LLVMBuilderRef >> ret: result [
 { #category : #'as yet unclassified' }
 LLVMBuilderRef >> retVoid [
 	^ self ffiCall: #(LLVMValueRef LLVMBuildRetVoid(self)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMBuilderRef >> select: condition trueValue: trueValue falseValue: falseValue name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildSelect(self, LLVMValueRef condition, LLVMValueRef trueValue, LLVMValueRef falseValue, String name)) library: LLVMC
 ]
 
 { #category : #'as yet unclassified' }
@@ -138,6 +219,11 @@ LLVMBuilderRef >> store: value pointer: pointer [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMBuilderRef >> switch: value default: defaultDestination numCases: numCases [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildSwitch(self, LLVMValueRef value, LLVMBasicBlockRef defaultDestination, uint numCases)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMBuilderRef >> trunc: value to: destType name: name [
 	^ self ffiCall: #(LLVMValueRef LLVMBuildTrunc(self, LLVMValueRef value, LLVMTypeRef destType, String name)) library: LLVMC
 ]
@@ -149,7 +235,7 @@ LLVMBuilderRef >> ui: value toFP: destType name: name [
 
 { #category : #'as yet unclassified' }
 LLVMBuilderRef >> unreachable [
-	^ self ffiCall: #(LLVMValueRef LLVMBuildCondBr(self)) library: LLVMC
+	^ self ffiCall: #(LLVMValueRef LLVMBuildUnreachable(self)) library: LLVMC
 ]
 
 { #category : #'as yet unclassified' }

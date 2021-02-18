@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'elements',
 		'packed',
-		'inlineDefinitionString'
+		'inlineDefinitionString',
+		'cachedNamedPrintString'
 	],
 	#category : #'LLVM-IR-Types'
 }
@@ -146,7 +147,7 @@ LLVMStructType >> printDefinitionOn: aStream [
 { #category : #composition }
 LLVMStructType >> printOn: aStream [
 	name ifNotNil: [ 
-		aStream nextPut: $%; nextPutAll: name.
+		aStream nextPutAll: (cachedNamedPrintString ifNil: [cachedNamedPrintString := '%' , name llvmNameString]).
 	] ifNil: [
 		aStream nextPutAll: self inlineDefinitionString
 	].

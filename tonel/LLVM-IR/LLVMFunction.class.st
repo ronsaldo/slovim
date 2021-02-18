@@ -71,7 +71,11 @@ LLVMFunction >> basicBlocksReplacedWith: replacement [
 
 { #category : #accessing }
 LLVMFunction >> buildHandle [
-	handle := ownerModule validHandle addFunction: name type: functionType validHandle.
+	handle := ownerModule validHandle addFunction: name llvmNameForHandle type: functionType validHandle.
+	handle setLinkage: (LinkageMap at: linkage).
+	handle setVisibility: (VisibilityMap at: visibility).
+	handle setDLLStorageClass: (DLLStorageMap at: dllStorageClass).
+
 	"Set the arguments."
 	arguments doWithIndex: [ :arg :index |
 		arg setHandle: (handle getParam: index - 1)
@@ -79,7 +83,7 @@ LLVMFunction >> buildHandle [
 
 	"Create the blocks."
 	basicBlocks do: [ :each |
-		each setHandle: (handle appendBasicBlockNamed: each name inContext: functionType context)
+		each setHandle: (handle appendBasicBlockNamed: each name llvmNameForHandle inContext: functionType context)
 	].
 
 	"Create the instructions."

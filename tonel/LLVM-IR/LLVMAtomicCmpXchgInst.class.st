@@ -11,6 +11,11 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMAtomicCmpXchgInst >> buildHandleWithBuilder: builder [
+	handle := builder atomicPointer: pointer validHandle cmp: comparisonValue validHandle xchg: newValue validHandle successOrdering: (AtomicOrderingMap at: successOrdering) failureOrdering: (AtomicOrderingMap at: failureOrdering) singleThread: false
+]
+
 { #category : #accessing }
 LLVMAtomicCmpXchgInst >> comparisonValue [
 	^ comparisonValue

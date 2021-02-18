@@ -38,6 +38,15 @@ SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName callOverloaded
 ]
 
 { #category : #initialization }
+SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName callOverloadedUnaryBitwiseDefined: llvmBuiltInName [
+	BuiltInFunctionDictionary at: builtInName put:
+		(SLVMLLVMUnaryOverloadedBitwiseDefinedBuiltInFunctionGenerator new
+			name: builtInName;
+			llvmBuiltIn: llvmBuiltInName;
+			yourself)
+]
+
+{ #category : #initialization }
 SLVMLLVMBuiltInFunctionGenerator class >> addBuiltIn: builtInName callScalarMathDoubleFunction: standardFunctionName [
 	self addBuiltIn: builtInName inlineWith: [ :functionCodeGenerator :builtInFunction :callInstruction |
 			functionCodeGenerator generateBuiltInCall: callInstruction byCallingScalarMathDoubleFunction: standardFunctionName
@@ -111,8 +120,8 @@ SLVMLLVMBuiltInFunctionGenerator class >> bitwiseBuiltin [
 	<builtInFunctions>
 	self
 		addBuiltIn: #'bitwise.ctpop' callOverloadedUnary: #'llvm.ctpop';
-		addBuiltIn: #'bitwise.ctlz' callOverloadedUnary: #'llvm.ctlz';
-		addBuiltIn: #'bitwise.cttz' callOverloadedUnary: #'llvm.cttz'
+		addBuiltIn: #'bitwise.ctlz' callOverloadedUnaryBitwiseDefined: #'llvm.ctlz';
+		addBuiltIn: #'bitwise.cttz' callOverloadedUnaryBitwiseDefined: #'llvm.cttz'
 ]
 
 { #category : #initialization }

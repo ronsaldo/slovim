@@ -5,8 +5,23 @@ Class {
 		'parent',
 		'metadata'
 	],
+	#classVars : [
+		'AtomicOrderingMap'
+	],
 	#category : #'LLVM-IR-Instructions'
 }
+
+{ #category : #'class initialization' }
+LLVMInstruction class >> initialize [
+	AtomicOrderingMap := Dictionary newFromPairs: {
+		#unordered . LLVMAtomicOrderingUnordered.
+		#monotonic . LLVMAtomicOrderingMonotonic.
+		#acquire . LLVMAtomicOrderingAcquire.
+		#release . LLVMAtomicOrderingRelease.
+		#acq_rel . LLVMAtomicOrderingAcquireRelease.
+		#seq_cst . LLVMAtomicOrderingSequentiallyConsistent
+	}	
+]
 
 { #category : #adding }
 LLVMInstruction >> addDebugMetadata: metadataValue [
@@ -27,6 +42,11 @@ LLVMInstruction >> buildHandle [
 { #category : #'as yet unclassified' }
 LLVMInstruction >> buildHandleWithBuilder: aBuilder [
 	self subclassResponsibility
+]
+
+{ #category : #'as yet unclassified' }
+LLVMInstruction >> fixupInstructionHandle [
+	"An opportunity for performing required fixups after the instructions are created"
 ]
 
 { #category : #printing }

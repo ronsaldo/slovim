@@ -19,6 +19,12 @@ LLVMInsertValueInst >> aggregate: anObject [
 	aggregate := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMInsertValueInst >> buildHandleWithBuilder: builder [
+	self assert: indices size = 1.
+	handle := builder insert: aggregate validHandle value: element validHandle at: indices first name: name llvmNameForHandle
+]
+
 { #category : #accessing }
 LLVMInsertValueInst >> element [
 	^ element

@@ -9,6 +9,11 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMInsertElementInst >> buildHandleWithBuilder: builder [
+	handle := builder insert: vector validHandle element: element validHandle at: elementIndex validHandle name: name llvmNameForHandle
+]
+
 { #category : #accessing }
 LLVMInsertElementInst >> element [
 	^ element

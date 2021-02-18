@@ -4,6 +4,11 @@ Class {
 	#category : #'LLVM-IR-Constants'
 }
 
+{ #category : #accessing }
+LLVMConstantVector >> buildHandle [
+	handle := type elementType validHandle constVector: (LLVMValueRefArray withAll: elements) getHandle count: elements size.
+]
+
 { #category : #'as yet unclassified' }
 LLVMConstantVector >> convertIntoCompactVectorType: compactVectorType [
 	self assert: compactVectorType elements = elements size.

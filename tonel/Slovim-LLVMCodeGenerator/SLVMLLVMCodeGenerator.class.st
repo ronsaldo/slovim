@@ -382,7 +382,7 @@ SLVMLLVMCodeGenerator >> declareNamedStructure: aNamedStructure [
 	| convertedStructure |
 	convertedStructure := LLVMStructType new
 		context: self context;
-		name: aNamedStructure name llvmNameString;
+		name: aNamedStructure name;
 		packed: aNamedStructure isPacked;
 		yourself.
 	translatedTypes at: aNamedStructure put: convertedStructure.
@@ -1255,7 +1255,7 @@ SLVMLLVMCodeGenerator >> visitGlobalVariable: aGlobalVariable [
 	variable := LLVMGlobalVariable createWithType: variableType module: self llvmModule isConstant: aGlobalVariable readOnly linkage: (self convertLinkage: aGlobalVariable) name: (self convertName: aGlobalVariable name) threadLocalMode: LLVMGlobalValue notThreadLocal addressSpace: 0.
 	variable alignment: aGlobalVariable valueType alignment.
 	self createComdatIfRequiredFor: variable.
-	aGlobalVariable threadLocalModel ifNil: [ 
+	aGlobalVariable threadLocalMode ifNil: [ 
 		aGlobalVariable type storage == SLVMType gcStorage ifTrue: [
 			(aGlobalVariable initialValue isNotNil or: [ aGlobalVariable isExternal not ]) ifTrue: [ 
 				moduleDynamicRoots add: variable

@@ -56,6 +56,9 @@ LLVMBasicBlock >> endingBlock: anObject [
 
 { #category : #handle }
 LLVMBasicBlock >> fixupInstructionHandles [
+	instructions do: [ :each |
+		each fixupInstructionHandle
+	]
 ]
 
 { #category : #printing }
@@ -114,7 +117,11 @@ LLVMBasicBlock >> instructions [
 
 { #category : #accessing }
 LLVMBasicBlock >> instructions: anObject [
-	instructions := anObject
+	instructions := anObject.
+	instructions do: [ :each |
+		self assert: each parent isNil.
+		each parent: self
+	]
 ]
 
 { #category : #enumerating }

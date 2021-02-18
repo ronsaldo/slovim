@@ -9,6 +9,11 @@ LLVMC class >> isAvailable [
 	^ self uniqueInstance isAvailable
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMC >> disposeMessage: message [
+	^ self ffiCall: #(void LLVMDisposeMessage(char *message))
+]
+
 { #category : #testing }
 LLVMC >> isAvailable [
 	^ [

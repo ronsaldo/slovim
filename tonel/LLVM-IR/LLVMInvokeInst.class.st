@@ -33,6 +33,11 @@ LLVMInvokeInst >> arguments: anObject [
 	arguments := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMInvokeInst >> buildHandleWithBuilder: builder [
+	handle := builder invoke: calledFunction validHandle arguments: (LLVMValueRefArray withAll: arguments) getHandle count: arguments size thenBlock: normalDestination validHandle catchBlock: unwindDestination validHandle name: name llvmNameForHandle
+]
+
 { #category : #accessing }
 LLVMInvokeInst >> calledFunction [
 	^ calledFunction

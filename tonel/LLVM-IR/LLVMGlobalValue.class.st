@@ -16,6 +16,7 @@ Class {
 		'CommonLinkage',
 		'DLLExportStorageClass',
 		'DLLImportStorageClass',
+		'DLLStorageMap',
 		'DefaultStorageClass',
 		'DefaultVisibility',
 		'ExternalLinkage',
@@ -26,11 +27,14 @@ Class {
 		'InternalLinkage',
 		'LinkOnceAnyLinkage',
 		'LinkOnceODRLinkage',
+		'LinkageMap',
 		'LocalDynamicTLSModel',
 		'LocalExecTLSModel',
 		'NotThreadLocal',
 		'PrivateLinkage',
 		'ProtectedVisibility',
+		'ThreadLocalModeMap',
+		'VisibilityMap',
 		'WeakAnyLinkage',
 		'WeakODRLinkage'
 	],
@@ -83,6 +87,20 @@ LLVMGlobalValue class >> initialize [
 		(ExternalWeakLinkage extern_weak)
 		(CommonLinkage common)
 	).
+	
+	LinkageMap := Dictionary newFromPairs: { 
+		ExternalLinkage . LLVMExternalLinkage.
+		AvailableExternallyLinkage . LLVMAvailableExternallyLinkage.
+		LinkOnceAnyLinkage . LLVMLinkOnceAnyLinkage.
+		LinkOnceODRLinkage . LLVMLinkOnceODRLinkage.
+		WeakAnyLinkage . LLVMWeakAnyLinkage.
+		WeakODRLinkage . LLVMWeakODRLinkage.
+		AppendingLinkage . LLVMAppendingLinkage.
+		InternalLinkage . LLVMInternalLinkage.
+		PrivateLinkage . LLVMPrivateLinkage.
+		ExternalWeakLinkage . LLVMExternalWeakLinkage.
+		CommonLinkage . LLVMCommonLinkage.
+	}.
 
 	self enumDefine: #(
 		(DefaultVisibility default)
@@ -90,11 +108,23 @@ LLVMGlobalValue class >> initialize [
 		(ProtectedVisibility protected)
 	).	
 
+	VisibilityMap := Dictionary newFromPairs: { 
+		DefaultVisibility . LLVMDefaultVisibility.
+		HiddenVisibility . LLVMHiddenVisibility.
+		ProtectedVisibility . LLVMProtectedVisibility.
+	}.
+
 	self enumDefine: #(
 		(DefaultStorageClass #'')
 		(DLLImportStorageClass dllimport)
 		(DLLExportStorageClass dllexport)
 	).	
+
+	DLLStorageMap := Dictionary newFromPairs: { 
+		DefaultStorageClass . LLVMDefaultStorageClass.
+		DLLImportStorageClass . LLVMDLLImportStorageClass.
+		LLVMDLLExportStorageClass . DLLExportStorageClass.
+	}.
 
 	self enumDefine: #(
 		(NotThreadLocal #'')
@@ -103,6 +133,14 @@ LLVMGlobalValue class >> initialize [
 		(InitialExecTLSModel #'thread_local(initialexec)')
 		(LocalExecTLSModel #'thread_local(localexec)')
 	).
+	
+	ThreadLocalModeMap := Dictionary newFromPairs: { 
+		NotThreadLocal . LLVMNotThreadLocal.
+		GeneralDynamicTLSModel . LLVMGeneralDynamicTLSModel.
+		LocalDynamicTLSModel . LLVMLocalDynamicTLSModel.
+		InitialExecTLSModel . LLVMInitialExecTLSModel.
+		LocalExecTLSModel . LLVMLocalExecTLSModel.
+	}.
 ]
 
 { #category : #linkage }
@@ -331,13 +369,13 @@ LLVMGlobalValue >> printOn: aStream [
 ]
 
 { #category : #accessing }
-LLVMGlobalValue >> threadLocalMode: anObject [
-	threadLocalMode := anObject
+LLVMGlobalValue >> threadLocalMode [
+	^ threadLocalMode
 ]
 
 { #category : #accessing }
-LLVMGlobalValue >> threadLocalModel [
-	^ threadLocalMode
+LLVMGlobalValue >> threadLocalMode: anObject [
+	threadLocalMode := anObject
 ]
 
 { #category : #accessing }

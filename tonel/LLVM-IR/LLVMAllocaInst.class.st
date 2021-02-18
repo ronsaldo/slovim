@@ -18,6 +18,14 @@ LLVMAllocaInst >> alignment: anObject [
 	alignment := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMAllocaInst >> buildHandleWithBuilder: builder [
+	handle := builder alloca: valueType validHandle name: name llvmNameForHandle.
+	alignment ifNotNil: [
+		handle setAlignment: alignment
+	]
+]
+
 { #category : #testing }
 LLVMAllocaInst >> isAlloca [
 	^ true

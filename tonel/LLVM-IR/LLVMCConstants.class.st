@@ -17,6 +17,7 @@ Class {
 		'LLVMAVRBUILTINCallConv',
 		'LLVMAVRINTRCallConv',
 		'LLVMAVRSIGNALCallConv',
+		'LLVMAbortProcessAction',
 		'LLVMAdd',
 		'LLVMAddrSpaceCast',
 		'LLVMAlloca',
@@ -182,6 +183,7 @@ Class {
 		'LLVMPointerTypeKind',
 		'LLVMPreserveAllCallConv',
 		'LLVMPreserveMostCallConv',
+		'LLVMPrintMessageAction',
 		'LLVMPrivateLinkage',
 		'LLVMProtectedVisibility',
 		'LLVMPtrToInt',
@@ -203,6 +205,7 @@ Class {
 		'LLVMRealUNO',
 		'LLVMResume',
 		'LLVMRet',
+		'LLVMReturnStatusAction',
 		'LLVMSDiv',
 		'LLVMSExt',
 		'LLVMSIToFP',
@@ -267,7 +270,8 @@ LLVMCConstants class >> initialize [
 		initializeAtomicaRMWBinOp;
 		initializeDiagnosticSeverity;
 		initializeInlineAsmDialect;
-		initializeModuleFlagBehavior
+		initializeModuleFlagBehavior;
+		initializeVerifierFailureAction
 ]
 
 { #category : #initialization }
@@ -586,6 +590,14 @@ LLVMCConstants class >> initializeValueKind [
 	LLVMInlineAsmValueKind := 23.
 
 	LLVMInstructionValueKind := 24.
+]
+
+{ #category : #'class initialization' }
+LLVMCConstants class >> initializeVerifierFailureAction [
+	LLVMAbortProcessAction := 0.
+	LLVMPrintMessageAction := 1.
+	LLVMReturnStatusAction := 2.
+
 ]
 
 { #category : #initialization }

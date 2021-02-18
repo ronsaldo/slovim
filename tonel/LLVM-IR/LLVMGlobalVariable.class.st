@@ -35,6 +35,19 @@ LLVMGlobalVariable >> alignment: anObject [
 	alignment := anObject
 ]
 
+{ #category : #accessing }
+LLVMGlobalVariable >> buildHandle [
+	handle := ownerModule validHandle addGlobal: name llvmNameForHandle type: valueType validHandle.
+	handle setLinkage: (LinkageMap at: linkage).
+	handle setVisibility: (VisibilityMap at: visibility).
+	handle setDLLStorageClass: (DLLStorageMap at: dllStorageClass).
+	handle setThreadLocalMode: (ThreadLocalModeMap at: threadLocalMode).
+
+	alignment ifNotNil: [ handle setAlignment: alignment ].
+	handle setGlobalConstant: isConstant.
+	initialValue ifNotNil: [ handle setGlobalInitializer: initialValue validHandle ].
+]
+
 { #category : #printing }
 LLVMGlobalVariable >> fullPrintOn: aStream [
 	aStream print: self; nextPutAll: ' = '.

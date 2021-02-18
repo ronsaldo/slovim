@@ -13,7 +13,7 @@ Class {
 LLVMBranchInst >> buildHandleWithBuilder: builder [
 	condition ifNil: [ 
 		handle := builder branch: trueDestination validHandle
-	] ifNotNil: [ 
+	] ifNotNil: [
 		handle := builder condition: condition validHandle branch: trueDestination validHandle else: falseDestination validHandle
 	].
 

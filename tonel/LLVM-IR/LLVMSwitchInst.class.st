@@ -10,6 +10,14 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMSwitchInst >> buildHandleWithBuilder: builder [
+	handle := builder switch: condition validHandle default: defaultDest validHandle numCases: caseDests size.
+	1 to: caseDests size do: [ :index |
+		handle addCase: (caseValues at: index) validHandle destination: (caseDests at: index) validHandle
+	].
+]
+
 { #category : #accessing }
 LLVMSwitchInst >> caseDests [
 	^ caseDests

@@ -7,6 +7,11 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMResumeInst >> buildHandleWithBuilder: builder [
+	handle := builder resume: value validHandle
+]
+
 { #category : #printing }
 LLVMResumeInst >> mnemonic [
 	^ #resume

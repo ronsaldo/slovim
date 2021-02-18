@@ -9,7 +9,11 @@ Class {
 
 { #category : #accessing }
 LLVMConstantInt >> buildHandle [
-	handle := type validHandle constInt: value & 16rFFFFFFFFFFFFFFFF signExtend: value < 0
+	"handle := type validHandle constInt: value & 16rFFFFFFFFFFFFFFFF signExtend: value < 0."
+	| valueString |
+	"We use the textual representation as a workaround a FFI bug. At least this one works with arbitrary precision."
+	valueString := value asString.
+	handle := type validHandle constIntString: valueString size: valueString size radix: 10
 ]
 
 { #category : #printing }

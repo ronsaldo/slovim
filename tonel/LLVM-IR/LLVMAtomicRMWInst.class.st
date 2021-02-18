@@ -7,8 +7,35 @@ Class {
 		'operation',
 		'ordering'
 	],
+	#classVars : [
+		'OperationOpcodeMap'
+	],
 	#category : #'LLVM-IR-Instructions'
 }
+
+{ #category : #'class initialization' }
+LLVMAtomicRMWInst class >> initialize [
+	OperationOpcodeMap := Dictionary newFromPairs: { 
+		#xchg . LLVMAtomicRMWBinOpXchg.
+		#add . LLVMAtomicRMWBinOpAdd.
+		#sub . LLVMAtomicRMWBinOpSub.
+		#and . LLVMAtomicRMWBinOpAnd.
+		#nand . LLVMAtomicRMWBinOpNand.
+		#or . LLVMAtomicRMWBinOpOr.
+		#xor . LLVMAtomicRMWBinOpXor.
+		#max . LLVMAtomicRMWBinOpMax.
+		#min . LLVMAtomicRMWBinOpMin.
+		#umax . LLVMAtomicRMWBinOpUMax.
+		#umin . LLVMAtomicRMWBinOpUMin.
+		#fadd . LLVMAtomicRMWBinOpFAdd.
+		#fsub . LLVMAtomicRMWBinOpFSub.
+	}
+]
+
+{ #category : #'as yet unclassified' }
+LLVMAtomicRMWInst >> buildHandleWithBuilder: builder [
+	handle := builder atomicRMW: (OperationOpcodeMap at: operation) pointer: pointer validHandle value: operand validHandle ordering: (AtomicOrderingMap at: ordering) singleThread: false
+]
 
 { #category : #accessing }
 LLVMAtomicRMWInst >> initialize [

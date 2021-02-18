@@ -4,6 +4,11 @@ Class {
 	#category : #'LLVM-IR-Constants'
 }
 
+{ #category : #accessing }
+LLVMConstantArray >> buildHandle [
+	handle := type elementType validHandle constArray: (LLVMValueRefArray withAll: elements) getHandle count: elements size.
+]
+
 { #category : #printing }
 LLVMConstantArray >> printOn: aStream [
 	aStream nextPut: $[.

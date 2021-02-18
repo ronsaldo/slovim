@@ -10,6 +10,13 @@ Class {
 }
 
 { #category : #accessing }
+LLVMGetElementPtrConstantExpr >> buildHandle [
+	handle := inbounds
+		ifTrue: [ pointer validHandle constInBoundsGEPIndices: (LLVMValueRefArray withAll: indices) getHandle count: indices size ]
+		ifFalse: [ pointer validHandle constGEPIndices: (LLVMValueRefArray withAll: indices) getHandle count: indices size ].
+]
+
+{ #category : #accessing }
 LLVMGetElementPtrConstantExpr >> inbounds [
 	^ inbounds
 ]

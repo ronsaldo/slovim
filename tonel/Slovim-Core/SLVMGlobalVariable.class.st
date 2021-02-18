@@ -181,7 +181,7 @@ SLVMGlobalVariable >> shouldBePromotedToConstant: aBoolean [
 ]
 
 { #category : #accessing }
-SLVMGlobalVariable >> threadLocalModel [
+SLVMGlobalVariable >> threadLocalMode [
 	^ threadLocalModel
 ]
 

@@ -8,6 +8,11 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMExtractElementInst >> buildHandleWithBuilder: builder [
+	handle := builder extract: vector validHandle elementAt: index validHandle name: name llvmNameForHandle
+]
+
 { #category : #accessing }
 LLVMExtractElementInst >> index [
 	^ index

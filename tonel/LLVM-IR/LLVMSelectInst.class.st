@@ -9,6 +9,11 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMSelectInst >> buildHandleWithBuilder: builder [
+	handle := builder select: condition validHandle trueValue: trueValue validHandle falseValue: falseValue validHandle name: name llvmNameForHandle
+]
+
 { #category : #accessing }
 LLVMSelectInst >> condition [
 	^ condition

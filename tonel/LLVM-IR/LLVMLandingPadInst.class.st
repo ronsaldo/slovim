@@ -8,6 +8,13 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMLandingPadInst >> buildHandleWithBuilder: builder [
+	handle := builder landingPath: type validHandle personalityFunction: parent parent personalityFunction validHandle 	numClauses: catchedExceptions size name: name llvmNameForHandle.
+	catchedExceptions do: [ :each | handle addClause: each validHandle ].
+	handle setCleanup: cleanup
+]
+
 { #category : #accessing }
 LLVMLandingPadInst >> catchedExceptions [
 	^ catchedExceptions
