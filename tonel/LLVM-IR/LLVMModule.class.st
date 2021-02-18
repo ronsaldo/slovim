@@ -679,12 +679,25 @@ LLVMModule >> writeExecutableToFileNamed: outputFileName [
 
 ]
 
-{ #category : #printing }
+{ #category : #writing }
 LLVMModule >> writeIRAssemblyToFileNamed: aFileName [
+	LLVMC isAvailable ifTrue: [ 
+		self validHandle
+			verifyModule;
+			printToFileNamed: aFileName asFileReference asAbsolute fullName.
+		^ self
+	].
 	aFileName asFileReference writeStreamDo: [ :out |
 		out truncate.
 		self fullPrintOn: out
 	]
+]
+
+{ #category : #writing }
+LLVMModule >> writeIRObjectToFileNamed: aFileName [
+	self validHandle
+		verifyModule;
+		writeBitcodeToFileNamed: aFileName asFileReference asAbsolute fullName
 ]
 
 { #category : #writing }
