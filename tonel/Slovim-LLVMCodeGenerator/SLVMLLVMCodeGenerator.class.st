@@ -31,6 +31,7 @@ Class {
 		'usedSymbols'
 	],
 	#classVars : [
+		'CallingConventionMap',
 		'DebugLanguageMap',
 		'ThreadLocalModelMap'
 	],
@@ -49,6 +50,11 @@ SLVMLLVMCodeGenerator class >> initialize [
 	
 	ThreadLocalModelMap := Dictionary newFromPairs: {
 		#generalDynamicTLSModel . LLVMGlobalValue generalDynamicTLSModel
+	}.
+	
+	CallingConventionMap := Dictionary newFromPairs: {
+		#cdecl . #ccc.
+		#stdcall . #'cc 64'.
 	}.
 ]
 
@@ -169,6 +175,19 @@ SLVMLLVMCodeGenerator >> buildGlobalVariable: slvmGlobalVariable debugInformatio
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> context [
 	^ llvmContext ifNil: [ llvmContext := LLVMContext new ]
+]
+
+{ #category : #visiting }
+SLVMLLVMCodeGenerator >> convertCallingConvention: callingConvention [
+	callingConvention = #apicall ifTrue: [
+		(target isWindowsFamily and: [ target isX86_32 ]) ifTrue: [ 
+			^ CallingConventionMap at: #stdcall
+		] ifFalse: [
+			^ CallingConventionMap at: #cdecl
+		].
+	].
+
+	^ CallingConventionMap at: callingConvention
 ]
 
 { #category : #'debug information' }
@@ -1214,6 +1233,7 @@ SLVMLLVMCodeGenerator >> visitFunction: aFunction [
 
 	functionType := self translateType: aFunction functionType.
 	function := LLVMFunction createWithType: functionType linkage: (self convertLinkage: aFunction) name: (self convertName: aFunction name) module: self llvmModule.
+	function callingConvention: (self convertCallingConvention: aFunction callingConvention).
 	self createComdatIfRequiredFor: function.
 	translatedModuleElements at: aFunction put: function.
 		

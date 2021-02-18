@@ -25,6 +25,11 @@ LLVMTypeRef >> constIntString: text size: textSize radix: radix [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMTypeRef >> constNull [
+	^ self ffiCall: #(LLVMValueRef LLVMConstNull(self)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMTypeRef >> constPointerNull [
 	^ self ffiCall: #(LLVMValueRef LLVMConstPointerNull(self)) library: LLVMC
 ]

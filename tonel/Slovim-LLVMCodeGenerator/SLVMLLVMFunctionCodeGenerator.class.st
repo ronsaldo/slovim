@@ -514,7 +514,7 @@ SLVMLLVMFunctionCodeGenerator >> context [
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> convertCallingConvention: callingConvention [
-	^ nil
+	^ moduleTranslator convertCallingConvention: callingConvention
 ]
 
 { #category : #'code generation' }

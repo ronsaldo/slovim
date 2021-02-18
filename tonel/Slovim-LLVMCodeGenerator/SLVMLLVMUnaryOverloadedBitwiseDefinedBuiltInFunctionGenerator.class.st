@@ -11,7 +11,7 @@ SLVMLLVMUnaryOverloadedBitwiseDefinedBuiltInFunctionGenerator >> generateWith: f
 	^ functionCodeGenerator
 		call: overloadedIntrinsic
 		arguments: (instruction arguments collect: [:arg | functionCodeGenerator translateValue: arg]) ,
-			{ functionCodeGenerator translateValue: (SLVMConstant bool: true) }
+			{ functionCodeGenerator translateValue: (SLVMConstant bool: false) }
 		returnType: (functionCodeGenerator translateType: instruction type)
 		name: (functionCodeGenerator convertName: instruction name)
 ]

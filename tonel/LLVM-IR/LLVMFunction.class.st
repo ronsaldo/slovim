@@ -4,7 +4,6 @@ Class {
 	#instVars : [
 		'functionType',
 		'basicBlocks',
-		'callingConvenction',
 		'arguments',
 		'symbolGenerationCount',
 		'hasArgumentNames',
@@ -12,7 +11,8 @@ Class {
 		'gcStrategy',
 		'personalityFunction',
 		'returnAttributes',
-		'functionAttributes'
+		'functionAttributes',
+		'callingConvention'
 	],
 	#category : #'LLVM-IR-GlobalValues'
 }
@@ -71,14 +71,29 @@ LLVMFunction >> basicBlocksReplacedWith: replacement [
 
 { #category : #accessing }
 LLVMFunction >> buildHandle [
+	| context|
+	context := functionType context.
 	handle := ownerModule validHandle addFunction: name llvmNameForHandle type: functionType validHandle.
 	handle setLinkage: (LinkageMap at: linkage).
 	handle setVisibility: (VisibilityMap at: visibility).
 	handle setDLLStorageClass: (DLLStorageMap at: dllStorageClass).
+	callingConvention ifNotNil: [ handle setFunctionCallingConvention: (CallingConventionMap at: callingConvention) ].
+	personalityFunction ifNotNil: [ handle setPersonalityFunction: personalityFunction validHandle ].
+
+	returnAttributes do: [ :attr |
+		handle addAttribute: (context getOrCreateEnumAttributeHandleFor: attr) at: 0
+	].
 
 	"Set the arguments."
 	arguments doWithIndex: [ :arg :index |
-		arg setHandle: (handle getParam: index - 1)
+		arg setHandle: (handle getParam: index - 1).
+		arg flags do: [ :attr |
+			handle addAttribute: (context getOrCreateEnumAttributeHandleFor: attr) at: index
+		]
+	].
+
+	functionAttributes do: [ :attr |
+		handle addAttribute: (context getOrCreateEnumAttributeHandleFor: attr) at: -1
 	].
 
 	"Create the blocks."
@@ -98,11 +113,23 @@ LLVMFunction >> buildHandle [
 
 ]
 
+{ #category : #accessing }
+LLVMFunction >> callingConvention [
+
+	^ callingConvention
+]
+
+{ #category : #accessing }
+LLVMFunction >> callingConvention: anObject [
+
+	callingConvention := anObject
+]
+
 { #category : #printing }
 LLVMFunction >> fullPrintOn: aStream [
 	self sanitizeNames.
 	basicBlocks ifEmpty: [
-		aStream << 'declare ' << linkage second << ' ' << visibility second << ' ' << dllStorageClass  second << callingConvenction.
+		aStream << 'declare ' << linkage second << ' ' << visibility second << ' ' << dllStorageClass  second << callingConvention.
 		returnAttributes do: [ :each |
 			aStream space; nextPutAll: each
 		].
@@ -126,7 +153,7 @@ LLVMFunction >> fullPrintOn: aStream [
 		^ self
 	].
 
-	aStream << 'define ' << linkage second << ' ' << visibility second << ' ' << dllStorageClass  second << callingConvenction.
+	aStream << 'define ' << linkage second << ' ' << visibility second << ' ' << dllStorageClass  second << callingConvention.
 	returnAttributes do: [ :each |
 		aStream space; nextPutAll: each
 	].
@@ -220,7 +247,7 @@ LLVMFunction >> hasReturnAttribute: attributeName [
 LLVMFunction >> initialize [
 	super initialize.
 	basicBlocks := OrderedCollection new.
-	callingConvenction := #ccc.
+	callingConvention := #ccc.
 	symbolGenerationCount := 0.
 	labelSymbolGenerationCount := 0.
 	hasArgumentNames := false.

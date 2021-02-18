@@ -14,7 +14,8 @@ Class {
 		'int32Ty',
 		'int64Ty',
 		'int128Ty',
-		'halfTy'
+		'halfTy',
+		'enumAttributeHandles'
 	],
 	#category : #'LLVM-IR'
 }
@@ -49,6 +50,13 @@ LLVMContext >> floatTy [
 	^ floatTy
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMContext >> getOrCreateEnumAttributeHandleFor: attributeName [
+	^ enumAttributeHandles at: attributeName ifAbsentPut: [ 
+		self validHandle createEnumAttribute: (LLVMC uniqueInstance getAttributeKindForName: attributeName) value: 0
+	]
+]
+
 { #category : #accessing }
 LLVMContext >> halfTy [
 	^ halfTy
@@ -73,6 +81,8 @@ LLVMContext >> initialize [
 	int32Ty := LLVMIntegerType new context: self; bits: 32.
 	int64Ty := LLVMIntegerType new context: self; bits: 64.
 	int128Ty := LLVMIntegerType new context: self; bits: 128.
+	
+	enumAttributeHandles := Dictionary new.
 ]
 
 { #category : #accessing }

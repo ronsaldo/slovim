@@ -4,6 +4,11 @@ Class {
 	#category : #'LLVM-IR-Constants'
 }
 
+{ #category : #accessing }
+LLVMConstantZeroInitializer >> buildHandle [
+	handle := type validHandle constNull
+]
+
 { #category : #'as yet unclassified' }
 LLVMConstantZeroInitializer >> convertIntoCompactVectorType: compactVectorType [
 	^ self copy type: compactVectorType; yourself

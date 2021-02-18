@@ -171,6 +171,8 @@ LLVMModule >> asString [
 LLVMModule >> buildHandle [
 	handle := context validHandle createModuleWithName: name.
 	
+	targetTriple ifNotNil: [ handle setTarget: targetTriple ].
+	
 	structureSymbolTable valuesDo: [ :each | each validHandle ].
 	comdats do: [ :each | each validHandle ].
 	moduleLevelAssemblySources do: [ :each | each validHandle ].

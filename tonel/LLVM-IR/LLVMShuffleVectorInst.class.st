@@ -9,6 +9,11 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMShuffleVectorInst >> buildHandleWithBuilder: builder [
+	handle := builder shuffle: firstVector validHandle with: secondVector validHandle mask: mask validHandle name: name llvmNameForHandle
+]
+
 { #category : #accessing }
 LLVMShuffleVectorInst >> firstVector [
 	^ firstVector

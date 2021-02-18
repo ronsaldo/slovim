@@ -33,7 +33,20 @@ LLVMCallInst >> arguments: anObject [
 
 { #category : #'as yet unclassified' }
 LLVMCallInst >> buildHandleWithBuilder: builder [
-	handle := builder call: calledFunction validHandle arguments: (LLVMValueRefArray withAll: arguments) getHandle count: arguments size name: name llvmNameForHandle
+	| context |
+	context := type context.
+	handle := builder call: calledFunction validHandle arguments: (LLVMValueRefArray withAll: arguments) getHandle count: arguments size name: name llvmNameForHandle.
+
+	callingConvention ifNotNil: [ handle setInstructionCallingConvention: (CallingConventionMap at: callingConvention) ].
+
+	self returnAttributes do: [ :attr |
+		handle addCallSiteAttribute: (context getOrCreateEnumAttributeHandleFor: attr) at: 0
+	].
+	self argumentAttributes doWithIndex: [ :argAttributes :index |
+		argAttributes do: [ :attr |
+			handle addCallSiteAttribute: (context getOrCreateEnumAttributeHandleFor: attr) at: index
+		]
+	].
 ]
 
 { #category : #accessing }

@@ -5,8 +5,19 @@ Class {
 		'name',
 		'type'
 	],
+	#classVars : [
+		'CallingConventionMap'
+	],
 	#category : #'LLVM-IR'
 }
+
+{ #category : #'class initialization' }
+LLVMValue class >> initialize [
+	CallingConventionMap := Dictionary newFromPairs: { 
+		#ccc . LLVMCCallConv.
+		#'cc 64' . LLVMX86StdcallCallConv.
+	}.
+]
 
 { #category : #converting }
 LLVMValue >> asLLVMMetadata [

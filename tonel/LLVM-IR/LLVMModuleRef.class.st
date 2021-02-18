@@ -58,6 +58,11 @@ LLVMModuleRef >> printToFileNamed: fileName errorMessage: errorMessage [
 	^ self ffiCall: #(bool LLVMPrintModuleToFile(self, String fileName, char **errorMessage)) library: LLVMC
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMModuleRef >> setTarget: triple [
+	^ self ffiCall: #(void LLVMSetTarget(self, String triple)) library: LLVMC
+]
+
 { #category : #writing }
 LLVMModuleRef >> verifyModule [
 	| buffer result errorMessage |

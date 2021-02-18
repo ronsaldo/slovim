@@ -5,6 +5,16 @@ Class {
 }
 
 { #category : #adding }
+LLVMValueRef >> addAttribute: attribute at: index [
+	^ self ffiCall: #(void LLVMAddAttributeAtIndex(self, int index, LLVMAttributeRef attribute)) library: LLVMC
+]
+
+{ #category : #adding }
+LLVMValueRef >> addCallSiteAttribute: attribute at: index [
+	^ self ffiCall: #(void LLVMAddCallSiteAttribute(self, int index, LLVMAttributeRef attribute)) library: LLVMC
+]
+
+{ #category : #adding }
 LLVMValueRef >> addCase: value destination: destination [
 	^ self ffiCall: #(void LLVMAddCase(self, LLVMValueRef value, LLVMBasicBlockRef destination)) library: LLVMC
 ]
@@ -74,6 +84,11 @@ LLVMValueRef >> setDLLStorageClass: dllStorageClass [
 	^ self ffiCall: #(void LLVMSetDLLStorageClass(self, uint dllStorageClass)) library: LLVMC
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMValueRef >> setFunctionCallingConvention: callingConvention [
+	self ffiCall: #(void LLVMSetFunctionCallConv(self, uint callingConvention)) library: LLVMC
+]
+
 { #category : #initialization }
 LLVMValueRef >> setGlobalConstant: isConstant [
 	^ self ffiCall: #(void LLVMSetGlobalConstant(self, bool isConstant)) library: LLVMC
@@ -82,6 +97,11 @@ LLVMValueRef >> setGlobalConstant: isConstant [
 { #category : #initialization }
 LLVMValueRef >> setGlobalInitializer: initialValue [
 	^ self ffiCall: #(void LLVMSetInitializer(self, LLVMValueRef initialValue)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMValueRef >> setInstructionCallingConvention: callingConvention [
+	self ffiCall: #(void LLVMSetInstructionCallConv(self, uint callingConvention)) library: LLVMC
 ]
 
 { #category : #initialization }
@@ -97,6 +117,11 @@ LLVMValueRef >> setName: name [
 { #category : #initialization }
 LLVMValueRef >> setOrdering: ordering [
 	^ self ffiCall: #(void LLVMSetOrdering(self, uint ordering)) library: LLVMC
+]
+
+{ #category : #initialization }
+LLVMValueRef >> setPersonalityFunction: personalityFunction [
+	^ self ffiCall: #(void LLVMSetLinkage(self, LLVMValueRef personalityFunction)) library: LLVMC
 ]
 
 { #category : #initialization }

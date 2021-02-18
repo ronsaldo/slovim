@@ -14,6 +14,16 @@ LLVMC >> disposeMessage: message [
 	^ self ffiCall: #(void LLVMDisposeMessage(char *message))
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMC >> getAttributeKindForName: name [
+	^ self getAttributeKindForName: name size: name size
+]
+
+{ #category : #'as yet unclassified' }
+LLVMC >> getAttributeKindForName: name size: size [
+	^ self ffiCall: #(uint LLVMGetEnumAttributeKindForName(char *name, size_t size))
+]
+
 { #category : #testing }
 LLVMC >> isAvailable [
 	^ [

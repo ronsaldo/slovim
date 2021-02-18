@@ -34,6 +34,11 @@ LLVMContextRef >> createBuilder [
 		yourself
 ]
 
+{ #category : #accessing }
+LLVMContextRef >> createEnumAttribute: kind value: value [
+	^ self ffiCall: #(LLVMAttributeRef LLVMCreateEnumAttribute(self, uint kind, uint64 value)) library: LLVMC
+]
+
 { #category : #'module creation' }
 LLVMContextRef >> createModuleWithName: name [
 	^ (self primitiveCreateModuleWithName: name)

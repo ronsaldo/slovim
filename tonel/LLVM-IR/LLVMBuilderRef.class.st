@@ -209,6 +209,11 @@ LLVMBuilderRef >> sext: value to: destType name: name [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMBuilderRef >> shuffle: left with: right mask: mask name: name [
+	^ self ffiCall: #(LLVMValueRef LLVMBuildShuffleVector(self, LLVMValueRef left, LLVMValueRef right, LLVMValueRef mask, String name)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMBuilderRef >> si: value toFP: destType name: name [
 	^ self ffiCall: #(LLVMValueRef LLVMBuildSIToFP(self, LLVMValueRef value, LLVMTypeRef destType, String name)) library: LLVMC
 ]
