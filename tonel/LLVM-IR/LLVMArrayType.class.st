@@ -5,6 +5,11 @@ Class {
 }
 
 { #category : #accessing }
+LLVMArrayType >> buildHandle [
+	handle := elementType validHandle arrayWithElements: elements
+]
+
+{ #category : #accessing }
 LLVMArrayType >> constant: constantElements [
 	self assert: constantElements size = elements.
 	^ LLVMConstantArray new

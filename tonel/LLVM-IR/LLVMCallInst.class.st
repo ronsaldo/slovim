@@ -31,6 +31,11 @@ LLVMCallInst >> arguments: anObject [
 	arguments := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMCallInst >> buildHandleWithBuilder: builder [
+	handle := builder call: calledFunction validHandle arguments: (LLVMValueRefArray withAll: arguments) getHandle count: arguments size name: name llvmNameForHandle
+]
+
 { #category : #accessing }
 LLVMCallInst >> calledFunction [
 	^ calledFunction

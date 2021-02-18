@@ -8,6 +8,11 @@ Class {
 }
 
 { #category : #accessing }
+LLVMIncompleteType >> buildHandle [
+	self shouldNotImplement
+]
+
+{ #category : #accessing }
 LLVMIncompleteType >> definition [
 	^ definition
 ]
@@ -20,4 +25,9 @@ LLVMIncompleteType >> definition: anObject [
 { #category : #accessing }
 LLVMIncompleteType >> name [
 	^ definition name
+]
+
+{ #category : #accessing }
+LLVMIncompleteType >> validHandle [
+	^ definition validHandle
 ]

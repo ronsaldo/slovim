@@ -7,6 +7,11 @@ Class {
 	#category : #'LLVM-IR-Metadata'
 }
 
+{ #category : #accessing }
+LLVMLocalAsMetadata >> buildHandle [
+	handle := value validHandle asMetadata
+]
+
 { #category : #printing }
 LLVMLocalAsMetadata >> printOn: aStream [
 	aStream print: value type; space; print: value

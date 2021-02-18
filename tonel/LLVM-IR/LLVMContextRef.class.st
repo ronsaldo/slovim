@@ -31,6 +31,16 @@ LLVMContextRef >> createModuleWithName: name [
 ]
 
 { #category : #accessing }
+LLVMContextRef >> createStructNamed: name [
+	^ self ffiCall: #(LLVMTypeRef LLVMStructCreateNamed(self, String name)) library: LLVMC
+]
+
+{ #category : #accessing }
+LLVMContextRef >> createStructWithElements: elements count: elementCount packed: packed [
+	^ self ffiCall: #(LLVMTypeRef LLVMStructTypeInContext(self, void* elements, uint elementCount, bool packed)) library: LLVMC
+]
+
+{ #category : #accessing }
 LLVMContextRef >> doubleType [
 	^ self ffiCall: #(LLVMTypeRef LLVMDoubleTypeInContext(self)) library: LLVMC
 ]
@@ -93,6 +103,11 @@ LLVMContextRef >> intType: numBits [
 { #category : #accessing }
 LLVMContextRef >> labelType [
 	^ self ffiCall: #(LLVMTypeRef LLVMLabelTypeInContext(self)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMContextRef >> metadataAsValue: metadata [
+	^ self ffiCall: #(LLVMTypeRef LLVMMetadataAsValue(self, LLVMMetadataRef metadata)) library: LLVMC
 ]
 
 { #category : #accessing }

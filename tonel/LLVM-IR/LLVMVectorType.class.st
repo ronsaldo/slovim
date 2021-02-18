@@ -10,6 +10,11 @@ LLVMVectorType >> bits [
 ]
 
 { #category : #accessing }
+LLVMVectorType >> buildHandle [
+	handle := elementType validHandle vectorWithElements: elements
+]
+
+{ #category : #accessing }
 LLVMVectorType >> constant: constantElements [
 	self assert: constantElements size = elements.
 	^ LLVMConstantVector new

@@ -7,6 +7,11 @@ Class {
 	#category : #'LLVM-IR-Constants'
 }
 
+{ #category : #accessing }
+LLVMConstantFP >> buildHandle [
+	handle := type validHandle constReal: value asFloat
+]
+
 { #category : #printing }
 LLVMConstantFP >> printOn: aStream [
 	| ieee64 |

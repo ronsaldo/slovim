@@ -32,6 +32,11 @@ LLVMStoreInst >> atomic: anObject [
 	atomic := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMStoreInst >> buildHandleWithBuilder: builder [
+	handle := builder store: value pointer: pointer validHandle
+]
+
 { #category : #initialization }
 LLVMStoreInst >> initialize [
 	super initialize.

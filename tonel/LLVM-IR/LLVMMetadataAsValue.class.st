@@ -7,6 +7,11 @@ Class {
 	#category : #'LLVM-IR'
 }
 
+{ #category : #accessing }
+LLVMMetadataAsValue >> buildHandle [
+	handle := type context validHandle metadataAsValue: value validHandle
+]
+
 { #category : #printing }
 LLVMMetadataAsValue >> printOn: aStream [
 	^ value printOn: aStream

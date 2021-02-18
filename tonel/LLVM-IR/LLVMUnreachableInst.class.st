@@ -4,6 +4,11 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMUnreachableInst >> buildHandleWithBuilder: builder [
+	handle := builder unreachable
+]
+
 { #category : #printing }
 LLVMUnreachableInst >> mnemonic [
 	^ #unreachable

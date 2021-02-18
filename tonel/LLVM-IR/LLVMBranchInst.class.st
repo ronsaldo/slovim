@@ -9,6 +9,17 @@ Class {
 	#category : #'LLVM-IR-Instructions'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMBranchInst >> buildHandleWithBuilder: builder [
+	condition ifNil: [ 
+		handle := builder branch: trueDestination validHandle
+	] ifNotNil: [ 
+		handle := builder condition: condition validHandle branch: trueDestination validHandle else: falseDestination validHandle
+	].
+
+	
+]
+
 { #category : #accessing }
 LLVMBranchInst >> condition [
 	^ condition

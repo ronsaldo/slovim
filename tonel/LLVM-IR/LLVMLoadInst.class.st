@@ -31,6 +31,11 @@ LLVMLoadInst >> atomic: anObject [
 	atomic := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMLoadInst >> buildHandleWithBuilder: builder [
+	handle := builder load: pointer validHandle name: name llvmNameForHandle
+]
+
 { #category : #accessing }
 LLVMLoadInst >> initialize [
 	super initialize.

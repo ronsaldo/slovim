@@ -31,6 +31,11 @@ LLVMPointerType >> addressSpace: anObject [
 	addressSpace := anObject
 ]
 
+{ #category : #accessing }
+LLVMPointerType >> buildHandle [
+	handle := elementType validHandle pointerForAddressSpace: addressSpace
+]
+
 { #category : #'as yet unclassified' }
 LLVMPointerType >> computeMemberTypeFor: index [
 	^ elementType

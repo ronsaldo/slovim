@@ -10,6 +10,11 @@ LLVMValueRef >> appendBasicBlockNamed: blockName inContext: context [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMValueRef >> asMetadata [
+	^ self ffiCall: #(LLVMMetadataRef LLVMValueAsMetadata (self)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMValueRef >> getParam: index [
 	^ self ffiCall: #(LLVMValueRef LLVMGetParam (self, uint index)) library: LLVMC
 ]

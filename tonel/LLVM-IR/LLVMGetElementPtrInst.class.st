@@ -9,6 +9,11 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+LLVMGetElementPtrInst >> buildHandleWithBuilder: builder [
+	handle := builder gepPointer: pointer validHandle indices: (LLVMValueRefArray withAll: indices) getHandle numIndices: indices size name: name llvmNameForHandle
+]
+
+{ #category : #'as yet unclassified' }
 LLVMGetElementPtrInst >> computeResultType [
 	| memberType |
 	memberType := pointer type.

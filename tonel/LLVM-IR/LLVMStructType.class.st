@@ -18,6 +18,23 @@ LLVMStructType class >> context: context elements: elements [
 				yourself ]
 ]
 
+{ #category : #accessing }
+LLVMStructType >> buildHandle [
+	| memberHandles |
+	name ifNotNil: [
+		handle := context validHandle createStructNamed: name.
+	].
+
+	memberHandles := FFIExternalArray newType: #'void*' size: elements size.
+	elements doWithIndex: [ :el :index | memberHandles at: index put: el validHandle getHandle ].
+	
+	name ifNotNil: [
+		handle setStructElements: memberHandles getHandle count: elements size packed: packed
+	] ifNil: [ 
+		handle := context validHandle createStructWithElements: memberHandles getHandle count: elements size packed: packed
+	].
+]
+
 { #category : #'as yet unclassified' }
 LLVMStructType >> computeMemberTypeFor: elementIndex [
 	self assert: elementIndex value isInteger.

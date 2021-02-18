@@ -7,6 +7,11 @@ Class {
 	#category : #'LLVM-IR-Constants'
 }
 
+{ #category : #accessing }
+LLVMConstantInt >> buildHandle [
+	handle := type validHandle constInt: value & 16rFFFFFFFFFFFFFFFF signExtend: value < 0
+]
+
 { #category : #printing }
 LLVMConstantInt >> printOn: aStream [
 	type bits = 1 ifTrue: [

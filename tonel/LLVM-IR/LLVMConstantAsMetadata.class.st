@@ -8,6 +8,11 @@ Class {
 }
 
 { #category : #accessing }
+LLVMConstantAsMetadata >> buildHandle [
+	handle := constant validHandle asMetadata
+]
+
+{ #category : #accessing }
 LLVMConstantAsMetadata >> constant [
 	^ constant
 ]
