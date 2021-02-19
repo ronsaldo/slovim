@@ -8,6 +8,20 @@ Class {
 	#category : #'LLVM-IR-Metadata'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMDIGlobalVariableExpression >> doConcretizeWithDIBuilder: builder [
+	| validName validLinkageName |
+	validName := var name ifNil: [ '' ].
+	validLinkageName := var linkageName ifNil: [ '' ].
+	handle := builder createGlobalVariableExpressionIn: var scope
+		name: validName nameLen: validName size
+		linkage: validLinkageName len: validLinkageName size
+		file: var file validHandle line: var line
+		type: var type validHandle localToUnit: var isLocal
+		expr: expr validHandle decl: LLVMMetadataRef null align: 0.
+	var replaceHandleAllUsesWith: handle getVariableFromGlobalExpression
+]
+
 { #category : #accessing }
 LLVMDIGlobalVariableExpression >> expr [
 	^ expr

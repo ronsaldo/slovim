@@ -1,8 +1,8 @@
 Extension { #name : #String }
 
 { #category : #'*LLVM-IR' }
-String >> asLLVMMetadata [
-	^ LLVMMDString new value: self
+String >> asLLVMMetadataInContext: aContext [
+	^ LLVMMDString new context: aContext; value: self; yourself
 ]
 
 { #category : #'*LLVM-IR' }

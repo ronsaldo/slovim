@@ -7,6 +7,11 @@ Class {
 	#category : #'LLVM-IR-Metadata'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMDIBasicType >> doConcretizeWithDIBuilder: builder [
+	handle := builder createBasicTypeNamed: name len: name size sizeInBits: size encoding: encoding value flags: (flags ifNil: [ 0 ] ifNotNil: [ flags mapToDIFlags ])
+]
+
 { #category : #accessing }
 LLVMDIBasicType >> encoding [
 	^ encoding
@@ -24,5 +29,5 @@ LLVMDIBasicType >> specializedName [
 
 { #category : #accessing }
 LLVMDIBasicType >> specializedProperties [
-	^ super specializedProperties , #(encoding)
+	^ (super specializedProperties copyWithout: #scope) ,  #(encoding)
 ]

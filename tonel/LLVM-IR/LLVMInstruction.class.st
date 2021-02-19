@@ -60,6 +60,18 @@ LLVMInstruction >> fullPrintOn: aStream [
 	self printMetadataOn: aStream
 ]
 
+{ #category : #adding }
+LLVMInstruction >> getDebugMetadata [
+	| found |
+	found := nil.
+	self namedMetadataDo: [ :metadataName :metadataValue |
+		metadataName = #dbg ifTrue: [
+			found := metadataValue.
+		]
+	].
+	^ found
+]
+
 { #category : #initialization }
 LLVMInstruction >> initialize [
 	super initialize.
@@ -75,6 +87,11 @@ LLVMInstruction >> isInstruction [
 { #category : #printing }
 LLVMInstruction >> mnemonic [
 	self subclassResponsibility
+]
+
+{ #category : #adding }
+LLVMInstruction >> namedMetadataDo: aBlock [
+	metadata do: [ :each | aBlock value: each first value: each second ].
 ]
 
 { #category : #accessing }

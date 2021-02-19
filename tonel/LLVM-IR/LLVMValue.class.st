@@ -20,7 +20,7 @@ LLVMValue class >> initialize [
 ]
 
 { #category : #converting }
-LLVMValue >> asLLVMMetadata [
+LLVMValue >> asLLVMMetadataInContext: aContext [
 	^ LLVMLocalAsMetadata new value: self
 ]
 

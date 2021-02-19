@@ -99,6 +99,11 @@ LLVMValueRef >> setGlobalInitializer: initialValue [
 	^ self ffiCall: #(void LLVMSetInitializer(self, LLVMValueRef initialValue)) library: LLVMC
 ]
 
+{ #category : #initialization }
+LLVMValueRef >> setGlobalMetadata: kind value: value [
+	^ self ffiCall: #(void LLVMGlobalSetMetadata(self, uint kind, LLVMMetadataRef value)) library: LLVMC
+]
+
 { #category : #'as yet unclassified' }
 LLVMValueRef >> setInstructionCallingConvention: callingConvention [
 	self ffiCall: #(void LLVMSetInstructionCallConv(self, uint callingConvention)) library: LLVMC

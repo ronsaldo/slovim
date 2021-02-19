@@ -2,7 +2,8 @@ Class {
 	#name : #SLVMLLVMDebugTranslator,
 	#superclass : #SLVMCodeGenerator,
 	#instVars : [
-		'moduleTranslator'
+		'moduleTranslator',
+		'emptyMDTuple'
 	],
 	#classVars : [
 		'EncodingFromDebugTypeKind',
@@ -78,12 +79,22 @@ SLVMLLVMDebugTranslator class >> initialize [
 	).
 ]
 
+{ #category : #accessing }
+SLVMLLVMDebugTranslator >> context [
+	^ moduleTranslator context
+]
+
 { #category : #visiting }
 SLVMLLVMDebugTranslator >> convertFlags: flags [
 	| convertedFlags |
 	convertedFlags := flags collect: [ :each | FlagConversionMap at: each ].
 	convertedFlags ifEmpty: [ ^ nil ].
 	^ LLVMNamedFlags with: convertedFlags
+]
+
+{ #category : #accessing }
+SLVMLLVMDebugTranslator >> emptyMDTuple [
+	^ emptyMDTuple ifNil: [ emptyMDTuple := LLVMMDTuple for: self llvmModule rawElements: #() ]
 ]
 
 { #category : #visiting }
@@ -121,11 +132,7 @@ SLVMLLVMDebugTranslator >> translate: aDebugElement [
 
 { #category : #'as yet unclassified' }
 SLVMLLVMDebugTranslator >> translateDebugType: debugType commonParametersInto: llvmDebugType [
-	debugType parentScope ifNotNil: [ :parentScope |
-		llvmDebugType scope: (moduleTranslator convertDebugScope: parentScope fallbackTo: nil)
-	]
-
-
+	llvmDebugType scope: (moduleTranslator convertDebugScope: debugType parentScope fallbackTo: moduleTranslator debugCompileUnit)
 ]
 
 { #category : #visiting }
@@ -225,9 +232,10 @@ SLVMLLVMDebugTranslator >> visitDebugCompositeType: debugType [
 		size: debugType bitSize;
 		align: debugType bitAlignment;
 		elements: (LLVMMDTuple for: self llvmModule);
-		identifier: (self isEmittingCodeView
+		identifier: ((self isEmittingCodeView or: [ LLVMC isAvailable ])
 			ifTrue: [self assert: (debugType kind ~~ #structure or: [debugType identifier isNotNil]). debugType identifier]
 			ifFalse: [nil]);
+		templateParams: self emptyMDTuple;
 		yourself.
 	moduleTranslator register: debugType debugElement: compositeType.
 	self translateDebugType: debugType commonParametersInto: compositeType.
@@ -267,7 +275,7 @@ SLVMLLVMDebugTranslator >> visitDebugDerivedType: debugType [
 	
 	debugType isBitField ifTrue: [ 
 		derivedType
-			extraData: (moduleTranslator context int64Ty constant: 64) asLLVMMetadata
+			extraData: ((moduleTranslator context int64Ty constant: 64) asLLVMMetadataInContext: self context)
 	].
 	
 	^ derivedType
@@ -301,9 +309,7 @@ SLVMLLVMDebugTranslator >> visitDebugNamespace: debugNamespace [
 		name: debugNamespace name;
 		yourself.
 	moduleTranslator register: debugNamespace debugElement: namespace.
-	debugNamespace parentScope ifNotNil: [ :parentScope |
-		debugNamespace scope: (moduleTranslator convertDebugScope: parentScope fallbackTo: nil)
-	].
+	namespace scope: (moduleTranslator convertDebugScope: debugNamespace parentScope fallbackTo: moduleTranslator debugCompileUnit).
 
 	^ namespace
 ]

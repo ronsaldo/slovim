@@ -39,8 +39,11 @@ LLVMBasicBlock >> buildInstructionHandles [
 		positionAtEndOf: self validHandle;
 		yourself.	
 		
-	instructions do: [ :each |
-		each buildHandleWithBuilder: builder
+	instructions do: [ :each |	
+		builder setCurrentDebugLocation: (each getDebugMetadata
+			ifNotNil: [:value | value validHandle]
+			ifNil: [ LLVMMetadataRef null ]).
+		each buildHandleWithBuilder: builder.
 	]
 ]
 

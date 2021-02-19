@@ -77,6 +77,8 @@ LLVMFunction >> buildHandle [
 	handle setLinkage: (LinkageMap at: linkage).
 	handle setVisibility: (VisibilityMap at: visibility).
 	handle setDLLStorageClass: (DLLStorageMap at: dllStorageClass).
+	self setHandleNamedMetadata.
+	
 	callingConvention ifNotNil: [ handle setFunctionCallingConvention: (CallingConventionMap at: callingConvention) ].
 	personalityFunction ifNotNil: [ handle setPersonalityFunction: personalityFunction validHandle ].
 

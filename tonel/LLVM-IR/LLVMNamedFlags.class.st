@@ -28,6 +28,11 @@ LLVMNamedFlags >> llvmPrintSpecializedMetadataValueOn: aStream [
 	
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMNamedFlags >> mapToDIFlags [
+	^ 0
+]
+
 { #category : #printing }
 LLVMNamedFlags >> printOn: aStream [
 	flags doWithIndex: [ :flag :index |

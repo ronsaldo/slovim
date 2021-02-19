@@ -19,6 +19,11 @@ LLVMDILocation >> column: anObject [
 	column := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMDILocation >> doConcretizeWithDIBuilder: builder [
+	handle := builder createLocationLine: line column: column scope: scope validHandle inlinedAt: LLVMMetadataRef null
+]
+
 { #category : #accessing }
 LLVMDILocation >> line [
 	^ line

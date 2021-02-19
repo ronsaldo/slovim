@@ -5,7 +5,7 @@ Class {
 }
 
 { #category : #converting }
-LLVMConstant >> asLLVMMetadata [
+LLVMConstant >> asLLVMMetadataInContext: aContext [
 	^ LLVMConstantAsMetadata new constant: self
 ]
 

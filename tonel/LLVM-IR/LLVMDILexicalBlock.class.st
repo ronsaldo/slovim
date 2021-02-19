@@ -18,6 +18,11 @@ LLVMDILexicalBlock >> column: anObject [
 	column := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMDILexicalBlock >> doConcretizeWithDIBuilder: builder [
+	handle := builder createLexicalBlockIn: scope validHandle file: (file ifNil: [LLVMMetadataRef null] ifNotNil: [file validHandle]) line: (line ifNil: [0]) column: (column ifNil: [0])
+]
+
 { #category : #accessing }
 LLVMDILexicalBlock >> line [
 	^ line

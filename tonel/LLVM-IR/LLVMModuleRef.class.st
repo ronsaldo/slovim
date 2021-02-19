@@ -8,6 +8,13 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+LLVMModuleRef >> addFlagWithBehavior: flagBehavior name: flagName len: flagNameLen value: flagValue [
+	^ self ffiCall: #(void LLVMAddModuleFlag(self, uint flagBehavior,
+                       char *flagName, size_t flagNameLen,
+                       LLVMMetadataRef flagValue)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMModuleRef >> addFunction: name type: functionType [
 	^ self ffiCall: #(LLVMValueRef LLVMAddFunction(self, String name, LLVMTypeRef functionType)) library: LLVMC
 ]
@@ -29,6 +36,20 @@ LLVMModuleRef >> context: anObject [
 	context := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMModuleRef >> createDIBuilder [
+	^ self primitiveCreateDIBuilder
+		autoRelease;
+		module: self;
+		context: context;
+		yourself
+]
+
+{ #category : #'as yet unclassified' }
+LLVMModuleRef >> primitiveCreateDIBuilder [
+	^ self ffiCall: #(LLVMDIBuilderRef LLVMCreateDIBuilder(self)) library: LLVMC
+]
+
 { #category : #'memory management' }
 LLVMModuleRef >> primitiveDispose [
 	^ self ffiCall: #(void LLVMDisposeModule(self)) library: LLVMC
@@ -37,12 +58,13 @@ LLVMModuleRef >> primitiveDispose [
 { #category : #writing }
 LLVMModuleRef >> printToFileNamed: fileName [
 	| buffer result errorMessage |
+
 	buffer := ExternalAddress new.
 	[ 
 		result := self printToFileNamed: fileName errorMessage: buffer.
 	] ensure: [
-		buffer isNil ifFalse: [ 
-			errorMessage := buffer readStringUTF8.
+		buffer isNull ifFalse: [ 
+			errorMessage := buffer fromCString.
 			LLVMC uniqueInstance disposeMessage: buffer
 		]
 	].
@@ -50,7 +72,6 @@ LLVMModuleRef >> printToFileNamed: fileName [
 	result ifTrue: [
 		self error: errorMessage
 	]
-
 ]
 
 { #category : #writing }
@@ -66,12 +87,13 @@ LLVMModuleRef >> setTarget: triple [
 { #category : #writing }
 LLVMModuleRef >> verifyModule [
 	| buffer result errorMessage |
+
 	buffer := ExternalAddress new.
 	[ 
 		result := self verifyModuleWithFailureAction: LLVMReturnStatusAction outMessage: buffer.
 	] ensure: [
-		buffer isNil ifFalse: [ 
-			errorMessage := buffer readStringUTF8.
+		buffer isNull ifFalse: [
+			errorMessage := buffer fromCString.
 			LLVMC uniqueInstance disposeMessage: buffer
 		]
 	].

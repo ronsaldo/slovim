@@ -14,6 +14,20 @@ Class {
 	#category : #'LLVM-IR-Metadata'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMDISubprogram >> doConcretizeWithDIBuilder: builder [
+	| validName validLinkageName |
+	validName := name ifNil: [ '' ].
+	validLinkageName := linkageName ifNil: [ '' ].
+
+	handle := builder createFunctionInScope: scope validHandle
+		name: validName nameLen: validName size
+		linkageName: validLinkageName linkageNameLen: validLinkageName size
+		file: file validHandle lineNo: line type: type
+		isLocalToUnit: isLocal  isDefinition: isDefinition
+		scopeLine: scopeLine flags: (flags ifNil: [ 0 ] ifNotNil: [ flags mapToDIFlags ]) optimized: false
+]
+
 { #category : #accessing }
 LLVMDISubprogram >> isDefinition [
 	^ isDefinition

@@ -83,6 +83,49 @@ Class {
 		'LLVMDSNote',
 		'LLVMDSRemark',
 		'LLVMDSWarning',
+		'LLVMDWARFEmissionFull',
+		'LLVMDWARFEmissionLineTablesOnly',
+		'LLVMDWARFEmissionNone',
+		'LLVMDWARFSourceLanguageAda83',
+		'LLVMDWARFSourceLanguageAda95',
+		'LLVMDWARFSourceLanguageBLISS',
+		'LLVMDWARFSourceLanguageBORLAND_Delphi',
+		'LLVMDWARFSourceLanguageC',
+		'LLVMDWARFSourceLanguageC11',
+		'LLVMDWARFSourceLanguageC89',
+		'LLVMDWARFSourceLanguageC99',
+		'LLVMDWARFSourceLanguageC_plus_plus',
+		'LLVMDWARFSourceLanguageC_plus_plus_03',
+		'LLVMDWARFSourceLanguageC_plus_plus_11',
+		'LLVMDWARFSourceLanguageC_plus_plus_14',
+		'LLVMDWARFSourceLanguageCobol74',
+		'LLVMDWARFSourceLanguageCobol85',
+		'LLVMDWARFSourceLanguageD',
+		'LLVMDWARFSourceLanguageDylan',
+		'LLVMDWARFSourceLanguageFortran03',
+		'LLVMDWARFSourceLanguageFortran08',
+		'LLVMDWARFSourceLanguageFortran77',
+		'LLVMDWARFSourceLanguageFortran90',
+		'LLVMDWARFSourceLanguageFortran95',
+		'LLVMDWARFSourceLanguageGOOGLE_RenderScript',
+		'LLVMDWARFSourceLanguageGo',
+		'LLVMDWARFSourceLanguageHaskell',
+		'LLVMDWARFSourceLanguageJava',
+		'LLVMDWARFSourceLanguageJulia',
+		'LLVMDWARFSourceLanguageMips_Assembler',
+		'LLVMDWARFSourceLanguageModula2',
+		'LLVMDWARFSourceLanguageModula3',
+		'LLVMDWARFSourceLanguageOCaml',
+		'LLVMDWARFSourceLanguageObjC',
+		'LLVMDWARFSourceLanguageObjC_plus_plus',
+		'LLVMDWARFSourceLanguageOpenCL',
+		'LLVMDWARFSourceLanguagePLI',
+		'LLVMDWARFSourceLanguagePascal83',
+		'LLVMDWARFSourceLanguagePython',
+		'LLVMDWARFSourceLanguageRenderScript',
+		'LLVMDWARFSourceLanguageRust',
+		'LLVMDWARFSourceLanguageSwift',
+		'LLVMDWARFSourceLanguageUPC',
 		'LLVMDefaultStorageClass',
 		'LLVMDefaultVisibility',
 		'LLVMDoubleTypeKind',
@@ -271,7 +314,9 @@ LLVMCConstants class >> initialize [
 		initializeDiagnosticSeverity;
 		initializeInlineAsmDialect;
 		initializeModuleFlagBehavior;
-		initializeVerifierFailureAction
+		initializeVerifierFailureAction;
+		initializeDwarfSourceLanguage;
+		initializeDwarfEmissionKind
 ]
 
 { #category : #initialization }
@@ -361,6 +406,65 @@ LLVMCConstants class >> initializeDiagnosticSeverity [
     LLVMDSWarning := 1.
     LLVMDSRemark := 2.
     LLVMDSNote := 3.
+]
+
+{ #category : #initialization }
+LLVMCConstants class >> initializeDwarfEmissionKind [
+    LLVMDWARFEmissionNone := 0.
+    LLVMDWARFEmissionFull := 1.
+    LLVMDWARFEmissionLineTablesOnly := 2.
+]
+
+{ #category : #initialization }
+LLVMCConstants class >> initializeDwarfSourceLanguage [
+  LLVMDWARFSourceLanguageC89 := 0.
+  LLVMDWARFSourceLanguageC := 1.
+  LLVMDWARFSourceLanguageAda83 := 2.
+  LLVMDWARFSourceLanguageC_plus_plus := 3.
+  LLVMDWARFSourceLanguageCobol74 := 4.
+  LLVMDWARFSourceLanguageCobol85 := 5.
+  LLVMDWARFSourceLanguageFortran77 := 6.
+  LLVMDWARFSourceLanguageFortran90 := 7.
+  LLVMDWARFSourceLanguagePascal83 := 8.
+  LLVMDWARFSourceLanguageModula2 := 9.
+  
+  "New in DWARF v3:"
+  LLVMDWARFSourceLanguageJava := 10.
+  LLVMDWARFSourceLanguageC99 := 11.
+  LLVMDWARFSourceLanguageAda95 := 12.
+  LLVMDWARFSourceLanguageFortran95 := 13.
+  LLVMDWARFSourceLanguagePLI := 14.
+  LLVMDWARFSourceLanguageObjC := 15.
+  LLVMDWARFSourceLanguageObjC_plus_plus := 16.
+  LLVMDWARFSourceLanguageUPC := 17.
+  LLVMDWARFSourceLanguageD := 18.
+  
+	"New in DWARF v4:"
+  LLVMDWARFSourceLanguagePython := 19.
+  
+  "New in DWARF v5:"
+  LLVMDWARFSourceLanguageOpenCL := 20.
+  LLVMDWARFSourceLanguageGo := 21.
+  LLVMDWARFSourceLanguageModula3 := 22.
+  LLVMDWARFSourceLanguageHaskell := 23.
+  LLVMDWARFSourceLanguageC_plus_plus_03 := 24.
+  LLVMDWARFSourceLanguageC_plus_plus_11 := 25.
+  LLVMDWARFSourceLanguageOCaml := 26.
+  LLVMDWARFSourceLanguageRust := 27.
+  LLVMDWARFSourceLanguageC11 := 28.
+  LLVMDWARFSourceLanguageSwift := 29.
+  LLVMDWARFSourceLanguageJulia := 30.
+  LLVMDWARFSourceLanguageDylan := 31.
+  LLVMDWARFSourceLanguageC_plus_plus_14 := 32.
+  LLVMDWARFSourceLanguageFortran03 := 33.
+  LLVMDWARFSourceLanguageFortran08 := 34.
+  LLVMDWARFSourceLanguageRenderScript := 35.
+  LLVMDWARFSourceLanguageBLISS := 36.
+  
+  "Vendor extensions:"
+  LLVMDWARFSourceLanguageMips_Assembler := 37.
+  LLVMDWARFSourceLanguageGOOGLE_RenderScript := 38.
+  LLVMDWARFSourceLanguageBORLAND_Delphi := 39.
 ]
 
 { #category : #initialization }

@@ -77,6 +77,11 @@ LLVMContextRef >> functionType: returnType args: params count: paramCount variad
 	^ self ffiCall: #(LLVMTypeRef LLVMFunctionType(LLVMTypeRef returnType, void* params, 	uint paramCount, bool isVariadic)) library: LLVMC
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMContextRef >> getMDKindForName: name len: nameLen [
+	^ self ffiCall: #(uint LLVMGetMDKindIDInContext(self, char *name, uint nameLen)) library: LLVMC
+]
+
 { #category : #accessing }
 LLVMContextRef >> halfType [
 	^ self ffiCall: #(LLVMTypeRef LLVMHalfTypeInContext(self)) library: LLVMC
@@ -123,6 +128,16 @@ LLVMContextRef >> labelType [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMContextRef >> mdNodeWith: elements count: count [
+	^ self ffiCall: #(LLVMMetadataRef LLVMMDNodeInContext2(self, void *elements, size_t count)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
+LLVMContextRef >> mdString: value slen: size [
+	^ self ffiCall: #(LLVMMetadataRef LLVMMDStringInContext2(self, char *value, size_t size)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMContextRef >> metadataAsValue: metadata [
 	^ self ffiCall: #(LLVMTypeRef LLVMMetadataAsValue(self, LLVMMetadataRef metadata)) library: LLVMC
 ]
@@ -150,6 +165,18 @@ LLVMContextRef >> primitiveCreateModuleWithName: name [
 { #category : #'memory management' }
 LLVMContextRef >> primitiveDispose [
 	^ self ffiCall: #(void LLVMContextDispose(self)) library: LLVMC
+]
+
+{ #category : #'module creation' }
+LLVMContextRef >> primitiveTemporaryMDNode: elements count: count [
+	^ self ffiCall: #(LLVMMetadataRef LLVMTemporaryMDNode(self, void *elements, size_t count)) library: LLVMC
+]
+
+{ #category : #'module creation' }
+LLVMContextRef >> temporaryMDNode: elements count: count [
+	^ (self primitiveTemporaryMDNode: elements count: count)
+		autoRelease;
+		yourself
 ]
 
 { #category : #accessing }

@@ -40,6 +40,11 @@ LLVMDIFile >> directory: anObject [
 	directory := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMDIFile >> doConcretizeWithDIBuilder: builder [
+	handle := builder createFile: filename len: filename size directory: directory directoryLen: directory size
+]
+
 { #category : #accessing }
 LLVMDIFile >> filename [
 	^ filename

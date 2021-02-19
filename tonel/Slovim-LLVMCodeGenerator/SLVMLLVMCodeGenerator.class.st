@@ -251,6 +251,8 @@ SLVMLLVMCodeGenerator >> convertDebugVariable: debugVariable fallbackScopeInto: 
 			name: debugVariable name;
 			arg: debugVariable argumentIndex;
 			scope: scope;
+			file: scope file;
+			line: scope line;
 			type: (self translateDebugType: debugVariable type);
 			flags: (self debugTranslator convertFlags: debugVariable flags);
 			yourself.

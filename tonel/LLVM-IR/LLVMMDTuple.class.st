@@ -20,6 +20,16 @@ LLVMMDTuple >> addElement: anElement [
 ]
 
 { #category : #accessing }
+LLVMMDTuple >> buildHandle [
+	handle := context validHandle mdNodeWith: (LLVMMetadataRefArray withAll: elements) getHandle count: elements size.
+]
+
+{ #category : #'as yet unclassified' }
+LLVMMDTuple >> doConcretizeWithDIBuilder: aBuilder [
+	self buildHandle
+]
+
+{ #category : #accessing }
 LLVMMDTuple >> elements [
 	^ elements
 ]
@@ -46,5 +56,5 @@ LLVMMDTuple >> printContentOn: aStream [
 
 { #category : #'as yet unclassified' }
 LLVMMDTuple >> rawElements: rawElements [
-	self elements: (rawElements collect: #asLLVMMetadata)
+	self elements: (rawElements collect: [:each | each asLLVMMetadataInContext: context])
 ]

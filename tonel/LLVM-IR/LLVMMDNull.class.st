@@ -8,3 +8,8 @@ Class {
 LLVMMDNull >> printOn: aStream [
 	aStream nextPutAll: 'null'
 ]
+
+{ #category : #accessing }
+LLVMMDNull >> validHandle [
+	^ LLVMMetadataRef null
+]

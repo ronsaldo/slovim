@@ -9,6 +9,18 @@ Class {
 	#category : #'LLVM-IR-Metadata'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMDIGlobalVariable >> doConcretizeWithDIBuilder: builder [
+	| validName validLinkageName |
+	validName := name ifNil: [ '' ].
+	validLinkageName := linkageName ifNil: [ '' ].
+	handle := builder createTempGlobalVariableFwdDeclIn: scope validHandle
+		name: validName nameLen: validName size
+		linkage: validLinkageName len: validLinkageName size
+		file: file validHandle line: line type: type validHandle
+		localToUnit: isLocal decl: LLVMMetadataRef null align: 0
+]
+
 { #category : #accessing }
 LLVMDIGlobalVariable >> isDefinition [
 	^ isDefinition

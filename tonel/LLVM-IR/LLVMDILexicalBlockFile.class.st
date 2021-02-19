@@ -17,6 +17,11 @@ LLVMDILexicalBlockFile >> discriminator: anObject [
 	discriminator := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMDILexicalBlockFile >> doConcretizeWithDIBuilder: builder [
+	handle := builder createLexicalBlockFileIn: scope validHandle file: file validHandle discriminator: (discriminator ifNil: [ 0 ])
+]
+
 { #category : #initialization }
 LLVMDILexicalBlockFile >> initialize [
 	super initialize.

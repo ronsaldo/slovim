@@ -15,7 +15,9 @@ Class {
 		'int64Ty',
 		'int128Ty',
 		'halfTy',
-		'enumAttributeHandles'
+		'enumAttributeHandles',
+		'nullMetadata',
+		'mdKindDictionary'
 	],
 	#category : #'LLVM-IR'
 }
@@ -51,6 +53,13 @@ LLVMContext >> floatTy [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMContext >> getMDKindFor: name [
+	^ mdKindDictionary at: name ifAbsentPut: [ 
+		self validHandle getMDKindForName: name len: name size
+	]
+]
+
+{ #category : #'as yet unclassified' }
 LLVMContext >> getOrCreateEnumAttributeHandleFor: attributeName [
 	^ enumAttributeHandles at: attributeName ifAbsentPut: [ 
 		self validHandle createEnumAttribute: (LLVMC uniqueInstance getAttributeKindForName: attributeName) value: 0
@@ -83,6 +92,9 @@ LLVMContext >> initialize [
 	int128Ty := LLVMIntegerType new context: self; bits: 128.
 	
 	enumAttributeHandles := Dictionary new.
+	mdKindDictionary := Dictionary new.
+	
+	nullMetadata := LLVMMDNull new.
 ]
 
 { #category : #accessing }
@@ -123,6 +135,11 @@ LLVMContext >> labelTy [
 { #category : #accessing }
 LLVMContext >> metadataTy [
 	^ metadataTy
+]
+
+{ #category : #accessing }
+LLVMContext >> nullMetadata [
+	^ nullMetadata
 ]
 
 { #category : #accessing }

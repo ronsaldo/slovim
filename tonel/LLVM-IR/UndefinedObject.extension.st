@@ -1,8 +1,8 @@
 Extension { #name : #UndefinedObject }
 
 { #category : #'*LLVM-IR' }
-UndefinedObject >> asLLVMMetadata [
-	^ LLVMMDNull new
+UndefinedObject >> asLLVMMetadataInContext: aContext [
+	^ aContext nullMetadata
 ]
 
 { #category : #'*LLVM-IR' }

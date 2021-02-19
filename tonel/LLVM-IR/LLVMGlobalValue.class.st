@@ -368,6 +368,15 @@ LLVMGlobalValue >> printOn: aStream [
 	name llvmPrintNameOn: aStream.
 ]
 
+{ #category : #initialization }
+LLVMGlobalValue >> setHandleNamedMetadata [
+	| context |
+	context := type context.
+	metadata do: [ :each |
+		handle setGlobalMetadata: (context getMDKindFor: each first) value: each second
+	]
+]
+
 { #category : #accessing }
 LLVMGlobalValue >> threadLocalMode [
 	^ threadLocalMode

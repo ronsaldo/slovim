@@ -10,8 +10,31 @@ Class {
 		'enums',
 		'globals'
 	],
+	#classVars : [
+		'DwarfLanguageMap'
+	],
 	#category : #'LLVM-IR-Metadata'
 }
+
+{ #category : #'class initialization' }
+LLVMDICompileUnit class >> initialize [
+	DwarfLanguageMap := Dictionary newFromPairs: {
+		#DW_LANG_C . LLVMDWARFSourceLanguageC.
+		#DW_LANG_C_plus_plus . LLVMDWARFSourceLanguageC_plus_plus.
+	}
+]
+
+{ #category : #'as yet unclassified' }
+LLVMDICompileUnit >> doConcretizeWithDIBuilder: builder [
+	handle := builder createCompileUnitWithLang: (DwarfLanguageMap at: language name) fileRef: file validHandle
+		producer: producer producerLen: producer size
+		isOptimized: (isOptimized ifNil: [false])
+		runtimeVer: (runtimeVersion ifNil: [ 0 ])
+		kind: 	emissionKind mapToDwarfEmissionKind dwoId: 0 splitDebugInlining: false
+		debugInfoForProfiling: false
+		sysRoot: nil sysRootLen: 0
+		sdk: nil sdkLen: 0
+]
 
 { #category : #accessing }
 LLVMDICompileUnit >> emissionKind [

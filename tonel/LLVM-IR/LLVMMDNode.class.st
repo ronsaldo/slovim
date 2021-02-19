@@ -2,8 +2,10 @@ Class {
 	#name : #LLVMMDNode,
 	#superclass : #LLVMMetadata,
 	#instVars : [
+		'context',
 		'metadataName',
-		'isDistinct'
+		'isDistinct',
+		'forwarder'
 	],
 	#category : #'LLVM-IR-Metadata'
 }
@@ -19,8 +21,40 @@ LLVMMDNode class >> named: aName for: aModule [
 ]
 
 { #category : #'as yet unclassified' }
+LLVMMDNode >> concretizeWithDIBuilder: aBuilder [
+	forwarder ifNotNil: [ 
+		self doConcretizeWithDIBuilder: aBuilder.
+	
+		forwarder replaceAllUsesWith: handle.
+		forwarder := nil.
+	]
+]
+
+{ #category : #accessing }
+LLVMMDNode >> context [
+
+	^ context
+]
+
+{ #category : #accessing }
+LLVMMDNode >> context: anObject [
+
+	context := anObject
+]
+
+{ #category : #'as yet unclassified' }
+LLVMMDNode >> createForwarder [
+	handle := forwarder := context validHandle temporaryMDNode: nil count: 0
+]
+
+{ #category : #'as yet unclassified' }
 LLVMMDNode >> distinct [
 	isDistinct := true
+]
+
+{ #category : #'as yet unclassified' }
+LLVMMDNode >> doConcretizeWithDIBuilder: aBuilder [
+	self subclassResponsibility
 ]
 
 { #category : #printing }
@@ -102,6 +136,13 @@ LLVMMDNode >> printSpecializedContentOn: aStream [
 			destIndex := destIndex + 1
 		].
 	]
+]
+
+{ #category : #'as yet unclassified' }
+LLVMMDNode >> replaceHandleAllUsesWith: newHandle [
+	handle replaceAllUsesWith: newHandle.
+	handle := newHandle.
+	forwarder := nil.
 ]
 
 { #category : #accessing }

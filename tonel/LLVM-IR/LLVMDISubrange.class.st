@@ -17,6 +17,11 @@ LLVMDISubrange >> count: anObject [
 	count := anObject
 ]
 
+{ #category : #'as yet unclassified' }
+LLVMDISubrange >> doConcretizeWithDIBuilder: builder [
+	handle := builder getOrCreateSubrangeFrom: 0 count: count
+]
+
 { #category : #accessing }
 LLVMDISubrange >> specializedName [
 	^ #DISubrange

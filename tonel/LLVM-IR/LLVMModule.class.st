@@ -127,7 +127,9 @@ LLVMModule >> addGlobalValue: aGlobalValue [
 
 { #category : #adding }
 LLVMModule >> addMetadata: aMetadata [
+	aMetadata context: self context.
 	aMetadata metadataName ifNil: [ aMetadata metadataName: self generateMetadataSymbol ].
+	self assert: (metadataSymbolTable includesKey: aMetadata metadataName) not.
 	metadataSymbolTable at: aMetadata metadataName put: aMetadata.
 	^ aMetadata
 ]
@@ -169,15 +171,20 @@ LLVMModule >> asString [
 
 { #category : #accessing }
 LLVMModule >> buildHandle [
+	| diBuilder |
 	handle := context validHandle createModuleWithName: name.
 	
 	targetTriple ifNotNil: [ handle setTarget: targetTriple ].
-	
 	structureSymbolTable valuesDo: [ :each | each validHandle ].
+	metadataSymbolTable valuesDo: [ :each | each createForwarder ].
 	comdats do: [ :each | each validHandle ].
 	moduleLevelAssemblySources do: [ :each | each validHandle ].
 	valueSymbolTable valuesDo: [ :each | each validHandle ].
-	metadataSymbolTable valuesDo: [ :each | each validHandle ].
+	
+	diBuilder := handle createDIBuilder.
+	metadataSymbolTable valuesDo: [ :each | self concretizeMetadata: each withDIBuilder: diBuilder ].
+	diBuilder finalizeBuilder.
+	diBuilder := nil
 ]
 
 { #category : #writing }
@@ -229,6 +236,22 @@ LLVMModule >> compilationPlugins [
 { #category : #accessing }
 LLVMModule >> compilationPlugins: anObject [
 	compilationPlugins := anObject
+]
+
+{ #category : #accessing }
+LLVMModule >> concretizeMetadata: metadata withDIBuilder: diBuilder [
+	metadata concretizeWithDIBuilder: diBuilder.
+	
+	metadata metadataName = #'llvm.module.flags' ifTrue: [
+		metadata elements do:[ :moduleFlagTuple |
+			| flagBehavior flagName flagValue |
+			flagBehavior := moduleFlagTuple elements first constant value - 1.
+			flagName := moduleFlagTuple elements second value.
+			flagValue := moduleFlagTuple elements third.
+
+			handle addFlagWithBehavior: flagBehavior name: flagName len: flagName size value: flagValue validHandle
+		]
+	]
 ]
 
 { #category : #accessing }
@@ -325,11 +348,10 @@ LLVMModule >> getDebugDeclareIntrinsic [
 
 { #category : #intrinsic }
 LLVMModule >> getDebugValueIntrinsic [
-	| metadataTy int64Ty |
+	| metadataTy |
 	^ self getIntrinsic: #'llvm.dbg.value' orCreateWithType: [
 		metadataTy := context metadataTy.
-		int64Ty := context int64Ty.
-		LLVMFunctionType get: context voidTy params: { metadataTy . int64Ty . metadataTy . metadataTy} isVarArg: false
+		LLVMFunctionType get: context voidTy params: { metadataTy . metadataTy . metadataTy} isVarArg: false
 	]
 ]
 
@@ -347,7 +369,7 @@ LLVMModule >> getNamedValue: name [
 
 { #category : #adding }
 LLVMModule >> getOrCreateNamedMetadata: aName [
-	^ metadataSymbolTable at: aName ifAbsentPut: [ LLVMMDTuple new metadataName: aName ]
+	^ metadataSymbolTable at: aName ifAbsentPut: [ LLVMMDTuple new context: context; metadataName: aName ]
 ]
 
 { #category : #writing }

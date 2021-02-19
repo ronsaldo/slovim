@@ -2135,7 +2135,7 @@ SLVMLLVMFunctionCodeGenerator >> visitDebugInstructionDeclareVariable: instructi
 	| debugDeclareIntrinsic address localVariable expression |
 	debugDeclareIntrinsic := moduleTranslator llvmModule getDebugDeclareIntrinsic.
 
-	address := (self translateValue: instruction variable) asLLVMMetadata asLLVMValueFor: self context.
+	address := ((self translateValue: instruction variable) asLLVMMetadataInContext: self context) asLLVMValueFor: self context.
 	localVariable := (self convertDebugVariable: instruction debugInformation) asLLVMValueFor: self context.
 	expression := moduleTranslator emptyDebugExpression asLLVMValueFor: self context.
 
@@ -2149,10 +2149,9 @@ SLVMLLVMFunctionCodeGenerator >> visitDebugInstructionDeclareVariable: instructi
 
 { #category : #visiting }
 SLVMLLVMFunctionCodeGenerator >> visitDebugInstructionSetVariableValue: instruction [
-	| debugValueIntrinsic localVariable expression newValue offset |
+	| debugValueIntrinsic localVariable expression newValue |
 	debugValueIntrinsic := moduleTranslator llvmModule getDebugValueIntrinsic.
-	newValue := (self translateValue: instruction value) asLLVMMetadata asLLVMValueFor: self context.
-	offset := self context int64Ty constant: 0.
+	newValue := ((self translateValue: instruction value) asLLVMMetadataInContext: self context) asLLVMValueFor: self context.
 
 	localVariable := (self convertDebugVariable: instruction variable) asLLVMValueFor: self context.
 	expression := moduleTranslator emptyDebugExpression asLLVMValueFor: self context.
@@ -2160,7 +2159,7 @@ SLVMLLVMFunctionCodeGenerator >> visitDebugInstructionSetVariableValue: instruct
 	^ self addInstruction: (LLVMCallInst new
 		name: (self convertName: instruction name);
 		calledFunction: debugValueIntrinsic;
-		arguments: {newValue . offset . localVariable . expression };
+		arguments: {newValue . localVariable . expression };
 		type: debugValueIntrinsic returnType;
 		yourself)
 ]

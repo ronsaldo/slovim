@@ -4,6 +4,11 @@ Class {
 	#category : #'LLVM-IR-Metadata'
 }
 
+{ #category : #'as yet unclassified' }
+LLVMDINamespace >> doConcretizeWithDIBuilder: builder [
+	handle := builder createNamespaceIn: scope validHandle name: name len: name size exportSymbols: true
+]
+
 { #category : #accessing }
 LLVMDINamespace >> requiredProperties [
 	^ #(scope)

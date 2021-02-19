@@ -42,6 +42,7 @@ LLVMGlobalVariable >> buildHandle [
 	handle setVisibility: (VisibilityMap at: visibility).
 	handle setDLLStorageClass: (DLLStorageMap at: dllStorageClass).
 	handle setThreadLocalMode: (ThreadLocalModeMap at: threadLocalMode).
+	self setHandleNamedMetadata.
 
 	alignment ifNotNil: [ handle setAlignment: alignment ].
 	handle setGlobalConstant: isConstant.

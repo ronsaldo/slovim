@@ -11,7 +11,7 @@ LLVMC class >> isAvailable [
 
 { #category : #'as yet unclassified' }
 LLVMC >> disposeMessage: message [
-	^ self ffiCall: #(void LLVMDisposeMessage(char *message))
+	^ self ffiCall: #(void LLVMDisposeMessage(char *message)) library: self
 ]
 
 { #category : #'as yet unclassified' }

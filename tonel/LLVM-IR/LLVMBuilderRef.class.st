@@ -204,6 +204,11 @@ LLVMBuilderRef >> select: condition trueValue: trueValue falseValue: falseValue 
 ]
 
 { #category : #'as yet unclassified' }
+LLVMBuilderRef >> setCurrentDebugLocation: debugLocation [
+	^ self ffiCall: #(void LLVMSetCurrentDebugLocation2(self, LLVMMetadataRef debugLocation)) library: LLVMC
+]
+
+{ #category : #'as yet unclassified' }
 LLVMBuilderRef >> sext: value to: destType name: name [
 	^ self ffiCall: #(LLVMValueRef LLVMBuildSExt(self, LLVMValueRef value, LLVMTypeRef destType, String name)) library: LLVMC
 ]
