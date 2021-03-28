@@ -285,28 +285,28 @@ SLVMMessagePackDecoder >> nextInt8 [
 
 { #category : #parsing }
 SLVMMessagePackDecoder >> nextUInt16 [
-	^ inputStream next |
-	(inputStream next << 8)
+	^ (inputStream next << 8) |
+	inputStream next
 ]
 
 { #category : #parsing }
 SLVMMessagePackDecoder >> nextUInt32 [
-	^ inputStream next |
-	(inputStream next << 8) |
+	^ (inputStream next << 24) |
 	(inputStream next << 16) |
-	(inputStream next << 24)
+	(inputStream next << 8) |
+	inputStream next
 ]
 
 { #category : #parsing }
 SLVMMessagePackDecoder >> nextUInt64 [
-	^ inputStream next |
-	(inputStream next << 8) |
-	(inputStream next << 16) |
-	(inputStream next << 24) |
-	(inputStream next << 32) |
-	(inputStream next << 40) |
+	^ (inputStream next << 56) |
 	(inputStream next << 48) |
-	(inputStream next << 56)
+	(inputStream next << 40) |
+	(inputStream next << 32) |
+	(inputStream next << 24) |
+	(inputStream next << 16) |
+	(inputStream next << 8) |
+	inputStream next
 ]
 
 { #category : #parsing }

@@ -219,30 +219,30 @@ SLVMMessagePackEncoder >> nextPutInt64: value [
 { #category : #encoding }
 SLVMMessagePackEncoder >> nextPutUInt16: value [
 	outputStream
-		nextPut: value & 16rff;
-		nextPut: (value >> 8) & 16rff
+		nextPut: (value >> 8) & 16rff;
+		nextPut: value & 16rff
 ]
 
 { #category : #encoding }
 SLVMMessagePackEncoder >> nextPutUInt32: value [
 	outputStream
-		nextPut: value & 16rff;
-		nextPut: (value >> 8) & 16rff;
+		nextPut: (value >> 24) & 16rff;
 		nextPut: (value >> 16) & 16rff;
-		nextPut: (value >> 24) & 16rff
+		nextPut: (value >> 8) & 16rff;
+		nextPut: value & 16rff
 ]
 
 { #category : #encoding }
 SLVMMessagePackEncoder >> nextPutUInt64: value [
 	outputStream
-		nextPut: value & 16rff;
-		nextPut: (value >> 8) & 16rff;
-		nextPut: (value >> 16) & 16rff;
-		nextPut: (value >> 24) & 16rff;
-		nextPut: (value >> 32) & 16rff;
-		nextPut: (value >> 40) & 16rff;
+		nextPut: (value >> 56) & 16rff;
 		nextPut: (value >> 48) & 16rff;
-		nextPut: (value >> 56) & 16rff
+		nextPut: (value >> 40) & 16rff;
+		nextPut: (value >> 32) & 16rff;
+		nextPut: (value >> 24) & 16rff;
+		nextPut: (value >> 16) & 16rff;
+		nextPut: (value >> 8) & 16rff;
+		nextPut: value & 16rff
 ]
 
 { #category : #accessing }
