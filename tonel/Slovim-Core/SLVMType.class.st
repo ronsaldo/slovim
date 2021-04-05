@@ -12,6 +12,8 @@ Class {
 		'CharType',
 		'CrossWorkgroupStorage',
 		'DepthTexture2DArrayType',
+		'DepthTexture2DMSArrayType',
+		'DepthTexture2DMSType',
 		'DepthTexture2DType',
 		'DepthTextureCubeArrayType',
 		'DepthTextureCubeType',
@@ -36,6 +38,8 @@ Class {
 		'Texture1DArrayType',
 		'Texture1DType',
 		'Texture2DArrayType',
+		'Texture2DMSArrayType',
+		'Texture2DMSType',
 		'Texture2DType',
 		'Texture3DArrayType',
 		'Texture3DType',
@@ -88,6 +92,16 @@ SLVMType class >> crossWorkgroupStorage [
 { #category : #'built in types' }
 SLVMType class >> depthTexture2DArrayType [
 	^ DepthTexture2DArrayType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> depthTexture2DMSArrayType [
+	^ DepthTexture2DMSArrayType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> depthTexture2DMSType [
+	^ DepthTexture2DMSType
 ]
 
 { #category : #'built in types' }
@@ -323,6 +337,16 @@ SLVMType class >> texture2DArrayType [
 ]
 
 { #category : #'built in types' }
+SLVMType class >> texture2DMSArrayType [
+	^ Texture2DMSArrayType
+]
+
+{ #category : #'built in types' }
+SLVMType class >> texture2DMSType [
+	^ Texture2DMSType
+]
+
+{ #category : #'built in types' }
 SLVMType class >> texture2DType [
 	^ Texture2DType
 ]
@@ -345,6 +369,8 @@ SLVMType class >> textureAndSamplerTypes [
 	Texture1DArrayType := SLVMTextureType new name: #texture1DArray; sampledType: FloatType; dimensions: 1; array: true; depth: false; multisample: false; sampled: true.
 	Texture2DType := SLVMTextureType new name: #texture2D; dimensions: 2; sampledType: FloatType; array: false; depth: false; multisample: false; sampled: true.
 	Texture2DArrayType := SLVMTextureType new name: #texture2DArray; sampledType: FloatType; dimensions: 2; array: true; depth: false; multisample: false; sampled: true.
+	Texture2DMSType := SLVMTextureType new name: #texture2DMS; dimensions: 2; sampledType: FloatType; array: false; depth: false; multisample: true; sampled: true.
+	Texture2DMSArrayType := SLVMTextureType new name: #texture2DMSArray; sampledType: FloatType; dimensions: 2; array: true; depth: false; multisample: true; sampled: true.
 	Texture3DType := SLVMTextureType new name: #texture3D; dimensions: 3; sampledType: FloatType; array: false; depth: false; multisample: false; sampled: true.
 	Texture3DArrayType := SLVMTextureType new name: #texture3DArray; sampledType: FloatType; dimensions: 3; array: true; depth: false; multisample: false; sampled: true.
 	TextureCubeType := SLVMTextureType new name: #textureCube; dimensions: 4; sampledType: FloatType; array: false; depth: false; multisample: false; sampled: true.
@@ -352,6 +378,8 @@ SLVMType class >> textureAndSamplerTypes [
 
 	DepthTexture2DType := SLVMTextureType new name: #depthTexture2D; dimensions: 2; sampledType: FloatType; array: false; depth: true; multisample: false; sampled: true.
 	DepthTexture2DArrayType := SLVMTextureType new name: #depthTexture2DArray; sampledType: FloatType; dimensions: 2; array: true; depth: true; multisample: false; sampled: true.
+	DepthTexture2DMSType := SLVMTextureType new name: #depthTexture2DMS; dimensions: 2; sampledType: FloatType; array: false; depth: true; multisample: true; sampled: true.
+	DepthTexture2DMSArrayType := SLVMTextureType new name: #depthTexture2DMSArray; sampledType: FloatType; dimensions: 2; array: true; depth: true; multisample: true; sampled: true.
 	DepthTextureCubeType := SLVMTextureType new name: #depthTextureCube; dimensions: 4; sampledType: FloatType; array: false; depth: true; multisample: false; sampled: true.
 	DepthTextureCubeArrayType := SLVMTextureType new name: #depthTextureCubeArray; sampledType: FloatType; dimensions: 4; array: true; depth: true; multisample: false; sampled: true.
 	
@@ -361,6 +389,8 @@ SLVMType class >> textureAndSamplerTypes [
 		Texture1DArrayType .
 		Texture2DType .
 		Texture2DArrayType .
+		Texture2DMSType .
+		Texture2DMSArrayType .
 		Texture3DType .
 		Texture3DArrayType .
 		TextureCubeType .
@@ -368,6 +398,8 @@ SLVMType class >> textureAndSamplerTypes [
 		
 		DepthTexture2DType.
 		DepthTexture2DArrayType.
+		DepthTexture2DMSType.
+		DepthTexture2DMSArrayType.
 		DepthTextureCubeType.
 		DepthTextureCubeArrayType.
 	}

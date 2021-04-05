@@ -61,6 +61,16 @@ SLVMCompilationTargetTypes >> depthTexture2DArray [
 ]
 
 { #category : #types }
+SLVMCompilationTargetTypes >> depthTexture2DMS [
+	^ SLVMType depthTexture2DMSType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> depthTexture2DMSArray [
+	^ SLVMType depthTexture2DMSArrayType
+]
+
+{ #category : #types }
 SLVMCompilationTargetTypes >> depthTextureCube [
 	^ SLVMType depthTextureCubeType
 ]
@@ -215,6 +225,16 @@ SLVMCompilationTargetTypes >> texture2D [
 { #category : #types }
 SLVMCompilationTargetTypes >> texture2DArray [
 	^ SLVMType texture2DArrayType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> texture2DMS [
+	^ SLVMType texture2DMSType
+]
+
+{ #category : #types }
+SLVMCompilationTargetTypes >> texture2DMSArray [
+	^ SLVMType texture2DMSArrayType
 ]
 
 { #category : #types }

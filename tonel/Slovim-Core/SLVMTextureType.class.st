@@ -100,6 +100,11 @@ SLVMTextureType >> multisample: anObject [
 	multisample := anObject
 ]
 
+{ #category : #printing }
+SLVMTextureType >> printOn: aStream [
+	aStream nextPutAll: name
+]
+
 { #category : #accessing }
 SLVMTextureType >> requiredCoordinates [
 	^ dimensions + (array asBit)
