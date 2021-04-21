@@ -590,10 +590,10 @@ SLVMCompilationTarget >> targetTriple [
 				out nextPut: $-; nextPutAll: system
 			].
 
-			self abiName ifNil: [
-				out nextPutAll: '-unknown'
-			] ifNotNil: [ :abi |
-				out nextPut: $-; nextPutAll: abi
+			self abiName ifNotNil: [ :abi |
+				abi ifNotEmpty: [ 
+					out nextPut: $-; nextPutAll: abi
+				].
 			].
 		]
 	].

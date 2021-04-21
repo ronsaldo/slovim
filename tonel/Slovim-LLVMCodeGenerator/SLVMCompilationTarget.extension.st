@@ -51,6 +51,21 @@ SLVMCompilationTarget class >> llvm_mipsel [
 ]
 
 { #category : #'*Slovim-LLVMCodeGenerator' }
+SLVMCompilationTarget class >> llvm_wasm [
+	^ SLVMLLVMCompilationTarget webAssembly
+]
+
+{ #category : #'*Slovim-LLVMCodeGenerator' }
+SLVMCompilationTarget class >> llvm_wasm32 [
+	^ SLVMLLVMCompilationTarget webAssembly32
+]
+
+{ #category : #'*Slovim-LLVMCodeGenerator' }
+SLVMCompilationTarget class >> llvm_wasm64 [
+	^ SLVMLLVMCompilationTarget webAssembly64
+]
+
+{ #category : #'*Slovim-LLVMCodeGenerator' }
 SLVMCompilationTarget class >> llvm_webAssembly [
 	^ SLVMLLVMCompilationTarget webAssembly
 ]
