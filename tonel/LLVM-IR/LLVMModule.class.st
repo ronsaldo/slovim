@@ -26,7 +26,8 @@ Class {
 		'clangProgram',
 		'linkerTargetTriple',
 		'systemRoot',
-		'comdats'
+		'comdats',
+		'sourceFilename'
 	],
 	#classVars : [
 		'ClangIsPresent',
@@ -312,6 +313,7 @@ LLVMModule >> fpu: anObject [
 { #category : #printing }
 LLVMModule >> fullPrintOn: aStream [
 	aStream << '; Module ' << name; lf.
+	sourceFilename ifNotNil: [ aStream << 'source_filename = '. sourceFilename llvmPrintEscapedStringOn: aStream. aStream lf ].
 	targetTriple ifNotNil: [ aStream << 'target triple = "' << targetTriple << '"'; lf ].
 
 	structureSymbolTable valuesDo: [ :value | value fullPrintOn: aStream. aStream lf ].
@@ -597,6 +599,18 @@ LLVMModule >> sanitizeLinkerArgument: linkerArgument [
 LLVMModule >> setKnownIntrinsicAttributes: intrinsic [
 	intrinsic functionAttributes: #(nounwind).
 	^ intrinsic
+]
+
+{ #category : #accessing }
+LLVMModule >> sourceFilename [
+
+	^ sourceFilename
+]
+
+{ #category : #accessing }
+LLVMModule >> sourceFilename: anObject [
+
+	sourceFilename := anObject
 ]
 
 { #category : #accessing }

@@ -26,7 +26,9 @@ Class {
 		'structureTypeNameToHighLevelMap',
 		'nonInlineLiterals',
 		'nonInlineLiteralsTable',
-		'usedSymbols'
+		'usedSymbols',
+		'sourceFilename',
+		'name'
 	],
 	#category : #'Slovim-Core-SSA'
 }
@@ -569,6 +571,18 @@ SLVMModule >> inlineAssemblyFragments [
 	^ inlineAssemblyFragments
 ]
 
+{ #category : #accessing }
+SLVMModule >> name [
+
+	^ name
+]
+
+{ #category : #accessing }
+SLVMModule >> name: anObject [
+
+	name := anObject
+]
+
 { #category : #'as yet unclassified' }
 SLVMModule >> nodeTitle [
 	^ #Module
@@ -633,6 +647,18 @@ SLVMModule >> sortPackageElements [
 	].
 	
 	^ result
+]
+
+{ #category : #accessing }
+SLVMModule >> sourceFilename [
+
+	^ sourceFilename
+]
+
+{ #category : #accessing }
+SLVMModule >> sourceFilename: anObject [
+
+	sourceFilename := anObject
 ]
 
 { #category : #accessing }

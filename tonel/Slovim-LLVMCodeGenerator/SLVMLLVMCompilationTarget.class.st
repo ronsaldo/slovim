@@ -171,7 +171,7 @@ SLVMLLVMCompilationTarget >> applyABI [
 	(#(x86 x86_64) includes: self architecture) ifTrue: [ 
 		self isWindowsFamily ifTrue: [ ^ self abiName: #msvc ].
 		self isLinux ifTrue: [ ^ self abiName: #gnu ].
-		self isOSX ifTrue: [ ^ self abiName: #macho ].
+		self isOSX ifTrue: [ ^ self abiName: nil ].
 		^ self abiName: #elf
 	].
 

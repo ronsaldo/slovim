@@ -10,7 +10,6 @@ Class {
 		'usedNames',
 		'translatedConstants',
 		'debugCompileUnit',
-		'unknownDebugFile',
 		'convertedDebugFiles',
 		'convertedDebugSourceLocations',
 		'debugTranslator',
@@ -28,7 +27,10 @@ Class {
 		'namedStructures',
 		'compactTranslatedVectors',
 		'cskMD5',
-		'usedSymbols'
+		'usedSymbols',
+		'sourceFilename',
+		'compileUnitDebugFile',
+		'moduleName'
 	],
 	#classVars : [
 		'CallingConventionMap',
@@ -170,6 +172,40 @@ SLVMLLVMCodeGenerator >> buildGlobalVariable: slvmGlobalVariable debugInformatio
 	debugCompileUnit globals addElement: debugGlobalVariableExpression.
 	
 	^ debugGlobalVariable
+]
+
+{ #category : #'code generation' }
+SLVMLLVMCodeGenerator >> compileUnitDebugFile [
+	^ compileUnitDebugFile ifNil: [
+		| fileReference filename directory |
+		sourceFilename ifNil: [
+			filename := 'compileUnit'.
+			directory := ''.
+		] ifNotNil: [
+			fileReference := sourceFilename asFileReference.
+			filename := fileReference basename.
+			directory := fileReference parent fullName.
+		].
+		self isEmittingCodeView ifTrue: [
+			| contents |
+			contents := #[].
+			fileReference isFile ifTrue: [ 
+				contents := fileReference binaryReadStreamDo: [:in | in contents ].
+			].
+			
+			compileUnitDebugFile := (LLVMDIFile for: self llvmModule)
+				filename: filename;
+				directory: directory;
+				checksumkind: self cskMD5;
+				checksum: (MD5 hashMessage: contents) hex;
+				yourself
+		] ifFalse: [
+			compileUnitDebugFile := (LLVMDIFile for: self llvmModule)
+				filename: filename;
+				directory: directory;
+				yourself
+		].
+	]
 ]
 
 { #category : #'code generation' }
@@ -526,7 +562,8 @@ SLVMLLVMCodeGenerator >> isSpecialSetjmp: aFunction [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> llvmModule [
-	^ llvmModule ifNil: [ llvmModule := (LLVMModule name: #module context: self context)
+	^ llvmModule ifNil: [ llvmModule := (LLVMModule name: (moduleName ifNil: [ #module]) asSymbol context: self context)
+			sourceFilename: sourceFilename;
 			optimizationLevel: optimizationLevel;
 			relocationModel: target relocationModel;
 			targetTriple: target targetTriple;
@@ -711,6 +748,12 @@ SLVMLLVMCodeGenerator >> translateDynamicLiteral: aLiteral [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> translateModule: module exportList: exportList [
+	moduleName ifNil: [
+		moduleName := module name 
+	].
+	sourceFilename ifNil: [
+		sourceFilename := module sourceFilename
+	].
 	self applyPassesIn: module functionList: (exportList select: [:each | each isFunction]).
 	self translateModuleDebugInformation: module.
 	
@@ -802,7 +845,7 @@ SLVMLLVMCodeGenerator >> translateModuleDebugInformation: module [
 		distinct;
 		language: (DebugLanguageMap at: module sourceLanguageName ifAbsent: [DW_LANG_lo_user value]);
 		producer: 'SLVM to LLVM';
-		file: (self unknownDebugFile)
+		file: (self compileUnitDebugFile)
 		yourself.
 
 	cuMetadata elements: { debugCompileUnit }.
@@ -972,21 +1015,7 @@ SLVMLLVMCodeGenerator >> uintPointerType [
 
 { #category : #'code generation' }
 SLVMLLVMCodeGenerator >> unknownDebugFile [
-	^ unknownDebugFile ifNil: [
-		self isEmittingCodeView ifTrue: [
-			unknownDebugFile := (LLVMDIFile for: self llvmModule)
-				filename: 'unknown';
-				directory: '';
-				checksumkind: self cskMD5;
-				checksum: (MD5 hashMessage: #[]) hex;
-				yourself
-		] ifFalse: [
-			unknownDebugFile := (LLVMDIFile for: self llvmModule)
-				filename: 'unknown';
-				directory: '';
-				yourself
-		].
-	]
+	^ self compileUnitDebugFile
 ]
 
 { #category : #testing }
