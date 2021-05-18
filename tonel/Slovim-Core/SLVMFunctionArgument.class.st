@@ -30,7 +30,7 @@ SLVMFunctionArgument >> asFullSExpression [
 { #category : #'as yet unclassified' }
 SLVMFunctionArgument >> createPublicInterfaceVersionIn: targetVersion [
 	targetVersion
-		flags: flags copy;
+		flags: self flags copy;
 		name: name.
 	
 ]

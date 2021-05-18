@@ -500,7 +500,7 @@ SLVMFunction >> createPublicInterfaceDeclarationVersionIn: targetModule [
 	self isPubliclyExported ifFalse: [ ^ self ].
 	resultFunction := self class module: targetModule name: name functionType: (targetModule importType: functionType fromModule: module).
 	resultFunction makeExternal.
-	resultFunction flags: flags copy.
+	resultFunction flags: self flags copy.
 	arguments doWithIndex: [ :arg :index |
 		arg createPublicInterfaceVersionIn: (resultFunction arguments at: index)
 	].
