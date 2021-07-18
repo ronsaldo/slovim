@@ -26,9 +26,10 @@ LLVMC >> getAttributeKindForName: name size: size [
 
 { #category : #testing }
 LLVMC >> isAvailable [
-	^ [
+	^ false
+	"^ [
 		self libraryName isString
-	] on: Error do: [ false ]
+	] on: Error do: [ false ]"
 ]
 
 { #category : #'accessing platform' }
