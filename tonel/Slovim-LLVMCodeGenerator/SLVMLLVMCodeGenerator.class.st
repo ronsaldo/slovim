@@ -937,7 +937,7 @@ SLVMLLVMCodeGenerator >> translateStructureFieldTypes: structureType [
 			| nextType nextUnalignedSize |
 			nextType := structureType types at: i + 1.
 			nextUnalignedSize := currentOffset + currentTypeSize.
-			(nextUnalignedSize + nextType size) = nextOffset ifTrue: [
+			((nextUnalignedSize + nextType size) = nextOffset and: [type isVectorType ]) ifTrue: [
 				fieldConvertedType := self translateCompactVersionOf: type.
 				nextOffset := nextUnalignedSize.
 			].
